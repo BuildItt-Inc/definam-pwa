@@ -1,2 +1,11 @@
 #!/bin/sh
+
+# Frontend: run lint-staged for TS/JS files
 npx lint-staged
+
+# Backend: run ruff on any staged Python files
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep '^backend/.*\.py$')
+if [ -n "$STAGED_PY" ]; then
+  echo "Running ruff on staged backend Python files..."
+  uv run --directory backend ruff check $STAGED_PY
+fi
