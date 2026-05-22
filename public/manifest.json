@@ -1,9 +1,0 @@
-{
-  "name": "DefinAm",
-  "short_name": "DefinAm",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0d2b5e",
-  "icons": []
-}
