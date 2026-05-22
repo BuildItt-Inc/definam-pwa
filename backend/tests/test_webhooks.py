@@ -175,6 +175,16 @@ async def test_org_webhook_creates_org_and_sends_admin_email():
             new_callable=AsyncMock,
         ),
         patch(
+            "app.services.webhook_service.get_school_by_email",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
+        patch(
+            "app.services.webhook_service.get_user_by_username",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
+        patch(
             "app.services.webhook_service.create_org",
             new_callable=AsyncMock,
             return_value="org-uuid",
