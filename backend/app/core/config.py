@@ -15,17 +15,17 @@ class Settings(BaseSettings):
     allowed_origins: str | list[str] = "http://localhost:3000"
 
     # ── Database ───────────────────────────────────────────
-    database_url: str  # e.g. postgresql+asyncpg://user:pass@host/dbname
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 
     # ── Auth (JWT) ─────────────────────────────────────────
-    jwt_secret: str
+    jwt_secret: str = "supersecretjwtkeythatisreallylongandsecure123"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 15        # access token — short-lived
     jwt_refresh_expire_days: int = 30   # refresh token — long-lived
 
     # ── Paystack ───────────────────────────────────────────
-    paystack_secret_key: str
-    paystack_webhook_secret: str
+    paystack_secret_key: str = "sk_test_mockkeyhere"
+    paystack_webhook_secret: str = "mock_webhook_secret"
 
     # ── Email — Resend (primary) ───────────────────────────
     resend_api_key: str = ""
