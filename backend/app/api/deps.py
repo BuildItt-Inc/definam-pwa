@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import Depends, Header
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.exceptions import (
     AuthenticationError,
@@ -10,8 +11,6 @@ from app.core.exceptions import (
     InvalidTokenError,
 )
 from app.core.security import decode_jwt
-
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer()
 

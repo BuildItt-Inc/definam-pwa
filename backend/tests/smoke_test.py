@@ -6,11 +6,11 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy import delete
+
+from app.db.models import AccessCode, School, User
 from app.db.session import _get_session_factory
-from app.db.models import School, User, AccessCode, ProcessedWebhook
+from app.schemas.auth import LoginRequest, RegisterRequest
 from app.services import auth_service
-from app.schemas.auth import RegisterRequest, LoginRequest
-from app.core.security import generate_access_code, hash_password
 
 
 async def run_smoke_test():
