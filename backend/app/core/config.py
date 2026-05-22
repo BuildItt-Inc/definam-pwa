@@ -1,0 +1,61 @@
+from __future__ import annotations
+
+from functools import lru_cache
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    # ── App ───────────────────────────────────────────────
+    app_url: str = "http://localhost:8000"
+    frontend_url: str = "http://localhost:3000"
+    # Stored as str so pydantic-settings won't JSON-parse it before our
+    # validator runs; the validator normalises it to list[str] at runtime.
+    allowed_origins: str | list[str] = "http://localhost:3000"
+
+    # ── Database ───────────────────────────────────────────
+    database_url: str  # e.g. postgresql+asyncpg://user:pass@host/dbname
+
+    # ── Auth (JWT) ─────────────────────────────────────────
+    jwt_secret: str
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 15        # access token — short-lived
+    jwt_refresh_expire_days: int = 30   # refresh token — long-lived
+
+    # ── Paystack ───────────────────────────────────────────
+    paystack_secret_key: str
+    paystack_webhook_secret: str
+
+    # ── Email — Resend (primary) ───────────────────────────
+    resend_api_key: str = ""
+    from_email: str = "no-reply@definam.ng"
+
+    # ── Email — SMTP (fallback) ────────────────────────────
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+
+    # ── AI (future) ────────────────────────────────────────
+    openai_api_key: str = ""
+    anthropic_api_key: str = ""
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_origins(cls, v: str | list[str]) -> list[str]:
+        """Allow ALLOWED_ORIGINS as a comma-separated string in .env."""
+        if isinstance(v, str):
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()  # type: ignore[call-arg]
