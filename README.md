@@ -49,9 +49,12 @@ npm run dev                   # → http://localhost:3000
 
 ```bash
 cd backend
-cp .env.example .env         # fill in your values
+cp .env.example .env   # fill in your values
 uv sync --extra dev
-uv run uvicorn main:app --reload  # → http://localhost:8000
+# runs database migrations
+uv run alembic upgrade head
+# starts backend server in dev mode → http://localhost:8000
+uv run fastapi dev app/main.py
 ```
 
 ## CI/CD Pipeline
