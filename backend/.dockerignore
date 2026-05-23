@@ -1,0 +1,26 @@
+# Virtual environments
+.venv/
+__pycache__/
+
+# Caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# Dev / CI
+tests/
+.pre-commit-config.yaml
+.git/
+.gitignore
+
+# Local env (secrets are injected via Coolify)
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
