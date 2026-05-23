@@ -13,7 +13,14 @@ from alembic import context
 load_dotenv()
 
 config = context.config
-config.set_main_option("sqlalchemy.url", os.environ.get("DATABASE_URL", ""))
+
+# Normalise the URL so Coolify/Heroku-style "postgres://" works with asyncpg.
+_raw_url = os.environ.get("DATABASE_URL", "")
+if _raw_url.startswith("postgres://"):
+    _raw_url = _raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif _raw_url.startswith("postgresql://"):
+    _raw_url = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+config.set_main_option("sqlalchemy.url", _raw_url)
 
 if config.config_file_name is not None:
     try:

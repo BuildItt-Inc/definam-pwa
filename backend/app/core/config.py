@@ -41,6 +41,23 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     anthropic_api_key: str = ""
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalise_database_url(cls, v: str) -> str:
+        """Ensure the URL uses the postgresql+asyncpg driver.
+
+        Coolify / Heroku / Supabase provide URLs starting with
+        ``postgres://`` or ``postgresql://``.  SQLAlchemy's async engine
+        requires ``postgresql+asyncpg://``.
+        """
+        if v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgresql://"):
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgresql+psycopg2://"):
+            v = v.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
+        return v
+
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def parse_origins(cls, v: str | list[str]) -> list[str]:
