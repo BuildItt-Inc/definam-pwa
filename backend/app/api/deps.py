@@ -15,7 +15,9 @@ from app.core.security import decode_jwt
 security = HTTPBearer()
 
 
-def get_bearer_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+def get_bearer_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> str:
     """Extract and return the raw JWT from the Authorization: Bearer header."""
     if not credentials or not credentials.credentials:
         raise AuthenticationError("Invalid or missing authorization header.")

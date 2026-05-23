@@ -32,7 +32,7 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
         key=_COOKIE_NAME,
         value=refresh_token,
         httponly=True,
-        secure=True,          # requires HTTPS in production; harmless over localhost
+        secure=True,  # requires HTTPS in production; harmless over localhost
         samesite="strict",
         max_age=max_age,
         path="/api/v1/auth",  # scoped — only sent to auth endpoints
@@ -61,7 +61,9 @@ async def register(request: Request, body: RegisterRequest) -> dict:
     ),
 )
 @limiter.limit("5/minute")
-async def login(request: Request, body: LoginRequest, response: Response) -> LoginResponse:
+async def login(
+    request: Request, body: LoginRequest, response: Response
+) -> LoginResponse:
     """Authenticate an individual student or admin; set refresh-token cookie."""
     result = await auth_service.login(body)
     _set_refresh_cookie(response, result["refresh_token"])
@@ -83,7 +85,9 @@ async def login(request: Request, body: LoginRequest, response: Response) -> Log
     ),
 )
 @limiter.limit("5/minute")
-async def org_login(request: Request, body: OrgLoginRequest, response: Response) -> OrgLoginResponse:
+async def org_login(
+    request: Request, body: OrgLoginRequest, response: Response
+) -> OrgLoginResponse:
     """Authenticate an org student by access code; set refresh-token cookie."""
     result = await auth_service.org_login(body)
     _set_refresh_cookie(response, result["refresh_token"])

@@ -25,7 +25,6 @@ async def test_password_hash_and_verify() -> None:
     assert not await verify_password("wrong", hashed)
 
 
-
 # ── JWT ────────────────────────────────────────────────────────────────────
 
 

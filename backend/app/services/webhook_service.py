@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import io
+import json
 import logging
 import uuid
 
@@ -36,17 +37,15 @@ logger = logging.getLogger(__name__)
 def verify_signature(raw_body: bytes, signature: str) -> None:
     """Verify Paystack HMAC-SHA512 signature. Raises on mismatch."""
     settings = get_settings()
-    
-    paystack_secret_key = getattr(settings, "paystack_secret_key", None)
-    if paystack_secret_key:
-        secret = paystack_secret_key.encode()
-        expected = hmac.new(secret, raw_body, hashlib.sha512).hexdigest()
-        if hmac.compare_digest(expected, signature):
-            return
-            
-    paystack_webhook_secret = getattr(settings, "paystack_webhook_secret", None)
-    if paystack_webhook_secret:
-        secret = paystack_webhook_secret.encode()
+
+    secret_keys = [
+        getattr(settings, "paystack_secret_key", None),
+        getattr(settings, "paystack_webhook_secret", None),
+    ]
+    for secret_val in secret_keys:
+        if not secret_val:
+            continue
+        secret = secret_val.encode()
         expected = hmac.new(secret, raw_body, hashlib.sha512).hexdigest()
         if hmac.compare_digest(expected, signature):
             return
@@ -61,8 +60,6 @@ async def handle_event(raw_body: bytes, signature: str) -> dict:
     Always returns {\"received\": True} so Paystack gets a 200.
     """
     verify_signature(raw_body, signature)
-
-    import json
 
     event = json.loads(raw_body)
 
@@ -105,7 +102,9 @@ async def _handle_individual(data: dict, metadata: dict) -> None:
     await insert_individual_code(code)
 
     await send_individual_code(email, code)
-    await send_payment_receipt(email, amount_kobo // 100, "DefinAm Individual Term Access")
+    await send_payment_receipt(
+        email, amount_kobo // 100, "DefinAm Individual Term Access"
+    )
     logger.info("Individual code %s issued to %s", code, email)
 
 
@@ -131,19 +130,27 @@ async def _handle_org(data: dict, metadata: dict) -> None:
         # Increment the school's active seats
         new_seat_count = existing_school["active_seats"] + student_count
         await update_school_seats(org_id, new_seat_count)
-        logger.info("School %s already exists. Updated seats to %d", school_email, new_seat_count)
+        logger.info(
+            "School %s already exists. Updated seats to %d",
+            school_email,
+            new_seat_count,
+        )
     else:
-        org_id = await create_org(email=school_email, name=school_name, seat_count=student_count)
+        org_id = await create_org(
+            email=school_email, name=school_name, seat_count=student_count
+        )
 
     codes = [generate_access_code("org") for _ in range(student_count)]
     await bulk_insert_codes(org_id, codes)
 
     temp_password = generate_temp_password()
-    
+
     # Check if admin user already exists
     existing_admin = await get_user_by_username(school_email)
     if existing_admin:
-        logger.info("Admin user %s already exists. Re-using existing account.", school_email)
+        logger.info(
+            "Admin user %s already exists. Re-using existing account.", school_email
+        )
         # Use a placeholder message in the email indicating password remains unchanged
         temp_password = "[Your existing password]"
     else:

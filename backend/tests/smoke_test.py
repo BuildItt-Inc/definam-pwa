@@ -15,10 +15,10 @@ from app.services import auth_service
 
 async def run_smoke_test():
     print("🚀 Starting DefinAm Backend Smoke Test...")
-    
+
     # 1. Establish session factory and clean any residue
     session_factory = _get_session_factory()
-    
+
     async with session_factory() as session:
         print("🔗 Database connection verified.")
         # Ensure clean state for test run
@@ -32,11 +32,7 @@ async def run_smoke_test():
         test_code = "SMOKE-IND-1234"
         async with session_factory() as session:
             # We insert an individual code directly
-            new_code = AccessCode(
-                code=test_code,
-                type="individual",
-                status="pending"
-            )
+            new_code = AccessCode(code=test_code, type="individual", status="pending")
             session.add(new_code)
             await session.commit()
             print(f"✅ Setup individual access code: {test_code}")
@@ -46,7 +42,7 @@ async def run_smoke_test():
             username="smoke_student",
             password="SmokeSecurePass123!",
             confirm_password="SmokeSecurePass123!",
-            access_code=test_code
+            access_code=test_code,
         )
         print("👤 Testing student registration...")
         reg_res = await auth_service.register(register_req)
@@ -54,15 +50,16 @@ async def run_smoke_test():
 
         # 4. Test Login & Token Hashing / Verification
         login_req = LoginRequest(
-            username="smoke_student",
-            password="SmokeSecurePass123!"
+            username="smoke_student", password="SmokeSecurePass123!"
         )
         print("🔑 Testing student login...")
         login_res = await auth_service.login(login_req)
         print("✅ Login successful!")
         assert "access_token" in login_res, "Missing access_token"
         assert "refresh_token" in login_res, "Missing refresh_token"
-        assert login_res["role"] == "student_individual", f"Unexpected role: {login_res['role']}"
+        assert login_res["role"] == "student_individual", (
+            f"Unexpected role: {login_res['role']}"
+        )
         print(f"👉 Generated Access Token: {login_res['access_token'][:30]}...")
         print(f"👉 Generated Refresh Token: {login_res['refresh_token'][:30]}...")
 
@@ -73,15 +70,21 @@ async def run_smoke_test():
         assert "refresh_token" in refresh_res, "Failed to rotate refresh_token"
         print("✅ Refresh and token rotation successful!")
 
-        print("\n🎉 SMOKE TEST COMPLETED SUCCESSFULLY! All components are fully operational.")
+        print(
+            "\n🎉 SMOKE TEST COMPLETED SUCCESSFULLY! All components are fully operational."
+        )
 
     finally:
         # 6. Database Cleanup
         print("🧹 Cleaning up smoke test database records...")
         async with session_factory() as session:
-            await session.execute(delete(AccessCode).where(AccessCode.code.like("SMOKE-%")))
+            await session.execute(
+                delete(AccessCode).where(AccessCode.code.like("SMOKE-%"))
+            )
             await session.execute(delete(User).where(User.username.like("smoke_%")))
-            await session.execute(delete(School).where(School.name == "Smoke Test School"))
+            await session.execute(
+                delete(School).where(School.name == "Smoke Test School")
+            )
             await session.commit()
         print("✨ Database successfully cleaned.")
 

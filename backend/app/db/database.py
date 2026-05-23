@@ -134,9 +134,7 @@ async def create_student_user(
 async def get_user_by_username(username: str) -> dict[str, Any] | None:
     """Return a user row by username, or None."""
     async with db_session() as session:
-        result = await session.execute(
-            select(User).where(User.username == username)
-        )
+        result = await session.execute(select(User).where(User.username == username))
         row = result.scalar_one_or_none()
         if row is None:
             return None
@@ -154,9 +152,7 @@ async def get_user_by_username(username: str) -> dict[str, Any] | None:
 async def get_user_by_id(user_id: str) -> dict[str, Any] | None:
     """Return a user row by primary key, or None."""
     async with db_session() as session:
-        result = await session.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await session.execute(select(User).where(User.id == user_id))
         row = result.scalar_one_or_none()
         if row is None:
             return None
@@ -181,9 +177,7 @@ async def set_force_password_change(user_id: str, value: bool) -> None:
     """Toggle the force_password_change flag for a user."""
     async with db_session() as session:
         await session.execute(
-            update(User)
-            .where(User.id == user_id)
-            .values(force_password_change=value)
+            update(User).where(User.id == user_id).values(force_password_change=value)
         )
 
 
@@ -194,18 +188,14 @@ async def create_org(*, email: str, name: str, seat_count: int) -> str:
     """Insert a school row and return its generated UUID."""
     org_id = str(uuid.uuid4())
     async with db_session() as session:
-        session.add(
-            School(id=org_id, email=email, name=name, active_seats=seat_count)
-        )
+        session.add(School(id=org_id, email=email, name=name, active_seats=seat_count))
     return org_id
 
 
 async def get_school_by_email(email: str) -> dict[str, Any] | None:
     """Return a school row by email, or None."""
     async with db_session() as session:
-        result = await session.execute(
-            select(School).where(School.email == email)
-        )
+        result = await session.execute(select(School).where(School.email == email))
         row = result.scalar_one_or_none()
         if row is None:
             return None
@@ -221,7 +211,9 @@ async def update_school_seats(school_id: str, new_seat_count: int) -> None:
     """Update a school's active seat count."""
     async with db_session() as session:
         await session.execute(
-            update(School).where(School.id == school_id).values(active_seats=new_seat_count)
+            update(School)
+            .where(School.id == school_id)
+            .values(active_seats=new_seat_count)
         )
 
 

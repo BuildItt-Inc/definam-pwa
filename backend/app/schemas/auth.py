@@ -59,5 +59,3 @@ class UserMeResponse(BaseModel):
     username: str
     role: str
     org_id: str | None = None
-
-
