@@ -149,6 +149,7 @@ async def send_org_admin_credentials(
     temp_password: str,
     login_url: str,
     codes_csv: bytes,
+    seat_count: int,
 ) -> None:
     """
     Send the school admin their temporary credentials and access-code CSV.
@@ -159,6 +160,7 @@ async def send_org_admin_credentials(
         temp_password: Temporary password generated during webhook processing.
         login_url: Full URL to the admin login page.
         codes_csv: Raw bytes of the CSV containing all student access codes.
+        seat_count: The number of active seats/licenses.
     """
     html = _render(
         "org_admin_credentials.html",
@@ -166,10 +168,7 @@ async def send_org_admin_credentials(
         admin_email=to,
         temp_password=temp_password,
         login_url=login_url,
-        seat_count=len(
-            [line for line in codes_csv.decode().splitlines() if line.strip()]
-        )
-        - 1,  # rows minus header
+        seat_count=seat_count,
     )
     attachment = {"filename": "definam_access_codes.csv", "content": codes_csv}
     await send_email(

@@ -175,7 +175,7 @@ async def _handle_org(data: dict, metadata: dict) -> None:
     login_url = f"{settings.app_url}/login"
 
     await send_org_admin_credentials(
-        school_email, school_name, temp_password, login_url, csv_bytes
+        school_email, school_name, temp_password, login_url, csv_bytes, student_count
     )
     await send_payment_receipt(
         school_email,
