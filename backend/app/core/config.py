@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     jwt_refresh_expire_days: int = 30   # refresh token — long-lived
 
     # ── Paystack ───────────────────────────────────────────
-    paystack_secret_key: str = "sk_test_mockkeyhere"
+    paystack_secret_key: str = "mock_paystack_secret_key"
     paystack_webhook_secret: str = "mock_webhook_secret"
 
     # ── Email — Resend (primary) ───────────────────────────
