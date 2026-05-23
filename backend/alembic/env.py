@@ -15,11 +15,18 @@ load_dotenv()
 config = context.config
 
 # Normalise the URL so Coolify/Heroku-style "postgres://" works with asyncpg.
-_raw_url = os.environ.get("DATABASE_URL", "")
+_raw_url = os.environ.get("DATABASE_URL", "").strip().strip("'\"")
 if _raw_url.startswith("postgres://"):
     _raw_url = _raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
 elif _raw_url.startswith("postgresql://"):
     _raw_url = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+# Debug: log the scheme + host (no credentials) so deployment logs are useful.
+from urllib.parse import urlparse as _urlparse
+
+_parsed = _urlparse(_raw_url)
+print(f"[alembic] DATABASE_URL scheme={_parsed.scheme!r} host={_parsed.hostname!r} db={_parsed.path!r}")
+
 config.set_main_option("sqlalchemy.url", _raw_url)
 
 if config.config_file_name is not None:

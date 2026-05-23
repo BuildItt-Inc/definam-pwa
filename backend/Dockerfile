@@ -39,6 +39,7 @@ COPY <<'EOF' /app/entrypoint.sh
 #!/usr/bin/env bash
 set -e
 
+echo "▶ DATABASE_URL starts with: ${DATABASE_URL:0:30}…"
 echo "▶ Running Alembic migrations …"
 alembic upgrade head
 
