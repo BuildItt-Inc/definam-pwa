@@ -79,9 +79,11 @@ def _random_segment(length: int) -> str:
     return "".join(random.SystemRandom().choices(_alphanum_pool(), k=length))
 
 
+_ALPHANUM_POOL = "".join(c for c in _ALPHANUM if c not in {"O", "0", "I", "1"})
+
+
 def _alphanum_pool() -> str:
-    # Exclude visually ambiguous characters: O, 0, I, 1
-    return "".join(c for c in _ALPHANUM if c not in {"O", "0", "I", "1"})
+    return _ALPHANUM_POOL
 
 
 def generate_access_code(type_: Literal["individual", "org"]) -> str:

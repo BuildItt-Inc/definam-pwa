@@ -22,6 +22,16 @@ def _paystack_headers() -> dict[str, str]:
     }
 
 
+_client: httpx.AsyncClient | None = None
+
+
+def _get_client() -> httpx.AsyncClient:
+    global _client
+    if _client is None:
+        _client = httpx.AsyncClient()
+    return _client
+
+
 async def _initiate_transaction(
     email: str,
     amount_kobo: int,
@@ -35,13 +45,13 @@ async def _initiate_transaction(
         "callback_url": callback_url,
         "currency": "NGN",
     }
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            f"{PAYSTACK_BASE}/transaction/initialize",
-            json=payload,
-            headers=_paystack_headers(),
-            timeout=15,
-        )
+    client = _get_client()
+    resp = await client.post(
+        f"{PAYSTACK_BASE}/transaction/initialize",
+        json=payload,
+        headers=_paystack_headers(),
+        timeout=15,
+    )
 
     if resp.status_code != 200:
         raise PaymentGatewayError(f"Paystack error: {resp.text}")

@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     # ── Auth (JWT) ─────────────────────────────────────────
     jwt_secret: str = "supersecretjwtkeythatisreallylongandsecure123"
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 15        # access token — short-lived
-    jwt_refresh_expire_days: int = 30   # refresh token — long-lived
+    jwt_expire_minutes: int = 15  # access token — short-lived
+    jwt_refresh_expire_days: int = 30  # refresh token — long-lived
 
     # ── Paystack ───────────────────────────────────────────
     paystack_secret_key: str = "mock_paystack_secret_key"

@@ -81,7 +81,6 @@ async def test_register_rejects_already_used_code():
     assert "already been used" in resp.text
 
 
-
 @pytest.mark.anyio
 async def test_register_success():
     code_row = {
@@ -317,7 +316,11 @@ async def test_get_me_success():
     }
     with (
         patch("app.api.deps.decode_jwt", return_value=claims),
-        patch("app.api.v1.endpoints.auth.get_user_by_id", new_callable=AsyncMock, return_value=user_row),
+        patch(
+            "app.api.v1.endpoints.auth.get_user_by_id",
+            new_callable=AsyncMock,
+            return_value=user_row,
+        ),
     ):
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
@@ -331,4 +334,3 @@ async def test_get_me_success():
     assert data["id"] == "test-uuid"
     assert data["username"] == "student@example.com"
     assert data["role"] == "student_individual"
-

@@ -92,7 +92,7 @@ To maintain code quality and consistency, this project uses pre-commit hooks for
 1. Install the pre-commit package (if not already installed):
 
    ```sh
-   pip install -r -requirements.txt
+   pip install -r requirements.txt
    ```
    or
 

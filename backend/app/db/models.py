@@ -55,7 +55,9 @@ class User(Base):
         String(50), nullable=False
     )  # student_individual | student_org | admin
     org_id: Mapped[str | None] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("schools.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=False),
+        ForeignKey("schools.id", ondelete="SET NULL"),
+        nullable=True,
     )
     device_fingerprint: Mapped[str | None] = mapped_column(Text, nullable=True)
     force_password_change: Mapped[bool] = mapped_column(
@@ -85,14 +87,18 @@ class AccessCode(Base):
         String(20), nullable=False, default="pending"
     )  # pending | active | revoked
     school_id: Mapped[str | None] = mapped_column(
-        UUID(as_uuid=False), ForeignKey("schools.id", ondelete="SET NULL"), nullable=True
+        UUID(as_uuid=False),
+        ForeignKey("schools.id", ondelete="SET NULL"),
+        nullable=True,
     )
     activated_by: Mapped[str | None] = mapped_column(
         UUID(as_uuid=False), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     device_fingerprint: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    school: Mapped[School | None] = relationship("School", back_populates="access_codes")
+    school: Mapped[School | None] = relationship(
+        "School", back_populates="access_codes"
+    )
 
 
 # ── Processed Webhooks ─────────────────────────────────────────────────────

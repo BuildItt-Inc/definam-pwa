@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import logging
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -8,6 +9,7 @@ from pathlib import Path
 
 import aiosmtplib
 import resend
+from anyio import to_thread
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.core.config import get_settings
@@ -39,8 +41,6 @@ async def _send_via_resend(
     attachments: list[dict] | None = None,
 ) -> None:
     """Send an email using the Resend API."""
-    import base64
-
     settings = get_settings()
     resend.api_key = settings.resend_api_key
 
@@ -53,13 +53,15 @@ async def _send_via_resend(
     if attachments:
         formatted_attachments = []
         for att in attachments:
-            formatted_attachments.append({
-                "filename": att["filename"],
-                "content": base64.b64encode(att["content"]).decode("utf-8"),
-            })
+            formatted_attachments.append(
+                {
+                    "filename": att["filename"],
+                    "content": base64.b64encode(att["content"]).decode("utf-8"),
+                }
+            )
         params["attachments"] = formatted_attachments  # type: ignore[typeddict-unknown-key]
 
-    resend.Emails.send(params)
+    await to_thread.run_sync(resend.Emails.send, params)
 
 
 async def _send_via_smtp(
@@ -164,7 +166,8 @@ async def send_org_admin_credentials(
         admin_email=to,
         temp_password=temp_password,
         login_url=login_url,
-        seat_count=codes_csv.decode().count("\n") - 1,  # rows minus header
+        seat_count=len(codes_csv.decode().strip().splitlines())
+        - 1,  # rows minus header
     )
     attachment = {"filename": "definam_access_codes.csv", "content": codes_csv}
     await send_email(
