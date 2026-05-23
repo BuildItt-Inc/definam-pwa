@@ -16,7 +16,6 @@ definam-pwa/
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Auth & DB**: Supabase
 - **Cache**: Upstash Redis
 
 ### Backend
@@ -40,20 +39,19 @@ definam-pwa/
 
 ```bash
 cd frontend
-cp .env.example .env.local   # fill in your values
+cp .env.example .env.local
 npm install
-npm run dev                   # → http://localhost:3000
+npm run dev
 ```
 
 ### Backend
 
 ```bash
 cd backend
-cp .env.example .env   # fill in your values
+cp .env.example .env
 uv sync --extra dev
 # runs database migrations
 uv run alembic upgrade head
-# starts backend server in dev mode → http://localhost:8000
 uv run fastapi dev app/main.py
 ```
 
@@ -74,12 +72,6 @@ Husky runs automatically on `git commit`:
 - **Frontend** — `lint-staged` runs ESLint on staged `*.ts/tsx/js/jsx` files inside `frontend/`
 - **Backend** — `ruff check` runs on any staged `*.py` files inside `backend/`
 
-## Routes
-
-- `/login`
-- `/activate`
-- `/student` — learn, recall, chat, progress
-- `/admin` — IDs, reports
 
 ## Notes
 
