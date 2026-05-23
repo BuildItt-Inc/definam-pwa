@@ -5,11 +5,11 @@ from __future__ import annotations
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from dotenv import load_dotenv
+from sqlalchemy import pool
 
 from alembic import context
 
-from dotenv import load_dotenv
 load_dotenv()
 
 config = context.config
@@ -22,6 +22,7 @@ if config.config_file_name is not None:
         pass
 
 from app.db.models import Base
+
 target_metadata = Base.metadata
 
 
@@ -38,7 +39,9 @@ def run_migrations_offline() -> None:
 
 
 import asyncio
+
 from sqlalchemy.ext.asyncio import create_async_engine
+
 
 def run_migrations_online() -> None:
     connectable = create_async_engine(

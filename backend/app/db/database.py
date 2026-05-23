@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
 from contextlib import asynccontextmanager
+from typing import Any
 
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import AccessCode, ProcessedWebhook, School, User
 from app.db.session import _get_session_factory

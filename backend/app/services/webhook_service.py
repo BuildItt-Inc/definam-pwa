@@ -13,7 +13,11 @@ from app.core.email import (
     send_payment_receipt,
 )
 from app.core.exceptions import InvalidWebhookSignatureError
-from app.core.security import generate_access_code, generate_temp_password, hash_password
+from app.core.security import (
+    generate_access_code,
+    generate_temp_password,
+    hash_password,
+)
 from app.db.database import (
     bulk_insert_codes,
     create_org,
