@@ -25,7 +25,6 @@ __pycache__/
 .Python
 .venv/
 .uv/
-uv.lock
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
