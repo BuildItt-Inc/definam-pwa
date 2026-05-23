@@ -29,6 +29,7 @@ from app.db.database import (
     is_webhook_processed,
     mark_webhook_processed,
     update_school_seats,
+    update_user_org_and_role,
 )
 
 logger = logging.getLogger(__name__)
@@ -149,7 +150,13 @@ async def _handle_org(data: dict, metadata: dict) -> None:
     existing_admin = await get_user_by_username(school_email)
     if existing_admin:
         logger.info(
-            "Admin user %s already exists. Re-using existing account.", school_email
+            "Admin user %s already exists. Re-using existing account and updating org/role.",
+            school_email,
+        )
+        await update_user_org_and_role(
+            user_id=existing_admin["id"],
+            org_id=org_id,
+            role="admin",
         )
         # Use a placeholder message in the email indicating password remains unchanged
         temp_password = "[Your existing password]"

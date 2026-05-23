@@ -166,7 +166,9 @@ async def send_org_admin_credentials(
         admin_email=to,
         temp_password=temp_password,
         login_url=login_url,
-        seat_count=len(codes_csv.decode().strip().splitlines())
+        seat_count=len(
+            [line for line in codes_csv.decode().splitlines() if line.strip()]
+        )
         - 1,  # rows minus header
     )
     attachment = {"filename": "definam_access_codes.csv", "content": codes_csv}

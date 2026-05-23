@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import httpx
 
 from app.core.config import get_settings
@@ -23,12 +25,26 @@ def _paystack_headers() -> dict[str, str]:
 
 
 _client: httpx.AsyncClient | None = None
+_loop: asyncio.AbstractEventLoop | None = None
 
 
 def _get_client() -> httpx.AsyncClient:
-    global _client
-    if _client is None:
+    global _client, _loop
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        current_loop = None
+
+    if _client is None or _client.is_closed or _loop is not current_loop:
+        if (
+            _client is not None
+            and not _client.is_closed
+            and current_loop is not None
+            and current_loop.is_running()
+        ):
+            current_loop.create_task(_client.aclose())
         _client = httpx.AsyncClient()
+        _loop = current_loop
     return _client
 
 

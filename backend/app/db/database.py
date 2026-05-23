@@ -181,6 +181,14 @@ async def set_force_password_change(user_id: str, value: bool) -> None:
         )
 
 
+async def update_user_org_and_role(user_id: str, org_id: str | None, role: str) -> None:
+    """Update a user's organization and role."""
+    async with db_session() as session:
+        await session.execute(
+            update(User).where(User.id == user_id).values(org_id=org_id, role=role)
+        )
+
+
 # ── schools ────────────────────────────────────────────────────────────────
 
 
