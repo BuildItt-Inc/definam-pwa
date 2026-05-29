@@ -13,9 +13,6 @@ on:
       - '.github/workflows/frontend-ci.yml'
 
 jobs:
-  # ─────────────────────────────────────────────
-  # Frontend (Next.js)
-  # ─────────────────────────────────────────────
   frontend:
     name: Frontend — Lint, Type-check, Test, Build
     runs-on: ubuntu-latest
@@ -30,20 +27,22 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+
       - name: Install dependencies
         run: npm ci
+
       - name: Lint
         run: npm run lint
+
       - name: Type-check
         run: npm run type-check
+
       - name: Test
         run: npm test
+
       - name: Build
         run: npm run build
 
-  # ─────────────────────────────────────────────
-  # Trivy — Security Vulnerability Scan
-  # ─────────────────────────────────────────────
   trivy-scan:
     name: Trivy — Security Scan
     runs-on: ubuntu-latest
