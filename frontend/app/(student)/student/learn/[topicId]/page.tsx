@@ -4,6 +4,13 @@ type TopicPageProps = {
   };
 };
 
-export default function TopicPage({ params }: TopicPageProps) {
-  return <main>Learning flow scaffold for topic {params.topicId}</main>;
+export default async function TopicPage({
+  params,
+}: {
+  params: Promise<{
+    topicId: string;
+  }>;
+}) {
+  const { topicId } = await params;
+  return <main>Learning flow scaffold for topic {topicId}</main>;
 }
