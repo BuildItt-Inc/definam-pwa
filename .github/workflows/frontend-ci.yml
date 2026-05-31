@@ -27,11 +27,8 @@ jobs:
       - name: Upgrade npm
         run: npm install -g npm@latest
 
-      - name: Clean npm cache
-        run: npm cache clean --force
-
       - name: Install dependencies
-        run: cd frontend && npm ci --prefer-offline --no-audit
+        run: cd frontend && npm install
 
       - name: Lint
         run: cd frontend && npm run lint
