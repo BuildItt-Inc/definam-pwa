@@ -1,7 +1,27 @@
 'use client';
+import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function CodeEntryPage() {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const trimmed = code.trim();
+
+    if (!trimmed) {
+      setError('Please enter your access code.');
+      return;
+    }
+
+    setError('');
+    // TODO: Replace with real validation or backend verification.
+    router.push('/student');
+  };
+
   return (
     <main style={{
       backgroundColor: '#0A0F1E',
@@ -78,34 +98,65 @@ export default function CodeEntryPage() {
           Your Access Code
         </div>
 
-        {/* Code input */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          border: '2px solid #1A1A1A',
-          borderRadius: '12px',
-          padding: '6px 12px',
-          marginBottom: '8px'
-        }}>
-          <input
-            type="text"
-            placeholder="DA-XXXX-XX"
+        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            border: '2px solid #1A1A1A',
+            borderRadius: '12px',
+            padding: '6px 12px',
+            marginBottom: '8px'
+          }}>
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="DA-XXXX-XX"
+              style={{
+                width: '100%',
+                border: 'none',
+                outline: 'none',
+                fontSize: '20px',
+                fontWeight: 800,
+                fontFamily: 'monospace',
+                letterSpacing: '5px',
+                color: '#1A1A1A',
+                textAlign: 'center',
+                padding: '10px 0',
+                backgroundColor: 'transparent'
+              }}
+            />
+          </div>
+
+          {error ? (
+            <div style={{
+              color: '#F15A59',
+              fontSize: '12px',
+              marginBottom: '16px',
+              textAlign: 'center'
+            }}>
+              {error}
+            </div>
+          ) : null}
+
+          <button
+            type="submit"
             style={{
               width: '100%',
+              display: 'block',
+              backgroundColor: '#1B6B4A',
+              color: '#F5F0E8',
+              borderRadius: '12px',
+              padding: '14px',
+              fontSize: '14px', fontWeight: 700,
               border: 'none',
-              outline: 'none',
-              fontSize: '20px',
-              fontWeight: 800,
-              fontFamily: 'monospace',
-              letterSpacing: '5px',
-              color: '#1A1A1A',
-              textAlign: 'center',
-              padding: '10px 0',
-              backgroundColor: 'transparent'
+              cursor: 'pointer',
+              marginBottom: '28px'
             }}
-          />
-        </div>
+          >
+            Access My Account →
+          </button>
+        </form>
 
-        {/* Helper text */}
         <div style={{
           fontSize: '10px',
           color: 'rgba(255,255,255,0.3)',
@@ -114,22 +165,6 @@ export default function CodeEntryPage() {
         }}>
           Code format: DA-XXXX-XX · Case insensitive
         </div>
-
-        {/* Primary button */}
-        <Link href="/" style={{
-          width: '100%',
-          display: 'block',
-          backgroundColor: '#1B6B4A',
-          color: '#F5F0E8',
-          borderRadius: '12px',
-          padding: '14px',
-          fontSize: '14px', fontWeight: 700,
-          textDecoration: 'none',
-          textAlign: 'center',
-          marginBottom: '28px'
-        }}>
-          Access My Account →
-        </Link>
 
         {/* Divider */}
         <div style={{
@@ -174,6 +209,20 @@ export default function CodeEntryPage() {
             </div>
           ))}
         </div>
+
+        <Link href="/auth/login" style={{
+          width: '100%',
+          display: 'block',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '12px',
+          padding: '13px',
+          fontSize: '13px', fontWeight: 600,
+          color: 'rgba(255,255,255,0.4)',
+          textDecoration: 'none',
+          marginTop: '20px'
+        }}>
+          Login (Individual)
+        </Link>
 
       </div>
     </main>

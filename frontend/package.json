@@ -41,11 +41,12 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "autoprefixer": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "latest",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0",
     "jest": "latest",
     "tailwindcss": "^3.0.0",
     "ts-jest": "latest",
+    "ts-node": "latest",
     "typescript": "^5.0.0"
   },
   "engines": {

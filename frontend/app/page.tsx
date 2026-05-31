@@ -1,4 +1,3 @@
-'use client';
 import Link from 'next/link';
 
 export default function SplashScreen() {
@@ -50,7 +49,7 @@ export default function SplashScreen() {
       <p style={{
         fontSize: '13px', color: 'rgba(255,255,255,0.4)',
         marginBottom: '10px'
-      }}>Nigeria's AI learning brain</p>
+      }}>Nigeria&apos;s AI learning brain</p>
 
       {/* Quote pill */}
       <div style={{
@@ -62,7 +61,7 @@ export default function SplashScreen() {
         fontStyle: 'italic',
         marginBottom: '32px'
       }}>
-        "Knows what you've forgotten before you do."
+        &ldquo;Knows what you&apos;ve forgotten before you do.&rdquo;
       </div>
 
       {/* Primary CTA */}

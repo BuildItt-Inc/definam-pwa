@@ -1,11 +1,10 @@
 type StudentDetailPageProps = {
-  params: {
+  params: Promise<{
     studentId: string;
-  };
+  }>;
 };
 
-export default function StudentDetailPage({
-  params,
-}: StudentDetailPageProps) {
-  return <main>Student drill-down scaffold for {params.studentId}</main>;
+export default async function StudentDetailPage({ params }: StudentDetailPageProps) {
+  const { studentId } = await params;
+  return <main>Student drill-down scaffold for {studentId}</main>;
 }
