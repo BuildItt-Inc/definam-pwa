@@ -24,8 +24,11 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Clean npm cache
+        run: npm cache clean --force
+
       - name: Install dependencies
-        run: cd frontend && npm ci
+        run: cd frontend && npm ci --prefer-offline --no-audit
 
       - name: Lint
         run: cd frontend && npm run lint
