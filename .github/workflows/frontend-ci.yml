@@ -24,6 +24,9 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
       - name: Clean npm cache
         run: npm cache clean --force
 
