@@ -11,5 +11,4 @@ export async function GET(_request: Request, context: RouteContext) {
     message: "Learn route scaffold",
     params: { topicId, step },
   });
-  });
 }
