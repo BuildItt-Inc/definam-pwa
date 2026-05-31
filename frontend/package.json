@@ -46,6 +46,7 @@
     "autoprefixer": "latest",
     "tailwindcss": "^3.0.0",
     "ts-jest": "latest",
+    "ts-node": "latest",
     "typescript": "^5.0.0"
   },
   "engines": {
