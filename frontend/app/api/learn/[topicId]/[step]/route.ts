@@ -6,9 +6,10 @@ type RouteContext = {
 };
 
 export async function GET(_request: Request, context: RouteContext) {
-  const params = await context.params;
+  const { topicId, step } = await context.params;
   return Response.json({
     message: "Learn route scaffold",
-    params,
+    params: { topicId, step },
+  });
   });
 }

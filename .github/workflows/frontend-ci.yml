@@ -13,15 +13,9 @@ on:
       - '.github/workflows/frontend-ci.yml'
 
 jobs:
-  # ─────────────────────────────────────────────
-  # Frontend (Next.js)
-  # ─────────────────────────────────────────────
   frontend:
     name: Frontend — Lint, Type-check, Test, Build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -32,24 +26,24 @@ jobs:
           cache: "npm"
           cache-dependency-path: "frontend/package-lock.json"
 
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
       - name: Install dependencies
-        run: npm ci
+        run: cd frontend && npm install
 
       - name: Lint
-        run: npm run lint
+        run: cd frontend && npm run lint
 
       - name: Type-check
-        run: npm run type-check
+        run: cd frontend && npm run type-check
 
       - name: Test
-        run: npm test
+        run: cd frontend && npm test
 
       - name: Build
-        run: npm run build
+        run: cd frontend && npm run build
 
-  # ─────────────────────────────────────────────
-  # Trivy — Security Vulnerability Scan
-  # ─────────────────────────────────────────────
   trivy-scan:
     name: Trivy — Security Scan
     runs-on: ubuntu-latest
