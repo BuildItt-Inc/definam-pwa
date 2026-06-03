@@ -27,6 +27,7 @@ export default function IndividualPayPage() {
     try {
       const data = await initializeIndividualPayment();
       sessionStorage.setItem('payment_ref', data.reference);
+      sessionStorage.setItem('payment_type', 'individual');
       window.location.href = data.payment_url;
     } catch (err) {
       if (err instanceof PaymentError) {
