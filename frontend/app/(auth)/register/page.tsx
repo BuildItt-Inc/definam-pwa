@@ -37,10 +37,6 @@ export default function RegisterPage() {
     reValidateMode: 'onSubmit',
   });
 
-  // Destructure the access_code registration so we can intercept onChange
-  // and force the stored value to uppercase before RHF processes it.
-  const { onChange: onAccessCodeChange, ...accessCodeRest } = register('access_code');
-
   async function onSubmit(values: RegisterFormValues) {
     setBannerError(null);
     try {
@@ -264,11 +260,7 @@ export default function RegisterPage() {
                 autoCapitalize="characters"
                 placeholder="IND-0000-XX"
                 className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25 font-mono tracking-[0.15em] uppercase"
-                {...accessCodeRest}
-                onChange={(e) => {
-                  e.target.value = e.target.value.toUpperCase();
-                  onAccessCodeChange(e);
-                }}
+                {...register('access_code')}
               />
             </div>
             {errors.access_code && (
