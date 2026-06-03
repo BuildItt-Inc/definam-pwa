@@ -18,6 +18,7 @@ export class ApiError extends Error {
   }
 }
 
+// Unauthenticated — no cookie required, hits backend directly.
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
     method: 'POST',
@@ -35,6 +36,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
 
 // ── SCR-03d · Admin Login ──────────────────────────────────────────────────
 
+// Unauthenticated — no cookie required, hits backend directly.
 export async function adminLogin(
   data: AdminLoginRequest,
 ): Promise<AdminLoginResponse> {
@@ -55,18 +57,16 @@ export async function adminLogin(
   return res.json() as Promise<AdminLoginResponse>;
 }
 
+// Authenticated — proxied through Next.js so the request is same-origin and
+// the browser attaches the definam_token httpOnly cookie automatically.
 export async function changePassword(
   data: ChangePasswordRequest,
 ): Promise<{ ok: true }> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/admin/change-password`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    },
-  );
+  const res = await fetch('/api/proxy/auth/admin/change-password', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: '' }));
@@ -78,6 +78,7 @@ export async function changePassword(
 
 // ── SCR-02a-ii · Individual Registration ──────────────────────────────────
 
+// Unauthenticated — no cookie required, hits backend directly.
 export async function registerUser(
   data: RegisterRequest,
 ): Promise<RegisterResponse> {

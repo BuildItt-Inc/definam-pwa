@@ -14,6 +14,7 @@ export class PaymentError extends Error {
   }
 }
 
+// Unauthenticated — no cookie required, hits backend directly.
 export async function initializeIndividualPayment(): Promise<InitializePaymentResponse> {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/payment/initialize/individual`,
@@ -32,11 +33,13 @@ export async function initializeIndividualPayment(): Promise<InitializePaymentRe
   return res.json() as Promise<InitializePaymentResponse>;
 }
 
+// Authenticated — proxied through Next.js so the request is same-origin and
+// the browser attaches the definam_token httpOnly cookie automatically.
 export async function verifyPayment(
   reference: string,
 ): Promise<VerifyPaymentResponse> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/payment/verify?reference=${encodeURIComponent(reference)}`,
+    `/api/proxy/payment/verify?reference=${encodeURIComponent(reference)}`,
     {
       method: 'GET',
     },
@@ -52,6 +55,7 @@ export async function verifyPayment(
 
 // ── SCR-02b · Organisation Payment ────────────────────────────────────────
 
+// Unauthenticated — no cookie required, hits backend directly.
 export async function initializeOrgPayment(
   data: InitializeOrgPaymentRequest,
 ): Promise<InitializePaymentResponse> {
