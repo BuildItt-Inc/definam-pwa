@@ -16,8 +16,8 @@ const config: Config = {
         coral: "#E85D3A",
       },
       fontFamily: {
-        syne: ["Syne", "sans-serif"],
-        "dm-sans": ["DM Sans", "sans-serif"],
+        syne: ["var(--font-syne)", "sans-serif"],
+        "dm-sans": ["var(--font-dm-sans)", "sans-serif"],
       },
     },
   },
