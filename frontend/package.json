@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
+    "@hookform/resolvers": "^5.4.0",
     "@onesignal/node-onesignal": "latest",
     "@pdf-lib/fontkit": "latest",
     "@sentry/nextjs": "latest",
@@ -23,6 +24,7 @@
     "bullmq": "latest",
     "clsx": "latest",
     "ioredis": "latest",
+    "lucide-react": "^1.17.0",
     "next": "^15.5.18",
     "next-pwa": "^5.6.0",
     "openai": "^4.0.0",
@@ -32,7 +34,9 @@
     "posthog-node": "latest",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "tailwind-merge": "latest"
+    "react-hook-form": "^7.77.0",
+    "tailwind-merge": "latest",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/jest": "latest",

@@ -1,0 +1,556 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F2F2F2;
+  --white:#FFFFFF;
+  --black:#0A0A0A;
+  --dark:#1A1A1A;
+  --mid:#555555;
+  --light:#888888;
+  --lighter:#AAAAAA;
+  --line:#CCCCCC;
+  --line-light:#E0E0E0;
+  --fill-dark:#0A0F1E;
+  --fill-mid:#555555;
+  --fill-lighter:#F0F0F0;
+  --font:'Inter',sans-serif;
+  --jade:#1B6B4A;
+  --jade-light:#EAF3DE;
+  --jade-mid:#085041;
+  --gold:#C8973A;
+  --gold-light:#FEF3C7;
+  --coral:#E85D3A;
+  --cream:#F5F0E8;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--dark);padding:0}
+.wrap{padding:32px 24px}
+.wf-section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--black);margin-bottom:24px;padding-bottom:10px;border-bottom:2px solid var(--black);display:flex;align-items:center;gap:10px}
+.wf-section-label span{font-size:10px;font-weight:600;color:var(--light);text-transform:none;letter-spacing:0}
+.wf-grid{display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;margin-bottom:48px}
+.wf-divider{border:none;border-top:1.5px solid var(--line);margin:40px 0}
+.screen-label{font-size:11px;font-weight:700;color:var(--dark);margin-bottom:8px;text-align:center}
+.screen-num{display:inline-block;font-size:9px;font-weight:800;background:var(--black);color:var(--white);padding:2px 7px;border-radius:2px;margin-bottom:4px;letter-spacing:0.04em}
+.ann{background:var(--white);border:1px dashed var(--line);border-radius:6px;padding:8px 12px;font-size:9px;line-height:1.6;color:var(--mid);margin-top:8px;max-width:200px}
+.ann strong{color:var(--dark);font-weight:700}
+.flow-arrow{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:120px;flex-shrink:0;width:30px;color:var(--dark);font-size:16px}
+
+/* PHONE */
+.phone{width:200px;flex-shrink:0}
+.phone-shell{border:2px solid var(--dark);border-radius:28px;overflow:hidden;background:var(--white);position:relative;box-shadow:3px 3px 0 rgba(0,0,0,0.12)}
+.phone-notch{background:var(--fill-dark);height:6px;display:flex;justify-content:center;align-items:flex-end}
+.phone-notch-pill{width:60px;height:4px;background:var(--fill-dark);border-radius:0 0 4px 4px}
+.phone-status{display:flex;justify-content:space-between;align-items:center;padding:4px 14px 2px;font-size:8px;font-weight:700;color:var(--dark)}
+.phone-body{padding:0;min-height:380px}
+
+/* DESKTOP */
+.desk-frame{border:2px solid var(--black);border-radius:10px;overflow:hidden;background:var(--white);box-shadow:4px 4px 0 rgba(0,0,0,0.1)}
+.desk-titlebar{background:var(--fill-dark);padding:8px 14px;display:flex;align-items:center;gap:6px}
+.desk-dot{width:8px;height:8px;border-radius:50%;border:1px solid rgba(255,255,255,0.3)}
+.desk-url{flex:1;margin:0 10px;background:rgba(255,255,255,0.1);border-radius:4px;padding:3px 8px;font-size:9px;color:rgba(255,255,255,0.5)}
+
+/* APPBAR — coloured */
+.appbar{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line-light);gap:8px;min-height:38px;background:var(--cream)}
+.appbar-title{font-size:13px;font-weight:800;color:var(--fill-dark);flex:1;letter-spacing:-0.3px}
+.appbar-back{font-size:18px;font-weight:700;color:var(--fill-dark);cursor:pointer;display:flex;align-items:center}
+
+/* FIELD — coloured labels */
+.field-wrap{margin:6px 12px;border:1.5px solid var(--line);border-radius:8px;overflow:hidden}
+.field-wrap.active{border-color:var(--jade)}
+.field-label{font-size:8px;font-weight:700;color:var(--jade);padding:6px 10px 2px;display:flex;align-items:center;gap:4px}
+.field-label i{font-size:11px}
+.field-input{font-size:9px;color:var(--mid);padding:2px 10px 8px;display:flex;align-items:center;justify-content:space-between}
+.field-input i{color:var(--lighter);font-size:12px}
+
+/* BIG BTN — jade */
+.big-btn{margin:10px 12px 6px;background:var(--jade);color:var(--white);border:none;border-radius:8px;padding:11px;font-size:10px;font-weight:700;font-family:var(--font);text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 24px);letter-spacing:-0.1px}
+.big-btn i{font-size:13px}
+.big-btn.outline{background:transparent;color:var(--jade);border:1.5px solid var(--jade)}
+
+/* INFO CARD — jade tint */
+.info-card{background:var(--jade-light);border:1px solid #9FE1CB;border-radius:10px;padding:12px;margin:0 12px 12px;display:flex;gap:8px;align-items:flex-start}
+.info-icon{width:28px;height:28px;background:var(--jade);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex-shrink:0}
+.info-title{font-size:9px;font-weight:700;color:var(--jade-mid)}
+.info-sub{font-size:8px;color:#0F6E56;line-height:1.5;margin-top:1px}
+
+/* WARN CARD — gold tint */
+.warn-card{background:var(--gold-light);border:1.5px solid #E5C97A;border-radius:10px;padding:12px;margin:0 12px 10px}
+.warn-title{font-size:9px;font-weight:800;color:#633806;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.warn-title i{font-size:12px;color:var(--gold)}
+.warn-sub{font-size:8px;color:#854F0B;line-height:1.5}
+
+/* SUCCESS CARD — jade tint */
+.success-card{background:var(--jade-light);border:1.5px solid #9FE1CB;border-radius:10px;padding:10px 12px;margin:0 12px 10px;display:flex;gap:8px;align-items:center}
+.sc-icon{color:var(--jade);font-size:16px;flex-shrink:0}
+.sc-title{font-size:9px;font-weight:700;color:var(--jade-mid)}
+.sc-sub{font-size:8px;color:#0F6E56;margin-top:1px}
+
+/* PRICE CARD — dark */
+.price-card{background:var(--fill-dark);border-radius:10px;padding:14px;text-align:center;margin:0 12px 12px}
+
+/* SUCCESS CIRCLE */
+.success-circle{width:52px;height:52px;background:var(--jade);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;margin:0 auto 14px}
+
+/* EMAIL LIST ITEMS — icons */
+.email-item{font-size:8px;color:var(--dark);display:flex;gap:6px;align-items:center;padding:3px 0}
+.email-item i{font-size:12px;color:var(--jade);flex-shrink:0}
+
+/* CODE INPUT */
+.code-box{background:var(--white);border:2px solid var(--jade);border-radius:10px;padding:14px 12px;text-align:center;margin:0 12px 6px}
+
+/* HOW IT WORKS STEPS */
+.step-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px}
+.step-num{width:18px;height:18px;background:var(--jade-light);border:1px solid #9FE1CB;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex-shrink:0;color:var(--jade-mid)}
+.step-text{font-size:8px;color:var(--mid);line-height:1.5}
+
+/* SPEC TABLE */
+.spec-table{width:100%;border-collapse:collapse;font-size:11px;max-width:900px;margin-bottom:32px}
+.spec-table th{background:var(--fill-dark);color:#fff;padding:9px 12px;text-align:left;font-size:10px;font-weight:700}
+.spec-table td{padding:9px 12px;border-bottom:1px solid var(--line-light);color:var(--dark);vertical-align:top;line-height:1.5}
+.spec-table tr:nth-child(even) td{background:var(--jade-light)}
+</style>
+
+<div class="wrap">
+
+<!-- ══════════════════════════════════════
+     SCR-01 · LANDING PAGE
+══════════════════════════════════════ -->
+<div class="wf-section-label">SCR-01 · Landing Page <span>Web · 3 CTAs · Entry point for all user types</span></div>
+<div class="wf-grid">
+  <div>
+    <div class="screen-num">SCR-01</div>
+    <div class="screen-label">Landing Page — Desktop</div>
+    <div class="desk-frame" style="max-width:480px">
+      <div class="desk-titlebar">
+        <div class="desk-dot" style="background:#FF5F57"></div>
+        <div class="desk-dot" style="background:#FFBD2E"></div>
+        <div class="desk-dot" style="background:#28C840"></div>
+        <div class="desk-url">
+          <i class="ti ti-lock" style="font-size:9px;margin-right:3px" aria-hidden="true"></i>definam.ng
+        </div>
+      </div>
+      <div style="background:var(--fill-dark);padding:48px 40px;text-align:center">
+        <div style="width:48px;height:48px;background:var(--jade);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px">
+          <svg width="26" height="26" viewBox="0 0 38 38" fill="none"><path d="M8 28L15 8L22 22L27 14L34 28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="19" cy="10" r="3" fill="#24A06E"/></svg>
+        </div>
+        <div style="font-size:22px;font-weight:900;color:white;letter-spacing:-0.8px;margin-bottom:6px">DefinAm</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px">Nigeria's AI learning brain for secondary school students</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.25);font-style:italic;margin-bottom:32px">"Knows what you've forgotten before you do."</div>
+        <div style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:0 auto">
+          <div style="background:var(--jade);color:white;border-radius:12px;padding:14px 20px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:10px">
+            <i class="ti ti-user" style="font-size:18px;flex-shrink:0" aria-hidden="true"></i>
+            <div style="text-align:left">
+              <div>Pay as an Individual</div>
+              <div style="font-size:9px;opacity:0.6;font-weight:400">Personal subscription · ₦1,700/term</div>
+            </div>
+            <i class="ti ti-arrow-right" style="margin-left:auto;opacity:0.6;font-size:16px" aria-hidden="true"></i>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:white;border-radius:12px;padding:14px 20px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:10px">
+            <i class="ti ti-building-school" style="font-size:18px;flex-shrink:0" aria-hidden="true"></i>
+            <div style="text-align:left">
+              <div>Pay as an Organisation</div>
+              <div style="font-size:9px;opacity:0.6;font-weight:400">Schools · Bulk seats · Admin dashboard</div>
+            </div>
+            <i class="ti ti-arrow-right" style="margin-left:auto;opacity:0.6;font-size:16px" aria-hidden="true"></i>
+          </div>
+          <div style="background:transparent;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.5);border-radius:12px;padding:13px 20px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px">
+            <i class="ti ti-login" style="font-size:15px" aria-hidden="true"></i> Login
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Landing page is a <strong>web page</strong>, not inside the mobile app. All 3 buttons visible to everyone. No role selector — users self-select their path.</div>
+  </div>
+
+  <div>
+    <div class="screen-num">SCR-03c</div>
+    <div class="screen-label">Mobile App Splash (Org Students)</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status" style="background:var(--fill-dark);color:rgba(255,255,255,0.7)"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="background:var(--fill-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;padding:32px 18px 28px;text-align:center">
+          <div style="width:52px;height:52px;background:var(--jade);border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+            <svg width="28" height="28" viewBox="0 0 38 38" fill="none"><path d="M8 28L15 8L22 22L27 14L34 28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="19" cy="10" r="3" fill="#24A06E"/></svg>
+          </div>
+          <div style="font-size:26px;font-weight:900;color:white;letter-spacing:-1px;margin-bottom:6px">DefinAm</div>
+          <div style="font-size:8px;color:rgba(255,255,255,0.4);margin-bottom:10px">Nigeria's AI learning brain</div>
+          <div style="border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:6px 12px;font-size:7px;color:rgba(255,255,255,0.3);font-style:italic;margin-bottom:28px">"Knows what you've forgotten before you do."</div>
+          <div style="width:100%;background:var(--jade);color:white;border-radius:12px;padding:12px;font-size:10px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:7px">
+            <i class="ti ti-key" style="font-size:14px" aria-hidden="true"></i> Enter with Access Code
+          </div>
+          <div style="width:100%;border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:11px;font-size:9px;font-weight:600;color:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;gap:7px">
+            <i class="ti ti-login" style="font-size:13px" aria-hidden="true"></i> Login (Individual)
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Org students never visit the landing page. <strong>"Enter with Access Code"</strong> is their only path.</div>
+  </div>
+</div>
+
+<div class="wf-divider"></div>
+
+<!-- ══════════════════════════════════════
+     SCR-02b · ORG PAYMENT FLOW
+══════════════════════════════════════ -->
+<div class="wf-section-label">SCR-02b · Pay as Organisation Flow <span>Web · School email + student count → payment → admin account auto-created</span></div>
+<div class="wf-grid">
+
+  <div>
+    <div class="screen-num">SCR-02b-i</div>
+    <div class="screen-label">Org: Enter Details</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="min-height:420px">
+          <div class="appbar">
+            <div class="appbar-back"><i class="ti ti-arrow-left" aria-hidden="true"></i></div>
+            <div class="appbar-title">Organisation Access</div>
+          </div>
+          <div style="padding:14px">
+            <div class="info-card">
+              <div class="info-icon"><i class="ti ti-building-school" aria-hidden="true"></i></div>
+              <div>
+                <div class="info-title">For Schools &amp; Organisations</div>
+                <div class="info-sub">Pay for all your students at once. You get an admin dashboard + access codes to share.</div>
+              </div>
+            </div>
+            <div class="field-wrap active" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-mail" aria-hidden="true"></i>School Email Address</div>
+              <div class="field-input">admin@kingsschool.edu.ng</div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-school" aria-hidden="true"></i>School Name</div>
+              <div class="field-input">Kings Secondary School, Lagos</div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-users" aria-hidden="true"></i>Number of Students</div>
+              <div class="field-input">850</div>
+            </div>
+            <div style="background:var(--jade-light);border:1px solid #9FE1CB;border-radius:8px;padding:10px;margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;font-size:8px;color:#0F6E56;margin-bottom:4px"><span>850 students × ₦1,700/term</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:var(--jade-mid)"><span>Total</span><span>₦1,445,000</span></div>
+            </div>
+            <div class="big-btn"><i class="ti ti-credit-card" aria-hidden="true"></i> Proceed to Payment</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Price auto-calculates on input. Button disabled until email + count filled.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <div>
+    <div class="screen-num">SCR-02b-ii</div>
+    <div class="screen-label">Payment Gateway (Paystack)</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="font-size:9px;font-weight:700;color:var(--lighter);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px">Redirecting to</div>
+            <div style="font-size:14px;font-weight:800;color:var(--dark)">Paystack</div>
+            <div style="font-size:8px;color:var(--light);margin-top:2px">Secure payment · ₦1,445,000</div>
+          </div>
+          <div style="width:100%;border:1.5px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px">
+            <div style="font-size:8px;color:var(--lighter);margin-bottom:6px">Card Number</div>
+            <div style="font-size:11px;font-weight:700;color:var(--dark);font-family:monospace">•••• •••• •••• 4242</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-bottom:14px">
+            <div style="border:1.5px solid var(--line);border-radius:10px;padding:12px">
+              <div style="font-size:8px;color:var(--lighter);margin-bottom:4px">Expiry</div>
+              <div style="font-size:10px;font-weight:700;color:var(--dark)">12/27</div>
+            </div>
+            <div style="border:1.5px solid var(--line);border-radius:10px;padding:12px">
+              <div style="font-size:8px;color:var(--lighter);margin-bottom:4px">CVV</div>
+              <div style="font-size:10px;font-weight:700;color:var(--dark)">•••</div>
+            </div>
+          </div>
+          <div class="big-btn" style="width:100%;margin:0"><i class="ti ti-lock" aria-hidden="true"></i> Pay ₦1,445,000</div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Paystack handles payment. On success → webhook fires to backend → org + admin + codes created + email sent.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <div>
+    <div class="screen-num">SCR-02b-iii</div>
+    <div class="screen-label">Payment Success + Email Sent</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 18px;text-align:center">
+          <div class="success-circle"><i class="ti ti-circle-check" style="font-size:26px" aria-hidden="true"></i></div>
+          <div style="font-size:14px;font-weight:900;color:var(--black);letter-spacing:-0.5px;margin-bottom:4px">Payment Successful</div>
+          <div style="font-size:8px;color:var(--light);margin-bottom:20px">Check admin@kingsschool.edu.ng for your next steps</div>
+          <div style="width:100%;text-align:left;background:var(--jade-light);border:1px solid #9FE1CB;border-radius:10px;padding:12px;margin-bottom:10px">
+            <div style="font-size:8px;font-weight:700;text-transform:uppercase;color:var(--jade-mid);letter-spacing:0.06em;margin-bottom:8px">Email sent contains</div>
+            <div class="email-item"><i class="ti ti-file-text" aria-hidden="true"></i> Payment receipt</div>
+            <div class="email-item"><i class="ti ti-key" aria-hidden="true"></i> Admin login link + temp password</div>
+            <div class="email-item"><i class="ti ti-table" aria-hidden="true"></i> CSV file — 850 access codes</div>
+          </div>
+          <div class="big-btn" style="width:100%;margin:0"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Go to Admin Dashboard</div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Email sent automatically by backend on Paystack webhook. CSV of codes is attached.</div>
+  </div>
+</div>
+
+<div class="wf-divider"></div>
+
+<!-- ══════════════════════════════════════
+     SCR-02a · INDIVIDUAL PAYMENT FLOW
+══════════════════════════════════════ -->
+<div class="wf-section-label">SCR-02a · Pay as Individual Flow <span>Web · Pay → get code by email → register → login with username+password forever after</span></div>
+<div class="wf-grid">
+
+  <div>
+    <div class="screen-num">SCR-02a-i</div>
+    <div class="screen-label">Individual: Pay</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="min-height:420px">
+          <div class="appbar">
+            <div class="appbar-back"><i class="ti ti-arrow-left" aria-hidden="true"></i></div>
+            <div class="appbar-title">Individual Access</div>
+          </div>
+          <div style="padding:14px">
+            <div class="info-card" style="margin:0 0 14px">
+              <div class="info-icon"><i class="ti ti-user" aria-hidden="true"></i></div>
+              <div>
+                <div class="info-title">Personal Subscription</div>
+                <div class="info-sub">Full access to all subjects · ₦1,700 per term · No school required</div>
+              </div>
+            </div>
+            <div class="price-card">
+              <div style="font-size:8px;color:rgba(255,255,255,0.4);margin-bottom:4px">Amount to pay</div>
+              <div style="font-size:22px;font-weight:900;color:white;letter-spacing:-1px">₦1,700</div>
+              <div style="font-size:8px;color:rgba(255,255,255,0.3);margin-top:2px">Per term · One-time access code</div>
+            </div>
+            <div class="big-btn" style="margin-bottom:8px"><i class="ti ti-credit-card" aria-hidden="true"></i> Proceed to Payment</div>
+            <div style="font-size:8px;color:var(--lighter);text-align:center;display:flex;align-items:center;justify-content:center;gap:4px">
+              <i class="ti ti-mail" style="font-size:11px;color:var(--jade)" aria-hidden="true"></i>
+              You'll receive an access code by email after payment
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <div>
+    <div class="screen-num">SCR-02a-ii</div>
+    <div class="screen-label">Individual: Register (after payment)</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="min-height:420px">
+          <div class="appbar">
+            <div class="appbar-back"><i class="ti ti-arrow-left" aria-hidden="true"></i></div>
+            <div class="appbar-title">Create Your Account</div>
+          </div>
+          <div style="padding:14px">
+            <div class="success-card">
+              <i class="ti ti-circle-check sc-icon" aria-hidden="true"></i>
+              <div>
+                <div class="sc-title">Payment confirmed</div>
+                <div class="sc-sub">Access code sent to your email</div>
+              </div>
+            </div>
+            <div class="field-wrap active" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-user" aria-hidden="true"></i>Username</div>
+              <div class="field-input">chukwuemeka_23</div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-lock" aria-hidden="true"></i>Password</div>
+              <div class="field-input">••••••••••<i class="ti ti-eye"></i></div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-lock" aria-hidden="true"></i>Confirm Password</div>
+              <div class="field-input">••••••••••<i class="ti ti-eye"></i></div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:14px">
+              <div class="field-label"><i class="ti ti-key" aria-hidden="true"></i>Access Code (from your email)</div>
+              <div class="field-input" style="font-family:monospace;letter-spacing:2px">IND-7743-MQ</div>
+            </div>
+            <div class="big-btn"><i class="ti ti-user-plus" aria-hidden="true"></i> Create Account</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Access code is single-use. After registration, student logs in with <strong>username + password only</strong>. Code never needed again.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <div>
+    <div class="screen-num">SCR-03a</div>
+    <div class="screen-label">Login — Individual (username + password)</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="min-height:420px">
+          <div class="appbar">
+            <div class="appbar-back"><i class="ti ti-arrow-left" aria-hidden="true"></i></div>
+            <div class="appbar-title">Login</div>
+          </div>
+          <div style="padding:14px">
+            <div style="font-size:18px;font-weight:900;color:var(--black);letter-spacing:-0.5px;margin-bottom:4px">Welcome back</div>
+            <div style="font-size:8px;color:var(--light);margin-bottom:18px">Login with your username and password</div>
+            <div class="field-wrap active" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-user" aria-hidden="true"></i>Username</div>
+              <div class="field-input">chukwuemeka_23</div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:6px">
+              <div class="field-label"><i class="ti ti-lock" aria-hidden="true"></i>Password</div>
+              <div class="field-input">••••••••••<i class="ti ti-eye"></i></div>
+            </div>
+            <div style="text-align:right;font-size:8px;color:var(--jade);font-weight:700;margin:0 12px 14px">Forgot password?</div>
+            <div class="big-btn" style="margin-bottom:10px"><i class="ti ti-login" aria-hidden="true"></i> Login</div>
+            <div style="text-align:center;font-size:8px;color:var(--lighter)">New? <span style="color:var(--jade);font-weight:700">Pay as Individual</span> to get started</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Standard username+password login for individuals. Admin also uses this screen.</div>
+  </div>
+</div>
+
+<div class="wf-divider"></div>
+
+<!-- ══════════════════════════════════════
+     SCR-03b · ORG STUDENT LOGIN
+══════════════════════════════════════ -->
+<div class="wf-section-label">SCR-03b · Org Student Login <span>Mobile app · Access code is both activation AND login credential</span></div>
+<div class="wf-grid">
+  <div>
+    <div class="screen-num">SCR-03b</div>
+    <div class="screen-label">Org Student: Enter Access Code</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="min-height:420px">
+          <div class="appbar">
+            <div class="appbar-back"><i class="ti ti-arrow-left" aria-hidden="true"></i></div>
+            <div class="appbar-title">Student Access</div>
+          </div>
+          <div style="padding:14px">
+            <div class="info-card" style="margin:0 0 16px">
+              <div class="info-icon"><i class="ti ti-building-school" aria-hidden="true"></i></div>
+              <div>
+                <div class="info-title">Your school paid for your access</div>
+                <div class="info-sub">Enter the unique code your school gave you. This code is your permanent login — no password needed.</div>
+              </div>
+            </div>
+            <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--lighter);margin-bottom:6px">Your Access Code</div>
+            <div class="code-box">
+              <div style="font-size:18px;font-weight:800;color:var(--jade-mid);letter-spacing:4px;font-family:monospace">DA-8472-KX</div>
+            </div>
+            <div style="font-size:8px;color:var(--lighter);text-align:center;margin-bottom:16px">Given to you by your teacher or school admin</div>
+            <div class="big-btn" style="margin:0 0 18px"><i class="ti ti-door-enter" aria-hidden="true"></i> Enter DefinAm</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <div style="flex:1;height:1px;background:var(--line-light)"></div>
+              <div style="font-size:8px;color:var(--lighter)">How it works</div>
+              <div style="flex:1;height:1px;background:var(--line-light)"></div>
+            </div>
+            <div class="step-item"><div class="step-num">1</div><div class="step-text">Your school paid ₦1,700 per student per term</div></div>
+            <div class="step-item"><div class="step-num">2</div><div class="step-text">The system generated a unique code for each student</div></div>
+            <div class="step-item"><div class="step-num">3</div><div class="step-text">Enter your code once — this device is now your DefinAm login forever</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann"><strong>First use:</strong> auto-creates account, stores device_fingerprint.<br><br><strong>Return visits:</strong> session token skips this screen entirely.<br><br><strong>New device:</strong> old session revoked, new fingerprint stored.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <div>
+    <div class="screen-num">SCR-03d</div>
+    <div class="screen-label">Admin: First Login + Change Password</div>
+    <div class="phone">
+      <div class="phone-shell">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+        <div class="phone-body" style="min-height:420px">
+          <div class="appbar"><div class="appbar-title">Admin Login</div></div>
+          <div style="padding:14px">
+            <div style="font-size:14px;font-weight:900;color:var(--black);letter-spacing:-0.4px;margin-bottom:3px">School Admin Login</div>
+            <div style="font-size:8px;color:var(--light);margin-bottom:16px">Login to your DefinAm admin dashboard</div>
+            <div class="field-wrap active" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-mail" aria-hidden="true"></i>Username (your school email)</div>
+              <div class="field-input">admin@kingsschool.edu.ng</div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:12px">
+              <div class="field-label"><i class="ti ti-lock" aria-hidden="true"></i>Password</div>
+              <div class="field-input">••••••••<i class="ti ti-eye"></i></div>
+            </div>
+            <div class="big-btn" style="margin-bottom:14px"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Login to Dashboard</div>
+            <div class="warn-card">
+              <div class="warn-title"><i class="ti ti-alert-triangle" aria-hidden="true"></i> First Login — Change Your Password</div>
+              <div class="warn-sub">You're using a temporary password. Set a permanent one before you continue.</div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:6px">
+              <div class="field-label"><i class="ti ti-lock" aria-hidden="true"></i>New Password</div>
+              <div class="field-input">••••••••••<i class="ti ti-eye"></i></div>
+            </div>
+            <div class="field-wrap" style="margin-bottom:8px">
+              <div class="field-label"><i class="ti ti-lock" aria-hidden="true"></i>Confirm New Password</div>
+              <div class="field-input">••••••••••<i class="ti ti-eye"></i></div>
+            </div>
+            <div class="big-btn"><i class="ti ti-circle-check" aria-hidden="true"></i> Set Password &amp; Continue</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann">Change-password block appears <strong>only on first login</strong>. Triggered by <code>force_password_change: true</code> in login response.</div>
+  </div>
+</div>
+
+<div class="wf-divider"></div>
+
+<!-- AUTH RULES TABLE -->
+<div class="wf-section-label">Auth Rules Summary — For Dev Team</div>
+<table class="spec-table">
+  <thead><tr><th>User Type</th><th>How They Register</th><th>How They Login</th><th>Access Code Role</th><th>Device Handling</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Individual Student</td>
+      <td>username + password + access code (web, after payment)</td>
+      <td>username + password only</td>
+      <td>One-time use at registration. Then retired (status → active). org_id = NULL.</td>
+      <td>Standard session. No device lock.</td>
+    </tr>
+    <tr>
+      <td>Org Student (School)</td>
+      <td>No registration. System auto-creates account on first code use.</td>
+      <td>Access code only. Always. No username, no password.</td>
+      <td>Permanent login credential. org_id = school_id. Never expires unless revoked by admin.</td>
+      <td>device_fingerprint stored on first use. New device → old session revoked, new fingerprint stored.</td>
+    </tr>
+    <tr>
+      <td>School Admin</td>
+      <td>System creates account after org payment. Email = username. Temp password sent by email.</td>
+      <td>username (school email) + password. Must change password on first login.</td>
+      <td>No access code involved.</td>
+      <td>Standard session. No device lock.</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
