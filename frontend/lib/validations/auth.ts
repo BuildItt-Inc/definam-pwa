@@ -90,3 +90,17 @@ export const registerSchema = z
   });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
+
+// ── SCR-03b · Org Student Code Entry ──────────────────────────────────────
+
+export const orgLoginSchema = z.object({
+  access_code: z
+    .string()
+    .min(1, 'Access code is required')
+    .transform((val) => val.trim().toUpperCase())
+    .refine((val) => /^[A-Z]{2,3}-\d{4}-[A-Z]{2}$/.test(val), {
+      message: 'Invalid access code format',
+    }),
+});
+
+export type OrgLoginFormValues = z.infer<typeof orgLoginSchema>;
