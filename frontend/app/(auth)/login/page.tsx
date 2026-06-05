@@ -38,19 +38,7 @@ export default function LoginPage() {
     setBannerError(null);
     setIsSubmitting(true);
     try {
-      const data = await loginUser(values);
-
-      const cookieRes = await fetch('/api/auth/set-cookie', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: data.token }),
-      });
-
-      if (!cookieRes.ok) {
-        setBannerError('Something went wrong. Please try again.');
-        return;
-      }
-
+      await loginUser(values);
       router.push('/dashboard');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {

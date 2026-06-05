@@ -40,22 +40,11 @@ export default function RegisterPage() {
   async function onSubmit(values: RegisterFormValues) {
     setBannerError(null);
     try {
-      const data = await registerUser({
+      await registerUser({
         username: values.username,
         password: values.password,
         access_code: values.access_code, // already trimmed + uppercased by zod transform
       });
-
-      const cookieRes = await fetch('/api/auth/set-cookie', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: data.token }),
-      });
-
-      if (!cookieRes.ok) {
-        setBannerError('Something went wrong. Please try again.');
-        return;
-      }
 
       router.push('/dashboard');
     } catch (err) {

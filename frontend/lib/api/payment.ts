@@ -1,6 +1,7 @@
 import type {
   InitializePaymentResponse,
   InitializeOrgPaymentRequest,
+  InitializeOrgPaymentResponse,
   VerifyPaymentResponse,
 } from '@/types/payment';
 
@@ -14,14 +15,15 @@ export class PaymentError extends Error {
   }
 }
 
-// Unauthenticated — no cookie required, hits backend directly.
-export async function initializeIndividualPayment(): Promise<InitializePaymentResponse> {
+export async function initializeIndividualPayment(
+  email: string,
+): Promise<InitializePaymentResponse> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/payment/initialize/individual`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/payments/individual`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ email }),
     },
   );
 
@@ -33,16 +35,13 @@ export async function initializeIndividualPayment(): Promise<InitializePaymentRe
   return res.json() as Promise<InitializePaymentResponse>;
 }
 
-// Authenticated — proxied through Next.js so the request is same-origin and
-// the browser attaches the definam_token httpOnly cookie automatically.
+// Unauthenticated — Paystack reference is the implicit proof of payment.
 export async function verifyPayment(
   reference: string,
 ): Promise<VerifyPaymentResponse> {
   const res = await fetch(
-    `/api/proxy/payment/verify?reference=${encodeURIComponent(reference)}`,
-    {
-      method: 'GET',
-    },
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/payment/verify?reference=${encodeURIComponent(reference)}`,
+    { method: 'GET' },
   );
 
   if (!res.ok) {
@@ -55,12 +54,11 @@ export async function verifyPayment(
 
 // ── SCR-02b · Organisation Payment ────────────────────────────────────────
 
-// Unauthenticated — no cookie required, hits backend directly.
 export async function initializeOrgPayment(
   data: InitializeOrgPaymentRequest,
-): Promise<InitializePaymentResponse> {
+): Promise<InitializeOrgPaymentResponse> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/payment/initialize/organisation`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/payments/organisation`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,5 +71,5 @@ export async function initializeOrgPayment(
     throw new PaymentError(res.status, body.error ?? '');
   }
 
-  return res.json() as Promise<InitializePaymentResponse>;
+  return res.json() as Promise<InitializeOrgPaymentResponse>;
 }

@@ -22,7 +22,13 @@ import type { VerifyOrgPaymentResponse } from '@/types/payment';
 type VerifyState =
   | { status: 'loading' }
   | { status: 'success'; paymentType: 'individual'; email: string }
-  | { status: 'success'; paymentType: 'organisation'; adminEmail: string; orgName: string }
+  | {
+      status: 'success';
+      paymentType: 'organisation';
+      adminEmail: string;
+      orgName: string;
+      totalAmountNaira: number;
+    }
   | { status: 'error' };
 
 // ── Inner component (needs Suspense boundary because of useSearchParams) ───
@@ -56,6 +62,8 @@ function CallbackContent() {
 
         if (paymentType === 'organisation') {
           const orgData = data as unknown as VerifyOrgPaymentResponse;
+          const storedTotal = sessionStorage.getItem('total_amount_naira');
+          const totalAmountNaira = parseInt(storedTotal ?? '0', 10) || 0;
           setState({
             status: 'success',
             paymentType: 'organisation',
@@ -64,6 +72,7 @@ function CallbackContent() {
               sessionStorage.getItem('org_email') ||
               '',
             orgName: orgData.org_name || '',
+            totalAmountNaira,
           });
         } else {
           if (data.email) {
@@ -206,6 +215,15 @@ function CallbackContent() {
               </div>
             ))}
           </div>
+
+          {state.totalAmountNaira > 0 && (
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#9FE1CB]">
+              <span className="text-[12px] font-medium text-[#085041]">Total paid</span>
+              <span className="font-syne text-[14px] font-black text-[#085041] tracking-tight">
+                ₦{state.totalAmountNaira.toLocaleString('en-NG')}
+              </span>
+            </div>
+          )}
         </div>
 
         <p className="text-[12px] text-ink/40 leading-snug max-w-[280px]">

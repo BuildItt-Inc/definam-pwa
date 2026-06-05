@@ -64,19 +64,6 @@ export default function AdminLoginPage() {
     setLoginBannerError(null);
     try {
       const data = await adminLogin(values);
-
-      // Always set the cookie first, regardless of force_password_change
-      const cookieRes = await fetch('/api/auth/set-cookie', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: data.token }),
-      });
-
-      if (!cookieRes.ok) {
-        setLoginBannerError('Something went wrong. Please try again.');
-        return;
-      }
-
       if (data.force_password_change) {
         setForcePasswordChange(true);
       } else {
@@ -95,7 +82,10 @@ export default function AdminLoginPage() {
   async function onChangePasswordSubmit(values: ChangePasswordFormValues) {
     setChangeBannerError(null);
     try {
-      await changePassword({ new_password: values.new_password });
+      await changePassword({
+        new_password: values.new_password,
+        confirm_password: values.confirm_password,
+      });
       router.push('/admin/dashboard');
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {

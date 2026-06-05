@@ -1,5 +1,5 @@
 export interface InitializePaymentResponse {
-  payment_url: string;
+  authorization_url: string;
   reference: string;
 }
 
@@ -15,6 +15,10 @@ export interface InitializeOrgPaymentRequest {
   school_email: string;
   school_name: string;
   student_count: number;
+}
+
+export interface InitializeOrgPaymentResponse extends InitializePaymentResponse {
+  total_amount_naira: number;
 }
 
 export interface VerifyOrgPaymentResponse {

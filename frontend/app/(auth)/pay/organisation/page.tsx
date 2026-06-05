@@ -100,7 +100,8 @@ export default function OrgPayPage() {
       sessionStorage.setItem('payment_ref', data.reference);
       sessionStorage.setItem('org_email', values.school_email);
       sessionStorage.setItem('payment_type', 'organisation');
-      window.location.href = data.payment_url;
+      sessionStorage.setItem('total_amount_naira', data.total_amount_naira.toString());
+      window.location.href = data.authorization_url;
     } catch (err) {
       if (err instanceof PaymentError) {
         setBannerError('Could not initialise payment. Please try again.');
@@ -236,7 +237,7 @@ export default function OrgPayPage() {
             )}
           </div>
 
-          {/* ── Price summary ── */}
+          {/* ── Price summary (client-side preview) ── */}
           <div className="bg-[#EAF3DE] border border-[#9FE1CB] rounded-xl px-4 py-3.5 mb-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] text-[#0F6E56]">
