@@ -21,7 +21,7 @@ import {
   type AdminLoginFormValues,
   type ChangePasswordFormValues,
 } from '@/lib/validations/auth';
-import { adminLogin, changePassword, ApiError } from '@/lib/api/auth';
+import { loginUser, changePassword, ApiError } from '@/lib/api/auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
   async function onLoginSubmit(values: AdminLoginFormValues) {
     setLoginBannerError(null);
     try {
-      const data = await adminLogin(values);
+      const data = await loginUser(values);
       if (data.force_password_change) {
         setForcePasswordChange(true);
       } else {

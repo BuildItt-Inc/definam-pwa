@@ -1,8 +1,6 @@
 import type {
   LoginRequest,
   LoginResponse,
-  AdminLoginRequest,
-  AdminLoginResponse,
   ChangePasswordRequest,
   RegisterRequest,
   RegisterResponse,
@@ -43,30 +41,6 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   }
 
   const json: LoginResponse = await res.json();
-  accessToken = json.access_token;
-  return json;
-}
-
-// ── SCR-03d · Admin Login ──────────────────────────────────────────────────
-
-export async function adminLogin(
-  data: AdminLoginRequest,
-): Promise<AdminLoginResponse> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/admin/login`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    },
-  );
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
-  }
-
-  const json: AdminLoginResponse = await res.json();
   accessToken = json.access_token;
   return json;
 }

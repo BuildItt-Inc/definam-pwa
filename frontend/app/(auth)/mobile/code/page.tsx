@@ -41,8 +41,8 @@ export default function OrgCodePage() {
       });
       router.push('/dashboard');
     } catch (err) {
-      if (err instanceof ApiError && (err.status === 400 || err.status === 422)) {
-        setBannerError('Invalid or already used access code');
+      if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
+        setBannerError(err.message || 'Invalid or already used access code');
       } else {
         setBannerError('Something went wrong. Please try again.');
       }
