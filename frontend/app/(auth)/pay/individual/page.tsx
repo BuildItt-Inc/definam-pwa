@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   AlertCircle,
   ArrowLeft,
@@ -11,24 +14,40 @@ import {
   User,
 } from 'lucide-react';
 
-import {
-  initializeIndividualPayment,
-  PaymentError,
-} from '@/lib/api/payment';
+import { initializeIndividualPayment, PaymentError } from '@/lib/api/payment';
+
+const individualPaySchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+});
+
+type IndividualPayFormValues = z.infer<typeof individualPaySchema>;
 
 export default function IndividualPayPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
 
-  async function handleProceedToPayment() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IndividualPayFormValues>({
+    resolver: zodResolver(individualPaySchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+  });
+
+  async function onSubmit(values: IndividualPayFormValues) {
     setBannerError(null);
     setIsLoading(true);
     try {
-      const data = await initializeIndividualPayment();
+      const data = await initializeIndividualPayment(values.email);
       sessionStorage.setItem('payment_ref', data.reference);
       sessionStorage.setItem('payment_type', 'individual');
-      window.location.href = data.payment_url;
+      window.location.href = data.authorization_url;
     } catch (err) {
       if (err instanceof PaymentError) {
         setBannerError('Could not initialise payment. Please try again.');
@@ -86,45 +105,82 @@ export default function IndividualPayPage() {
           </p>
         </div>
 
-        {/* Error banner */}
-        {bannerError && (
-          <div
-            role="alert"
-            className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug mb-4"
-          >
-            <AlertCircle size={16} strokeWidth={2} className="flex-shrink-0 mt-0.5" aria-hidden />
-            {bannerError}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+
+          {/* ── Email ── */}
+          <div className="mb-5">
+            <div
+              className={[
+                'border rounded-xl transition-colors',
+                errors.email
+                  ? 'border-coral'
+                  : 'border-black/15 focus-within:border-jade',
+              ].join(' ')}
+            >
+              <label
+                htmlFor="email"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+              >
+                <Mail size={11} strokeWidth={2.5} aria-hidden />
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                spellCheck={false}
+                autoCapitalize="none"
+                placeholder="you@example.com"
+                className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
+                {...register('email')}
+              />
+            </div>
+            {errors.email && (
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+                {errors.email.message}
+              </p>
+            )}
           </div>
-        )}
 
-        {/* CTA button */}
-        <button
-          type="button"
-          onClick={handleProceedToPayment}
-          disabled={isLoading}
-          className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-4"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 size={18} className="animate-spin" aria-hidden />
-              Redirecting…
-            </>
-          ) : (
-            <>
-              <CreditCard size={18} strokeWidth={2.2} aria-hidden />
-              Proceed to Payment
-            </>
+          {/* Error banner */}
+          {bannerError && (
+            <div
+              role="alert"
+              className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug mb-4"
+            >
+              <AlertCircle size={16} strokeWidth={2} className="flex-shrink-0 mt-0.5" aria-hidden />
+              {bannerError}
+            </div>
           )}
-        </button>
 
-        {/* Email note */}
-        <div className="flex items-center justify-center gap-1.5">
-          <Mail size={13} strokeWidth={2} className="text-jade flex-shrink-0" aria-hidden />
-          <p className="text-[12px] text-ink/40">
-            You&apos;ll receive an access code by email after payment
-          </p>
-        </div>
+          {/* CTA button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-4"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" aria-hidden />
+                Redirecting…
+              </>
+            ) : (
+              <>
+                <CreditCard size={18} strokeWidth={2.2} aria-hidden />
+                Proceed to Payment
+              </>
+            )}
+          </button>
 
+          {/* Email note */}
+          <div className="flex items-center justify-center gap-1.5">
+            <Mail size={13} strokeWidth={2} className="text-jade flex-shrink-0" aria-hidden />
+            <p className="text-[12px] text-ink/40">
+              Your access code will be sent to this email after payment
+            </p>
+          </div>
+
+        </form>
       </main>
     </div>
   );

@@ -6,6 +6,8 @@ import type {
   ChangePasswordRequest,
   RegisterRequest,
   RegisterResponse,
+  OrgLoginRequest,
+  OrgLoginResponse,
 } from '@/types/auth';
 
 export class ApiError extends Error {
@@ -18,30 +20,16 @@ export class ApiError extends Error {
   }
 }
 
-// Unauthenticated — no cookie required, hits backend directly.
-export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+// In-memory only. Never written to localStorage or sessionStorage.
+let accessToken: string | null = null;
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
-  }
-
-  return res.json() as Promise<LoginResponse>;
+export function getAccessToken(): string | null {
+  return accessToken;
 }
 
-// ── SCR-03d · Admin Login ──────────────────────────────────────────────────
-
-// Unauthenticated — no cookie required, hits backend directly.
-export async function adminLogin(
-  data: AdminLoginRequest,
-): Promise<AdminLoginResponse> {
+export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/admin/login`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -54,19 +42,50 @@ export async function adminLogin(
     throw new ApiError(res.status, body.error ?? '');
   }
 
-  return res.json() as Promise<AdminLoginResponse>;
+  const json: LoginResponse = await res.json();
+  accessToken = json.access_token;
+  return json;
 }
 
-// Authenticated — proxied through Next.js so the request is same-origin and
-// the browser attaches the definam_token httpOnly cookie automatically.
+// ── SCR-03d · Admin Login ──────────────────────────────────────────────────
+
+export async function adminLogin(
+  data: AdminLoginRequest,
+): Promise<AdminLoginResponse> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/admin/login`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: '' }));
+    throw new ApiError(res.status, body.error ?? '');
+  }
+
+  const json: AdminLoginResponse = await res.json();
+  accessToken = json.access_token;
+  return json;
+}
+
+// Authenticated — sends access token in Authorization header.
 export async function changePassword(
   data: ChangePasswordRequest,
 ): Promise<{ ok: true }> {
-  const res = await fetch('/api/proxy/auth/admin/change-password', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/change-password`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      body: JSON.stringify(data),
+    },
+  );
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: '' }));
@@ -78,20 +97,78 @@ export async function changePassword(
 
 // ── SCR-02a-ii · Individual Registration ──────────────────────────────────
 
-// Unauthenticated — no cookie required, hits backend directly.
 export async function registerUser(
   data: RegisterRequest,
 ): Promise<RegisterResponse> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/register`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: '' }));
     throw new ApiError(res.status, body.error ?? '');
   }
 
-  return res.json() as Promise<RegisterResponse>;
+  const json: RegisterResponse = await res.json();
+  accessToken = json.access_token;
+  return json;
+}
+
+// ── F1 · Org Student Login ────────────────────────────────────────────────
+
+export async function orgLogin(
+  data: OrgLoginRequest,
+): Promise<OrgLoginResponse> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/org-login`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: '' }));
+    throw new ApiError(res.status, body.error ?? '');
+  }
+
+  const json: OrgLoginResponse = await res.json();
+  accessToken = json.access_token;
+  return json;
+}
+
+// ── Token lifecycle ────────────────────────────────────────────────────────
+
+// Uses the httpOnly refresh cookie the backend sets on login.
+export async function refreshToken(): Promise<void> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
+    {
+      method: 'POST',
+      credentials: 'include',
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: '' }));
+    throw new ApiError(res.status, body.error ?? '');
+  }
+
+  const json = (await res.json()) as { access_token: string };
+  accessToken = json.access_token;
+}
+
+export async function logout(): Promise<void> {
+  await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+  });
+  accessToken = null;
 }
