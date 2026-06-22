@@ -1,0 +1,84 @@
+'use client';
+
+import {
+  Calculator,
+  FlaskConical,
+  FileText,
+  Zap,
+  TrendingUp,
+  BookOpen,
+  ChevronRight,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { Subject } from '@/types/topics';
+
+// ── Subject → icon ─────────────────────────────────────────────────────────
+
+const SUBJECT_ICONS: Record<string, LucideIcon> = {
+  Mathematics: Calculator,
+  Chemistry: FlaskConical,
+  'English Language': FileText,
+  Physics: Zap,
+  Economics: TrendingUp,
+};
+
+// ── Mastery badge ──────────────────────────────────────────────────────────
+
+function MasteryBadge({ mastery }: { mastery: number | null }) {
+  if (mastery === null || mastery === 0) {
+    return (
+      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-gray-500">
+        —
+      </span>
+    );
+  }
+  if (mastery >= 60) {
+    return (
+      <span className="flex-shrink-0 rounded-[3px] bg-jade px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+        {mastery}%
+      </span>
+    );
+  }
+  return (
+    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+      {mastery}%
+    </span>
+  );
+}
+
+// ── Component ──────────────────────────────────────────────────────────────
+
+interface SubjectCardProps {
+  subject: Subject;
+  onClick: () => void;
+}
+
+export function SubjectCard({ subject, onClick }: SubjectCardProps) {
+  const Icon = SUBJECT_ICONS[subject.name] ?? BookOpen;
+
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors active:bg-gray-50"
+    >
+      {/* Subject icon box */}
+      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white">
+        <Icon size={14} strokeWidth={1.5} className="text-gray-500" />
+      </span>
+
+      {/* Name + count */}
+      <span className="min-w-0 flex-1">
+        <span className="block font-dm-sans text-[13px] font-bold text-ink">
+          {subject.name}
+        </span>
+        <span className="mt-0.5 block font-dm-sans text-[11px] text-gray-400">
+          {subject.chapter_count} chapters · {subject.topic_count} topics
+        </span>
+      </span>
+
+      <MasteryBadge mastery={subject.mastery_percent} />
+
+      <ChevronRight size={16} strokeWidth={1.5} className="flex-shrink-0 text-gray-300" />
+    </button>
+  );
+}
