@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DefinAm — Week 2 F1 Screens Spec</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F2F2F2;
+  --white: #FFFFFF;
+  --black: #0A0A0A;
+  --dark: #1A1A1A;
+  --mid: #555555;
+  --light: #888888;
+  --lighter: #AAAAAA;
+  --line: #CCCCCC;
+  --line-light: #E0E0E0;
+  --screen-bg: #FFFFFF;
+  --fill-dark: #0A0F1E;
+  --fill-mid: #555555;
+  --fill-light: #DDDDDD;
+  --fill-lighter: #F0F0F0;
+  --font: 'Inter', sans-serif;
+  --jade: #1B6B4A;
+  --jade-light: #EAF3DE;
+  --gold: #C8973A;
+  --gold-light: #FEF3C7;
+  --coral: #E85D3A;
+}
+
+body { font-family: var(--font); background: var(--bg); color: var(--dark); padding: 0; }
+
+.doc-header {
+  background: var(--white); border-bottom: 2px solid var(--black);
+  padding: 24px 48px; position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.doc-title { font-size: 20px; font-weight: 800; color: var(--black); letter-spacing: -0.5px; }
+.doc-sub { font-size: 12px; color: var(--mid); margin-top: 3px; }
+.doc-tag { font-size: 10px; font-weight: 700; border: 1.5px solid var(--black); padding: 4px 10px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+.doc-tag.filled { background: var(--black); color: var(--white); }
+
+.context-banner { background: var(--fill-dark); color: var(--white); padding: 12px 48px; font-size: 11px; line-height: 1.7; }
+.context-banner strong { color: #C8973A; }
+
+.section { padding: 48px; display: block; }
+.section-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--lighter); margin-bottom: 6px; }
+.section-title { font-size: 20px; font-weight: 800; color: var(--black); letter-spacing: -0.4px; margin-bottom: 4px; }
+.section-desc { font-size: 13px; color: var(--mid); margin-bottom: 40px; line-height: 1.6; }
+
+.wf-grid { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 56px; }
+.wf-grid.tight { gap: 20px; }
+.wf-section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--black); margin-bottom: 24px; padding-bottom: 10px; border-bottom: 2px solid var(--black); display: flex; align-items: center; gap: 10px; }
+.wf-section-label span { font-size: 10px; font-weight: 600; color: var(--light); text-transform: none; letter-spacing: 0; }
+.wf-divider { border: none; border-top: 1.5px solid var(--line); margin: 48px 0; }
+
+.screen-label { font-size: 11px; font-weight: 700; color: var(--dark); margin-bottom: 8px; text-align: center; }
+.screen-num { display: inline-block; font-size: 9px; font-weight: 800; background: var(--black); color: var(--white); padding: 2px 7px; border-radius: 2px; margin-bottom: 4px; letter-spacing: 0.04em; }
+
+.phone { width: 200px; flex-shrink: 0; }
+.phone.wide { width: 220px; }
+.phone-shell { border: 2px solid var(--dark); border-radius: 28px; overflow: hidden; background: var(--screen-bg); position: relative; box-shadow: 3px 3px 0 rgba(0,0,0,0.12); }
+.phone-notch { background: var(--fill-dark); height: 6px; display: flex; justify-content: center; align-items: flex-end; }
+.phone-notch-pill { width: 60px; height: 4px; background: var(--fill-dark); border-radius: 0 0 4px 4px; }
+.phone-status { display: flex; justify-content: space-between; align-items: center; padding: 4px 14px 2px; font-size: 8px; font-weight: 700; color: var(--dark); }
+.phone-body { padding: 0; min-height: 380px; }
+
+.appbar { display: flex; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line-light); gap: 8px; min-height: 38px; background: var(--white); }
+.appbar-title { font-size: 13px; font-weight: 800; color: var(--fill-dark); flex: 1; letter-spacing: -0.3px; }
+.appbar-back { font-size: 18px; font-weight: 700; color: var(--fill-dark); cursor: pointer; display: flex; align-items: center; }
+.appbar-icon { width: 22px; height: 22px; border: 1.5px solid var(--line); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+
+.bottom-nav { display: flex; border-top: 1.5px solid var(--line); background: var(--white); }
+.bnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px 0 10px; font-size: 8px; font-weight: 600; color: var(--lighter); gap: 3px; cursor: pointer; }
+.bnav-icon { width: 18px; height: 14px; border: 1.5px solid var(--lighter); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+.bnav-item.on { color: var(--jade); }
+.bnav-item.on .bnav-icon { border-color: var(--jade); background: var(--jade); color: var(--white); }
+
+.search-bar { margin: 8px 12px; border: 1.5px solid var(--line); border-radius: 6px; padding: 7px 10px; font-size: 9px; color: var(--lighter); display: flex; align-items: center; gap: 5px; background: var(--fill-lighter); }
+
+.list-item { display: flex; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--line-light); gap: 10px; cursor: pointer; }
+.list-item:last-child { border-bottom: none; }
+.list-icon { width: 28px; height: 28px; border: 1.5px solid var(--line); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.list-info { flex: 1; }
+.list-title { font-size: 10px; font-weight: 700; color: var(--dark); }
+.list-sub { font-size: 8px; color: var(--light); margin-top: 1px; }
+.list-badge { font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 2px; border: 1px solid var(--line); }
+.badge-jade { background: var(--jade); color: var(--white); border-color: var(--jade); }
+.badge-mid { background: var(--fill-mid); color: var(--white); border-color: var(--fill-mid); }
+.badge-outline { background: transparent; color: var(--dark); }
+.list-arrow { font-size: 10px; color: var(--lighter); }
+
+.big-btn { margin: 10px 12px 6px; background: var(--jade); color: var(--white); border: none; border-radius: 8px; padding: 11px; font-size: 10px; font-weight: 700; font-family: var(--font); text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: calc(100% - 24px); letter-spacing: -0.1px; }
+.big-btn i { font-size: 13px; }
+
+.card { margin: 8px 12px; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; }
+.card-header { padding: 8px 12px; background: var(--fill-lighter); border-bottom: 1px solid var(--line-light); font-size: 9px; font-weight: 700; color: var(--dark); display: flex; justify-content: space-between; align-items: center; }
+.card-body { padding: 10px 12px; }
+.card-body p { font-size: 9px; color: var(--mid); line-height: 1.6; }
+
+.subject-pill-row { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 12px; }
+.subject-pill { border: 1.5px solid var(--line); border-radius: 20px; padding: 4px 10px; font-size: 8px; font-weight: 700; color: var(--dark); }
+.subject-pill.on { background: var(--jade); color: var(--white); border-color: var(--jade); }
+
+.progress-row { padding: 6px 14px; }
+.prog-top { display: flex; justify-content: space-between; font-size: 8px; font-weight: 600; color: var(--dark); margin-bottom: 3px; }
+.prog-track { height: 4px; background: var(--fill-lighter); border-radius: 2px; border: 0.5px solid var(--line); }
+.prog-fill { height: 100%; background: var(--jade); border-radius: 2px; }
+
+.question-card { margin: 8px 12px; border: 1.5px solid var(--fill-dark); border-radius: 10px; padding: 12px; background: var(--fill-lighter); }
+.qcard-topic { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--jade); margin-bottom: 6px; }
+.qcard-text { font-size: 11px; font-weight: 700; color: var(--dark); line-height: 1.5; }
+
+.rating-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 8px 12px; }
+.rate-btn-wf { border: 1.5px solid var(--line); border-radius: 6px; padding: 6px 2px 5px; text-align: center; cursor: pointer; }
+.rate-btn-wf:nth-child(1), .rate-btn-wf:nth-child(2) { border-style: dashed; }
+.rate-btn-wf:last-child { border-style: solid; border-color: var(--jade); background: var(--jade); }
+.rate-num-wf { font-size: 12px; font-weight: 800; color: var(--dark); }
+.rate-num-wf.white { color: var(--white); }
+.rate-word-wf { font-size: 7px; color: var(--lighter); }
+.rate-word-wf.white { color: rgba(255,255,255,0.7); }
+
+.chat-area { padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
+.chat-msg { display: flex; gap: 6px; }
+.chat-msg.user { flex-direction: row-reverse; }
+.chat-av { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; flex-shrink: 0; background: var(--fill-lighter); color: var(--dark); }
+.chat-av.dark { background: var(--jade); color: var(--white); border-color: var(--jade); }
+.chat-bubble { max-width: 75%; padding: 7px 9px; border-radius: 10px; font-size: 9px; line-height: 1.5; color: var(--dark); border: 1.5px solid var(--line); background: var(--fill-lighter); }
+.chat-msg.user .chat-bubble { background: var(--jade); color: var(--white); border-color: var(--jade); }
+.chat-input-row { display: flex; gap: 5px; margin: 6px 12px 10px; }
+.chat-input-field { flex: 1; border: 1.5px solid var(--line); border-radius: 7px; padding: 7px 9px; font-size: 9px; color: var(--lighter); background: var(--fill-lighter); }
+.chat-send { width: 28px; height: 28px; background: var(--jade); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--white); flex-shrink: 0; }
+.chat-limit-note { text-align: center; font-size: 8px; color: var(--lighter); padding: 0 12px 8px; }
+
+.flow-arrow { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 120px; flex-shrink: 0; width: 30px; color: var(--dark); font-size: 16px; }
+
+.ann { background: var(--white); border: 1px dashed var(--line); border-radius: 6px; padding: 8px 12px; font-size: 9px; line-height: 1.6; color: var(--mid); margin-top: 8px; max-width: 200px; }
+.ann strong { color: var(--dark); font-weight: 700; }
+
+.info-card { background: var(--jade-light); border: 1px solid #9FE1CB; border-radius: 10px; padding: 10px 12px; margin: 0 12px 12px; display: flex; gap: 8px; align-items: flex-start; }
+.info-icon { width: 28px; height: 28px; background: var(--jade); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; flex-shrink: 0; }
+.info-title { font-size: 9px; font-weight: 700; color: #085041; }
+.info-sub { font-size: 8px; color: #0F6E56; line-height: 1.5; margin-top: 1px; }
+
+.spec-table { width: 100%; border-collapse: collapse; font-size: 11px; max-width: 900px; margin-bottom: 32px; }
+.spec-table th { background: var(--fill-dark); color: #fff; padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; }
+.spec-table td { padding: 9px 12px; border-bottom: 1px solid var(--line-light); color: var(--dark); vertical-align: top; line-height: 1.5; }
+.spec-table tr:nth-child(even) td { background: var(--jade-light); }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div>
+    <div class="doc-title">DefinAm · Week 2 F1 — Student App Screens</div>
+    <div class="doc-sub">PWA Mobile · 9 screens across 6 sections · F1 scope</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="doc-tag filled">F1 Scope</div>
+    <div class="doc-tag">Week 2</div>
+    <div class="doc-tag">Mobile PWA</div>
+  </div>
+</div>
+
+<div class="context-banner">
+  <strong>F1 Week 2 scope:</strong> SCR-04a/b Home Dashboard (2 states) · SCR-05a/b/c Browse Topics (subjects → chapters → topics) · SCR-06a–e 5-Step Learning Flow · SCR-07a–d Daily Recall · SCR-08a/b AI Tutor Chat · SCR-09 My Progress ·
+  <strong>All mobile PWA routes inside Next.js — no React Native.</strong>
+</div>
+
+<div class="section">
+
+  <!-- ══════════════════════════════════════
+       SCR-04 HOME DASHBOARD
+  ══════════════════════════════════════ -->
+  <div class="section-heading">Section 1 · Home</div>
+  <div class="section-title">Home Dashboard</div>
+  <div class="section-desc">First screen after login · Recall queue card (when due) · Streak · Subject chips · Topic list with mastery bars</div>
+
+  <div class="wf-section-label">SCR-04 · Home Dashboard <span>2 states: Queue present · Queue empty</span></div>
+  <div class="wf-grid">
+
+    <!-- State A: Queue present -->
+    <div>
+      <div class="screen-num">SCR-04a</div>
+      <div class="screen-label">Home — Queue Present (Default)</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div style="background:var(--fill-dark);padding:14px 14px 24px">
+              <div style="font-size:8px;color:rgba(255,255,255,0.5);margin-bottom:2px">Good morning</div>
+              <div style="font-size:14px;font-weight:800;color:var(--white);letter-spacing:-0.3px">Ada Okonkwo</div>
+              <div style="font-size:8px;color:rgba(255,255,255,0.4)">Kings Secondary School · SS2</div>
+              <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px;margin-top:8px">
+                <span style="display:inline-flex;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8973A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c0-4-3-6-3-9a3 3 0 0 1 6 0c0 3-3 5-3 9zm-1 4a1 1 0 1 0 2 0 1 1 0 0 0-2 0z"/></svg></span>
+                <span style="font-size:14px;font-weight:800;color:var(--white)">7</span>
+                <span style="font-size:8px;color:rgba(255,255,255,0.5)">day streak</span>
+              </div>
+            </div>
+            <!-- Recall Card -->
+            <div style="margin:-12px 12px 12px;background:var(--white);border:1.5px solid var(--jade);border-radius:12px;padding:12px;position:relative;z-index:2">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px">
+                <div style="width:5px;height:5px;border-radius:50%;background:var(--jade)"></div>
+                <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--jade)">Daily Recall</div>
+                <div style="margin-left:auto;font-size:8px;font-weight:700;background:var(--jade);color:var(--white);padding:2px 7px;border-radius:2px">3 due</div>
+              </div>
+              <div style="font-size:11px;font-weight:800;color:var(--black);margin-bottom:2px">Time to Review</div>
+              <div style="font-size:8px;color:var(--light);margin-bottom:10px">Acids &amp; Bases · Quadratic Eq. · Comprehension</div>
+              <div class="big-btn" style="margin:0;font-size:9px;padding:9px"><i class="ti ti-arrow-right"></i> Start Recall Session</div>
+            </div>
+            <!-- Subject chips -->
+            <div style="padding:0 12px 4px">
+              <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:700;margin-bottom:8px">
+                <span style="color:var(--black)">Browse Topics</span>
+                <span style="color:var(--jade)">See all</span>
+              </div>
+              <div class="subject-pill-row" style="padding:0;margin-bottom:10px">
+                <div class="subject-pill on">All</div>
+                <div class="subject-pill">Maths</div>
+                <div class="subject-pill">English</div>
+                <div class="subject-pill">Chem</div>
+              </div>
+            </div>
+            <!-- Topics -->
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+              <div class="list-info">
+                <div class="list-title">Quadratic Equations</div>
+                <div class="list-sub">Mathematics · Ch.3</div>
+                <div style="height:3px;background:var(--fill-lighter);border-radius:2px;margin-top:4px;width:70px"><div style="height:100%;width:65%;background:var(--jade);border-radius:2px"></div></div>
+              </div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H7v9l-4 4v1h18v-1l-4-4V3h-2M9 3h6M9 3a3 3 0 0 0 6 0"/></svg></div>
+              <div class="list-info">
+                <div class="list-title">Acids &amp; Bases</div>
+                <div class="list-sub">Chemistry · Ch.5</div>
+                <div style="height:3px;background:var(--fill-lighter);border-radius:2px;margin-top:4px;width:70px"><div style="height:100%;width:38%;background:var(--fill-mid);border-radius:2px"></div></div>
+              </div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h12"/></svg></div>
+              <div class="list-info">
+                <div class="list-title">Comprehension</div>
+                <div class="list-sub">English · Ch.2</div>
+                <div style="height:3px;background:var(--fill-lighter);border-radius:2px;margin-top:4px;width:70px"><div style="height:100%;width:80%;background:var(--jade);border-radius:2px"></div></div>
+              </div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="bottom-nav">
+              <div class="bnav-item on"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12V19H15V15H9V19H5V12Z"/></svg></div>Home</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>Browse</div>
+              <div class="bnav-item" style="position:relative">
+                <div class="bnav-icon" style="position:relative"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg><div style="position:absolute;top:-4px;right:-4px;width:9px;height:9px;background:var(--jade);border-radius:50%;font-size:6px;color:white;font-weight:800;display:flex;align-items:center;justify-content:center">3</div></div>Recall
+              </div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>Progress</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann">Recall card always appears at top when queue &gt; 0. Recall tab shows badge count. Progress bars show mastery %.</div>
+    </div>
+
+    <!-- State B: Empty -->
+    <div>
+      <div class="screen-num">SCR-04b</div>
+      <div class="screen-label">Home — Empty State</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div style="background:var(--fill-dark);padding:14px 14px 24px">
+              <div style="font-size:8px;color:rgba(255,255,255,0.5);margin-bottom:2px">Good morning</div>
+              <div style="font-size:14px;font-weight:800;color:var(--white)">Ada Okonkwo</div>
+              <div style="font-size:8px;color:rgba(255,255,255,0.4)">Kings Secondary School · SS2</div>
+              <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px;margin-top:8px">
+                <span style="display:inline-flex;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8973A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c0-4-3-6-3-9a3 3 0 0 1 6 0c0 3-3 5-3 9zm-1 4a1 1 0 1 0 2 0 1 1 0 0 0-2 0z"/></svg></span>
+                <span style="font-size:14px;font-weight:800;color:var(--white)">0</span>
+                <span style="font-size:8px;color:rgba(255,255,255,0.5)">Start your streak!</span>
+              </div>
+            </div>
+            <div style="margin:-12px 12px 12px;background:var(--fill-lighter);border:1.5px dashed var(--line);border-radius:12px;padding:16px;text-align:center">
+              <div style="margin-bottom:6px;display:flex;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+              <div style="font-size:10px;font-weight:800;color:var(--dark);margin-bottom:3px">Nothing to recall yet</div>
+              <div style="font-size:8px;color:var(--light);line-height:1.5">Study a topic first — it'll show up here when it's time to review.</div>
+            </div>
+            <div style="padding:0 12px;font-size:9px;font-weight:700;color:var(--dark);margin-bottom:8px">Start here</div>
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+              <div class="list-info"><div class="list-title">Quadratic Equations</div><div class="list-sub">Mathematics · Not started</div></div>
+              <div class="list-badge badge-jade">Start →</div>
+            </div>
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H7v9l-4 4v1h18v-1l-4-4V3h-2M9 3h6M9 3a3 3 0 0 0 6 0"/></svg></div>
+              <div class="list-info"><div class="list-title">Acids &amp; Bases</div><div class="list-sub">Chemistry · Not started</div></div>
+              <div class="list-badge badge-jade">Start →</div>
+            </div>
+            <div class="bottom-nav">
+              <div class="bnav-item on"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12V19H15V15H9V19H5V12Z"/></svg></div>Home</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>Browse</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg></div>Recall</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>Progress</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann"><strong>Empty state:</strong> No recall card. No badge on recall tab. Topic list shows unstarted topics to encourage first study.</div>
+    </div>
+
+    <!-- Push notification side note -->
+    <div style="align-self:flex-start;margin-top:40px">
+      <div style="background:var(--white);border:1.5px solid var(--line);border-radius:10px;padding:14px;max-width:220px">
+        <div style="font-size:10px;font-weight:800;color:var(--black);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line-light)">Push Notification · 7AM</div>
+        <div style="background:var(--fill-lighter);border-radius:8px;padding:10px;border:1px solid var(--line)">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <div style="width:16px;height:16px;background:var(--jade);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:white;font-weight:800">DA</div>
+            <div style="font-size:9px;font-weight:700">DefinAm</div>
+            <div style="margin-left:auto;font-size:8px;color:var(--light)">now</div>
+          </div>
+          <div style="font-size:9px;font-weight:700;color:var(--dark)">3 topics to review today</div>
+          <div style="font-size:8px;color:var(--light);margin-top:2px">Acids &amp; Bases, Quad Eq, Comprehension</div>
+        </div>
+        <div style="margin-top:10px;font-size:8px;color:var(--light);line-height:1.6">Fires daily at 7AM via <strong>OneSignal</strong> if queue &gt; 0. No notification if queue is empty.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wf-divider"></div>
+
+  <!-- ══════════════════════════════════════
+       SCR-05 BROWSE TOPICS
+  ══════════════════════════════════════ -->
+  <div class="section-heading">Section 2 · Browse</div>
+  <div class="section-title">Browse Topics — Subject → Chapter → Topic</div>
+  <div class="section-desc">Pre-loaded WAEC syllabus only · No PDF upload in V1</div>
+
+  <div class="wf-section-label">SCR-05 · Browse Flow <span>Subjects → Chapters → Topics in chapter</span></div>
+  <div class="wf-grid">
+
+    <!-- Subjects -->
+    <div>
+      <div class="screen-num">SCR-05a</div>
+      <div class="screen-label">Subjects List</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar"><div class="appbar-title">Browse</div><div class="appbar-icon"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div></div>
+            <div class="search-bar"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search topics...</div>
+            <div class="list-item" style="background:var(--fill-lighter)">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+              <div class="list-info"><div class="list-title">Mathematics</div><div class="list-sub">18 chapters · 94 topics</div></div>
+              <div class="list-badge badge-jade">78%</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h12"/></svg></div>
+              <div class="list-info"><div class="list-title">English Language</div><div class="list-sub">12 chapters · 60 topics</div></div>
+              <div class="list-badge badge-mid">65%</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H7v9l-4 4v1h18v-1l-4-4V3h-2M9 3h6M9 3a3 3 0 0 0 6 0"/></svg></div>
+              <div class="list-info"><div class="list-title">Chemistry</div><div class="list-sub">16 chapters · 80 topics</div></div>
+              <div class="list-badge badge-outline">41%</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
+              <div class="list-info"><div class="list-title">Physics</div><div class="list-sub">14 chapters · 70 topics</div></div>
+              <div class="list-badge badge-outline">—</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="list-info"><div class="list-title">Economics</div><div class="list-sub">10 chapters · 48 topics</div></div>
+              <div class="list-badge badge-outline">—</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="bottom-nav">
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12V19H15V15H9V19H5V12Z"/></svg></div>Home</div>
+              <div class="bnav-item on"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>Browse</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg></div>Recall</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>Progress</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann">Only shows student's registered subjects. Badge = mastery %. Tap → chapter list.</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Chapters -->
+    <div>
+      <div class="screen-num">SCR-05b</div>
+      <div class="screen-label">Chapters (Mathematics)</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar"><div class="appbar-back">←</div><div class="appbar-title">Mathematics</div></div>
+            <div style="padding:6px 12px 4px;font-size:8px;color:var(--light)">SS2 Syllabus · 18 chapters</div>
+            <div class="list-item">
+              <div class="list-info"><div class="list-title">Ch.1 — Number &amp; Numeration</div><div class="list-sub">5 topics</div></div>
+              <div class="list-badge badge-jade">82%</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info"><div class="list-title">Ch.2 — Algebraic Processes</div><div class="list-sub">6 topics</div></div>
+              <div class="list-badge badge-mid">71%</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item" style="background:var(--fill-lighter)">
+              <div class="list-info"><div class="list-title">Ch.3 — Equations &amp; Inequalities</div><div class="list-sub">8 topics · In Progress</div></div>
+              <div class="list-badge badge-mid">65%</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info"><div class="list-title">Ch.4 — Geometry</div><div class="list-sub">7 topics</div></div>
+              <div class="list-badge badge-outline">—</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info"><div class="list-title">Ch.5 — Statistics</div><div class="list-sub">6 topics</div></div>
+              <div class="list-badge badge-outline">—</div>
+              <div class="list-arrow">›</div>
+            </div>
+            <div class="bottom-nav">
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12V19H15V15H9V19H5V12Z"/></svg></div>Home</div>
+              <div class="bnav-item on"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>Browse</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg></div>Recall</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>Progress</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Topics in chapter -->
+    <div>
+      <div class="screen-num">SCR-05c</div>
+      <div class="screen-label">Topics in Chapter</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar"><div class="appbar-back">←</div><div class="appbar-title">Equations &amp; Inequalities</div></div>
+            <div style="padding:6px 12px 4px;font-size:8px;color:var(--light)">Ch.3 · 8 topics · WAEC-aligned</div>
+            <div class="list-item">
+              <div class="list-info"><div class="list-title">Quadratic Equations</div><div class="list-sub">Mastery: 65% · Last studied 3 days ago</div></div>
+              <div class="list-badge badge-jade">Study →</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info"><div class="list-title">Linear Equations</div><div class="list-sub">Not yet studied</div></div>
+              <div class="list-badge badge-mid">Start →</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info"><div class="list-title">Simultaneous Equations</div><div class="list-sub">Not yet studied</div></div>
+              <div class="list-badge badge-mid">Start →</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info"><div class="list-title">Inequalities</div><div class="list-sub">Not yet studied</div></div>
+              <div class="list-badge badge-outline">Start →</div>
+            </div>
+            <div class="bottom-nav">
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12V19H15V15H9V19H5V12Z"/></svg></div>Home</div>
+              <div class="bnav-item on"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>Browse</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg></div>Recall</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>Progress</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann">Tapping any topic row opens the 5-Step Learning Flow (SCR-06).</div>
+    </div>
+  </div>
+
+  <div class="wf-divider"></div>
+
+  <!-- ══════════════════════════════════════
+       SCR-06 5-STEP LEARNING FLOW
+  ══════════════════════════════════════ -->
+  <div class="section-heading">Section 3 · Learn</div>
+  <div class="section-title">5-Step AI Learning Flow</div>
+  <div class="section-desc">Core teaching engine · Triggered when student taps any topic · Steps progress linearly · Pre-loaded content</div>
+
+  <div class="wf-section-label">SCR-06 · All 5 Steps <span>Step 5 (AI Chat) is embedded in the flow — not a separate tab</span></div>
+  <div class="wf-grid tight">
+
+    <!-- Step 1 -->
+    <div>
+      <div class="screen-num">SCR-06a</div>
+      <div class="screen-label">Step 1: Definition</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div style="background:var(--fill-dark);padding:10px 14px 6px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <div style="font-size:10px;color:rgba(255,255,255,0.5)">←</div>
+                <div style="flex:1">
+                  <div style="font-size:10px;font-weight:800;color:white">Quadratic Equations</div>
+                  <div style="font-size:8px;color:rgba(255,255,255,0.4)">Mathematics · Ch.3</div>
+                </div>
+                <div style="font-size:8px;color:rgba(255,255,255,0.3)">Exit</div>
+              </div>
+              <div style="display:flex;gap:4px;margin-bottom:4px">
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div style="flex:1;text-align:center;font-size:7px;color:white;font-weight:700">Def</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Example</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Visual</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Practice</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Chat</div>
+              </div>
+            </div>
+            <div style="padding:12px 14px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                <div style="width:20px;height:20px;background:var(--jade);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white">1</div>
+                <div style="font-size:11px;font-weight:800;color:var(--black)">Simple Definition</div>
+              </div>
+              <div style="background:var(--fill-lighter);border-radius:8px;padding:10px;margin-bottom:10px">
+                <div style="font-size:9px;line-height:1.6;color:var(--dark)">A <strong>quadratic equation</strong> is any equation where the highest power of the unknown is 2. It always looks like: <strong>ax² + bx + c = 0</strong>.</div>
+              </div>
+              <div style="background:var(--jade-light);border:1px solid #9FE1CB;border-radius:6px;padding:8px;font-size:8px;color:#085041;margin-bottom:10px"><strong>Key parts:</strong> a (cannot be 0), b, and c are numbers. x is what you're solving for.</div>
+              <div class="big-btn">See a Nigerian Example →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann">Content pre-generated when admin seeds topic. Cached in Redis. Students see instant text — no AI wait.</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Step 2 -->
+    <div>
+      <div class="screen-num">SCR-06b</div>
+      <div class="screen-label">Step 2: Nigerian Example</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div style="background:var(--fill-dark);padding:10px 14px 6px">
+              <div style="display:flex;gap:4px;margin-bottom:4px">
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.5)">Def ✓</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:white;font-weight:700">Example</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Visual</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Practice</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Chat</div>
+              </div>
+            </div>
+            <div style="padding:12px 14px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                <div style="width:20px;height:20px;background:var(--jade);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white">2</div>
+                <div style="font-size:11px;font-weight:800;color:var(--black)">Nigerian Example</div>
+                <div style="margin-left:auto;font-size:7px;color:white;background:var(--jade);padding:2px 6px;border-radius:2px">🇳🇬 Local</div>
+              </div>
+              <div style="background:var(--jade-light);border-left:3px solid var(--jade);border-radius:0 8px 8px 0;padding:10px;margin-bottom:10px">
+                <div style="font-size:9px;line-height:1.6;color:var(--dark)">A trader at <strong>Alaba Market, Lagos</strong> whose profit depends on generators sold. Her formula is:<br><strong>P = −2x² + 20x − 30</strong><br>To find break-even, she solves a quadratic. Appears in WAEC Maths &amp; Economics.</div>
+              </div>
+              <div style="font-size:8px;color:var(--mid);padding:6px 8px;background:var(--fill-lighter);border-radius:6px;margin-bottom:10px">AI uses Nigerian context: Alaba Market, NEPA, Jollof rice, JAMB, Nnewi, etc.</div>
+              <div class="big-btn">Continue to Visual →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Step 3 -->
+    <div>
+      <div class="screen-num">SCR-06c</div>
+      <div class="screen-label">Step 3: Visual Breakdown</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div style="background:var(--fill-dark);padding:10px 14px 6px">
+              <div style="display:flex;gap:4px;margin-bottom:4px">
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.5)">Def ✓</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.5)">Example ✓</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:white;font-weight:700">Visual</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Practice</div>
+                <div style="flex:1;text-align:center;font-size:7px;color:rgba(255,255,255,0.3)">Chat</div>
+              </div>
+            </div>
+            <div style="padding:12px 14px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                <div style="width:20px;height:20px;background:var(--jade);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white">3</div>
+                <div style="font-size:11px;font-weight:800;color:var(--black)">Visual Breakdown</div>
+              </div>
+              <div style="background:var(--fill-lighter);border-radius:8px;padding:10px;margin-bottom:10px;font-family:monospace;font-size:8px;line-height:2;color:var(--dark)">
+                ax² + bx + c = 0<br>
+                ├── a = x² coefficient (≠0)<br>
+                ├── b = x coefficient<br>
+                ├── c = constant<br>
+                └── Solve by:<br>
+                &nbsp;&nbsp;├── Factorisation<br>
+                &nbsp;&nbsp;├── Completing square<br>
+                &nbsp;&nbsp;└── Formula: x=(-b±√b²-4ac)/2a
+              </div>
+              <div style="font-size:8px;color:var(--lighter);padding:4px 8px;border:1px dashed var(--line);border-radius:4px;margin-bottom:10px">Text diagrams only in V1. Image gen is V2.</div>
+              <div class="big-btn">Continue to Practice →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Step 4 -->
+    <div>
+      <div class="screen-num">SCR-06d</div>
+      <div class="screen-label">Step 4: Practice Questions</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div style="background:var(--fill-dark);padding:10px 14px 6px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <div style="font-size:8px;color:rgba(255,255,255,0.5)">Question 2 of 4</div>
+                <div style="font-size:8px;color:rgba(255,255,255,0.4)">Quadratic Equations</div>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:white;border-radius:2px"></div>
+                <div style="flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px"></div>
+              </div>
+            </div>
+            <div style="padding:12px 14px">
+              <div class="question-card">
+                <div class="qcard-topic">Mathematics · Practice Q2/4</div>
+                <div class="qcard-text">Solve: x² − 5x + 6 = 0</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:5px;margin:0 12px 10px">
+                <div style="border:1.5px solid var(--line);border-radius:7px;padding:8px 10px;font-size:9px;font-weight:600;color:var(--dark)">A. x = −2 and x = −3</div>
+                <div style="border:1.5px solid var(--jade);border-radius:7px;padding:8px 10px;font-size:9px;font-weight:700;background:var(--jade);color:var(--white)">B. x = 2 and x = 3 ✓ Correct!</div>
+                <div style="border:1.5px solid var(--line);border-radius:7px;padding:8px 10px;font-size:9px;font-weight:600;color:var(--lighter)">C. x = 1 and x = 6</div>
+                <div style="border:1.5px solid var(--line);border-radius:7px;padding:8px 10px;font-size:9px;font-weight:600;color:var(--lighter)">D. x = −1 and x = −6</div>
+              </div>
+              <div style="background:var(--jade-light);border-radius:8px;padding:8px 10px;margin:0 12px 10px;font-size:8px;color:#085041;line-height:1.5">
+                <strong>✓ Correct!</strong> Factorise: (x−2)(x−3) = 0 → x = 2 or x = 3.
+              </div>
+              <div class="big-btn">Next Question →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann">3–5 questions per session. AI marks instantly. Accuracy logged to topic_reviews after step completes.</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Step 5 -->
+    <div>
+      <div class="screen-num">SCR-06e</div>
+      <div class="screen-label">Step 5: AI Tutor Chat</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar">
+              <div class="appbar-back">←</div>
+              <div style="width:28px;height:28px;background:var(--jade);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:white"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+              <div class="list-info" style="margin-left:4px">
+                <div class="list-title">AI Tutor</div>
+                <div class="list-sub">Quadratic Equations · 42 msgs left</div>
+              </div>
+            </div>
+            <div style="background:var(--jade-light);border-radius:6px;margin:6px 12px;padding:6px 8px;font-size:8px;color:#085041">Stays within syllabus. Guides you — won't give direct answers.</div>
+            <div class="chat-area">
+              <div class="chat-msg">
+                <div class="chat-av dark"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+                <div class="chat-bubble">Good work on practice. What part of quadratics is still confusing you?</div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-av">A</div>
+                <div class="chat-bubble">Why can't we always just factorise?</div>
+              </div>
+              <div class="chat-msg">
+                <div class="chat-av dark"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+                <div class="chat-bubble">Good question. Try to factorise: x² + 3x + 1 = 0. What factors would you try?</div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-av">A</div>
+                <div class="chat-bubble">I can't find factors that work...</div>
+              </div>
+              <div class="chat-msg">
+                <div class="chat-av dark"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+                <div class="chat-bubble">Exactly — you just found why the formula exists!</div>
+              </div>
+            </div>
+            <div class="chat-input-row">
+              <div class="chat-input-field">Ask about this topic...</div>
+              <div class="chat-send">↑</div>
+            </div>
+            <div class="chat-limit-note">50 msgs/day · 42 remaining · Resets midnight</div>
+          </div>
+        </div>
+      </div>
+      <div class="ann"><strong>Socratic method:</strong> AI guides student to answer, never gives it. RAG retrieves syllabus context per query. Streamed via SSE.</div>
+    </div>
+  </div>
+
+  <div class="wf-divider"></div>
+
+  <!-- ══════════════════════════════════════
+       SCR-07 DAILY RECALL
+  ══════════════════════════════════════ -->
+  <div class="section-heading">Section 4 · Recall</div>
+  <div class="section-title">Daily Recall</div>
+  <div class="section-desc">SM-2 spaced repetition · Pre-computed nightly · Student rates 0–5 · EF updates · Streak tracks</div>
+
+  <div class="wf-section-label">SCR-07 · Daily Recall Flow <span>Queue → Question → Reveal → Rate → Next / Done</span></div>
+  <div class="wf-grid tight">
+
+    <!-- Queue -->
+    <div>
+      <div class="screen-num">SCR-07a</div>
+      <div class="screen-label">Queue Overview</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>7:03</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar">
+              <div class="appbar-back">←</div>
+              <div class="list-info"><div class="appbar-title">Daily Recall</div><div style="font-size:8px;color:var(--light)">Monday, 7 April</div></div>
+            </div>
+            <div style="padding:10px 14px">
+              <div style="display:flex;align-items:center;gap:10px;background:var(--jade-light);border:1px solid #9FE1CB;border-radius:10px;padding:12px;margin-bottom:12px">
+                <div style="display:flex;align-items:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                <div>
+                  <div style="font-size:11px;font-weight:800;color:var(--black)">3 topics due today</div>
+                  <div style="font-size:8px;color:var(--jade)">~8 minutes · Pre-computed at midnight</div>
+                </div>
+                <div style="margin-left:auto;text-align:center">
+                  <div style="font-size:14px;font-weight:800;color:var(--black)">0/3</div>
+                  <div style="font-size:7px;color:var(--light)">done</div>
+                </div>
+              </div>
+              <div style="height:4px;background:var(--fill-lighter);border-radius:2px;margin-bottom:14px;border:0.5px solid var(--line)"><div style="width:0%;height:100%;background:var(--jade);border-radius:2px"></div></div>
+              <div class="list-item" style="border:1.5px solid var(--line);border-radius:8px;margin-bottom:6px">
+                <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H7v9l-4 4v1h18v-1l-4-4V3h-2M9 3h6M9 3a3 3 0 0 0 6 0"/></svg></div>
+                <div class="list-info"><div class="list-title">Acids &amp; Bases</div><div class="list-sub">Chemistry · Due today</div></div>
+                <div class="list-badge badge-outline">Overdue</div>
+              </div>
+              <div class="list-item" style="border:1.5px solid var(--line);border-radius:8px;margin-bottom:6px">
+                <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+                <div class="list-info"><div class="list-title">Quadratic Equations</div><div class="list-sub">Mathematics · Due today</div></div>
+              </div>
+              <div class="list-item" style="border:1.5px solid var(--line);border-radius:8px">
+                <div class="list-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h12"/></svg></div>
+                <div class="list-info"><div class="list-title">Comprehension</div><div class="list-sub">English · Due today</div></div>
+              </div>
+              <div class="big-btn" style="margin-top:12px">Start All Reviews →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Question hidden -->
+    <div>
+      <div class="screen-num">SCR-07b</div>
+      <div class="screen-label">Question · Answer Hidden</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>7:04</span><span>WiFi ■■</span></div>
+          <div class="phone-body" style="background:var(--fill-dark);min-height:420px">
+            <div style="padding:10px 14px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+                <div style="font-size:10px;color:rgba(255,255,255,0.4)">← Back</div>
+                <div style="font-size:10px;font-weight:800;color:white;flex:1">Daily Recall</div>
+                <div style="background:rgba(255,255,255,0.1);border-radius:20px;padding:3px 8px;font-size:8px;color:rgba(255,255,255,0.6)">1 / 3</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px">
+                <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.4);margin-bottom:10px">Chemistry · Acids &amp; Bases</div>
+                <div style="font-size:13px;font-weight:700;color:white;line-height:1.5">What is the pH range of a strong acid, and give a Nigerian example?</div>
+                <div style="margin-top:16px;font-size:8px;color:rgba(255,255,255,0.3)">Tap to reveal answer ↓</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:11px;text-align:center;font-size:10px;font-weight:700;color:white;">Show Answer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Answer + Rating -->
+    <div>
+      <div class="screen-num">SCR-07c</div>
+      <div class="screen-label">Answer Revealed · Rate 0–5</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>7:05</span><span>WiFi ■■</span></div>
+          <div class="phone-body" style="background:var(--fill-dark);min-height:420px">
+            <div style="padding:10px 14px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <div style="font-size:10px;font-weight:800;color:white;flex:1">Daily Recall</div>
+                <div style="background:rgba(255,255,255,0.1);border-radius:20px;padding:3px 8px;font-size:8px;color:rgba(255,255,255,0.6)">1 / 3</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;text-align:center;margin-bottom:10px">
+                <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);line-height:1.4">What is the pH range of a strong acid + Nigerian example?</div>
+              </div>
+              <div style="background:white;border-radius:12px;padding:12px;margin-bottom:10px">
+                <div style="font-size:7px;font-weight:700;text-transform:uppercase;color:var(--lighter);margin-bottom:5px">Model Answer</div>
+                <div style="font-size:9px;line-height:1.6;color:var(--dark)">Strong acids have a pH of <strong>0–2</strong>. Battery acid (H₂SO₄) found in car batteries — those powering generators during NEPA outages — is a common Nigerian example.</div>
+              </div>
+              <div style="font-size:8px;font-weight:600;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:6px">How well did you remember this?</div>
+              <div class="rating-row">
+                <div class="rate-btn-wf"><div class="rate-num-wf">0</div><div class="rate-word-wf">No idea</div></div>
+                <div class="rate-btn-wf"><div class="rate-num-wf">1</div><div class="rate-word-wf">Forgot</div></div>
+                <div class="rate-btn-wf"><div class="rate-num-wf">2</div><div class="rate-word-wf">Hard</div></div>
+                <div class="rate-btn-wf"><div class="rate-num-wf">3</div><div class="rate-word-wf">OK</div></div>
+                <div class="rate-btn-wf"><div class="rate-num-wf">4</div><div class="rate-word-wf">Good</div></div>
+                <div class="rate-btn-wf" style="background:var(--jade);border-color:white"><div class="rate-num-wf white">5</div><div class="rate-word-wf white">Perfect</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann">Rating triggers SM-2 update: 0–2 resets interval, 3–5 increases it. EF adjusts. Next due date written to topic_reviews.</div>
+    </div>
+    <div class="flow-arrow">→</div>
+
+    <!-- Done -->
+    <div>
+      <div class="screen-num">SCR-07d</div>
+      <div class="screen-label">All Done · Streak Updated</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>7:11</span><span>WiFi ■■</span></div>
+          <div class="phone-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;background:var(--fill-dark);padding:24px 20px;text-align:center">
+            <div style="margin-bottom:12px;display:flex;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3L2 22l10.7-3.79"/><path d="M4 3L3 2"/><path d="M22 4l1-1"/><path d="M7 12l10-10L22 7 12 17l-5-5z"/><path d="M14 12L7.7 5.7"/><path d="M2 22l7.7-2.23"/></svg></div>
+            <div style="font-size:16px;font-weight:900;color:white;letter-spacing:-0.5px;margin-bottom:4px">All done!</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:20px">3 topics reviewed · 7 minutes</div>
+            <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:16px 24px;margin-bottom:20px">
+              <div style="font-size:8px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:5px">Streak</div>
+              <div style="font-size:32px;font-weight:900;color:white;line-height:1;display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8973A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c0-4-3-6-3-9a3 3 0 0 1 6 0c0 3-3 5-3 9zm-1 4a1 1 0 1 0 2 0 1 1 0 0 0-2 0z"/></svg> 8</div>
+              <div style="font-size:8px;color:rgba(255,255,255,0.4);margin-top:3px">days in a row</div>
+            </div>
+            <div style="font-size:8px;color:rgba(255,255,255,0.3);margin-bottom:16px;text-align:left;width:100%">Next reviews: Tomorrow → Quadratic Eq · In 4 days → Linear Eq</div>
+            <div style="background:var(--jade);color:white;border-radius:10px;padding:11px;font-size:10px;font-weight:800;width:100%">Browse More Topics →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SM-2 Table -->
+  <div style="background:var(--white);border:2px solid var(--black);border-radius:10px;padding:20px 24px;max-width:700px;margin-top:8px">
+    <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px">SM-2 Algorithm — Backend Logic</div>
+    <table class="spec-table">
+      <thead><tr><th>Rating</th><th>What Happens</th></tr></thead>
+      <tbody>
+        <tr><td>0–2 (forgot)</td><td>Reset: interval = 1, n = 0. Review again tomorrow. EF decreases.</td></tr>
+        <tr><td>3 (hard)</td><td>n=0→interval=1. n=1→interval=3. n≥2→prev×EF. EF decreases slightly.</td></tr>
+        <tr><td>4 (good)</td><td>Same interval logic. EF unchanged.</td></tr>
+        <tr><td>5 (perfect)</td><td>Same interval logic. EF increases. Topic spaced further out.</td></tr>
+        <tr><td>Nightly cron</td><td>Runs midnight. Queries topic_reviews. Computes due topics. Writes to daily_recall_queue. Student sees pre-computed list in morning — instant load.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wf-divider"></div>
+
+  <!-- ══════════════════════════════════════
+       SCR-08 AI TUTOR CHAT (FULL SCREEN)
+  ══════════════════════════════════════ -->
+  <div class="section-heading">Section 5 · Chat</div>
+  <div class="section-title">AI Tutor Chat (Full Screen)</div>
+  <div class="section-desc">Embedded in 5-Step Flow as Step 5 · Also accessible from Home and inside Recall · Syllabus-scoped · Socratic method · 50 msg/day cap · RAG + streaming</div>
+
+  <div class="wf-section-label">SCR-08 · AI Tutor Chat <span>Entry: after Step 4, from Home chat icon, or inside Recall</span></div>
+  <div class="wf-grid">
+
+    <!-- Active -->
+    <div>
+      <div class="screen-num">SCR-08a</div>
+      <div class="screen-label">Chat — Active Session</div>
+      <div class="phone wide">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar">
+              <div class="appbar-back">←</div>
+              <div style="width:26px;height:26px;background:var(--jade);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:white;flex-shrink:0"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+              <div class="list-info">
+                <div class="list-title">AI Tutor</div>
+                <div class="list-sub">Mathematics · Quadratic Equations</div>
+              </div>
+              <div style="font-size:7px;font-weight:700;background:var(--jade);color:white;padding:2px 6px;border-radius:2px">38 left</div>
+            </div>
+            <div style="background:var(--jade-light);border-radius:5px;margin:6px 12px;padding:5px 8px;font-size:8px;color:#085041"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C8973A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Syllabus only · Guides, doesn't give direct answers · 50 msgs/day</div>
+            <div class="chat-area" style="min-height:220px">
+              <div class="chat-msg">
+                <div class="chat-av dark"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+                <div class="chat-bubble">I see you finished Practice. What part is still confusing you? Tell me what you tried first.</div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-av">A</div>
+                <div class="chat-bubble">I don't understand why we need the quadratic formula. Can't we always factorise?</div>
+              </div>
+              <div class="chat-msg">
+                <div class="chat-av dark"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+                <div class="chat-bubble">Let's test that. Can you factorise: x² + 3x + 1 = 0? What numbers multiply to 1 and add to 3?</div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-av">A</div>
+                <div class="chat-bubble">I can't find factors that work...</div>
+              </div>
+              <div class="chat-msg">
+                <div class="chat-av dark"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+                <div class="chat-bubble">Exactly — you just discovered why the formula exists. What values are a, b, c in that equation?</div>
+              </div>
+            </div>
+            <div class="chat-input-row">
+              <div class="chat-input-field">Ask anything about this topic...</div>
+              <div class="chat-send">↑</div>
+            </div>
+            <div class="chat-limit-note">50 messages per day · 38 remaining · Resets at midnight</div>
+          </div>
+        </div>
+      </div>
+      <div class="ann">RAG: each query retrieves topic syllabus context before AI call. SSE streaming for fast feel. System prompt enforces Socratic guidance.</div>
+    </div>
+
+    <!-- Cap reached -->
+    <div>
+      <div class="screen-num">SCR-08b</div>
+      <div class="screen-label">Cap Reached (50/day)</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar">
+              <div class="appbar-back">←</div>
+              <div style="width:26px;height:26px;background:var(--jade);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:white"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+              <div class="list-info"><div class="list-title">AI Tutor</div><div class="list-sub">Mathematics · Quadratic Equations</div></div>
+              <div style="font-size:7px;font-weight:700;background:var(--gold);color:white;padding:2px 6px;border-radius:2px">0 left</div>
+            </div>
+            <div style="background:var(--gold-light);border:1px solid #E5C97A;margin:6px 12px;border-radius:6px;padding:7px 9px;font-size:8px;color:#633806">You've used all 50 messages today. Resets at midnight. Your progress is saved.</div>
+            <div class="chat-area" style="opacity:0.5;pointer-events:none;min-height:200px">
+              <div class="chat-msg">
+                <div class="chat-av dark"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2zm-4 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm8 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg></div>
+                <div class="chat-bubble">What values are a, b, c in that equation?</div>
+              </div>
+              <div class="chat-msg user">
+                <div class="chat-av">A</div>
+                <div class="chat-bubble">a=1, b=3, c=1</div>
+              </div>
+            </div>
+            <div style="border:1.5px dashed var(--line);border-radius:8px;padding:10px 12px;margin:8px 12px;text-align:center">
+              <div style="font-size:9px;font-weight:700;color:var(--dark);margin-bottom:3px">Daily limit reached</div>
+              <div style="font-size:8px;color:var(--light)">Resets midnight · Come back tomorrow</div>
+            </div>
+            <div class="chat-input-row" style="opacity:0.4;pointer-events:none">
+              <div class="chat-input-field">Chat disabled until midnight...</div>
+              <div class="chat-send" style="opacity:0.4">↑</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann">50 msg/day via Redis counter. Soft block — gentle banner, not an error. Counter resets at midnight.</div>
+    </div>
+
+    <!-- Entry points note -->
+    <div style="align-self:flex-start;margin-top:40px">
+      <div style="background:var(--white);border:1.5px solid var(--line);border-radius:10px;padding:14px;max-width:200px">
+        <div style="font-size:10px;font-weight:800;color:var(--black);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--line-light)">Chat Entry Points</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:9px;color:var(--dark);padding:7px;background:var(--fill-lighter);border-radius:6px;border:1px solid var(--line)"><strong>1.</strong> After Step 4 completes → auto-opens on that topic</div>
+          <div style="font-size:9px;color:var(--dark);padding:7px;background:var(--fill-lighter);border-radius:6px;border:1px solid var(--line)"><strong>2.</strong> Home dashboard → chat icon in topic row</div>
+          <div style="font-size:9px;color:var(--dark);padding:7px;background:var(--fill-lighter);border-radius:6px;border:1px solid var(--line)"><strong>3.</strong> Inside Daily Recall → "Ask about this" button below model answer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wf-divider"></div>
+
+  <!-- ══════════════════════════════════════
+       SCR-09 MY PROGRESS
+  ══════════════════════════════════════ -->
+  <div class="section-heading">Section 6 · Progress</div>
+  <div class="section-title">My Progress</div>
+  <div class="section-desc">Mastery by subject · Study heatmap · Upcoming reviews · No gamification beyond streak</div>
+
+  <div class="wf-section-label">SCR-09 · Progress Screen</div>
+  <div class="wf-grid">
+    <div>
+      <div class="screen-num">SCR-09</div>
+      <div class="screen-label">My Progress</div>
+      <div class="phone wide">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar"><div class="appbar-title">My Progress</div></div>
+            <!-- Stats row -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 12px 6px">
+              <div style="background:var(--jade);border-radius:8px;padding:10px;color:white;text-align:center">
+                <div style="font-size:16px;font-weight:900;line-height:1">🔥 8</div>
+                <div style="font-size:7px;opacity:0.7;margin-top:2px">day streak</div>
+              </div>
+              <div style="background:var(--fill-lighter);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:16px;font-weight:900;color:var(--black);line-height:1">24</div>
+                <div style="font-size:7px;color:var(--light);margin-top:2px">topics studied</div>
+              </div>
+              <div style="background:var(--fill-lighter);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:16px;font-weight:900;color:var(--black);line-height:1">71%</div>
+                <div style="font-size:7px;color:var(--light);margin-top:2px">avg accuracy</div>
+              </div>
+              <div style="background:var(--fill-lighter);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:16px;font-weight:900;color:var(--black);line-height:1">3</div>
+                <div style="font-size:7px;color:var(--light);margin-top:2px">due tomorrow</div>
+              </div>
+            </div>
+            <!-- Subject mastery -->
+            <div class="card-header" style="margin:0 12px;border-radius:8px 8px 0 0;border:1.5px solid var(--line)">Subject Mastery</div>
+            <div style="border:1.5px solid var(--line);border-top:none;border-radius:0 0 8px 8px;margin:0 12px 8px;padding:8px 10px">
+              <div class="prog-top"><span>Mathematics</span><span>78%</span></div>
+              <div class="prog-track" style="margin-bottom:7px"><div class="prog-fill" style="width:78%"></div></div>
+              <div class="prog-top"><span>English</span><span>65%</span></div>
+              <div class="prog-track" style="margin-bottom:7px"><div class="prog-fill" style="width:65%;background:var(--fill-mid)"></div></div>
+              <div class="prog-top"><span>Chemistry</span><span>41%</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:41%;background:var(--fill-mid)"></div></div>
+            </div>
+            <!-- Heatmap placeholder -->
+            <div style="margin:0 12px 8px;border:1.5px solid var(--line);border-radius:8px;padding:10px">
+              <div style="font-size:9px;font-weight:700;color:var(--dark);margin-bottom:8px">Study Activity — 3 Months</div>
+              <div style="display:flex;flex-wrap:wrap;gap:2px">
+                <!-- Heatmap squares -->
+                <div style="width:9px;height:9px;border-radius:2px;background:#EEE"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#CCC"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#EEE"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#888"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#444"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#111"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#888"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#EEE"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#444"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#888"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#CCC"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#EEE"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#444"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#111"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#888"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#CCC"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#888"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#EEE"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#444"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#888"></div>
+                <div style="width:9px;height:9px;border-radius:2px;background:#111"></div>
+              </div>
+              <div style="font-size:7px;color:var(--lighter);margin-top:5px">Less ◻ ░ ▒ ▓ ■ More</div>
+            </div>
+            <!-- Upcoming reviews -->
+            <div style="margin:0 12px 8px;border:1.5px solid var(--line);border-radius:8px;overflow:hidden">
+              <div class="card-header">Upcoming Reviews</div>
+              <div style="padding:8px 10px">
+                <div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--line-light)">
+                  <div style="width:6px;height:6px;border-radius:50%;background:var(--jade)"></div>
+                  <div style="flex:1;font-size:9px;font-weight:600;color:var(--dark)">Acids &amp; Bases</div>
+                  <div style="font-size:8px;font-weight:700;color:var(--jade)">Today</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--line-light)">
+                  <div style="width:6px;height:6px;border-radius:50%;background:var(--fill-mid)"></div>
+                  <div style="flex:1;font-size:9px;font-weight:600;color:var(--dark)">Quadratic Equations</div>
+                  <div style="font-size:8px;color:var(--light)">Tomorrow</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;padding:5px 0">
+                  <div style="width:6px;height:6px;border-radius:50%;background:var(--fill-lighter);border:1px solid var(--line)"></div>
+                  <div style="flex:1;font-size:9px;font-weight:600;color:var(--dark)">Linear Equations</div>
+                  <div style="font-size:8px;color:var(--light)">In 4 days</div>
+                </div>
+              </div>
+            </div>
+            <div class="bottom-nav">
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12L12 5L19 12V19H15V15H9V19H5V12Z"/></svg></div>Home</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>Browse</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg></div>Recall</div>
+              <div class="bnav-item on"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>Progress</div>
+              <div class="bnav-item"><div class="bnav-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>Settings</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ann" style="max-width:200px;align-self:flex-start;margin-top:40px">
+      <strong>No gamification</strong> beyond streak. No badges or leaderboards. Mastery % from topic_reviews accuracy average. Heatmap from studied_at timestamps.
+    </div>
+  </div>
+
+</div><!-- end section -->
+</body>
+</html>
