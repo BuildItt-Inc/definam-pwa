@@ -77,3 +77,24 @@ export interface RecallItem {
   question: string;
   model_answer: string;
 }
+
+export interface SubjectMastery {
+  subject: string;
+  mastery_percent: number;
+}
+
+export interface UpcomingReview {
+  topic_title: string;
+  due: string;
+  urgency: 'high' | 'medium' | 'low';
+}
+
+export interface ProgressData {
+  streak_days: number;
+  topics_studied: number;
+  avg_accuracy: number;
+  due_tomorrow: number;
+  subject_mastery: SubjectMastery[];
+  upcoming_reviews: UpcomingReview[];
+  heatmap_data: number[];
+}

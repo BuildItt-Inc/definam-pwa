@@ -5,6 +5,7 @@ import type {
   TopicDetail,
   HomeData,
   RecallItem,
+  ProgressData,
 } from '@/types/topics';
 
 // ── Subjects ───────────────────────────────────────────────────────────────
@@ -696,3 +697,44 @@ export const mockRecallQueue: RecallItem[] = [
       'Use context clues — the words and sentences surrounding the unfamiliar word — to determine its meaning as used in that specific passage. WAEC requires the contextual meaning, not the standard dictionary definition. Read the sentence before and after the word, consider what makes logical sense, and write your answer in a complete sentence.',
   },
 ];
+
+// ── Progress Data ──────────────────────────────────────────────────────────
+
+export const mockProgressData: ProgressData = {
+  streak_days: 8,
+  topics_studied: 24,
+  avg_accuracy: 71,
+  due_tomorrow: 3,
+  subject_mastery: [
+    { subject: 'Mathematics', mastery_percent: 78 },
+    { subject: 'English Language', mastery_percent: 65 },
+    { subject: 'Chemistry', mastery_percent: 41 },
+  ],
+  upcoming_reviews: [
+    { topic_title: 'Acids & Bases', due: 'Today', urgency: 'high' },
+    { topic_title: 'Quadratic Equations', due: 'Tomorrow', urgency: 'medium' },
+    { topic_title: 'Linear Equations', due: 'In 4 days', urgency: 'low' },
+  ],
+  // 63 values: 9 weeks × 7 days (Mon–Sun). Activity levels 0–4.
+  // Reads left-to-right as weeks; each group of 7 is Mon–Sun.
+  heatmap_data: [
+    // Week 1 (oldest)
+    0, 0, 1, 0, 2, 0, 0,
+    // Week 2
+    0, 1, 0, 2, 0, 1, 0,
+    // Week 3
+    0, 2, 1, 0, 2, 1, 0,
+    // Week 4
+    1, 0, 2, 1, 3, 0, 1,
+    // Week 5
+    0, 2, 1, 2, 1, 0, 1,
+    // Week 6
+    1, 2, 3, 1, 2, 0, 1,
+    // Week 7
+    0, 2, 1, 3, 2, 1, 0,
+    // Week 8
+    2, 3, 2, 4, 1, 2, 0,
+    // Week 9 (most recent)
+    1, 3, 2, 4, 3, 2, 1,
+  ],
+};

@@ -1,4 +1,4 @@
-import type { Subject, Chapter, Topic, TopicDetail, HomeData, RecallItem } from '@/types/topics';
+import type { Subject, Chapter, Topic, TopicDetail, HomeData, RecallItem, ProgressData } from '@/types/topics';
 import { ApiError, getAccessToken } from '@/lib/api/auth';
 import { USE_MOCK, MOCK_DELAY_MS } from '@/lib/api/mock/week2';
 import {
@@ -8,6 +8,7 @@ import {
   mockTopicDetail,
   mockHomeData,
   mockRecallQueue,
+  mockProgressData,
 } from '@/lib/api/mock/data';
 
 const delay = () => new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
@@ -124,4 +125,20 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
     { headers: authHeaders() },
   );
   return handleResponse<RecallItem[]>(res);
+}
+
+// ── getProgressData ────────────────────────────────────────────────────────
+// Real: GET /api/v1/student/progress
+
+export async function getProgressData(): Promise<ProgressData> {
+  if (USE_MOCK) {
+    await delay();
+    return mockProgressData;
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/progress`,
+    { headers: authHeaders() },
+  );
+  return handleResponse<ProgressData>(res);
 }
