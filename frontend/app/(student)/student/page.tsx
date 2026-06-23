@@ -152,9 +152,11 @@ export default function StudentHomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [activePill, setActivePill] = useState(0);
+  const [greeting, setGreeting] = useState('Good day');
   const router = useRouter();
 
   useEffect(() => {
+    setGreeting(getGreeting());
     getHomeData()
       .then(setData)
       .catch((err: unknown) => {
@@ -185,7 +187,7 @@ export default function StudentHomePage() {
       {/* ── SCR-04 · Dark header ─────────────────────────────────────────── */}
       <header className="bg-ink px-4 pb-7 pt-5">
         <p className="mb-0.5 font-dm-sans text-[11px] text-white/50">
-          {getGreeting()}
+          {greeting}
         </p>
         <h1 className="mb-0.5 font-syne text-[22px] font-black leading-tight text-white">
           {student_name}

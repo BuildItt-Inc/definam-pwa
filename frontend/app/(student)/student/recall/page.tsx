@@ -51,9 +51,11 @@ function todayLabel(): string {
 export default function RecallPage() {
   const [queue, setQueue] = useState<RecallItem[] | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [dateLabel, setDateLabel] = useState('');
   const router = useRouter();
 
   useEffect(() => {
+    setDateLabel(todayLabel());
     getRecallQueue()
       .then(setQueue)
       .catch((err: unknown) => {
@@ -92,7 +94,7 @@ export default function RecallPage() {
           </button>
           <div>
             <h1 className="font-syne text-[17px] font-bold text-ink">Daily Recall</h1>
-            <p className="font-dm-sans text-[11px] text-gray-400">{todayLabel()}</p>
+            <p className="font-dm-sans text-[11px] text-gray-400">{dateLabel}</p>
           </div>
         </header>
 
@@ -132,7 +134,7 @@ export default function RecallPage() {
         </button>
         <div>
           <h1 className="font-syne text-[17px] font-bold text-ink">Daily Recall</h1>
-          <p className="font-dm-sans text-[11px] text-gray-400">{todayLabel()}</p>
+          <p className="font-dm-sans text-[11px] text-gray-400">{dateLabel}</p>
         </div>
       </header>
 
