@@ -6,8 +6,10 @@ Run: python seed_test_data.py
 
 import asyncio
 import uuid
+
 from app.db.database import db_session
-from app.db.models import Subject, Chapter, Topic
+from app.db.models import Chapter, Subject, Topic
+
 
 async def seed():
     async with db_session() as session:

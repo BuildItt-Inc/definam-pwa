@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime, date
+from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, JSON, Float
-from sqlalchemy.dialects.postgresql import UUID
 from pgvector.sqlalchemy import Vector
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -135,7 +135,7 @@ class Subject(Base):
         DateTime(timezone=True), nullable=True, onupdate=lambda: datetime.now(tz=UTC)
     )
 
-    chapters: Mapped[list["Chapter"]] = relationship("Chapter", back_populates="subject")
+    chapters: Mapped[list[Chapter]] = relationship("Chapter", back_populates="subject")
 
 
 # ── Chapters ────────────────────────────────────────────────────────────────
@@ -163,8 +163,8 @@ class Chapter(Base):
         DateTime(timezone=True), nullable=True, onupdate=lambda: datetime.now(tz=UTC)
     )
 
-    subject: Mapped["Subject"] = relationship("Subject", back_populates="chapters")
-    topics: Mapped[list["Topic"]] = relationship("Topic", back_populates="chapter")
+    subject: Mapped[Subject] = relationship("Subject", back_populates="chapters")
+    topics: Mapped[list[Topic]] = relationship("Topic", back_populates="chapter")
 
 
 # ── Topics ──────────────────────────────────────────────────────────────────
@@ -200,12 +200,12 @@ class Topic(Base):
         DateTime(timezone=True), nullable=True, onupdate=lambda: datetime.now(tz=UTC)
     )
 
-    chapter: Mapped["Chapter"] = relationship("Chapter", back_populates="topics")
-    reviews: Mapped[list["TopicReview"]] = relationship("TopicReview", back_populates="topic")
-    recall_queue: Mapped[list["DailyRecallQueue"]] = relationship(
+    chapter: Mapped[Chapter] = relationship("Chapter", back_populates="topics")
+    reviews: Mapped[list[TopicReview]] = relationship("TopicReview", back_populates="topic")
+    recall_queue: Mapped[list[DailyRecallQueue]] = relationship(
         "DailyRecallQueue", back_populates="topic"
     )
-    chat_messages: Mapped[list["ChatMessage"]] = relationship(
+    chat_messages: Mapped[list[ChatMessage]] = relationship(
         "ChatMessage", back_populates="topic"
     )
 
@@ -246,8 +246,8 @@ class TopicReview(Base):
         DateTime(timezone=True), nullable=True, onupdate=lambda: datetime.now(tz=UTC)
     )
 
-    topic: Mapped["Topic"] = relationship("Topic", back_populates="reviews")
-    user: Mapped["User"] = relationship("User")
+    topic: Mapped[Topic] = relationship("Topic", back_populates="reviews")
+    user: Mapped[User] = relationship("User")
 
 
 # ── Daily Recall Queue ─────────────────────────────────────────────────────
@@ -282,8 +282,8 @@ class DailyRecallQueue(Base):
         DateTime(timezone=True), nullable=True, onupdate=lambda: datetime.now(tz=UTC)
     )
 
-    topic: Mapped["Topic"] = relationship("Topic", back_populates="recall_queue")
-    user: Mapped["User"] = relationship("User")
+    topic: Mapped[Topic] = relationship("Topic", back_populates="recall_queue")
+    user: Mapped[User] = relationship("User")
 
 
 # ── Chat Messages ──────────────────────────────────────────────────────────
@@ -313,8 +313,8 @@ class ChatMessage(Base):
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
 
-    topic: Mapped["Topic | None"] = relationship("Topic", back_populates="chat_messages")
-    user: Mapped["User"] = relationship("User")
+    topic: Mapped[Topic | None] = relationship("Topic", back_populates="chat_messages")
+    user: Mapped[User] = relationship("User")
 
 
 # ── Chat Daily Usage (Rate Limiting) ──────────────────────────────────────
@@ -339,4 +339,4 @@ class ChatDailyUsage(Base):
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
 
-    user: Mapped["User"] = relationship("User")
+    user: Mapped[User] = relationship("User")
