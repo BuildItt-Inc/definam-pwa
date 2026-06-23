@@ -54,3 +54,8 @@ ignore = ["E501", "B008"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.13",
+]
