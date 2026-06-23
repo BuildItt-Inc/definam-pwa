@@ -12,7 +12,7 @@ def get_redis():
 
     if _redis_client is None:
         settings = get_settings()
-        url = settings.REDIS_URL.strip()
+        url = settings.redis_url.strip()
 
         if not url:
             raise ValueError("REDIS_URL is not configured")
