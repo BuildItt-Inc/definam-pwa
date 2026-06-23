@@ -37,9 +37,14 @@ class Settings(BaseSettings):
     smtp_username: str = ""
     smtp_password: str = ""
 
-    # ── AI (future) ────────────────────────────────────────
+    # ── AI ────────────────────────────────────────────────────
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    groq_api_key: str = ""     
+    gemini_api_key: str = ""     
+
+    REDIS_URL: str = "redis://localhost:6379"
+ 
 
     @field_validator("database_url", mode="before")
     @classmethod
