@@ -607,12 +607,18 @@ function LearningFlow({
 
         {/* Step 4 — practice questions */}
         {step === 4 && !showScoreSummary && (
-          <PracticeQuestion
-            key={questionIndex}
-            question={questions[questionIndex]}
-            onComplete={handleQuestionComplete}
-            isLast={questionIndex === totalQuestions - 1}
-          />
+          totalQuestions > 0 ? (
+            <PracticeQuestion
+              key={questionIndex}
+              question={questions[questionIndex]}
+              onComplete={handleQuestionComplete}
+              isLast={questionIndex === totalQuestions - 1}
+            />
+          ) : (
+            <div className="text-center py-8 font-dm-sans text-sm text-gray-500">
+              No practice questions available for this topic.
+            </div>
+          )
         )}
 
         {/* Step 4 — score summary before AI tutor */}

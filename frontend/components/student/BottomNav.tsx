@@ -30,8 +30,11 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-200 bg-white">
       {TABS.map(({ label, icon: Icon, href }) => {
         // Exact match for /student so /student/learn doesn't also highlight Home.
-        const isActive =
-          href === '/student' ? pathname === '/student' : pathname.startsWith(href);
+        const isActive = pathname
+          ? (href === '/student'
+              ? pathname === '/student'
+              : pathname.startsWith(href))
+          : false;
         const showBadge = label === 'Recall' && recallCount > 0;
 
         return (
