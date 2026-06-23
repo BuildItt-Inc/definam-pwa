@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, date
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, JSON, Float
 from sqlalchemy.dialects.postgresql import UUID
