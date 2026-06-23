@@ -6,13 +6,6 @@ from app.core.config import get_settings
 _redis_client = None
 
 
-import json
-import redis
-from app.core.config import get_settings
-
-_redis_client = None
-
-
 def get_redis():
     global _redis_client
 
