@@ -4,6 +4,7 @@ import type {
   Topic,
   TopicDetail,
   HomeData,
+  RecallItem,
 } from '@/types/topics';
 
 // ── Subjects ───────────────────────────────────────────────────────────────
@@ -660,3 +661,38 @@ export const mockHomeData: HomeData = {
     },
   ],
 };
+
+// ── Recall Queue ──────────────────────────────────────────────────────────
+
+export const mockRecallQueue: RecallItem[] = [
+  {
+    id: 'rq-001',
+    topic_id: 'top-004',
+    topic_title: 'Acids & Bases',
+    subject: 'Chemistry',
+    question:
+      'What is the pH range of a strong acid, and give a Nigerian everyday example of one?',
+    model_answer:
+      'Strong acids have a pH of 0–2. Battery acid (H₂SO₄) found in car batteries — those powering generators during NEPA outages — is a common Nigerian example. It turns litmus paper red and reacts violently with metals to produce hydrogen gas.',
+  },
+  {
+    id: 'rq-002',
+    topic_id: 'top-001',
+    topic_title: 'Quadratic Equations',
+    subject: 'Mathematics',
+    question:
+      'State the three methods for solving a quadratic equation, and write out the quadratic formula.',
+    model_answer:
+      'The three methods are: (1) Factorisation — split ax² + bx + c into two brackets; (2) Completing the square — rewrite as (x + p)² = q; (3) The quadratic formula: x = (−b ± √(b² − 4ac)) / 2a. The formula works for all quadratic equations including those that do not factorise neatly.',
+  },
+  {
+    id: 'rq-003',
+    topic_id: 'top-005',
+    topic_title: 'Comprehension',
+    subject: 'English Language',
+    question:
+      'Describe the correct approach to answering a WAEC comprehension vocabulary question (the "as used in the passage" type).',
+    model_answer:
+      'Use context clues — the words and sentences surrounding the unfamiliar word — to determine its meaning as used in that specific passage. WAEC requires the contextual meaning, not the standard dictionary definition. Read the sentence before and after the word, consider what makes logical sense, and write your answer in a complete sentence.',
+  },
+];

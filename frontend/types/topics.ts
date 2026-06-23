@@ -68,3 +68,12 @@ export interface HomeData {
   recall_queue: RecallQueueItem[];
   recent_topics: RecentTopic[];
 }
+
+export interface RecallItem {
+  id: string;
+  topic_id: string;
+  topic_title: string;
+  subject: string;
+  question: string;
+  model_answer: string;
+}
