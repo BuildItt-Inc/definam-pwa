@@ -1,5 +1,6 @@
 'use client';
 
+import DOMPurify from 'isomorphic-dompurify';
 import { Flag } from 'lucide-react';
 
 interface LearningStepProps {
@@ -18,7 +19,7 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
   const body = isHtml ? (
     <p
       className="font-dm-sans text-[14px] leading-relaxed text-ink"
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
     />
   ) : (
     <p className="font-dm-sans text-[14px] leading-relaxed text-ink">{content}</p>
