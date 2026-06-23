@@ -42,11 +42,12 @@ def upgrade() -> None:
     op.create_table('chat_daily_usage',
     sa.Column('id', sa.UUID(as_uuid=False), nullable=False),
     sa.Column('user_id', sa.UUID(as_uuid=False), nullable=False),
-    sa.Column('date', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('date', sa.Date(), nullable=False),
     sa.Column('count', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('user_id', 'date', name='uq_chat_daily_usage_user_date')
     )
     op.create_table('topics',
     sa.Column('id', sa.UUID(as_uuid=False), nullable=False),
