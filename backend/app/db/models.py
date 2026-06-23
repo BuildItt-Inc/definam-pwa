@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime, date
+from datetime import UTC, datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, JSON, Float, Date
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
