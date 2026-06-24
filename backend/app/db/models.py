@@ -221,7 +221,6 @@ class Topic(Base):
     )  # Daily Recall questions
     embedding: Mapped[list[float] | None] = mapped_column(
         Vector(1536), nullable=True
-    )  # pgvector
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="draft", server_default="'draft'"
     )  # draft, approved, published
