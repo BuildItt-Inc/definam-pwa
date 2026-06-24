@@ -223,7 +223,7 @@ class Topic(Base):
         Vector(1536), nullable=True
     )  # pgvector
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="draft", server_default="draft"
+        String(20), nullable=False, default="draft", server_default="'draft'"
     )  # draft, approved, published
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)

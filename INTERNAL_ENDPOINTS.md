@@ -7,7 +7,7 @@ These endpoints are used by the internal team to manage the Topic approval workf
 Moves a topic from `draft` to `approved` status.
 
 - **Method**: `PATCH`
-- **URL**: `/api/v1/internal/topics/:id/approve`
+- **URL**: `/api/v1/internal/topics/{topic_id}/approve`
 - **Auth**: Bearer token (Admin)
 - **Expected Request Body**: None (Empty)
 - **Example Response (Success)**:
@@ -29,7 +29,7 @@ Moves a topic from `draft` to `approved` status.
 Moves a topic from `approved` to `published` status.
 
 - **Method**: `PATCH`
-- **URL**: `/api/v1/internal/topics/:id/publish`
+- **URL**: `/api/v1/internal/topics/{topic_id}/publish`
 - **Auth**: Bearer token (Admin)
 - **Expected Request Body**: None (Empty)
 - **Example Response (Success)**:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import AdminDep
@@ -10,14 +12,14 @@ router = APIRouter()
 
 @router.patch("/topics/{topic_id}/approve")
 async def approve_topic(
-    topic_id: str,
+    topic_id: UUID,
     _: AdminDep,
 ):
     """
     Move topic from draft -> approved.
     Internal only. Reject any other starting status with a 400 error.
     """
-    success = await database.update_topic_status(topic_id, "draft", "approved")
+    success = await database.update_topic_status(str(topic_id), "draft", "approved")
     if not success:
         raise HTTPException(
             status_code=400,
@@ -28,14 +30,14 @@ async def approve_topic(
 
 @router.patch("/topics/{topic_id}/publish")
 async def publish_topic(
-    topic_id: str,
+    topic_id: UUID,
     _: AdminDep,
 ):
     """
     Move topic from approved -> published.
     Internal only. Reject any other starting status with a 400 error.
     """
-    success = await database.update_topic_status(topic_id, "approved", "published")
+    success = await database.update_topic_status(str(topic_id), "approved", "published")
     if not success:
         raise HTTPException(
             status_code=400,

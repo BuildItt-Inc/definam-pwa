@@ -30,7 +30,7 @@ def upgrade() -> None:
     )
 
     # Set server_default for topics.status
-    op.alter_column("topics", "status", server_default="draft")
+    op.alter_column('topics', 'status', server_default="'draft'")
 
 
 def downgrade() -> None:
