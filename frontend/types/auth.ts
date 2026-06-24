@@ -1,0 +1,50 @@
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  role: string;
+  force_password_change: boolean;
+}
+
+// ── SCR-03d · Admin Login ──────────────────────────────────────────────────
+
+export interface AdminLoginRequest {
+  username: string;
+  password: string;
+}
+
+export type AdminLoginResponse = LoginResponse;
+
+export interface ChangePasswordRequest {
+  new_password: string;
+  confirm_password: string;
+}
+
+// ── SCR-02a-ii · Individual Registration ──────────────────────────────────
+
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  access_code: string;
+}
+
+export interface RegisterResponse {
+  access_token: string;
+  role: string;
+}
+
+// ── F1 · Org Student Login ────────────────────────────────────────────────
+
+export interface OrgLoginRequest {
+  access_code: string;
+  user_agent: string;
+  ip: string;
+}
+
+export interface OrgLoginResponse {
+  access_token: string;
+  role: string;
+}
