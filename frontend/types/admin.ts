@@ -34,3 +34,35 @@ export interface AdminDashboardData {
   ai_alert: AIAlert;
   students: StudentRow[];
 }
+
+export interface PreviewMessage {
+  role: 'ai' | 'student';
+  content: string;
+}
+
+export interface ChatSession {
+  id: string;
+  date: string;
+  subject: string;
+  topic: string;
+  message_count: number;
+  preview_messages: PreviewMessage[];
+}
+
+export interface TopicHistory {
+  topic_id: string;
+  topic_title: string;
+  accuracy: number;
+  next_review: string;
+  ease_factor: number;
+  overdue: boolean;
+}
+
+export interface StudentDetail {
+  id: string;
+  name: string;
+  streak_days: number;
+  recall_status: RecallStatus;
+  topic_history: TopicHistory[];
+  chat_sessions: ChatSession[];
+}

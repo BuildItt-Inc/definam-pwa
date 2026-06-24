@@ -1,4 +1,4 @@
-import type { AdminDashboardData } from '@/types/admin';
+import type { AdminDashboardData, StudentDetail } from '@/types/admin';
 
 export const mockAdminData: AdminDashboardData = {
   school_name: 'Kings Secondary School',
@@ -115,4 +115,288 @@ export const mockAdminData: AdminDashboardData = {
       last_active: 'Yesterday',
     },
   ],
+};
+
+export const mockStudentDetail: Record<string, StudentDetail> = {
+  'ada-okonkwo': {
+    id: 'ada-okonkwo',
+    name: 'Ada Okonkwo',
+    streak_days: 7,
+    recall_status: 'on_track',
+    topic_history: [
+      {
+        topic_id: 'top-001',
+        topic_title: 'Quadratic Equations',
+        accuracy: 78,
+        next_review: 'Tomorrow',
+        ease_factor: 2.6,
+        overdue: false,
+      },
+      {
+        topic_id: 'top-002',
+        topic_title: 'Acids & Bases',
+        accuracy: 42,
+        next_review: 'Today',
+        ease_factor: 1.5,
+        overdue: true,
+      },
+      {
+        topic_id: 'top-003',
+        topic_title: 'Comprehension',
+        accuracy: 81,
+        next_review: 'In 5 days',
+        ease_factor: 2.8,
+        overdue: false,
+      },
+      {
+        topic_id: 'top-004',
+        topic_title: 'Linear Equations',
+        accuracy: 60,
+        next_review: 'In 3 days',
+        ease_factor: 2.1,
+        overdue: false,
+      },
+    ],
+    chat_sessions: [
+      {
+        id: 'sess-001',
+        date: 'Today',
+        subject: 'Chemistry',
+        topic: 'Acids & Bases',
+        message_count: 12,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'Tell me what you know about the pH scale first.',
+          },
+          {
+            role: 'student',
+            content: 'pH goes from 0 to 14. Below 7 is acid, above 7 is a base.',
+          },
+        ],
+      },
+      {
+        id: 'sess-002',
+        date: 'Yesterday',
+        subject: 'Mathematics',
+        topic: 'Quadratic Equations',
+        message_count: 8,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'Solve x² + 5x + 6 = 0 using factorisation.',
+          },
+          {
+            role: 'student',
+            content: 'I need two numbers that multiply to 6 and add to 5. That is 2 and 3.',
+          },
+        ],
+      },
+      {
+        id: 'sess-003',
+        date: '3 days ago',
+        subject: 'English Language',
+        topic: 'Comprehension',
+        message_count: 22,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'Read the passage and identify the main theme in your own words.',
+          },
+          {
+            role: 'student',
+            content: 'The theme is about resilience and how people overcome hardship.',
+          },
+        ],
+      },
+    ],
+  },
+
+  'emeka-nwosu': {
+    id: 'emeka-nwosu',
+    name: 'Emeka Nwosu',
+    streak_days: 3,
+    recall_status: 'on_track',
+    topic_history: [
+      {
+        topic_id: 'top-101',
+        topic_title: 'Simultaneous Equations',
+        accuracy: 38,
+        next_review: 'Today',
+        ease_factor: 1.4,
+        overdue: true,
+      },
+      {
+        topic_id: 'top-102',
+        topic_title: 'Indices & Logarithms',
+        accuracy: 72,
+        next_review: 'In 2 days',
+        ease_factor: 2.3,
+        overdue: false,
+      },
+      {
+        topic_id: 'top-103',
+        topic_title: 'Organic Chemistry',
+        accuracy: 55,
+        next_review: 'Tomorrow',
+        ease_factor: 1.9,
+        overdue: false,
+      },
+      {
+        topic_id: 'top-104',
+        topic_title: 'Essay Writing',
+        accuracy: 68,
+        next_review: 'In 4 days',
+        ease_factor: 2.4,
+        overdue: false,
+      },
+    ],
+    chat_sessions: [
+      {
+        id: 'sess-101',
+        date: 'Today',
+        subject: 'Mathematics',
+        topic: 'Simultaneous Equations',
+        message_count: 9,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'Let us try solving 2x + y = 7 and x - y = 2 using elimination.',
+          },
+          {
+            role: 'student',
+            content: 'OK so I add the equations to eliminate y and get 3x = 9?',
+          },
+        ],
+      },
+      {
+        id: 'sess-102',
+        date: 'Yesterday',
+        subject: 'Chemistry',
+        topic: 'Organic Chemistry',
+        message_count: 14,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'What is the functional group in ethanol?',
+          },
+          {
+            role: 'student',
+            content: 'Is it the OH group? That is the hydroxyl group.',
+          },
+        ],
+      },
+      {
+        id: 'sess-103',
+        date: '2 days ago',
+        subject: 'English Language',
+        topic: 'Essay Writing',
+        message_count: 7,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'How would you structure an argumentative essay introduction?',
+          },
+          {
+            role: 'student',
+            content: 'Start with a hook, then background, then the thesis statement.',
+          },
+        ],
+      },
+    ],
+  },
+
+  'fatima-musa': {
+    id: 'fatima-musa',
+    name: 'Fatima Musa',
+    streak_days: 0,
+    recall_status: 'overdue',
+    topic_history: [
+      {
+        topic_id: 'top-201',
+        topic_title: 'Quadratic Equations',
+        accuracy: 29,
+        next_review: 'Today',
+        ease_factor: 1.3,
+        overdue: true,
+      },
+      {
+        topic_id: 'top-202',
+        topic_title: 'Linear Equations',
+        accuracy: 44,
+        next_review: 'Today',
+        ease_factor: 1.6,
+        overdue: true,
+      },
+      {
+        topic_id: 'top-203',
+        topic_title: 'Acids & Bases',
+        accuracy: 51,
+        next_review: 'Tomorrow',
+        ease_factor: 1.8,
+        overdue: false,
+      },
+      {
+        topic_id: 'top-204',
+        topic_title: 'Reading Comprehension',
+        accuracy: 37,
+        next_review: 'Today',
+        ease_factor: 1.4,
+        overdue: true,
+      },
+    ],
+    chat_sessions: [
+      {
+        id: 'sess-201',
+        date: '3 days ago',
+        subject: 'Mathematics',
+        topic: 'Quadratic Equations',
+        message_count: 5,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'Can you try to expand (x + 3)(x - 2) for me?',
+          },
+          {
+            role: 'student',
+            content: 'I am not sure how to start that.',
+          },
+        ],
+      },
+      {
+        id: 'sess-202',
+        date: '4 days ago',
+        subject: 'Mathematics',
+        topic: 'Linear Equations',
+        message_count: 6,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'What is the value of x in 3x + 4 = 13?',
+          },
+          {
+            role: 'student',
+            content: 'Is it 3? I subtracted 4 then divided by 3.',
+          },
+        ],
+      },
+      {
+        id: 'sess-203',
+        date: '5 days ago',
+        subject: 'English Language',
+        topic: 'Reading Comprehension',
+        message_count: 11,
+        preview_messages: [
+          {
+            role: 'ai',
+            content: 'What is the author\'s purpose in paragraph two?',
+          },
+          {
+            role: 'student',
+            content: 'To explain why the character felt sad about leaving home?',
+          },
+        ],
+      },
+    ],
+  },
 };
