@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DefinAm — Week 2 F2 Screens Spec</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F2F2F2;
+  --white: #FFFFFF;
+  --black: #0A0A0A;
+  --dark: #1A1A1A;
+  --mid: #555555;
+  --light: #888888;
+  --lighter: #AAAAAA;
+  --line: #CCCCCC;
+  --line-light: #E0E0E0;
+  --fill-dark: #0A0F1E;
+  --fill-mid: #555555;
+  --fill-lighter: #F0F0F0;
+  --font: 'Inter', sans-serif;
+  --jade: #1B6B4A;
+  --jade-light: #EAF3DE;
+  --gold: #C8973A;
+  --gold-light: #FEF3C7;
+  --coral: #E85D3A;
+}
+
+body { font-family: var(--font); background: var(--bg); color: var(--dark); padding: 0; }
+
+.doc-header {
+  background: var(--white); border-bottom: 2px solid var(--black);
+  padding: 24px 48px; position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.doc-title { font-size: 20px; font-weight: 800; color: var(--black); letter-spacing: -0.5px; }
+.doc-sub { font-size: 12px; color: var(--mid); margin-top: 3px; }
+.doc-tag { font-size: 10px; font-weight: 700; border: 1.5px solid var(--black); padding: 4px 10px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+.doc-tag.filled { background: var(--black); color: var(--white); }
+
+.context-banner { background: var(--fill-dark); color: var(--white); padding: 12px 48px; font-size: 11px; line-height: 1.7; }
+.context-banner strong { color: #C8973A; }
+
+.section { padding: 48px; display: block; }
+.section-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--lighter); margin-bottom: 6px; }
+.section-title { font-size: 20px; font-weight: 800; color: var(--black); letter-spacing: -0.4px; margin-bottom: 4px; }
+.section-desc { font-size: 13px; color: var(--mid); margin-bottom: 40px; line-height: 1.6; }
+
+.wf-grid { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 56px; }
+.wf-section-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--black); margin-bottom: 24px; padding-bottom: 10px; border-bottom: 2px solid var(--black); display: flex; align-items: center; gap: 10px; }
+.wf-section-label span { font-size: 10px; font-weight: 600; color: var(--light); text-transform: none; letter-spacing: 0; }
+.wf-divider { border: none; border-top: 1.5px solid var(--line); margin: 48px 0; }
+
+.screen-label { font-size: 11px; font-weight: 700; color: var(--dark); margin-bottom: 8px; text-align: left; }
+.screen-num { display: inline-block; font-size: 9px; font-weight: 800; background: var(--black); color: var(--white); padding: 2px 7px; border-radius: 2px; margin-bottom: 4px; letter-spacing: 0.04em; }
+
+.ann { background: var(--white); border: 1px dashed var(--line); border-radius: 6px; padding: 8px 12px; font-size: 9px; line-height: 1.6; color: var(--mid); margin-top: 8px; max-width: 640px; }
+.ann strong { color: var(--dark); font-weight: 700; }
+
+/* DESKTOP FRAME */
+.desk-frame { border: 2px solid var(--black); border-radius: 10px; overflow: hidden; background: var(--white); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+.desk-titlebar { background: var(--fill-dark); padding: 8px 14px; display: flex; align-items: center; gap: 6px; }
+.desk-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); }
+.desk-url { flex: 1; margin: 0 10px; background: rgba(255,255,255,0.1); border-radius: 4px; padding: 3px 8px; font-size: 9px; color: rgba(255,255,255,0.5); }
+
+/* SIDEBAR */
+.desk-layout { display: flex; min-height: 500px; }
+.desk-sidebar { width: 180px; border-right: 1px solid var(--line); flex-shrink: 0; background: var(--fill-lighter); }
+.desk-sidebar-logo { padding: 14px 16px 10px; border-bottom: 1px solid var(--line-light); font-size: 13px; font-weight: 800; letter-spacing: -0.3px; color: var(--fill-dark); }
+.desk-sidebar-school { padding: 8px 16px 10px; border-bottom: 1px solid var(--line-light); }
+.desk-sidebar-school-name { font-size: 9px; font-weight: 700; color: var(--dark); }
+.desk-sidebar-school-sub { font-size: 8px; color: var(--light); margin-top: 1px; }
+.desk-nav-section { padding: 10px 0 0; }
+.desk-nav-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--lighter); padding: 5px 16px 3px; }
+.desk-nav-item { display: flex; align-items: center; gap: 7px; padding: 7px 16px; font-size: 10px; font-weight: 600; color: var(--mid); cursor: pointer; }
+.desk-nav-item.on { background: var(--jade); color: var(--white); }
+.desk-nav-icon { font-size: 10px; }
+.desk-nav-badge { margin-left: auto; font-size: 8px; font-weight: 800; background: var(--fill-mid); color: var(--white); padding: 1px 5px; border-radius: 3px; }
+.desk-nav-item.on .desk-nav-badge { background: rgba(255,255,255,0.3); }
+
+/* MAIN CONTENT */
+.desk-main { flex: 1; overflow: hidden; }
+.desk-topbar { background: var(--white); border-bottom: 1px solid var(--line); padding: 10px 20px; display: flex; align-items: center; gap: 12px; }
+.desk-topbar-title { font-size: 13px; font-weight: 800; color: var(--black); letter-spacing: -0.2px; }
+.desk-topbar-crumb { font-size: 9px; color: var(--light); }
+.desk-actions { margin-left: auto; display: flex; gap: 7px; }
+.desk-btn { font-size: 9px; font-weight: 700; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-family: var(--font); border: 1.5px solid var(--line); background: var(--white); color: var(--dark); }
+.desk-btn.filled { background: var(--jade); color: var(--white); border-color: var(--jade); }
+.desk-content { padding: 18px 20px; background: var(--fill-lighter); }
+
+/* STAT CARDS */
+.desk-stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.desk-stat { background: var(--white); border: 1.5px solid var(--line); border-radius: 8px; padding: 12px 14px; border-top: 3px solid var(--jade); }
+.desk-stat.warn { border-top-color: var(--gold); }
+.desk-stat.alert { border-top-color: var(--coral); }
+.desk-stat-num { font-size: 22px; font-weight: 900; color: var(--black); letter-spacing: -1px; line-height: 1; }
+.desk-stat-label { font-size: 9px; color: var(--light); margin-top: 4px; }
+.desk-stat-delta { font-size: 9px; font-weight: 700; margin-top: 3px; color: var(--mid); }
+
+/* ALERT BAR */
+.alert-bar { background: var(--gold-light); border: 1px solid #E5C97A; border-left: 3px solid var(--gold); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 10px; }
+.alert-bar-title { font-weight: 700; flex: 1; color: #633806; }
+.alert-bar-btn { font-size: 9px; font-weight: 700; border: 1px solid var(--gold); padding: 4px 10px; border-radius: 4px; cursor: pointer; color: #633806; background: transparent; }
+
+/* TABLE */
+.desk-table-card { background: var(--white); border: 1.5px solid var(--line); border-radius: 8px; overflow: hidden; }
+.desk-table-header { padding: 10px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; color: var(--black); }
+table.wf-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.wf-table th { padding: 7px 12px; text-align: left; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--lighter); border-bottom: 1px solid var(--line); background: var(--fill-lighter); }
+.wf-table td { padding: 9px 12px; border-bottom: 1px solid var(--line-light); color: var(--dark); vertical-align: middle; }
+.wf-table tr:last-child td { border-bottom: none; }
+.wf-table tr:hover td { background: var(--jade-light); }
+.td-name { font-weight: 700; }
+.td-pill { display: inline-block; font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 2px; border: 1px solid var(--line); }
+.td-pill.jade { background: var(--jade); color: var(--white); border-color: var(--jade); }
+.td-pill.mid { background: var(--fill-mid); color: var(--white); border-color: var(--fill-mid); }
+.td-pill.ghost { background: transparent; color: var(--mid); }
+.td-bar { display: flex; align-items: center; gap: 6px; }
+.td-bar-track { width: 55px; height: 4px; background: var(--fill-lighter); border-radius: 2px; border: 0.5px solid var(--line); }
+.td-bar-fill { height: 100%; background: var(--jade); border-radius: 2px; }
+
+/* PHONE (for SCR-12) */
+.phone { width: 200px; flex-shrink: 0; }
+.phone-shell { border: 2px solid var(--dark); border-radius: 28px; overflow: hidden; background: var(--white); position: relative; box-shadow: 3px 3px 0 rgba(0,0,0,0.12); }
+.phone-notch { background: var(--fill-dark); height: 6px; display: flex; justify-content: center; align-items: flex-end; }
+.phone-notch-pill { width: 60px; height: 4px; background: var(--fill-dark); border-radius: 0 0 4px 4px; }
+.phone-status { display: flex; justify-content: space-between; align-items: center; padding: 4px 14px 2px; font-size: 8px; font-weight: 700; color: var(--dark); }
+.phone-body { padding: 0; min-height: 380px; }
+.appbar { display: flex; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line-light); gap: 8px; min-height: 38px; background: var(--white); }
+.appbar-title { font-size: 13px; font-weight: 800; color: var(--fill-dark); flex: 1; letter-spacing: -0.3px; }
+.appbar-back { font-size: 18px; font-weight: 700; color: var(--fill-dark); }
+.list-item { display: flex; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--line-light); gap: 10px; cursor: pointer; }
+.list-item:last-child { border-bottom: none; }
+.list-info { flex: 1; }
+.list-title { font-size: 10px; font-weight: 700; color: var(--dark); }
+.list-sub { font-size: 8px; color: var(--light); margin-top: 1px; }
+.list-badge { font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 2px; border: 1px solid var(--line); }
+.badge-jade { background: var(--jade); color: var(--white); border-color: var(--jade); }
+.badge-outline { background: transparent; color: var(--dark); }
+.big-btn { margin: 10px 12px 6px; background: var(--jade); color: var(--white); border: none; border-radius: 8px; padding: 11px; font-size: 10px; font-weight: 700; font-family: var(--font); text-align: center; cursor: pointer; display: block; width: calc(100% - 24px); }
+.outline-btn { margin: 6px 12px; background: transparent; color: var(--jade); border: 1.5px solid var(--jade); border-radius: 8px; padding: 9px; font-size: 10px; font-weight: 600; font-family: var(--font); text-align: center; cursor: pointer; display: block; width: calc(100% - 24px); }
+.label-text { font-size: 8px; font-weight: 600; color: var(--light); text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 14px 2px; }
+
+.spec-table { width: 100%; border-collapse: collapse; font-size: 11px; max-width: 800px; margin-bottom: 32px; }
+.spec-table th { background: var(--fill-dark); color: #fff; padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; }
+.spec-table td { padding: 9px 12px; border-bottom: 1px solid var(--line-light); color: var(--dark); vertical-align: top; line-height: 1.5; }
+.spec-table tr:nth-child(even) td { background: var(--jade-light); }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div>
+    <div class="doc-title">DefinAm · Week 2 F2 — Admin Dashboard Screens</div>
+    <div class="doc-sub">Web · Desktop browser · School admin · F2 scope</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div class="doc-tag filled">F2 Scope</div>
+    <div class="doc-tag">Week 2</div>
+    <div class="doc-tag">Web / Desktop</div>
+  </div>
+</div>
+
+<div class="context-banner">
+  <strong>F2 Week 2 scope:</strong> SCR-10 Admin Dashboard — Student Overview · SCR-11 Student Drill-Down · SCR-12 Access Code Management ·
+  <strong>URL base:</strong> app.definam.ng/admin · <strong>Stack:</strong> Next.js 15, Tailwind CSS, Tabler icons · All screens are desktop-first web pages, not mobile.
+</div>
+
+<div class="section">
+
+  <!-- ══════════════════════════════════════
+       SCR-10 ADMIN DASHBOARD — STUDENT OVERVIEW
+  ══════════════════════════════════════ -->
+  <div class="section-heading">Section 7 · Admin Dashboard</div>
+  <div class="section-title">Admin Dashboard — Student Overview</div>
+  <div class="section-desc">Default view after school admin logs in · Desktop browser only · School monitors all student progress, recall performance, and class-wide AI-detected weaknesses</div>
+
+  <div class="wf-section-label">SCR-10 · Admin Dashboard — Student Overview <span>Default view · app.definam.ng/admin/students</span></div>
+
+  <div class="screen-num">SCR-10</div>
+  <div class="screen-label">Student Overview Dashboard</div>
+  <div class="desk-frame" style="margin-bottom:16px">
+    <div class="desk-titlebar">
+      <div class="desk-dot" style="background:#FF5F57;border-color:#FF5F57"></div>
+      <div class="desk-dot" style="background:#FFBD2E;border-color:#FFBD2E"></div>
+      <div class="desk-dot" style="background:#28C840;border-color:#28C840"></div>
+      <div class="desk-url">🔒 app.definam.ng/admin/students</div>
+    </div>
+    <div class="desk-layout">
+      <!-- Sidebar -->
+      <div class="desk-sidebar">
+        <div class="desk-sidebar-logo">DefinAm</div>
+        <div class="desk-sidebar-school">
+          <div class="desk-sidebar-school-name">Kings Secondary School</div>
+          <div class="desk-sidebar-school-sub">Lagos · SS2A · Mr. A. Ojo</div>
+        </div>
+        <div class="desk-nav-section">
+          <div class="desk-nav-label">Students</div>
+          <div class="desk-nav-item on"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Student Overview</div>
+          <div class="desk-nav-label">Codes</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span> Access Codes</div>
+          <div class="desk-nav-label">Reports</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span> Export Report</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span> Analytics</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span> My Classes</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></span> Settings</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span> Logout</div>
+        </div>
+      </div>
+      <!-- Main -->
+      <div class="desk-main">
+        <div class="desk-topbar">
+          <div class="desk-topbar-title">Class Overview</div>
+          <div class="desk-topbar-crumb">SS2A · 38 Students · Updated just now</div>
+          <div class="desk-actions">
+            <button class="desk-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export PDF</button>
+          </div>
+        </div>
+        <div class="desk-content">
+          <!-- 4 stat cards -->
+          <div class="desk-stat-row">
+            <div class="desk-stat">
+              <div class="desk-stat-num">38</div>
+              <div class="desk-stat-label">Total Students</div>
+              <div class="desk-stat-delta">↑ 34 active this week</div>
+            </div>
+            <div class="desk-stat warn">
+              <div class="desk-stat-num">67%</div>
+              <div class="desk-stat-label">Class Avg Accuracy</div>
+              <div class="desk-stat-delta">↓ 3% from last week</div>
+            </div>
+            <div class="desk-stat alert">
+              <div class="desk-stat-num">12</div>
+              <div class="desk-stat-label">Recall Overdue</div>
+              <div class="desk-stat-delta">Students skipping</div>
+            </div>
+            <div class="desk-stat">
+              <div class="desk-stat-num">3</div>
+              <div class="desk-stat-label">Active Subjects</div>
+              <div class="desk-stat-delta">Maths · English · Chem</div>
+            </div>
+          </div>
+          <!-- AI Alert bar -->
+          <div class="alert-bar">
+            <div style="display:flex;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8973A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <div class="alert-bar-title">AI Alert: Acids &amp; Bases — 24/38 students below 60% this week · EF avg: 1.4</div>
+            <button class="alert-bar-btn">View Topic →</button>
+          </div>
+          <!-- Student table -->
+          <div class="desk-table-card">
+            <div class="desk-table-header">
+              All Students — SS2A
+              <div style="display:flex;gap:7px;margin-left:auto">
+                <div style="border:1px solid var(--line);background:var(--fill-lighter);border-radius:5px;padding:4px 8px;font-size:8px;color:var(--light);display:flex;gap:4px;align-items:center">🔍 Search...</div>
+                <select style="border:1px solid var(--line);background:var(--fill-lighter);border-radius:5px;padding:4px 7px;font-size:8px;color:var(--mid);font-family:var(--font)"><option>All Subjects</option></select>
+              </div>
+            </div>
+            <table class="wf-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Streak</th>
+                  <th>Recall Status</th>
+                  <th>Avg Accuracy</th>
+                  <th>Weakest Topic</th>
+                  <th>Last Active</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-name">Ada Okonkwo</td>
+                  <td>🔥 7 days</td>
+                  <td><span class="td-pill jade">On Track</span></td>
+                  <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:78%"></div></div> 78%</div></td>
+                  <td style="font-size:9px;color:var(--mid)">Acids &amp; Bases · 42%</td>
+                  <td style="font-size:9px;color:var(--light)">Today</td>
+                  <td><button class="desk-btn" style="font-size:8px;padding:3px 8px">View →</button></td>
+                </tr>
+                <tr>
+                  <td class="td-name">Emeka Nwosu</td>
+                  <td>🔥 3 days</td>
+                  <td><span class="td-pill jade">On Track</span></td>
+                  <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:65%"></div></div> 65%</div></td>
+                  <td style="font-size:9px;color:var(--mid)">Simultaneous Eq · 38%</td>
+                  <td style="font-size:9px;color:var(--light)">Yesterday</td>
+                  <td><button class="desk-btn" style="font-size:8px;padding:3px 8px">View →</button></td>
+                </tr>
+                <tr style="background:#FFF8F8">
+                  <td class="td-name">Fatima Musa</td>
+                  <td style="color:var(--lighter)">— no streak</td>
+                  <td><span class="td-pill mid">2 Days Overdue</span></td>
+                  <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:41%;background:var(--gold)"></div></div> 41%</div></td>
+                  <td style="font-size:9px;color:var(--mid)">Quadratic Eq · 29%</td>
+                  <td style="font-size:9px;color:var(--light)">3 days ago</td>
+                  <td><button class="desk-btn" style="font-size:8px;padding:3px 8px">View →</button></td>
+                </tr>
+                <tr>
+                  <td class="td-name">Chidi Obi</td>
+                  <td>🔥 12 days</td>
+                  <td><span class="td-pill jade">On Track</span></td>
+                  <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:89%"></div></div> 89%</div></td>
+                  <td style="font-size:9px;color:var(--mid)">Comprehension · 71%</td>
+                  <td style="font-size:9px;color:var(--light)">Today</td>
+                  <td><button class="desk-btn" style="font-size:8px;padding:3px 8px">View →</button></td>
+                </tr>
+                <tr style="background:#FFF8F8">
+                  <td class="td-name">Ngozi Eze</td>
+                  <td style="color:var(--lighter)">— no streak</td>
+                  <td><span class="td-pill ghost">Not Started</span></td>
+                  <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:15%;background:var(--coral)"></div></div> 15%</div></td>
+                  <td style="font-size:9px;color:var(--lighter)">— No data</td>
+                  <td style="font-size:9px;color:var(--light)">5 days ago</td>
+                  <td><button class="desk-btn" style="font-size:8px;padding:3px 8px">View →</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="padding:8px 14px;font-size:9px;color:var(--light);border-top:1px solid var(--line-light)">Showing 5 of 38 · Click any row to open Student Drill-Down (SCR-11)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">
+    <strong>Stat card colours:</strong> jade top border = healthy metric · gold = needs attention · coral = alert. The AI Alert bar fires when ≥60% of students score below 60% on a topic in a 7-day window — sourced from topic_reviews table. Admin clicks row → SCR-11. Export PDF calls a server action that generates a report.
+  </div>
+
+  <div class="wf-divider"></div>
+
+  <!-- ══════════════════════════════════════
+       SCR-11 STUDENT DRILL-DOWN
+  ══════════════════════════════════════ -->
+  <div class="wf-section-label">SCR-11 · Student Drill-Down <span>Web · app.definam.ng/admin/student/[id]</span></div>
+
+  <div class="screen-num">SCR-11</div>
+  <div class="screen-label">Student Drill-Down — Ada Okonkwo</div>
+  <div class="desk-frame" style="margin-bottom:16px">
+    <div class="desk-titlebar">
+      <div class="desk-dot" style="background:#FF5F57;border-color:#FF5F57"></div>
+      <div class="desk-dot" style="background:#FFBD2E;border-color:#FFBD2E"></div>
+      <div class="desk-dot" style="background:#28C840;border-color:#28C840"></div>
+      <div class="desk-url">🔒 app.definam.ng/admin/student/ada-okonkwo</div>
+    </div>
+    <div class="desk-layout">
+      <!-- Sidebar same as SCR-10 -->
+      <div class="desk-sidebar">
+        <div class="desk-sidebar-logo">DefinAm</div>
+        <div class="desk-sidebar-school">
+          <div class="desk-sidebar-school-name">Kings Secondary School</div>
+          <div class="desk-sidebar-school-sub">Lagos · SS2A · Mr. A. Ojo</div>
+        </div>
+        <div class="desk-nav-section">
+          <div class="desk-nav-label">Students</div>
+          <div class="desk-nav-item on"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Student Overview</div>
+          <div class="desk-nav-label">Codes</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span> Access Codes</div>
+          <div class="desk-nav-label">Reports</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span> Export Report</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span> Analytics</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span> My Classes</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></span> Settings</div>
+          <div class="desk-nav-item"><span class="desk-nav-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span> Logout</div>
+        </div>
+      </div>
+      <!-- Main -->
+      <div class="desk-main">
+        <div class="desk-topbar">
+          <button class="desk-btn" style="font-size:8px">← Back to Class</button>
+          <div class="desk-topbar-title" style="margin-left:8px">Ada Okonkwo</div>
+          <span class="td-pill jade" style="font-size:9px;padding:3px 8px">Active · 🔥 7 days</span>
+          <div class="desk-actions">
+            <button class="desk-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export This Student</button>
+          </div>
+        </div>
+        <div class="desk-content">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <!-- Topic History -->
+            <div>
+              <div style="font-size:10px;font-weight:800;color:var(--black);margin-bottom:8px">Topic History</div>
+              <div class="desk-table-card">
+                <table class="wf-table">
+                  <thead><tr><th>Topic</th><th>Accuracy</th><th>Next Review</th><th>EF</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td class="td-name">Quadratic Eq.</td>
+                      <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:78%"></div></div> 78%</div></td>
+                      <td style="font-size:8px;color:var(--light)">Tomorrow</td>
+                      <td style="font-size:9px;color:var(--mid)">2.6</td>
+                    </tr>
+                    <tr>
+                      <td class="td-name">Acids &amp; Bases</td>
+                      <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:42%;background:var(--gold)"></div></div> 42%</div></td>
+                      <td style="font-size:8px;font-weight:700;color:var(--coral)">Today ⚠</td>
+                      <td style="font-size:9px;color:var(--mid)">1.5</td>
+                    </tr>
+                    <tr>
+                      <td class="td-name">Comprehension</td>
+                      <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:81%"></div></div> 81%</div></td>
+                      <td style="font-size:8px;color:var(--light)">5 days</td>
+                      <td style="font-size:9px;color:var(--mid)">2.8</td>
+                    </tr>
+                    <tr>
+                      <td class="td-name">Linear Eq.</td>
+                      <td><div class="td-bar"><div class="td-bar-track"><div class="td-bar-fill" style="width:60%"></div></div> 60%</div></td>
+                      <td style="font-size:8px;color:var(--light)">3 days</td>
+                      <td style="font-size:9px;color:var(--mid)">2.1</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <!-- AI Chat Logs -->
+            <div>
+              <div style="font-size:10px;font-weight:800;color:var(--black);margin-bottom:8px">AI Chat Logs (Teacher Read-Only)</div>
+              <div style="background:var(--fill-lighter);border:1px solid var(--line);border-radius:8px;padding:12px">
+                <div style="font-size:8px;font-weight:700;color:var(--lighter);margin-bottom:8px">Today · Chemistry · 12 messages</div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;gap:6px">
+                    <div style="font-size:8px;font-weight:700;color:var(--jade);min-width:20px">AI</div>
+                    <div style="font-size:8px;color:var(--mid)">Tell me what you know about the pH scale first.</div>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <div style="font-size:8px;font-weight:700;color:var(--mid);min-width:20px">A</div>
+                    <div style="font-size:8px;color:var(--mid)">pH goes from 0 to 14. Below 7 is acid...</div>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <div style="font-size:8px;font-weight:700;color:var(--jade);min-width:20px">AI</div>
+                    <div style="font-size:8px;color:var(--mid)">Good. Now what makes a strong acid different from a weak one?</div>
+                  </div>
+                </div>
+                <div style="font-size:8px;color:var(--lighter);margin-top:10px;padding-top:8px;border-top:1px solid var(--line-light)">3 sessions this week · 42 messages total</div>
+              </div>
+              <!-- Session list -->
+              <div style="margin-top:10px;font-size:9px;font-weight:700;color:var(--black);margin-bottom:6px">All Chat Sessions</div>
+              <div style="background:var(--white);border:1px solid var(--line);border-radius:8px;overflow:hidden">
+                <div style="padding:8px 12px;border-bottom:1px solid var(--line-light);display:flex;align-items:center;gap:8px;font-size:9px">
+                  <span style="color:var(--jade);font-weight:700">Today</span>
+                  <span style="color:var(--light)">Chemistry · Acids &amp; Bases</span>
+                  <span style="margin-left:auto;color:var(--lighter)">12 msgs</span>
+                </div>
+                <div style="padding:8px 12px;border-bottom:1px solid var(--line-light);display:flex;align-items:center;gap:8px;font-size:9px">
+                  <span style="color:var(--light)">Yesterday</span>
+                  <span style="color:var(--light)">Mathematics · Quadratic Eq.</span>
+                  <span style="margin-left:auto;color:var(--lighter)">8 msgs</span>
+                </div>
+                <div style="padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:9px">
+                  <span style="color:var(--light)">3 days ago</span>
+                  <span style="color:var(--light)">English · Comprehension</span>
+                  <span style="margin-left:auto;color:var(--lighter)">22 msgs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ann">
+    <strong>Read-only view.</strong> Teachers cannot modify or delete student chat logs — privacy policy. EF column shows the SM-2 ease factor — lower = struggling, higher = mastering. Clicking a chat session expands the full transcript inline. "Export This Student" generates a PDF of the topic history table.
+  </div>
+
+  <div class="wf-divider"></div>
+
+  <!-- ══════════════════════════════════════
+       SCR-12 ACCESS CODE MANAGEMENT
+  ══════════════════════════════════════ -->
+  <div class="wf-section-label">SCR-12 · Access Code Management <span>Admin generates + views + downloads student access codes</span></div>
+  <div class="wf-grid">
+
+    <div>
+      <div class="screen-num">SCR-12a</div>
+      <div class="screen-label">Access Code Management — Mobile Admin View</div>
+      <div class="phone">
+        <div class="phone-shell">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="phone-status"><span>9:41</span><span>WiFi ■■</span></div>
+          <div class="phone-body">
+            <div class="appbar"><div class="appbar-back">←</div><div class="appbar-title">Access ID Management</div></div>
+            <!-- Term banner -->
+            <div style="margin:8px 12px;background:var(--jade-light);border:1px solid #9FE1CB;border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start">
+              <div style="display:flex;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="21" y2="21"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="5 6 12 3 19 6"/><line x1="4" y1="10" x2="4" y2="21"/><line x1="8" y1="10" x2="8" y2="21"/><line x1="12" y1="10" x2="12" y2="21"/><line x1="16" y1="10" x2="16" y2="21"/><line x1="20" y1="10" x2="20" y2="21"/></svg></div>
+              <div>
+                <div style="font-size:9px;font-weight:700;color:#085041">Term 2 Subscription Active</div>
+                <div style="font-size:8px;color:#0F6E56">850 seats purchased · Expires July 31</div>
+              </div>
+            </div>
+            <!-- Stat cards -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin:8px 12px">
+              <div style="background:var(--fill-lighter);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:14px;font-weight:900;color:var(--dark)">850</div>
+                <div style="font-size:7px;color:var(--light)">Total IDs</div>
+              </div>
+              <div style="background:var(--jade-light);border:1px solid #9FE1CB;border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:14px;font-weight:900;color:var(--jade)">771</div>
+                <div style="font-size:7px;color:var(--light)">Activated</div>
+              </div>
+              <div style="background:var(--gold-light);border:1px solid #E5C97A;border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:14px;font-weight:900;color:var(--gold)">79</div>
+                <div style="font-size:7px;color:var(--light)">Unused</div>
+              </div>
+            </div>
+            <!-- Download buttons -->
+            <div style="display:flex;gap:6px;margin:6px 12px">
+              <div class="big-btn" style="flex:1;margin:0;font-size:8px;padding:9px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download All IDs</div>
+              <div class="outline-btn" style="flex:1;margin:0;font-size:8px;padding:8px">Download Unused</div>
+            </div>
+            <!-- ID list -->
+            <div class="label-text" style="margin-top:8px">Recent IDs</div>
+            <div class="list-item">
+              <div class="list-info">
+                <div class="list-title" style="font-family:monospace;letter-spacing:1px">DA-8472-KX</div>
+                <div class="list-sub">Adaeze Obi · Activated</div>
+              </div>
+              <div class="list-badge badge-jade">Active</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info">
+                <div class="list-title" style="font-family:monospace;letter-spacing:1px">DA-8473-PQ</div>
+                <div class="list-sub">Emeka Nwosu · Activated</div>
+              </div>
+              <div class="list-badge badge-jade">Active</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info">
+                <div class="list-title" style="font-family:monospace;letter-spacing:1px">DA-8475-LM</div>
+                <div class="list-sub">— Not yet used</div>
+              </div>
+              <div class="list-badge badge-outline">Unused</div>
+            </div>
+            <div class="list-item">
+              <div class="list-info">
+                <div class="list-title" style="font-family:monospace;letter-spacing:1px">DA-8476-JN</div>
+                <div class="list-sub">— Not yet used</div>
+              </div>
+              <div class="list-badge badge-outline">Unused</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ann"><strong>ID Format:</strong> DA-XXXX-XX (alphanumeric, unique per school). Generated in bulk by backend when school purchases seats. Admin downloads CSV, distributes via WhatsApp or email to students.</div>
+    </div>
+
+    <!-- How ID auth works -->
+    <div style="flex:1;align-self:flex-start;margin-top:40px;max-width:480px">
+      <div style="background:var(--white);border:2px solid var(--black);border-radius:10px;padding:20px 24px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:14px;color:var(--black)">How School ID Auth Works</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="width:22px;height:22px;background:var(--jade);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:white;flex-shrink:0">1</div>
+            <div style="font-size:9px;color:var(--mid);line-height:1.6">School pays via Paystack. Backend auto-generates N unique codes (e.g. DA-8472-KX) and emails them as a CSV to the admin.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="width:22px;height:22px;background:var(--jade);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:white;flex-shrink:0">2</div>
+            <div style="font-size:9px;color:var(--mid);line-height:1.6">Admin distributes codes — prints a list, sends via WhatsApp, or reads out in class. Each student gets one unique code.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="width:22px;height:22px;background:var(--jade);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:white;flex-shrink:0">3</div>
+            <div style="font-size:9px;color:var(--mid);line-height:1.6">Student enters their code in the PWA. System auto-creates their account, stores device fingerprint. Code status → "Active". First and only time they enter it.</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div style="width:22px;height:22px;background:var(--jade);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:white;flex-shrink:0">4</div>
+            <div style="font-size:9px;color:var(--mid);line-height:1.6">Return visits: the stored session token logs them back in automatically — no code re-entry needed. New device: old session revoked, new device fingerprint stored.</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:10px 12px;background:var(--jade-light);border:1px solid #9FE1CB;border-radius:8px;font-size:9px;color:#085041;line-height:1.6">
+          <strong>No passwords for org students.</strong> The access code is both the activation key and the identity. Students never need to remember anything once their device is registered.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wf-divider"></div>
+
+  <!-- ADMIN RULES TABLE -->
+  <div class="wf-section-label">Admin Dashboard Rules — For Dev Team</div>
+  <table class="spec-table">
+    <thead><tr><th>Screen</th><th>Route</th><th>Key Data Source</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>SCR-10</strong> Student Overview</td>
+        <td>/admin/students</td>
+        <td>topic_reviews table · daily_recall_queue · users table</td>
+        <td>AI Alert fires when ≥60% students below 60% on a topic in 7 days. Stat cards aggregate from topic_reviews. Table is paginated — show 20 rows, load more.</td>
+      </tr>
+      <tr>
+        <td><strong>SCR-11</strong> Student Drill-Down</td>
+        <td>/admin/student/[student_id]</td>
+        <td>topic_reviews · chat_sessions · chat_messages</td>
+        <td>Teacher read-only. Cannot edit or delete any data. EF column from topic_reviews.ease_factor. Chat logs load on demand — not pre-fetched with the page.</td>
+      </tr>
+      <tr>
+        <td><strong>SCR-12</strong> Access Code Management</td>
+        <td>/admin/codes</td>
+        <td>access_codes table</td>
+        <td>"Download All IDs" generates CSV from access_codes where org_id = admin's org. "Download Unused" filters status = 'pending'. Codes are generated server-side on Paystack webhook — admin never creates them manually.</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div><!-- end section -->
+</body>
+</html>
