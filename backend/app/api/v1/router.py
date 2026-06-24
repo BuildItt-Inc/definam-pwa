@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, health, payments, webhooks, learning, internal
+from app.api.v1.endpoints import auth, health, internal, learning, payments, webhooks
 
 api_router = APIRouter()
 

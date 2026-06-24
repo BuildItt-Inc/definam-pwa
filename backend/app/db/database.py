@@ -251,6 +251,7 @@ async def is_webhook_processed(reference: str) -> bool:
 async def get_all_subjects() -> list[dict[str, Any]]:
     """Return all subjects."""
     from app.db.models import Subject
+
     async with db_session() as session:
         result = await session.execute(select(Subject).order_by(Subject.created_at))
         return [
@@ -266,6 +267,7 @@ async def get_all_subjects() -> list[dict[str, Any]]:
 async def get_chapters_by_subject(subject_id: str) -> list[dict[str, Any]]:
     """Return all chapters for a given subject."""
     from app.db.models import Chapter
+
     async with db_session() as session:
         result = await session.execute(
             select(Chapter)
@@ -283,9 +285,12 @@ async def get_chapters_by_subject(subject_id: str) -> list[dict[str, Any]]:
         ]
 
 
-async def get_topics_by_chapter(chapter_id: str, published_only: bool = True) -> list[dict[str, Any]]:
+async def get_topics_by_chapter(
+    chapter_id: str, published_only: bool = True
+) -> list[dict[str, Any]]:
     """Return topics for a given chapter."""
     from app.db.models import Topic
+
     async with db_session() as session:
         stmt = select(Topic).where(Topic.chapter_id == chapter_id)
         if published_only:
@@ -303,9 +308,12 @@ async def get_topics_by_chapter(chapter_id: str, published_only: bool = True) ->
         ]
 
 
-async def get_topic_by_id(topic_id: str, published_only: bool = True) -> dict[str, Any] | None:
+async def get_topic_by_id(
+    topic_id: str, published_only: bool = True
+) -> dict[str, Any] | None:
     """Return a single topic by ID."""
     from app.db.models import Topic
+
     async with db_session() as session:
         stmt = select(Topic).where(Topic.id == topic_id)
         if published_only:
@@ -326,9 +334,12 @@ async def get_topic_by_id(topic_id: str, published_only: bool = True) -> dict[st
         }
 
 
-async def update_topic_status(topic_id: str, current_status: str, new_status: str) -> bool:
+async def update_topic_status(
+    topic_id: str, current_status: str, new_status: str
+) -> bool:
     """Update topic status if it matches current_status. Returns True if updated."""
     from app.db.models import Topic
+
     async with db_session() as session:
         result = await session.execute(
             update(Topic)
@@ -336,4 +347,3 @@ async def update_topic_status(topic_id: str, current_status: str, new_status: st
             .values(status=new_status)
         )
         return result.rowcount > 0
-

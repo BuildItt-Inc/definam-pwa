@@ -22,7 +22,9 @@ from app.services.redis_client import (
     set_topic_content,
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
@@ -51,6 +53,7 @@ Format your response as a JSON object with keys: question, options (array of 4 s
 Return only the JSON.
 """
 
+
 def generate_step(topic_title: str, step: int) -> str:
     """Call Groq API to generate a specific step content."""
     if step == 1:
@@ -74,6 +77,7 @@ def generate_step(topic_title: str, step: int) -> str:
         logger.error(f"Groq API error for topic '{topic_title}': {e}")
         raise
 
+
 async def process_topic(topic: Topic, force: bool = False):
     """Generate and cache Steps 1–3 for a single topic."""
     if not force:
@@ -90,11 +94,14 @@ async def process_topic(topic: Topic, force: bool = False):
             content = generate_step(topic.title, step_num)
             steps[f"step{step_num}"] = content
         except Exception as e:
-            logger.error(f"Failed to generate step {step_num} for topic {topic.id}: {e}")
+            logger.error(
+                f"Failed to generate step {step_num} for topic {topic.id}: {e}"
+            )
             return  # Skip storing this topic
 
     set_topic_content(topic.id, steps)
     logger.info(f"Cached content for topic {topic.id} ({topic.title})")
+
 
 async def main(force: bool = False, topic_id: str | None = None):
     """Main entry point."""
@@ -114,10 +121,17 @@ async def main(force: bool = False, topic_id: str | None = None):
                 delete_topic_cache(topic.id)
             await process_topic(topic, force)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Pre-generate topic content and cache in Redis.")
-    parser.add_argument("--force", action="store_true", help="Force re-generation even if cached.")
-    parser.add_argument("--topic-id", type=str, help="Only generate for a specific topic ID.")
+    parser = argparse.ArgumentParser(
+        description="Pre-generate topic content and cache in Redis."
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force re-generation even if cached."
+    )
+    parser.add_argument(
+        "--topic-id", type=str, help="Only generate for a specific topic ID."
+    )
     args = parser.parse_args()
 
     asyncio.run(main(force=args.force, topic_id=args.topic_id))

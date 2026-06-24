@@ -14,11 +14,7 @@ from app.db.models import Chapter, Subject, Topic
 async def seed():
     async with db_session() as session:
         # Create a test subject
-        subject = Subject(
-            id=str(uuid.uuid4()),
-            name="Mathematics",
-            class_level="SS2"
-        )
+        subject = Subject(id=str(uuid.uuid4()), name="Mathematics", class_level="SS2")
         session.add(subject)
         await session.flush()
         print(f"✅ Created subject: {subject.name} (ID: {subject.id})")
@@ -28,7 +24,7 @@ async def seed():
             id=str(uuid.uuid4()),
             subject_id=subject.id,
             chapter_num=1,
-            title="Quadratic Equations"
+            title="Quadratic Equations",
         )
         session.add(chapter)
         await session.flush()
@@ -47,13 +43,14 @@ async def seed():
                 id=str(uuid.uuid4()),
                 chapter_id=chapter.id,
                 title=data["title"],
-                status="draft"
+                status="draft",
             )
             session.add(topic)
             print(f"✅ Created topic: {topic.title} (ID: {topic.id})")
 
         await session.commit()
         print(f"\n🎉 Seeded {len(topics_data)} topics successfully!")
+
 
 if __name__ == "__main__":
     asyncio.run(seed())

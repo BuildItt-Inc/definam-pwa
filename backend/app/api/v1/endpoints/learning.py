@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 
-from app.api.deps import BearerTokenDep, CurrentUserDep
+from app.api.deps import CurrentUserDep
 from app.db import database
 
 router = APIRouter()
+
 
 @router.get("/subjects")
 async def get_subjects(

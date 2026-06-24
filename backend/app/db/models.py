@@ -9,6 +9,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Float,
@@ -16,7 +17,6 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    CheckConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -126,6 +126,7 @@ class ProcessedWebhook(Base):
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
 
+
 # ── Subjects ────────────────────────────────────────────────────────────────
 
 
@@ -138,7 +139,9 @@ class Subject(Base):
         UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    class_level: Mapped[str] = mapped_column(String(20), nullable=False)  # SS1, SS2, SS3
+    class_level: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # SS1, SS2, SS3
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
@@ -201,12 +204,24 @@ class Topic(Base):
         nullable=False,
     )
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    content_step1: Mapped[str | None] = mapped_column(Text, nullable=True)  # Simple Definition
-    content_step2: Mapped[str | None] = mapped_column(Text, nullable=True)  # Nigerian Example
-    content_step3: Mapped[str | None] = mapped_column(Text, nullable=True)  # Visual Breakdown
-    practice_questions: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # Step 4 questions
-    recall_questions: Mapped[dict | None] = mapped_column(JSON, nullable=True)    # Daily Recall questions
-    embedding: Mapped[list[float] | None] = mapped_column(Vector(1536), nullable=True)  # pgvector
+    content_step1: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # Simple Definition
+    content_step2: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # Nigerian Example
+    content_step3: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # Visual Breakdown
+    practice_questions: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True
+    )  # Step 4 questions
+    recall_questions: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True
+    )  # Daily Recall questions
+    embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(1536), nullable=True
+    )  # pgvector
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="draft", server_default="draft"
     )  # draft, approved, published
@@ -218,7 +233,9 @@ class Topic(Base):
     )
 
     chapter: Mapped[Chapter] = relationship("Chapter", back_populates="topics")
-    reviews: Mapped[list[TopicReview]] = relationship("TopicReview", back_populates="topic")
+    reviews: Mapped[list[TopicReview]] = relationship(
+        "TopicReview", back_populates="topic"
+    )
     recall_queue: Mapped[list[DailyRecallQueue]] = relationship(
         "DailyRecallQueue", back_populates="topic"
     )
@@ -249,13 +266,17 @@ class TopicReview(Base):
         nullable=False,
     )
     accuracy_score: Mapped[float | None] = mapped_column(Float, nullable=True)  # 0-100
-    ease_factor: Mapped[float] = mapped_column(Float, nullable=False, default=2.5)  # Easiness factor
+    ease_factor: Mapped[float] = mapped_column(
+        Float, nullable=False, default=2.5
+    )  # Easiness factor
     interval_days: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     repetitions: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_reviewed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
-    next_review_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    next_review_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
@@ -289,9 +310,13 @@ class DailyRecallQueue(Base):
         nullable=False,
     )
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)  # 0 = pending, 1 = done
+    completed: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )  # 0 = pending, 1 = done
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 0-5
-    rated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    rated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )

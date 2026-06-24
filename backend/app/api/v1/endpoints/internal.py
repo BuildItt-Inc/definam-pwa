@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 
 from app.api.deps import AdminDep
 from app.db import database
 
 router = APIRouter()
+
 
 @router.patch("/topics/{topic_id}/approve")
 async def approve_topic(
