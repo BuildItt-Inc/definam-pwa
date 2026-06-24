@@ -31,8 +31,14 @@ def upgrade() -> None:
         "status IN ('draft', 'approved', 'published')"
     )
 
+    # Set server_default for topics.status
+    op.alter_column('topics', 'status', server_default='draft')
+
 
 def downgrade() -> None:
+    # Remove server_default for topics.status
+    op.alter_column('topics', 'status', server_default=None)
+
     # Drop Check constraint from topics.status
     op.drop_constraint('chk_topic_status', 'topics', type_='check')
 
