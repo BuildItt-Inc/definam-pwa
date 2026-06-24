@@ -243,3 +243,97 @@ async def is_webhook_processed(reference: str) -> bool:
             )
         )
         return result.scalar_one_or_none() is not None
+
+
+# ── learning (subjects, chapters, topics) ──────────────────────────────────
+
+
+async def get_all_subjects() -> list[dict[str, Any]]:
+    """Return all subjects."""
+    from app.db.models import Subject
+    async with db_session() as session:
+        result = await session.execute(select(Subject).order_by(Subject.created_at))
+        return [
+            {
+                "id": row.id,
+                "name": row.name,
+                "class_level": row.class_level,
+            }
+            for row in result.scalars()
+        ]
+
+
+async def get_chapters_by_subject(subject_id: str) -> list[dict[str, Any]]:
+    """Return all chapters for a given subject."""
+    from app.db.models import Chapter
+    async with db_session() as session:
+        result = await session.execute(
+            select(Chapter)
+            .where(Chapter.subject_id == subject_id)
+            .order_by(Chapter.chapter_num)
+        )
+        return [
+            {
+                "id": row.id,
+                "subject_id": row.subject_id,
+                "chapter_num": row.chapter_num,
+                "title": row.title,
+            }
+            for row in result.scalars()
+        ]
+
+
+async def get_topics_by_chapter(chapter_id: str, published_only: bool = True) -> list[dict[str, Any]]:
+    """Return topics for a given chapter."""
+    from app.db.models import Topic
+    async with db_session() as session:
+        stmt = select(Topic).where(Topic.chapter_id == chapter_id)
+        if published_only:
+            stmt = stmt.where(Topic.status == "published")
+        stmt = stmt.order_by(Topic.created_at)
+        result = await session.execute(stmt)
+        return [
+            {
+                "id": row.id,
+                "chapter_id": row.chapter_id,
+                "title": row.title,
+                "status": row.status,
+            }
+            for row in result.scalars()
+        ]
+
+
+async def get_topic_by_id(topic_id: str, published_only: bool = True) -> dict[str, Any] | None:
+    """Return a single topic by ID."""
+    from app.db.models import Topic
+    async with db_session() as session:
+        stmt = select(Topic).where(Topic.id == topic_id)
+        if published_only:
+            stmt = stmt.where(Topic.status == "published")
+        result = await session.execute(stmt)
+        row = result.scalar_one_or_none()
+        if row is None:
+            return None
+        return {
+            "id": row.id,
+            "chapter_id": row.chapter_id,
+            "title": row.title,
+            "content_step1": row.content_step1,
+            "content_step2": row.content_step2,
+            "content_step3": row.content_step3,
+            "practice_questions": row.practice_questions,
+            "status": row.status,
+        }
+
+
+async def update_topic_status(topic_id: str, current_status: str, new_status: str) -> bool:
+    """Update topic status if it matches current_status. Returns True if updated."""
+    from app.db.models import Topic
+    async with db_session() as session:
+        result = await session.execute(
+            update(Topic)
+            .where(Topic.id == topic_id, Topic.status == current_status)
+            .values(status=new_status)
+        )
+        return result.rowcount > 0
+

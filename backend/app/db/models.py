@@ -16,6 +16,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    CheckConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -185,6 +186,12 @@ class Topic(Base):
 
     __tablename__ = "topics"
 
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('draft', 'approved', 'published')", name="chk_topic_status"
+        ),
+    )
+
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
     )
@@ -242,7 +249,7 @@ class TopicReview(Base):
         nullable=False,
     )
     accuracy_score: Mapped[float | None] = mapped_column(Float, nullable=True)  # 0-100
-    ef: Mapped[float] = mapped_column(Float, nullable=False, default=2.5)  # Easiness factor
+    ease_factor: Mapped[float] = mapped_column(Float, nullable=False, default=2.5)  # Easiness factor
     interval_days: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     repetitions: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_reviewed_at: Mapped[datetime] = mapped_column(
