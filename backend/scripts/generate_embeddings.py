@@ -16,18 +16,19 @@ from app.core.config import get_settings
 from app.db.database import db_session
 from app.db.models import Topic
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
 client = genai.Client(api_key=settings.gemini_api_key)
 
+
 def get_embedding(text: str) -> list[float]:
-    result = client.models.embed_content(
-        model="text-embedding-004",
-        contents=text
-    )
+    result = client.models.embed_content(model="text-embedding-004", contents=text)
     return result.embeddings[0].values
+
 
 async def process_topic(topic: Topic, session) -> bool:
     parts = [
@@ -54,6 +55,7 @@ async def process_topic(topic: Topic, session) -> bool:
     logger.info(f"Updated embedding for topic {topic.id} ({topic.title})")
     return True
 
+
 async def main(topic_id: str | None = None):
     async with db_session() as session:
         query = select(Topic)
@@ -67,8 +69,11 @@ async def main(topic_id: str | None = None):
         for topic in topics:
             await process_topic(topic, session)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate embeddings using Gemini.")
-    parser.add_argument("--topic-id", type=str, help="Only generate for a specific topic ID.")
+    parser.add_argument(
+        "--topic-id", type=str, help="Only generate for a specific topic ID."
+    )
     args = parser.parse_args()
     asyncio.run(main(topic_id=args.topic_id))

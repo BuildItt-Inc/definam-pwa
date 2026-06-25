@@ -17,11 +17,7 @@ def get_redis():
         if not url:
             raise ValueError("REDIS_URL is not configured")
 
-        _redis_client = redis.from_url(
-            url,
-            decode_responses=True,
-            ssl_cert_reqs=None  
-        )
+        _redis_client = redis.from_url(url, decode_responses=True, ssl_cert_reqs=None)
 
     return _redis_client
 
