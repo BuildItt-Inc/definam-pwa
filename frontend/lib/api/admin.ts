@@ -78,10 +78,12 @@ export async function downloadCodes(filter: 'all' | 'unused'): Promise<void> {
 
     const header = 'Code,Student Name,Status,Activated At\n';
     const rows = codes
-      .map(
-        (c) =>
-          `${c.code},${c.student_name ?? ''},${c.status},${c.activated_at ?? ''}`,
-      )
+      .map((c) => {
+        const escapedName = c.student_name
+          ? '"' + c.student_name.split('"').join('""') + '"'
+          : '';
+        return c.code + ',' + escapedName + ',' + c.status + ',' + (c.activated_at ?? '');
+      })
       .join('\n');
 
     const blob = new Blob([header + rows], { type: 'text/csv' });

@@ -69,21 +69,21 @@ const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
       {
         label: 'Analytics',
         icon: BarChart2,
-        href: '/admin/reports',
+        href: '/admin/analytics',
         activePath: '/admin/analytics',
         exact: false,
       },
       {
         label: 'My Classes',
         icon: School,
-        href: '/admin',
+        href: '/admin/classes',
         activePath: '/admin/classes',
         exact: false,
       },
       {
         label: 'Settings',
         icon: Settings,
-        href: '/admin',
+        href: '/admin/settings',
         activePath: '/admin/settings',
         exact: false,
       },
@@ -179,8 +179,13 @@ export default function AdminSidebar(props: AdminSidebarProps) {
   const router = useRouter();
 
   async function handleLogout() {
-    await logout();
-    router.push('/login');
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Failed to log out on server:', err);
+    } finally {
+      router.push('/login');
+    }
   }
 
   return (

@@ -235,15 +235,16 @@ function ChatLogsPanel({ sessions }: { sessions: ChatSession[] }) {
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 pt-2 border-t border-gray-200 text-[10px] text-gray-300">
-                    {sessions.length} sessions this week · {totalMessages} messages total
-                  </div>
                 </div>
               )}
             </div>
           );
         })}
       </div>
+
+      <p className="mt-2 text-[10px] text-gray-300">
+        {sessions.length} sessions this week · {totalMessages} messages total
+      </p>
     </div>
   );
 }
