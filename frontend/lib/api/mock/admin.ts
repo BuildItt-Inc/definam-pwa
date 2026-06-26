@@ -1,4 +1,4 @@
-import type { AdminDashboardData, StudentDetail } from '@/types/admin';
+import type { AdminDashboardData, StudentDetail, AccessCodesData } from '@/types/admin';
 
 export const mockAdminData: AdminDashboardData = {
   school_name: 'Kings Secondary School',
@@ -399,4 +399,78 @@ export const mockStudentDetail: Record<string, StudentDetail> = {
       },
     ],
   },
+};
+
+// ── SCR-12 · Access Code Management ───────────────────────────────────────
+
+export const mockAccessCodes: AccessCodesData = {
+  subscription: {
+    term: 'Term 2',
+    status: 'active',
+    total_seats: 850,
+    expires_at: 'July 31, 2026',
+  },
+  stats: {
+    total: 850,
+    activated: 771,
+    unused: 79,
+  },
+  codes: [
+    {
+      id: 'code-001',
+      code: 'DA-8472-KX',
+      student_name: 'Ada Okonkwo',
+      status: 'active',
+      activated_at: '2026-01-10T09:00:00Z',
+    },
+    {
+      id: 'code-002',
+      code: 'DA-8473-PQ',
+      student_name: 'Emeka Nwosu',
+      status: 'active',
+      activated_at: '2026-01-11T10:30:00Z',
+    },
+    {
+      id: 'code-003',
+      code: 'DA-8474-RS',
+      student_name: 'Fatima Musa',
+      status: 'active',
+      activated_at: '2026-01-12T08:15:00Z',
+    },
+    {
+      id: 'code-004',
+      code: 'DA-8475-LM',
+      student_name: null,
+      status: 'unused',
+      activated_at: null,
+    },
+    {
+      id: 'code-005',
+      code: 'DA-8476-JN',
+      student_name: null,
+      status: 'unused',
+      activated_at: null,
+    },
+    {
+      id: 'code-006',
+      code: 'DA-8477-WX',
+      student_name: 'Chidi Obi',
+      status: 'active',
+      activated_at: '2026-01-15T14:00:00Z',
+    },
+    {
+      id: 'code-007',
+      code: 'DA-8478-YZ',
+      student_name: 'Ngozi Eze',
+      status: 'active',
+      activated_at: '2026-01-18T11:45:00Z',
+    },
+    {
+      id: 'code-008',
+      code: 'DA-8479-AB',
+      student_name: null,
+      status: 'unused',
+      activated_at: null,
+    },
+  ],
 };

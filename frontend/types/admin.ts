@@ -66,3 +66,34 @@ export interface StudentDetail {
   topic_history: TopicHistory[];
   chat_sessions: ChatSession[];
 }
+
+// ── SCR-12 · Access Code Management ───────────────────────────────────────
+
+export type AccessCodeStatus = 'active' | 'unused';
+
+export interface SubscriptionInfo {
+  term: string;
+  status: 'active' | 'inactive';
+  total_seats: number;
+  expires_at: string;
+}
+
+export interface CodeStats {
+  total: number;
+  activated: number;
+  unused: number;
+}
+
+export interface AccessCode {
+  id: string;
+  code: string;
+  student_name: string | null;
+  status: AccessCodeStatus;
+  activated_at: string | null;
+}
+
+export interface AccessCodesData {
+  subscription: SubscriptionInfo;
+  stats: CodeStats;
+  codes: AccessCode[];
+}
