@@ -9,8 +9,8 @@ from app.core.auth import get_current_user
 from app.db.database import db_session
 from app.db.models import Topic, TopicReview
 from app.services.redis_client import get_redis
-from app.services.sm2 import sm2_calculate
-
+class RecallRating(BaseModel):
+    rating: int = Field(..., ge=0, le=5, description="Rating from 0 to 5")
 
 class RecallRating(BaseModel):
     rating: int
