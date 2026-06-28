@@ -70,6 +70,15 @@ def decode_jwt(token: str) -> dict[str, Any]:
         raise ValueError("Invalid or expired token") from exc
 
 
+def decode_token(token: str):
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        return payload
+    except JWTError:
+        return None
+
+
 # ── Access Code Generation ─────────────────────────────────────────────────
 
 _ALPHANUM = string.ascii_uppercase + string.digits

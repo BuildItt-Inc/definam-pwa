@@ -10,6 +10,7 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.handlers import register_exception_handlers
 from app.core.limiter import limiter
+from app.routers import recall
 
 settings = get_settings()
 
@@ -25,12 +26,13 @@ app = FastAPI(
 # ── Exception handlers ─────────────────────────────────────────────────────
 
 register_exception_handlers(app)
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 # ── CORS & Middleware ──────────────────────────────────────────────────────
 
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
+
+app.include_router(recall.router)
 
 app.add_middleware(
     CORSMiddleware,
