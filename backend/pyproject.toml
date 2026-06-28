@@ -25,6 +25,7 @@ dependencies = [
     "redis>=5.0.0",
     "pgvector>=0.3.0",
     "google-genai>=2.9.0",
+    "pyjwt>=2.13.0",
 ]
 
 [project.optional-dependencies]

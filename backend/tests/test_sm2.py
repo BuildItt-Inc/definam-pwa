@@ -1,5 +1,7 @@
 import pytest
+
 from app.services.sm2 import sm2_calculate
+
 
 def test_rating_0_resets():
     ef, interval, reps = sm2_calculate(0, 2.5, 5, 3)
