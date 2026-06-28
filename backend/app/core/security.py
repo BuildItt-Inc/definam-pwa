@@ -4,6 +4,8 @@ import hashlib
 import random
 import secrets
 import string
+import jwt
+from app.core.config import get_settings
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
@@ -68,6 +70,15 @@ def decode_jwt(token: str) -> dict[str, Any]:
         )
     except JWTError as exc:
         raise ValueError("Invalid or expired token") from exc
+
+
+def decode_token(token: str):
+    settings = get_settings()
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        return payload
+    except jwt.JWTError:
+        return None
 
 
 # ── Access Code Generation ─────────────────────────────────────────────────
