@@ -4,8 +4,6 @@ import hashlib
 import random
 import secrets
 import string
-import jwt
-from app.core.config import get_settings
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
