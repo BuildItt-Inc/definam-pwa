@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, update
-from datetime import date, timedelta
 import json
+from datetime import date, timedelta
+
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from app.db.database import db_session
-from app.db.models import TopicReview, Topic
-from app.services.sm2 import sm2_calculate
-from app.services.redis_client import get_redis
+from sqlalchemy import select
+
 from app.core.auth import get_current_user
+from app.db.database import db_session
+from app.db.models import Topic, TopicReview
+from app.services.redis_client import get_redis
+from app.services.sm2 import sm2_calculate
+
 
 class RecallRating(BaseModel):
     rating: int
