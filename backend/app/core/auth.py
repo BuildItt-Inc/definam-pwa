@@ -7,14 +7,15 @@ from app.db.database import db_session
 from app.db.models import User
 
 security = HTTPBearer()
-
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    payload = decode_token(token)
-    if not payload:
+    try:
+        payload = decode_jwt(token)
+    except ValueError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     user_id = payload.get("sub")
     if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     async with db_session() as session:
         result = await session.execute(select(User).where(User.id == user_id))
