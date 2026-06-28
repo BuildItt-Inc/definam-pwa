@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from datetime import date as date_type
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -375,7 +376,7 @@ class ChatDailyUsage(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    date: Mapped[date] = mapped_column(Date, nullable=False)
+    date: Mapped[date_type] = mapped_column(Date, nullable=False)
     count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
