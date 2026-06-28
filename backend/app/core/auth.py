@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 
 from app.core.security import decode_token
