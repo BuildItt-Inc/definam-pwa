@@ -48,21 +48,20 @@ async def record_step4_attempt(
         )
         review = result.scalar_one_or_none()
 
-        now = datetime.now(UTC)
-
         if not review:
-            # First attempt: create row with repetitions = 1
+            # First attempt: create row with repetitions = 0
             review = TopicReview(
                 topic_id=topic_id,
                 user_id=user.id,
                 ease_factor=2.5,
                 interval_days=1,
-                repetitions=0,          
+                repetitions=0,          # Let SM-2 handle repetitions on recall
                 last_reviewed_at=now,
                 # next_review_at remains NULL until recall is submitted
             )
             session.add(review)
         else:
+            # Subsequent attempts: only update last_reviewed_at
             review.last_reviewed_at = now
 
         await session.commit()
