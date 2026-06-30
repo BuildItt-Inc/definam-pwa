@@ -23,9 +23,14 @@ class RecallRating(BaseModel):
 # ──────────────────────────────────────────────
 @router.post("/topics/{topic_id}/review")
 async def record_step4_attempt(
-    topic_id: uuid.UUID,
+    topic_id: str,
     user=Depends(get_current_user)
 ):
+    import uuid
+    try:
+        uuid.UUID(topic_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid topic ID format")
     
     """
     Record that the student completed Step 4 (before rating).
