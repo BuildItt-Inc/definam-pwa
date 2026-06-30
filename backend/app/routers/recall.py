@@ -30,12 +30,13 @@ async def record_step4_attempt(
     try:
         uuid.UUID(topic_id)
     except ValueError:
-        raise HTTPException(400, "Invalid topic ID format")
+        raise HTTPException(400, "Invalid topic ID format") from None
     
     """
     Record that the student completed Step 4 (before rating).
     This updates last_reviewed_at. Repetitions are handled by the /recall endpoint.
     """
+    now = datetime.now(UTC)
     async with db_session() as session:
         # Verify topic exists
         topic_exists = await session.execute(
