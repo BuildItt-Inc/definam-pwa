@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,12 +23,13 @@ class RecallRating(BaseModel):
 # ──────────────────────────────────────────────
 @router.post("/topics/{topic_id}/review")
 async def record_step4_attempt(
-    topic_id: str,
+    topic_id: uuid.UUID,
     user=Depends(get_current_user)
 ):
+    
     """
     Record that the student completed Step 4 (before rating).
-    This increments repetitions and updates last_reviewed_at.
+    This updates last_reviewed_at. Repetitions are handled by the /recall endpoint.
     """
     async with db_session() as session:
         # Verify topic exists
@@ -55,14 +57,12 @@ async def record_step4_attempt(
                 user_id=user.id,
                 ease_factor=2.5,
                 interval_days=1,
-                repetitions=1,          # first attempt counts as 1
+                repetitions=0,          
                 last_reviewed_at=now,
                 # next_review_at remains NULL until recall is submitted
             )
             session.add(review)
         else:
-            # Subsequent attempts: increment repetitions
-            review.repetitions += 1
             review.last_reviewed_at = now
 
         await session.commit()
@@ -81,12 +81,11 @@ async def record_step4_attempt(
 # ──────────────────────────────────────────────
 @router.post("/topics/{topic_id}/recall")
 async def submit_recall(
-    topic_id: str,
+    topic_id: uuid.UUID,
     payload: RecallRating,
     user=Depends(get_current_user)
 ):
     rating = payload.rating
-
     if not 0 <= rating <= 5:
         raise HTTPException(400, "Rating must be between 0 and 5")
 
