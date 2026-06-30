@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,14 +17,80 @@ router = APIRouter(prefix="/api/v1", tags=["recall"])
 class RecallRating(BaseModel):
     rating: int
 
+
+# ──────────────────────────────────────────────
+#  Step 4 write endpoint (Naga’s ticket)
+# ──────────────────────────────────────────────
+@router.post("/topics/{topic_id}/review")
+async def record_step4_attempt(
+    topic_id: str,
+    user=Depends(get_current_user)
+):
+    import uuid
+    try:
+        uuid.UUID(topic_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid topic ID format") from None
+    
+    """
+    Record that the student completed Step 4 (before rating).
+    This updates last_reviewed_at. Repetitions are handled by the /recall endpoint.
+    """
+    now = datetime.now(UTC)
+    async with db_session() as session:
+        # Verify topic exists
+        topic_exists = await session.execute(
+            select(Topic.id).where(Topic.id == topic_id)
+        )
+        if not topic_exists.scalar_one_or_none():
+            raise HTTPException(404, "Topic not found")
+
+        # Get existing review
+        result = await session.execute(
+            select(TopicReview).where(
+                TopicReview.topic_id == topic_id,
+                TopicReview.user_id == user.id
+            )
+        )
+        review = result.scalar_one_or_none()
+
+        if not review:
+            # First attempt: create row with repetitions = 0
+            review = TopicReview(
+                topic_id=topic_id,
+                user_id=user.id,
+                ease_factor=2.5,
+                interval_days=1,
+                repetitions=0,          # Let SM-2 handle repetitions on recall
+                last_reviewed_at=now,
+                # next_review_at remains NULL until recall is submitted
+            )
+            session.add(review)
+        else:
+            # Subsequent attempts: only update last_reviewed_at
+            review.last_reviewed_at = now
+
+        await session.commit()
+
+        return {
+            "topic_id": topic_id,
+            "repetitions": review.repetitions,
+            "last_reviewed_at": review.last_reviewed_at.isoformat(),
+            "ease_factor": review.ease_factor,
+            "interval_days": review.interval_days,
+        }
+
+
+# ──────────────────────────────────────────────
+#  SM‑2 recall endpoint (your original ticket)
+# ──────────────────────────────────────────────
 @router.post("/topics/{topic_id}/recall")
 async def submit_recall(
-    topic_id: str,
+    topic_id: uuid.UUID,
     payload: RecallRating,
     user=Depends(get_current_user)
 ):
     rating = payload.rating
-
     if not 0 <= rating <= 5:
         raise HTTPException(400, "Rating must be between 0 and 5")
 
@@ -87,6 +154,10 @@ async def submit_recall(
             "next_review_at": review.next_review_at.isoformat() if review.next_review_at else now.isoformat()  # type: ignore
         }
 
+
+# ──────────────────────────────────────────────
+#  Recall queue helpers (Redis caching)
+# ──────────────────────────────────────────────
 async def refresh_recall_queue(user_id: str):
     async with db_session() as session:
         now = datetime.now(UTC)
@@ -110,6 +181,7 @@ async def refresh_recall_queue(user_id: str):
     r = get_redis()
     r.setex(f"recall_queue:{user_id}", 86400, json.dumps(due_topics))
     return due_topics
+
 
 @router.get("/recall/queue")
 async def get_recall_queue(user=Depends(get_current_user)):
