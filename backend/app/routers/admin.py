@@ -2,7 +2,7 @@ import csv
 from io import StringIO
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response  # <-- Import Response, not StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select, update
 
@@ -23,6 +23,7 @@ async def download_codes(
     """Download access codes as CSV (admin only)."""
     if user.role != "admin":
         raise HTTPException(403, "Admin only")
+    
     async with db_session() as session:
         query = select(AccessCode)
         if status:
@@ -31,13 +32,17 @@ async def download_codes(
             query = query.where(AccessCode.school_id == user.org_id)
         result = await session.execute(query)
         codes = result.scalars().all()
-    output = StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["code", "status", "activated_by", "device_fingerprint"])
-    for c in codes:
-        writer.writerow([c.code, c.status, c.activated_by, c.device_fingerprint])
-    return StreamingResponse(
-        iter([output.getvalue()]),
+    
+    # Use `with` to auto-close StringIO
+    with StringIO() as output:
+        writer = csv.writer(output)
+        writer.writerow(["code", "status", "activated_by", "device_fingerprint"])
+        for c in codes:
+            writer.writerow([c.code, c.status, c.activated_by, c.device_fingerprint])
+        csv_data = output.getvalue()
+    
+    return Response(
+        content=csv_data,
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=access_codes.csv"}
     )
@@ -50,12 +55,15 @@ async def revoke_code(
     """Revoke an access code (admin only)."""
     if user.role != "admin":
         raise HTTPException(403, "Admin only")
+    
     async with db_session() as session:
+        # Build update with school_id restriction for BOLA protection
+        stmt = update(AccessCode).where(AccessCode.id == payload.code_id)
+        if user.org_id:
+            stmt = stmt.where(AccessCode.school_id == user.org_id)
+        
         result = await session.execute(
-            update(AccessCode)
-            .where(AccessCode.id == payload.code_id)
-            .values(status="revoked")
-            .returning(AccessCode.code)
+            stmt.values(status="revoked").returning(AccessCode.code)
         )
         updated = result.scalar_one_or_none()
         if not updated:

@@ -26,7 +26,7 @@ def upgrade():
     DECLARE
         rows_affected INT;
     BEGIN
-        DELETE FROM daily_recall_queue WHERE due_date = CURRENT_DATE;
+        DELETE FROM daily_recall_queue WHERE DATE(due_date) = CURRENT_DATE;
 
         INSERT INTO daily_recall_queue (id, user_id, topic_id, due_date, completed, created_at)
         SELECT 
