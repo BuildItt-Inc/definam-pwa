@@ -1,14 +1,16 @@
 import json
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
+
 from app.core.auth import get_current_user
 from app.db.database import db_session
-from app.db.models import ChatMessage, ChatDailyUsage, Topic
+from app.db.models import ChatMessage, Topic
 from app.services.chat import stream_groq_response
 from app.services.redis_client import get_redis
-from app.services.usage import increment_daily_usage, get_daily_usage
+from app.services.usage import get_daily_usage, increment_daily_usage
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 

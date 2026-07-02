@@ -1,8 +1,11 @@
 # app/services/usage.py
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
 from sqlalchemy import select
+
 from app.db.database import db_session
 from app.db.models import ChatDailyUsage
+
 
 async def increment_daily_usage(user_id: str) -> int:
     """

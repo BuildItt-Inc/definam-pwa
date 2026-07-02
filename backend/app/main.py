@@ -10,9 +10,7 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.handlers import register_exception_handlers
 from app.core.limiter import limiter
-from app.routers import recall
-from app.routers import chat
-
+from app.routers import chat, recall
 
 settings = get_settings()
 
