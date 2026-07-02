@@ -17,28 +17,44 @@ def upgrade():
     # 1. Enable pg_cron extension (safe if already enabled)
     op.execute("CREATE EXTENSION IF NOT EXISTS pg_cron;")
 
-    # 2. Create the stub function that will eventually refresh recall queues
+    # 2. Create the full refresh_recall_queues() function with all fixes
     op.execute("""
     CREATE OR REPLACE FUNCTION refresh_recall_queues()
     RETURNS void
     LANGUAGE plpgsql
     AS $$
+    DECLARE
+        rows_affected INT;
     BEGIN
-        RAISE NOTICE 'refresh_recall_queues() called at %', now();
-        -- TODO: Week 3 - loop through all students, compute due topics, write to Redis
+        DELETE FROM daily_recall_queue WHERE due_date = CURRENT_DATE;
+
+        INSERT INTO daily_recall_queue (id, user_id, topic_id, due_date, completed, created_at)
+        SELECT 
+            gen_random_uuid(),
+            tr.user_id,
+            tr.topic_id,
+            CURRENT_DATE,
+            0,                       -- pending
+            now()
+        FROM topic_reviews tr
+        WHERE DATE(tr.next_review_at) <= CURRENT_DATE
+          AND tr.next_review_at IS NOT NULL;
+
+        GET DIAGNOSTICS rows_affected = ROW_COUNT;
+
+        RAISE NOTICE 'refresh_recall_queues() ran at % – % rows inserted', now(), rows_affected;
     END;
     $$;
     """)
 
-    # 3. Schedule the cron job to run daily at midnight
+    # 3. Schedule the cron job
     op.execute("""
     SELECT cron.schedule(
-        'refresh_recall_queues_job',   -- job name
-        '0 0 * * *',                   -- every day at midnight
+        'refresh_recall_queues_job',
+        '0 0 * * *',
         'SELECT refresh_recall_queues();'
     );
     """)
-
 def downgrade():
     # Remove the cron job and the function
     op.execute("SELECT cron.unschedule('refresh_recall_queues_job');")
