@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import UTC, datetime
 
@@ -20,27 +21,26 @@ async def chat_stream(
     question: str,
     user=Depends(get_current_user)
 ):
-    """
-    Stream Groq's response to the student's question via SSE.
-    """
     # 1. Rate limit check (Redis first, fallback to DB)
     redis = get_redis()
     key = f"chat:count:{user.id}:{datetime.now(UTC).date().isoformat()}"
-    count = redis.get(key)
+
+    # Use to_thread for Redis (non-blocking)
+    count = await asyncio.to_thread(redis.get, key)
     if count is None:
         # Redis miss – query DB
         count = await get_daily_usage(user.id)
-        # Seed Redis with DB value (so next time we hit Redis)
-        if count > 0:
-            redis.setex(key, 86400, count)
+        # Seed Redis unconditionally with the count (even if 0)
+        await asyncio.to_thread(redis.setex, key, 86400, count)
     else:
         count = int(count)
 
     if count >= 50:
         raise HTTPException(429, "Daily message limit reached (50/day).")
 
-    # 2. Retrieve topic context
+    # 2. Retrieve topic context + chat history in a single session
     async with db_session() as session:
+        # Get topic
         result = await session.execute(select(Topic).where(Topic.id == topic_id))
         topic = result.scalar_one_or_none()
         if not topic:
@@ -52,8 +52,7 @@ async def chat_stream(
             topic.content_step3 or ""
         ])
 
-    # 3. Fetch recent chat history (last 10 messages)
-    async with db_session() as session:
+        # Get chat history (last 10 messages)
         result = await session.execute(
             select(ChatMessage)
             .where(ChatMessage.user_id == user.id, ChatMessage.topic_id == topic_id)
@@ -65,24 +64,24 @@ async def chat_stream(
             history.append({"role": msg.role, "content": msg.content})
         history.reverse()
 
+    # 3. Increment rate limit and log user message BEFORE streaming
+    # This prevents TOCTOU race conditions and ensures proper error handling
+    await asyncio.to_thread(redis.incr, key)
+    await asyncio.to_thread(redis.expire, key, 86400)
+    await increment_daily_usage(user.id)
+
+    async with db_session() as session:
+        user_msg = ChatMessage(
+            user_id=user.id,
+            topic_id=topic_id,
+            role="user",
+            content=question
+        )
+        session.add(user_msg)
+        await session.commit()
+
     # 4. Stream Groq response
     async def generate():
-        # Increment both Redis and DB
-        redis.incr(key)
-        redis.expire(key, 86400)
-        await increment_daily_usage(user.id)
-
-        # Log user message
-        async with db_session() as session:
-            user_msg = ChatMessage(
-                user_id=user.id,
-                topic_id=topic_id,
-                role="user",
-                content=question
-            )
-            session.add(user_msg)
-            await session.commit()
-
         full_response = ""
         async for chunk in stream_groq_response(question, context, history):
             full_response += chunk

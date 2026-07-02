@@ -1,19 +1,15 @@
-from groq import Groq
+from groq import AsyncGroq
 
 from app.core.config import get_settings
 
 settings = get_settings()
-client = Groq(api_key=settings.groq_api_key)
+client = AsyncGroq(api_key=settings.groq_api_key)
 
 async def stream_groq_response(
     user_question: str,
     topic_context: str,
     history: list[dict]
 ):
-    """
-    Stream Groq's response using the provided context and history.
-    Yields chunks of the response as they arrive.
-    """
     system_prompt = (
         "You are a Socratic Nigerian tutor for DefinAm. "
         "Never give the answer directly. Guide the student to discover it themselves. "
@@ -28,7 +24,7 @@ async def stream_groq_response(
         {"role": "user", "content": user_question}
     ]
 
-    stream = client.chat.completions.create(
+    stream = await client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=messages,
         temperature=0.7,
@@ -36,6 +32,6 @@ async def stream_groq_response(
         stream=True,
     )
 
-    for chunk in stream:
+    async for chunk in stream:
         if chunk.choices[0].delta.content:
             yield chunk.choices[0].delta.content

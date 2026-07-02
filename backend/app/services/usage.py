@@ -1,38 +1,58 @@
-# app/services/usage.py
 from datetime import UTC, datetime
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.db.database import db_session
 from app.db.models import ChatDailyUsage
 
 
 async def increment_daily_usage(user_id: str) -> int:
-    """
-    Increment the daily message count for a user.
-    Returns the new count (after increment).
-    """
     today = datetime.now(UTC).date()
     async with db_session() as session:
-        # Try to get existing record
-        result = await session.execute(
-            select(ChatDailyUsage).where(
-                ChatDailyUsage.user_id == user_id,
-                ChatDailyUsage.date == today
+        try:
+            # Lock row to prevent concurrent updates
+            result = await session.execute(
+                select(ChatDailyUsage)
+                .where(
+                    ChatDailyUsage.user_id == user_id,
+                    ChatDailyUsage.date == today
+                )
+                .with_for_update()
             )
-        )
-        usage = result.scalar_one_or_none()
-        if usage:
-            usage.count += 1
-        else:
+            usage = result.scalar_one_or_none()
+            if usage:
+                usage.count += 1
+                await session.commit()
+                return usage.count
+
+            # Insert new record
             usage = ChatDailyUsage(
                 user_id=user_id,
                 date=today,
                 count=1
             )
             session.add(usage)
-        await session.commit()
-        return usage.count
+            await session.commit()
+            return usage.count
+
+        except IntegrityError:
+            # Concurrent insert – retry
+            await session.rollback()
+            result = await session.execute(
+                select(ChatDailyUsage)
+                .where(
+                    ChatDailyUsage.user_id == user_id,
+                    ChatDailyUsage.date == today
+                )
+                .with_for_update()
+            )
+            usage = result.scalar_one_or_none()
+            if usage:
+                usage.count += 1
+                await session.commit()
+                return usage.count
+            raise
 
 async def get_daily_usage(user_id: str) -> int:
     """
