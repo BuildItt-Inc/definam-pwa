@@ -6,10 +6,13 @@ Run this script daily (e.g., at 8 AM) via a scheduler.
 
 import asyncio
 from collections import defaultdict
+
 from sqlalchemy import select
+
 from app.db.database import db_session
 from app.db.models import DailyRecallQueue, Topic, User
 from app.services.push import send_daily_recall_push
+
 
 async def send_pushes():
     async with db_session() as session:
@@ -24,7 +27,7 @@ async def send_pushes():
         rows = result.fetchall()
         # Group by user_id
         user_topics = defaultdict(list)
-        for queue, title, user_id in rows:
+        for _queue, title, user_id in rows:
             user_topics[user_id].append(title)
 
         # Send notifications
