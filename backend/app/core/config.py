@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     gemini_api_key: str = ""
 
+    onesignal_app_id: str = ""
+    onesignal_api_key: str = ""
+
     redis_url: str = "redis://localhost:6379"
 
     @field_validator("database_url", mode="before")
