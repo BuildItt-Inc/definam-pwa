@@ -24,15 +24,12 @@ app = FastAPI(
 )
 
 # ── Exception handlers ─────────────────────────────────────────────────────
-
 register_exception_handlers(app)
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
-# ── CORS & Middleware ──────────────────────────────────────────────────────
 
+# ── CORS & Middleware ──────────────────────────────────────────────────────
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
-
-app.include_router(recall.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,7 +40,7 @@ app.add_middleware(
 )
 
 # ── Routes ─────────────────────────────────────────────────────────────────
-
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(recall.router)
 app.include_router(chat.router)
 
