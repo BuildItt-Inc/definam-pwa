@@ -11,7 +11,7 @@ async def increment_daily_usage(user_id: str) -> int:
     today = datetime.now(UTC).date()
     async with db_session() as session:
         try:
-            # Lock row to prevent race conditions
+            # Lock row to prevent concurrent updates
             result = await session.execute(
                 select(ChatDailyUsage)
                 .where(
@@ -55,6 +55,9 @@ async def increment_daily_usage(user_id: str) -> int:
             raise
 
 async def get_daily_usage(user_id: str) -> int:
+    """
+    Get the current daily usage count from the database.
+    """
     today = datetime.now(UTC).date()
     async with db_session() as session:
         result = await session.execute(

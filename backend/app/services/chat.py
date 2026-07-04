@@ -10,10 +10,6 @@ async def stream_groq_response(
     topic_context: str,
     history: list[dict]
 ):
-    """
-    Stream Groq's response using the provided context and history.
-    Yields chunks of the response as they arrive.
-    """
     system_prompt = (
         "You are a Socratic Nigerian tutor for DefinAm. "
         "Never give the answer directly. Guide the student to discover it themselves. "
