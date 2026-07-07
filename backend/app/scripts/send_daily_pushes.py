@@ -34,7 +34,7 @@ async def send_pushes():
         # Send notifications
         for user_id, titles in user_topics.items():
             try:
-                send_daily_recall_push(user_id, titles)
+                await send_daily_recall_push(user_id, titles)
                 print(f"✅ Push sent to user {user_id}")
             except Exception as e:
                 print(f"❌ Failed for {user_id}: {e}")
