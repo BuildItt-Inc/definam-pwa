@@ -4,10 +4,11 @@ Send daily recall push notifications to all students with due topics.
 Run this script daily (e.g., at 8 AM) via a scheduler.
 """
 
+from datetime import date
 import asyncio
 from collections import defaultdict
 
-from sqlalchemy import select
+from sqlalchemy import select, cast, Date
 
 from app.db.database import db_session
 from app.db.models import DailyRecallQueue, Topic, User
@@ -21,7 +22,7 @@ async def send_pushes():
             select(DailyRecallQueue, Topic.title, User.id)
             .join(Topic, DailyRecallQueue.topic_id == Topic.id)
             .join(User, DailyRecallQueue.user_id == User.id)
-            .where(DailyRecallQueue.due_date == date.today())
+            .where(cast(DailyRecallQueue.due_date, Date) == date.today())
             .where(DailyRecallQueue.completed == 0)
         )
         rows = result.fetchall()
@@ -39,5 +40,4 @@ async def send_pushes():
                 print(f"❌ Failed for {user_id}: {e}")
 
 if __name__ == "__main__":
-    from datetime import date
     asyncio.run(send_pushes())
