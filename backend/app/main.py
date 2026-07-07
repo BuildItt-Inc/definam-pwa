@@ -10,7 +10,6 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.handlers import register_exception_handlers
 from app.core.limiter import limiter
-from app.routers import chat, recall
 
 settings = get_settings()
 
@@ -41,6 +40,3 @@ app.add_middleware(
 
 # ── Routes ─────────────────────────────────────────────────────────────────
 app.include_router(api_router, prefix="/api/v1")
-app.include_router(recall.router)
-app.include_router(chat.router)
-
