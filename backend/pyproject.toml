@@ -9,7 +9,6 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pydantic[email]>=2.0",
     "pydantic-settings>=2.0",
-    "python-jose[cryptography]>=3.3",
     "passlib[bcrypt]>=1.7",
     "resend>=2.0",
     "aiosmtplib>=3.0",
