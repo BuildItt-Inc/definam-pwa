@@ -19,8 +19,8 @@ async def create_user():
         )
         session.add(user)
         await session.commit()
-        print(f'✅ Created user: {user.username} (ID: {user.id})')
-        print('🔑 Now login to get a token:')
+        print(f'[SUCCESS] Created user: {user.username} (ID: {user.id})')
+        print('[INFO] Now login to get a token:')
         print('   POST /api/v1/auth/login')
         print('   {"username": "teststudent", "password": "Test12345"}')
 

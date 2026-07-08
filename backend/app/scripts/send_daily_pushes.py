@@ -35,9 +35,9 @@ async def send_pushes():
         for user_id, titles in user_topics.items():
             try:
                 await send_daily_recall_push(user_id, titles)
-                print(f"✅ Push sent to user {user_id}")
+                print(f"[SUCCESS] Push sent to user {user_id}")
             except Exception as e:
-                print(f"❌ Failed for {user_id}: {e}")
+                print(f"[ERROR] Failed for {user_id}: {e}")
 
 if __name__ == "__main__":
     asyncio.run(send_pushes())

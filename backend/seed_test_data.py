@@ -17,7 +17,7 @@ async def seed():
         subject = Subject(id=str(uuid.uuid4()), name="Mathematics", class_level="SS2")
         session.add(subject)
         await session.flush()
-        print(f"✅ Created subject: {subject.name} (ID: {subject.id})")
+        print(f"[SUCCESS] Created subject: {subject.name} (ID: {subject.id})")
 
         # Create a test chapter
         chapter = Chapter(
@@ -28,7 +28,7 @@ async def seed():
         )
         session.add(chapter)
         await session.flush()
-        print(f"✅ Created chapter: {chapter.title} (ID: {chapter.id})")
+        print(f"[SUCCESS] Created chapter: {chapter.title} (ID: {chapter.id})")
 
         # Create test topics
         topics_data = [
@@ -46,10 +46,10 @@ async def seed():
                 status="draft",
             )
             session.add(topic)
-            print(f"✅ Created topic: {topic.title} (ID: {topic.id})")
+            print(f"[SUCCESS] Created topic: {topic.title} (ID: {topic.id})")
 
         await session.commit()
-        print(f"\n🎉 Seeded {len(topics_data)} topics successfully!")
+        print(f"\n[SUCCESS] Seeded {len(topics_data)} topics successfully!")
 
 
 if __name__ == "__main__":

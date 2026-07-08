@@ -15,7 +15,7 @@ from app.core.security import create_jwt
 
 
 async def run_chaos_test():
-    print("🔥 Starting Definam Chaos, Security, & Smoke Tests...")
+    print("[START] Starting Definam Chaos, Security, & Smoke Tests...")
     
     session_factory = _get_session_factory()
     
@@ -89,7 +89,7 @@ async def run_chaos_test():
         # Healthcheck
         r = await client.get("/api/v1/health")
         assert r.status_code == 200, f"Healthcheck failed: {r.text}"
-        print("✅ Healthcheck response successful.")
+        print("[SUCCESS] Healthcheck response successful.")
 
         # Accessing subjects list (Student A)
         r = await client.get(
@@ -97,7 +97,7 @@ async def run_chaos_test():
             headers={"Authorization": f"Bearer {token_student_a}"}
         )
         assert r.status_code == 200, f"Subjects endpoint failed: {r.text}"
-        print("✅ Subjects endpoint returned list successfully.")
+        print("[SUCCESS] Subjects endpoint returned list successfully.")
 
         # =====================================================================
         # 2. HACKER & SECURITY TESTS (Admin restrictions, BOLA/IDOR, Tampered JWTs)
@@ -110,7 +110,7 @@ async def run_chaos_test():
             headers={"Authorization": f"Bearer {token_student_a}"}
         )
         assert r.status_code == 403, f"Privilege Escalation failed! Student fetched admin codes: {r.text}"
-        print("✅ Correctly rejected: Standard student blocked from admin download endpoint.")
+        print("[SUCCESS] Correctly rejected: Standard student blocked from admin download endpoint.")
 
         # B. Privilege Escalation: Student tries to revoke a code
         r = await client.post(
@@ -119,7 +119,7 @@ async def run_chaos_test():
             headers={"Authorization": f"Bearer {token_student_a}"}
         )
         assert r.status_code == 403, f"Privilege Escalation failed! Student revoked access code: {r.text}"
-        print("✅ Correctly rejected: Standard student blocked from admin revoke endpoint.")
+        print("[SUCCESS] Correctly rejected: Standard student blocked from admin revoke endpoint.")
 
         # C. BOLA (Broken Object Level Authorization): School B Admin tries to revoke School A's code
         # This checks that our school_id scopes work properly.
@@ -129,7 +129,7 @@ async def run_chaos_test():
             headers={"Authorization": f"Bearer {token_admin_b}"}
         )
         assert r.status_code == 404, f"BOLA vulnerability detected! School B Admin revoked School A code: {r.text}"
-        print("✅ Correctly rejected (404 Not Found): School B Admin cannot revoke School A's access code.")
+        print("[SUCCESS] Correctly rejected (404 Not Found): School B Admin cannot revoke School A's access code.")
 
         # D. SQL Injection / Malformed UUID in endpoints
         r = await client.post(
@@ -137,7 +137,7 @@ async def run_chaos_test():
             headers={"Authorization": f"Bearer {token_student_a}"}
         )
         assert r.status_code == 400, f"Malformed UUID endpoint validation failed: {r.text}"
-        print("✅ Correctly rejected: Malformed UUID format in path parameter.")
+        print("[SUCCESS] Correctly rejected: Malformed UUID format in path parameter.")
 
         # E. Invalid JWT Signature
         bad_token = token_student_a + "tampered"
@@ -146,7 +146,7 @@ async def run_chaos_test():
             headers={"Authorization": f"Bearer {bad_token}"}
         )
         assert r.status_code == 401, f"Tampered token was accepted! {r.text}"
-        print("✅ Correctly rejected: Tampered token verification signature failure.")
+        print("[SUCCESS] Correctly rejected: Tampered token verification signature failure.")
 
         # =====================================================================
         # 3. UNREASONABLE USER TESTS (Out of bounds inputs, rate limit spamming)
@@ -181,7 +181,7 @@ async def run_chaos_test():
             headers={"Authorization": f"Bearer {token_student_a}"}
         )
         assert r.status_code == 400, f"Accepted invalid negative rating: {r.text}"
-        print("✅ Correctly rejected: Out-of-bound ratings returned 400 BadRequest.")
+        print("[SUCCESS] Correctly rejected: Out-of-bound ratings returned 400 BadRequest.")
 
         # C. Rate Limiting: Abuse daily chat usage limit (Set count to 50 directly in database to test limit)
         async with session_factory() as session:
@@ -194,10 +194,10 @@ async def run_chaos_test():
             headers={"Authorization": f"Bearer {token_student_a}"}
         )
         assert r.status_code == 429, f"Chat streaming rate limit failed: {r.text}"
-        print("✅ Correctly rejected (429 Rate Limit Exceeded): Chat limits enforced at 50/day.")
+        print("[SUCCESS] Correctly rejected (429 Rate Limit Exceeded): Chat limits enforced at 50/day.")
 
     # ── Database Cleanup ───────────────────────────────────────────────────
-    print("\n🧹 Cleaning up test database records...")
+    print("\n[INFO] Cleaning up test database records...")
     async with session_factory() as session:
         # Delete chat usage first to avoid FK constraints
         await session.execute(
@@ -216,8 +216,8 @@ async def run_chaos_test():
         await session.execute(delete(User).where(User.username.like("chaos_%")))
         await session.execute(delete(School).where(School.name.like("Chaos School %")))
         await session.commit()
-    print("✨ Database cleaned successfully.")
-    print("\n🎉 ALL CHAOS, SECURITY, & SMOKE TESTS PASSED!")
+    print("[INFO] Database cleaned successfully.")
+    print("\n[SUCCESS] ALL CHAOS, SECURITY, & SMOKE TESTS PASSED!")
 
 
 if __name__ == "__main__":
