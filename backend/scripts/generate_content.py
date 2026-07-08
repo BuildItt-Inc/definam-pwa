@@ -88,6 +88,7 @@ async def process_topic(topic: Topic, force: bool = False):
 
     logger.info(f"Generating content for topic {topic.id} ({topic.title})")
 
+    # Perform all blocking Groq API calls OUTSIDE any DB transaction
     steps = {}
     for step_num in [1, 2, 3]:
         try:
@@ -99,12 +100,14 @@ async def process_topic(topic: Topic, force: bool = False):
             )
             return  # Skip storing this topic
 
+    # All API calls succeeded — persist to cache (Redis, no DB hold)
     set_topic_content(topic.id, steps)
     logger.info(f"Cached content for topic {topic.id} ({topic.title})")
 
 
 async def main(force: bool = False, topic_id: str | None = None):
     """Main entry point."""
+    # 1. Fetch topic list in a short-lived session then close it
     async with db_session() as session:
         query = select(Topic)
         if topic_id:
@@ -112,14 +115,15 @@ async def main(force: bool = False, topic_id: str | None = None):
         result = await session.execute(query)
         topics = result.scalars().all()
 
-        if not topics:
-            logger.info("No topics found.")
-            return
+    if not topics:
+        logger.info("No topics found.")
+        return
 
-        for topic in topics:
-            if force and topic_id:
-                delete_topic_cache(topic.id)
-            await process_topic(topic, force)
+    # 2. Process each topic (API calls + Redis writes) with no open DB connection
+    for topic in topics:
+        if force and topic_id:
+            delete_topic_cache(topic.id)
+        await process_topic(topic, force)
 
 
 if __name__ == "__main__":

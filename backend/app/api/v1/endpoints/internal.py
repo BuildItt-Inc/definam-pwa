@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.api.deps import AdminDep
+from app.core.exceptions import BadRequestError
 from app.db import database
 
 router = APIRouter()
@@ -21,9 +22,8 @@ async def approve_topic(
     """
     success = await database.update_topic_status(str(topic_id), "draft", "approved")
     if not success:
-        raise HTTPException(
-            status_code=400,
-            detail="Topic must be in 'draft' status to be approved, or topic does not exist.",
+        raise BadRequestError(
+            "Topic must be in 'draft' status to be approved, or topic does not exist."
         )
     return {"status": "success", "message": f"Topic {topic_id} approved."}
 
@@ -39,8 +39,7 @@ async def publish_topic(
     """
     success = await database.update_topic_status(str(topic_id), "approved", "published")
     if not success:
-        raise HTTPException(
-            status_code=400,
-            detail="Topic must be in 'approved' status to be published, or topic does not exist.",
+        raise BadRequestError(
+            "Topic must be in 'approved' status to be published, or topic does not exist."
         )
     return {"status": "success", "message": f"Topic {topic_id} published."}

@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from app.api.deps import CurrentUserDep
+from app.core.exceptions import NotFoundError
 from app.db import database
 
 router = APIRouter()
@@ -45,5 +46,5 @@ async def get_topic(
     """Get a single topic. Returns 404 if not published."""
     topic = await database.get_topic_by_id(str(topic_id), published_only=True)
     if not topic:
-        raise HTTPException(status_code=404, detail="Topic not found or not published.")
+        raise NotFoundError("Topic not found or not published.")
     return topic

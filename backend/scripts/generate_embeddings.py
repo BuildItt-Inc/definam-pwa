@@ -30,7 +30,8 @@ def get_embedding(text: str) -> list[float]:
     return result.embeddings[0].values
 
 
-async def process_topic(topic: Topic, session) -> bool:
+async def process_topic(topic: Topic) -> bool:
+    """Generate and persist a Gemini embedding for a single topic."""
     parts = [
         topic.title or "",
         topic.content_step1 or "",
@@ -42,32 +43,40 @@ async def process_topic(topic: Topic, session) -> bool:
         logger.warning(f"Topic {topic.id} has no content. Skipping.")
         return False
 
+    # Perform Gemini API call OUTSIDE any open DB session
     try:
         embedding = get_embedding(full_text)
     except Exception as e:
         logger.error(f"Failed to embed topic {topic.id}: {e}")
         return False
 
-    await session.execute(
-        update(Topic).where(Topic.id == topic.id).values(embedding=embedding)
-    )
-    await session.commit()
+    # Short, focused write session — no long-held connection
+    async with db_session() as session:
+        await session.execute(
+            update(Topic).where(Topic.id == topic.id).values(embedding=embedding)
+        )
+        await session.commit()
+
     logger.info(f"Updated embedding for topic {topic.id} ({topic.title})")
     return True
 
 
 async def main(topic_id: str | None = None):
+    # 1. Fetch topics in a short-lived session then close it
     async with db_session() as session:
         query = select(Topic)
         if topic_id:
             query = query.where(Topic.id == topic_id)
         result = await session.execute(query)
         topics = result.scalars().all()
-        if not topics:
-            logger.info("No topics found.")
-            return
-        for topic in topics:
-            await process_topic(topic, session)
+
+    if not topics:
+        logger.info("No topics found.")
+        return
+
+    # 2. Embed and persist each topic individually (no open DB connection during API calls)
+    for topic in topics:
+        await process_topic(topic)
 
 
 if __name__ == "__main__":

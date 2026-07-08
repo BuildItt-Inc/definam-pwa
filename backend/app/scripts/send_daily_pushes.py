@@ -6,8 +6,10 @@ Run this script daily (e.g., at 8 AM) via a scheduler.
 
 import asyncio
 from collections import defaultdict
+from datetime import date
 
-from sqlalchemy import select
+import httpx
+from sqlalchemy import Date, cast, select
 
 from app.db.database import db_session
 from app.db.models import DailyRecallQueue, Topic, User
@@ -21,7 +23,7 @@ async def send_pushes():
             select(DailyRecallQueue, Topic.title, User.id)
             .join(Topic, DailyRecallQueue.topic_id == Topic.id)
             .join(User, DailyRecallQueue.user_id == User.id)
-            .where(DailyRecallQueue.due_date == date.today())
+            .where(cast(DailyRecallQueue.due_date, Date) == date.today())
             .where(DailyRecallQueue.completed == 0)
         )
         rows = result.fetchall()
@@ -30,14 +32,14 @@ async def send_pushes():
         for _queue, title, user_id in rows:
             user_topics[user_id].append(title)
 
-        # Send notifications
-        for user_id, titles in user_topics.items():
-            try:
-                send_daily_recall_push(user_id, titles)
-                print(f"✅ Push sent to user {user_id}")
-            except Exception as e:
-                print(f"❌ Failed for {user_id}: {e}")
+        # Send notifications using a reused httpx.AsyncClient
+        async with httpx.AsyncClient() as client:
+            for user_id, titles in user_topics.items():
+                try:
+                    await send_daily_recall_push(user_id, titles, client=client)
+                    print(f"[SUCCESS] Push sent to user {user_id}")
+                except Exception as e:
+                    print(f"[ERROR] Failed for {user_id}: {e}")
 
 if __name__ == "__main__":
-    from datetime import date
     asyncio.run(send_pushes())

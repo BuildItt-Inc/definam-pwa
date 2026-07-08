@@ -15,7 +15,7 @@ async def test():
     engine = _get_engine()
     async with engine.connect() as conn:
         result = await conn.execute(text("SELECT 1"))
-        print("✅ Database connected! Result:", result.scalar())
+        print("[SUCCESS] Database connected! Result:", result.scalar())
 
 
 asyncio.run(test())
