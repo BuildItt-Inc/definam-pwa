@@ -20,14 +20,18 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # Check if pgvector extension is available in the postgres installation
     connection = op.get_bind()
     result = connection.execute(sa.text("SELECT name FROM pg_available_extensions WHERE name = 'vector'"))
     has_vector = result.fetchone() is not None
 
-    if has_vector:
-        op.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+    try:
         from pgvector.sqlalchemy import Vector
+        has_pgvector_pkg = True
+    except ImportError:
+        has_pgvector_pkg = False
+
+    if has_vector and has_pgvector_pkg:
+        op.execute("CREATE EXTENSION IF NOT EXISTS vector;")
         embedding_type = Vector(1536)
     else:
         embedding_type = sa.ARRAY(sa.Float)

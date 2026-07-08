@@ -18,23 +18,16 @@ def upgrade():
 
     connection = op.get_bind()
 
-    # 1. Check if pg_cron is available; skip gracefully if not (e.g. local dev)
+    # 1. Check if pg_cron is available
     result = connection.execute(
         sa.text("SELECT name FROM pg_available_extensions WHERE name = 'pg_cron'")
     )
     has_pg_cron = result.fetchone() is not None
 
-    if not has_pg_cron:
-        print(
-            "WARNING: pg_cron extension is not available on this PostgreSQL instance. "
-            "Skipping cron job setup. This is expected in local development. "
-            "Ensure pg_cron is enabled on production (Supabase)."
-        )
-        return
+    if has_pg_cron:
+        op.execute("CREATE EXTENSION IF NOT EXISTS pg_cron;")
 
-    op.execute("CREATE EXTENSION IF NOT EXISTS pg_cron;")
-
-    # 2. Create the refresh_recall_queues() function
+    # 2. Create the refresh_recall_queues() function (always run, does not depend on pg_cron extension)
     op.execute("""
     CREATE OR REPLACE FUNCTION refresh_recall_queues()
     RETURNS void
@@ -64,14 +57,20 @@ def upgrade():
     $$;
     """)
 
-    # 3. Schedule the daily cron job (midnight UTC)
-    op.execute("""
-    SELECT cron.schedule(
-        'refresh_recall_queues_job',
-        '0 0 * * *',
-        'SELECT refresh_recall_queues();'
-    );
-    """)
+    # 3. Schedule the daily cron job (midnight UTC) if pg_cron is available
+    if has_pg_cron:
+        op.execute("""
+        SELECT cron.schedule(
+            'refresh_recall_queues_job',
+            '0 0 * * *',
+            'SELECT refresh_recall_queues();'
+        );
+        """)
+    else:
+        print(
+            "WARNING: pg_cron extension is not available on this PostgreSQL instance. "
+            "Skipping cron job scheduling. Ensure pg_cron is enabled on production."
+        )
 
 
 def downgrade():
@@ -81,8 +80,9 @@ def downgrade():
     result = connection.execute(
         sa.text("SELECT name FROM pg_available_extensions WHERE name = 'pg_cron'")
     )
-    if result.fetchone() is None:
-        return
+    has_pg_cron = result.fetchone() is not None
 
-    op.execute("SELECT cron.unschedule('refresh_recall_queues_job');")
+    if has_pg_cron:
+        op.execute("SELECT cron.unschedule('refresh_recall_queues_job');")
+
     op.execute("DROP FUNCTION IF EXISTS refresh_recall_queues();")
