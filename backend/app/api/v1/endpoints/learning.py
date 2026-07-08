@@ -5,9 +5,8 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.core.exceptions import NotFoundError
-
 from app.api.deps import CurrentUserDep
+from app.core.exceptions import NotFoundError
 from app.db import database
 
 router = APIRouter()

@@ -1,17 +1,26 @@
 import asyncio
 import os
 import sys
-from datetime import UTC, datetime, date
+from datetime import date
+
 import httpx
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select
 
 # Ensure backend root is in PYTHONPATH
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.main import app
-from app.db.models import AccessCode, School, User, Topic, Chapter, Subject, ChatDailyUsage
-from app.db.session import _get_session_factory
 from app.core.security import create_jwt
+from app.db.models import (
+    AccessCode,
+    Chapter,
+    ChatDailyUsage,
+    School,
+    Subject,
+    Topic,
+    User,
+)
+from app.db.session import _get_session_factory
+from app.main import app
 
 
 async def run_chaos_test():
@@ -70,12 +79,11 @@ async def run_chaos_test():
         school_a_id = school_a.id
         school_b_id = school_b.id
         code_a2_id = code_a2.id
-        code_b1_id = code_b1.id
 
     # Create stateless JWT tokens
     # Structure match: app/api/deps.py parses 'sub' (user_id), 'role', and 'org_id'
     token_student_a = create_jwt(student_a_id, {"role": "student_org", "org_id": school_a_id})
-    token_admin_a = create_jwt(admin_a_id, {"role": "admin", "org_id": school_a_id})
+    create_jwt(admin_a_id, {"role": "admin", "org_id": school_a_id})
     token_admin_b = create_jwt(admin_b_id, {"role": "admin", "org_id": school_b_id})
 
     # Prepare client
@@ -133,7 +141,7 @@ async def run_chaos_test():
 
         # D. SQL Injection / Malformed UUID in endpoints
         r = await client.post(
-            f"/api/v1/topics/12345-not-a-valid-uuid-injection-attempt/review",
+            "/api/v1/topics/12345-not-a-valid-uuid-injection-attempt/review",
             headers={"Authorization": f"Bearer {token_student_a}"}
         )
         assert r.status_code == 400, f"Malformed UUID endpoint validation failed: {r.text}"

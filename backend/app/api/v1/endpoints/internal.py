@@ -4,9 +4,8 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.core.exceptions import BadRequestError
-
 from app.api.deps import AdminDep
+from app.core.exceptions import BadRequestError
 from app.db import database
 
 router = APIRouter()

@@ -2,7 +2,17 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import admin, auth, chat, health, internal, learning, payments, recall, webhooks
+from app.api.v1.endpoints import (
+    admin,
+    auth,
+    chat,
+    health,
+    internal,
+    learning,
+    payments,
+    recall,
+    webhooks,
+)
 
 api_router = APIRouter()
 

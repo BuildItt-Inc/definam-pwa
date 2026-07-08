@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, update
 
 from app.api.deps import AdminDep
-from app.core.exceptions import ForbiddenError, NotFoundError
+from app.core.exceptions import NotFoundError
 from app.db.database import db_session
 from app.db.models import AccessCode
 

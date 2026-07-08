@@ -4,11 +4,11 @@ Send daily recall push notifications to all students with due topics.
 Run this script daily (e.g., at 8 AM) via a scheduler.
 """
 
-from datetime import date
 import asyncio
 from collections import defaultdict
+from datetime import date
 
-from sqlalchemy import select, cast, Date
+from sqlalchemy import Date, cast, select
 
 from app.db.database import db_session
 from app.db.models import DailyRecallQueue, Topic, User
