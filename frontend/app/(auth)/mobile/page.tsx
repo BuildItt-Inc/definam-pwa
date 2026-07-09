@@ -33,7 +33,7 @@ export default function MobileSplashPage() {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <circle cx="19" cy="10" r="3" fill="#5DCAA5" />
+            <circle cx="19" cy="10" r="3" className="fill-jade-light" />
           </svg>
         </div>
 
