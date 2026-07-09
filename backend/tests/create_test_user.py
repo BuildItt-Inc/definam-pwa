@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+"""
+Create a test student user in the database for local development.
+Run: python tests/create_test_user.py
+"""
+
 import asyncio
 import uuid
 
@@ -24,4 +30,6 @@ async def create_user():
         print('   POST /api/v1/auth/login')
         print('   {"username": "teststudent", "password": "Test12345"}')
 
-asyncio.run(create_user())
+
+if __name__ == "__main__":
+    asyncio.run(create_user())
