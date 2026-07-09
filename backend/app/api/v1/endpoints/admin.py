@@ -83,6 +83,8 @@ async def get_admin_stats(
 ) -> dict:
     """Get dashboard stats for admin (scoped to school/org if claims have org_id)."""
     org_id = claims.get("org_id")
+    # next_review_at is stored as TIMESTAMPTZ (timezone-aware) in Postgres.
+    # To be safe across naive/aware database connections, we use UTC-aware now.
     now = datetime.now(UTC)
 
     async with db_session() as session:
@@ -96,8 +98,10 @@ async def get_admin_stats(
         total_students = total_students_result.scalar() or 0
 
         # 2. Average accuracy across students
-        avg_accuracy_stmt = select(func.avg(TopicReview.accuracy_score)).join(
-            User, TopicReview.user_id == User.id
+        avg_accuracy_stmt = (
+            select(func.avg(TopicReview.accuracy_score))
+            .join(User, TopicReview.user_id == User.id)
+            .where(User.role.in_(student_roles))
         )
         if org_id:
             avg_accuracy_stmt = avg_accuracy_stmt.where(User.org_id == org_id)
@@ -107,9 +111,14 @@ async def get_admin_stats(
         avg_accuracy = float(round(avg_accuracy, 2)) if avg_accuracy is not None else 0.0
 
         # 3. Count of students with overdue recall (next_review_at < now)
-        overdue_stmt = select(func.count(func.distinct(TopicReview.user_id))).join(
-            User, TopicReview.user_id == User.id
-        ).where(TopicReview.next_review_at < now)
+        overdue_stmt = (
+            select(func.count(func.distinct(TopicReview.user_id)))
+            .join(User, TopicReview.user_id == User.id)
+            .where(
+                User.role.in_(student_roles),
+                TopicReview.next_review_at < now,
+            )
+        )
         if org_id:
             overdue_stmt = overdue_stmt.where(User.org_id == org_id)
         

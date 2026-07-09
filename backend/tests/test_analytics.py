@@ -61,19 +61,26 @@ def patch_jwt_settings(monkeypatch):
 @pytest.mark.anyio
 async def test_heatmap_returns_90_days():
     """Heatmap must always return exactly 90 entries."""
-    # Build 90 fake rows like the SQL generate_series would return
-    fake_rows = [
-        (f"2026-{(i // 30) + 4:02d}-{(i % 30) + 1:02d}", i % 3)
-        for i in range(90)
+    from datetime import UTC, datetime
+
+    # Mock reviews and queue items returned by execute().all()
+    fake_reviews = [
+        (datetime.now(UTC), "topic-1")
+    ]
+    fake_queue = [
+        (datetime.now(UTC), "topic-2")
     ]
 
     with patch(
         "app.api.v1.endpoints.students.db_session",
     ) as mock_ctx:
         mock_session = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.fetchall.return_value = fake_rows
-        mock_session.execute = AsyncMock(return_value=mock_result)
+        mock_session.execute = AsyncMock(
+            side_effect=[
+                MagicMock(all=MagicMock(return_value=fake_reviews)),
+                MagicMock(all=MagicMock(return_value=fake_queue)),
+            ]
+        )
         mock_ctx.return_value.__aenter__ = AsyncMock(return_value=mock_session)
         mock_ctx.return_value.__aexit__ = AsyncMock(return_value=False)
 
@@ -229,4 +236,32 @@ async def test_step4_review_accepts_empty_body():
             )
 
     assert resp.status_code == 404  # body accepted, topic not found
+
+
+@pytest.mark.anyio
+async def test_step4_review_invalid_accuracy_score():
+    """accuracy_score must be between 0.0 and 100.0. Invalid values should raise a 422."""
+    import uuid
+
+    topic_id = str(uuid.uuid4())
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        # Value > 100.0
+        resp1 = await client.post(
+            f"/api/v1/topics/{topic_id}/review",
+            json={"accuracy_score": 150.0},
+            headers={"Authorization": f"Bearer {_student_token()}"},
+        )
+        assert resp1.status_code == 422
+
+        # Value < 0.0
+        resp2 = await client.post(
+            f"/api/v1/topics/{topic_id}/review",
+            json={"accuracy_score": -5.0},
+            headers={"Authorization": f"Bearer {_student_token()}"},
+        )
+        assert resp2.status_code == 422
+
 

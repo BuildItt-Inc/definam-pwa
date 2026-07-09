@@ -8,7 +8,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from app.api.deps import CurrentUserDep
@@ -29,7 +29,7 @@ class RecallRating(BaseModel):
 
 
 class Step4ReviewPayload(BaseModel):
-    accuracy_score: float | None = None
+    accuracy_score: float | None = Field(default=None, ge=0.0, le=100.0)
 
 
 @router.post("/topics/{topic_id}/review")

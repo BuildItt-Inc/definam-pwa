@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from fastapi import APIRouter
-from sqlalchemy import text
+from sqlalchemy import select
 
 from app.api.deps import CurrentUserDep
 from app.db.database import db_session
+from app.db.models import DailyRecallQueue, TopicReview
 
 router = APIRouter(prefix="/students", tags=["students"])
 
@@ -16,38 +19,55 @@ async def get_student_heatmap(claims: CurrentUserDep) -> list[dict]:
     Includes days with 0 activity.
     """
     user_id = claims["sub"]
-
-    query = text("""
-        WITH date_series AS (
-            SELECT CAST(g.date AS DATE) AS study_date
-            FROM generate_series(
-                CURRENT_DATE - INTERVAL '89 days',
-                CURRENT_DATE,
-                INTERVAL '1 day'
-            ) AS g(date)
-        ),
-        study_counts AS (
-            SELECT CAST(study_time AS DATE) AS study_date, COUNT(DISTINCT topic_id) AS topic_count
-            FROM (
-                SELECT created_at AS study_time, topic_id
-                FROM topic_reviews
-                WHERE user_id = :user_id AND created_at IS NOT NULL
-                UNION ALL
-                SELECT rated_at AS study_time, topic_id
-                FROM daily_recall_queue
-                WHERE user_id = :user_id AND completed = 1 AND rated_at IS NOT NULL
-            ) sub
-            WHERE study_time >= CURRENT_DATE - INTERVAL '90 days'
-            GROUP BY CAST(study_time AS DATE)
-        )
-        SELECT
-            TO_CHAR(ds.study_date, 'YYYY-MM-DD') AS date,
-            COALESCE(sc.topic_count, 0) AS count
-        FROM date_series ds
-        LEFT JOIN study_counts sc ON ds.study_date = sc.study_date
-        ORDER BY ds.study_date ASC;
-    """)
+    today = datetime.now(UTC).date()
+    start_date = today - timedelta(days=89)
+    start_datetime = datetime.combine(start_date, datetime.min.time(), tzinfo=UTC)
 
     async with db_session() as session:
-        result = await session.execute(query, {"user_id": user_id})
-        return [{"date": row[0], "count": row[1]} for row in result.fetchall()]
+        # Fetch topic reviews created in the last 90 days
+        reviews_stmt = (
+            select(TopicReview.created_at, TopicReview.topic_id)
+            .where(
+                TopicReview.user_id == user_id,
+                TopicReview.created_at >= start_datetime,
+            )
+        )
+        reviews_result = await session.execute(reviews_stmt)
+        reviews = reviews_result.all()
+
+        # Fetch completed daily recall queue items rated in the last 90 days
+        queue_stmt = (
+            select(DailyRecallQueue.rated_at, DailyRecallQueue.topic_id)
+            .where(
+                DailyRecallQueue.user_id == user_id,
+                DailyRecallQueue.completed == 1,
+                DailyRecallQueue.rated_at >= start_datetime,
+            )
+        )
+        queue_result = await session.execute(queue_stmt)
+        queue_items = queue_result.all()
+
+    # Group by date and count distinct topic_ids per day
+    activity_by_date: dict[str, set[str]] = {}
+
+    for dt, topic_id in reviews:
+        if dt:
+            date_str = dt.date().isoformat()
+            activity_by_date.setdefault(date_str, set()).add(topic_id)
+
+    for dt, topic_id in queue_items:
+        if dt:
+            date_str = dt.date().isoformat()
+            activity_by_date.setdefault(date_str, set()).add(topic_id)
+
+    # Build the 90-day heatmap response
+    heatmap = []
+    for i in range(90):
+        current_date = (start_date + timedelta(days=i)).isoformat()
+        distinct_topics = activity_by_date.get(current_date, set())
+        heatmap.append({
+            "date": current_date,
+            "count": len(distinct_topics),
+        })
+
+    return heatmap
