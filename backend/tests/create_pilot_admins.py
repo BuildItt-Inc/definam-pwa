@@ -21,7 +21,7 @@ async def create_pilot(school_name: str, email: str, seats: int):
     # check if school exists
     existing_school = await get_school_by_email(email)
     if existing_school:
-        org_id = existing_school["id"]
+        org_id = existing_school["id"] if isinstance(existing_school, dict) else existing_school.id
         print(f"[INFO] School with email {email} already exists: {school_name} (ID: {org_id})")
     else:
         org_id = await create_org(email=email, name=school_name, seat_count=seats)

@@ -83,9 +83,9 @@ async def get_admin_stats(
 ) -> dict:
     """Get dashboard stats for admin (scoped to school/org if claims have org_id)."""
     org_id = claims.get("org_id")
-    # next_review_at is stored as TIMESTAMPTZ (timezone-aware) in Postgres.
-    # To be safe across naive/aware database connections, we use UTC-aware now.
-    now = datetime.now(UTC)
+    # If database columns are naive or SQLite is used, timezone-aware comparison
+    # can raise a TypeError. Using naive UTC datetime guarantees safety.
+    now = datetime.now(UTC).replace(tzinfo=None)
 
     async with db_session() as session:
         # 1. Total students
