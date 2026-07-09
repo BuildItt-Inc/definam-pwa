@@ -132,8 +132,8 @@ function CallbackContent() {
         </p>
 
         {/* What's next */}
-        <div className="w-full text-left bg-[#EAF3DE] border border-[#9FE1CB] rounded-xl px-4 py-4 mb-7">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-[#085041] mb-3">
+        <div className="w-full text-left bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-4 mb-7">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-jade-dark mb-3">
             Next steps
           </p>
           <ol className="space-y-2">
@@ -188,13 +188,13 @@ function CallbackContent() {
         </p>
 
         {/* Confirmation card */}
-        <div className="w-full bg-[#EAF3DE] border border-[#9FE1CB] rounded-xl px-4 py-4 mb-7">
+        <div className="w-full bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-4 mb-7">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-jade rounded-lg flex items-center justify-center flex-shrink-0">
               <Building2 size={15} strokeWidth={2} className="text-white" aria-hidden />
             </div>
             <div className="text-left">
-              <p className="text-[12px] font-bold text-[#085041] mb-0.5">
+              <p className="text-[12px] font-bold text-jade-dark mb-0.5">
                 Check your email
               </p>
               <p className="text-[12px] text-[#0F6E56] leading-snug break-all">
@@ -218,8 +218,8 @@ function CallbackContent() {
 
           {state.totalAmountNaira > 0 && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#9FE1CB]">
-              <span className="text-[12px] font-medium text-[#085041]">Total paid</span>
-              <span className="font-syne text-[14px] font-black text-[#085041] tracking-tight">
+              <span className="text-[12px] font-medium text-jade-dark">Total paid</span>
+              <span className="font-syne text-[14px] font-black text-jade-dark tracking-tight">
                 ₦{state.totalAmountNaira.toLocaleString('en-NG')}
               </span>
             </div>

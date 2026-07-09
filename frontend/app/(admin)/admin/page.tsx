@@ -219,7 +219,7 @@ export default function AdminHomePage() {
 
         {/* AI Alert bar */}
         <div
-          className="flex items-center gap-3 bg-[#FEF3C7] border border-amber-200 rounded-lg px-4 py-2.5 mb-4"
+          className="flex items-center gap-3 bg-gold-tint border border-amber-200 rounded-lg px-4 py-2.5 mb-4"
           style={{ borderLeft: '3px solid #C8973A' }}
         >
           <AlertTriangle size={15} className="text-gold shrink-0" strokeWidth={1.5} />

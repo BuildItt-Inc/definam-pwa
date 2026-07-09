@@ -72,12 +72,12 @@ export default function OrgCodePage() {
       <main className="px-5 pt-6 pb-12 md:max-w-md md:mx-auto md:pt-8">
 
         {/* ── Info card ── */}
-        <div className="flex items-start gap-3 bg-[#EAF3DE] border border-[#9FE1CB] rounded-xl p-4 mb-6">
+        <div className="flex items-start gap-3 bg-jade-tint border border-[#9FE1CB] rounded-xl p-4 mb-6">
           <div className="w-9 h-9 bg-jade rounded-xl flex items-center justify-center flex-shrink-0">
             <Building2 size={17} strokeWidth={2} className="text-white" aria-hidden />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-[#085041] leading-none mb-1">
+            <p className="text-[13px] font-bold text-jade-dark leading-none mb-1">
               Your school paid for your access
             </p>
             <p className="text-[12px] text-[#0F6E56] leading-snug">
@@ -114,7 +114,7 @@ export default function OrgCodePage() {
                 'font-mono text-[22px] font-extrabold tracking-[0.18em] uppercase',
                 errors.access_code
                   ? 'text-coral placeholder:text-coral/25'
-                  : 'text-[#085041] placeholder:text-jade/25',
+                  : 'text-jade-dark placeholder:text-jade/25',
               ].join(' ')}
               {...register('access_code')}
             />
@@ -184,7 +184,7 @@ export default function OrgCodePage() {
             'Enter your code once — this device is now your DefinAm login forever',
           ] as const).map((text, i) => (
             <li key={i} className="flex items-start gap-3">
-              <span className="w-5 h-5 bg-[#EAF3DE] border border-[#9FE1CB] rounded-[5px] flex items-center justify-center text-[9px] font-black text-[#085041] flex-shrink-0 mt-0.5">
+              <span className="w-5 h-5 bg-jade-tint border border-[#9FE1CB] rounded-[5px] flex items-center justify-center text-[9px] font-black text-jade-dark flex-shrink-0 mt-0.5">
                 {i + 1}
               </span>
               <span className="text-[12px] text-ink/50 leading-snug">{text}</span>

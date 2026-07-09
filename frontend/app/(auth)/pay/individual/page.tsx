@@ -78,12 +78,12 @@ export default function IndividualPayPage() {
       <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
 
         {/* Info card */}
-        <div className="flex items-start gap-3 bg-[#EAF3DE] border border-[#9FE1CB] rounded-xl p-4 mb-4">
+        <div className="flex items-start gap-3 bg-jade-tint border border-[#9FE1CB] rounded-xl p-4 mb-4">
           <div className="w-9 h-9 bg-jade rounded-xl flex items-center justify-center flex-shrink-0">
             <User size={17} strokeWidth={2} className="text-white" aria-hidden />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-[#085041] leading-none mb-1">
+            <p className="text-[13px] font-bold text-jade-dark leading-none mb-1">
               Personal Subscription
             </p>
             <p className="text-[12px] text-[#0F6E56] leading-snug">
