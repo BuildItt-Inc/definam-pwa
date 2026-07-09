@@ -118,7 +118,7 @@ export function IdManagementTable({
               filtered.map((code) => (
                 <tr
                   key={code.id}
-                  className="border-b border-gray-100 last:border-b-0 hover:bg-[#EAF3DE] transition-colors"
+                  className="border-b border-gray-100 last:border-b-0 hover:bg-jade-tint transition-colors"
                 >
                   <td className="px-4 py-[9px]">
                     <span className="font-mono font-bold text-[13px] tracking-wider text-ink">

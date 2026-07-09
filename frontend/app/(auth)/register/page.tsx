@@ -103,7 +103,7 @@ export default function RegisterPage() {
 
       <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
         {/* Payment confirmed card */}
-        <div className="flex items-center gap-3 bg-[#EAF3DE] border border-[#9FE1CB] rounded-xl px-4 py-3.5 mb-7">
+        <div className="flex items-center gap-3 bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-3.5 mb-7">
           <CircleCheck
             size={20}
             strokeWidth={2}
@@ -111,7 +111,7 @@ export default function RegisterPage() {
             aria-hidden
           />
           <div>
-            <p className="text-[13px] font-bold text-[#085041] leading-none">
+            <p className="text-[13px] font-bold text-jade-dark leading-none">
               Payment confirmed
             </p>
             <p className="text-[12px] text-[#0F6E56] mt-1 leading-none">

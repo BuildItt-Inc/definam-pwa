@@ -115,7 +115,7 @@ export default function AdminIdsPage() {
 
         {/* Subscription banner */}
         <div
-          className="flex items-center gap-3 bg-[#EAF3DE] border border-[#9FE1CB] rounded-lg px-4 py-3"
+          className="flex items-center gap-3 bg-jade-tint border border-[#9FE1CB] rounded-lg px-4 py-3"
           style={{ borderLeft: '3px solid #1B6B4A' }}
         >
           <Building2 size={18} strokeWidth={1.5} className="text-jade shrink-0" />
@@ -141,7 +141,7 @@ export default function AdminIdsPage() {
           </div>
 
           {/* Activated — jade tint */}
-          <div className="bg-[#EAF3DE] border border-[#9FE1CB] rounded-lg p-4">
+          <div className="bg-jade-tint border border-[#9FE1CB] rounded-lg p-4">
             <div className="text-[26px] font-black text-jade leading-none tracking-tight">
               {stats.activated.toLocaleString()}
             </div>
@@ -149,7 +149,7 @@ export default function AdminIdsPage() {
           </div>
 
           {/* Unused — gold tint */}
-          <div className="bg-[#FEF3C7] border border-[#E5C97A] rounded-lg p-4">
+          <div className="bg-gold-tint border border-[#E5C97A] rounded-lg p-4">
             <div className="text-[26px] font-black text-gold leading-none tracking-tight">
               {stats.unused.toLocaleString()}
             </div>
