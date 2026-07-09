@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+"""
+Inspect all tables in the public schema and show topics columns.
+Run: python tests/check_tables.py
+"""
+
 import asyncio
 
 from sqlalchemy import inspect, text
@@ -13,15 +19,16 @@ async def check():
             text("SELECT tablename FROM pg_tables WHERE schemaname='public'")
         )
         tables = [row[0] for row in result.fetchall()]
-        print("Tables in public schema:", tables)
+        print("[INFO] Tables in public schema:", tables)
 
         # If topics table exists, show its columns
         if "topics" in tables:
             inspector = inspect(conn)
             columns = [c["name"] for c in inspector.get_columns("topics")]
-            print("\n📊 Topics columns:", columns)
+            print("\n[INFO] Topics columns:", columns)
         else:
-            print("\n⚠️ Topics table not found yet. Waiting for Naga's migration.")
+            print("\n[WARN] Topics table not found yet.")
 
 
-asyncio.run(check())
+if __name__ == "__main__":
+    asyncio.run(check())

@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+"""
+Sanity-check the database connection.
+Run: python tests/test_db.py
+"""
+
 import asyncio
 
 from sqlalchemy import text
@@ -18,4 +24,5 @@ async def test():
         print("[SUCCESS] Database connected! Result:", result.scalar())
 
 
-asyncio.run(test())
+if __name__ == "__main__":
+    asyncio.run(test())
