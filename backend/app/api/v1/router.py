@@ -11,6 +11,7 @@ from app.api.v1.endpoints import (
     learning,
     payments,
     recall,
+    students,
     webhooks,
 )
 
@@ -25,3 +26,4 @@ api_router.include_router(internal.router, prefix="/internal", tags=["internal"]
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(chat.router, tags=["chat"])
 api_router.include_router(recall.router, tags=["recall"])
+api_router.include_router(students.router, tags=["students"])

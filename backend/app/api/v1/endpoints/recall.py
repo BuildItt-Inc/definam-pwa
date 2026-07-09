@@ -14,7 +14,7 @@ from sqlalchemy import select
 from app.api.deps import CurrentUserDep
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.db.database import db_session
-from app.db.models import Topic, TopicReview
+from app.db.models import DailyRecallQueue, Topic, TopicReview
 from app.services.redis_client import get_redis
 from app.services.sm2 import sm2_calculate
 
@@ -28,16 +28,22 @@ class RecallRating(BaseModel):
 # ── Step 4 write endpoint ──────────────────────────────────────────────────
 
 
+class Step4ReviewPayload(BaseModel):
+    accuracy_score: float | None = None
+
+
 @router.post("/topics/{topic_id}/review")
 async def record_step4_attempt(
     topic_id: str,
+    payload: Step4ReviewPayload,
     claims: CurrentUserDep,
 ) -> dict:
     """
     Record that the student completed Step 4 (practice questions) for a topic.
 
-    Updates ``last_reviewed_at``. SM-2 repetition counts are advanced only
-    when the student submits a recall rating via ``POST /topics/{id}/recall``.
+    Updates ``last_reviewed_at`` and records the ``accuracy_score`` if provided.
+    SM-2 repetition counts are advanced only when the student submits a
+    recall rating via ``POST /topics/{id}/recall``.
     """
     try:
         uuid.UUID(topic_id)
@@ -70,10 +76,13 @@ async def record_step4_attempt(
                 interval_days=1,
                 repetitions=0,
                 last_reviewed_at=now,
+                accuracy_score=payload.accuracy_score,
             )
             session.add(review)
         else:
             review.last_reviewed_at = now
+            if payload.accuracy_score is not None:
+                review.accuracy_score = payload.accuracy_score
 
         await session.commit()
 
@@ -83,6 +92,7 @@ async def record_step4_attempt(
             "last_reviewed_at": review.last_reviewed_at.isoformat(),
             "ease_factor": review.ease_factor,
             "interval_days": review.interval_days,
+            "accuracy_score": review.accuracy_score,
         }
 
 
@@ -143,6 +153,22 @@ async def submit_recall(
         review.repetitions = new_reps
         review.next_review_at = now + timedelta(days=new_interval)
         review.last_reviewed_at = now
+
+        # Mark the daily recall queue item as completed if it exists
+        queue_result = await session.execute(
+            select(DailyRecallQueue)
+            .where(
+                DailyRecallQueue.user_id == user_id,
+                DailyRecallQueue.topic_id == str(topic_id),
+                DailyRecallQueue.completed == 0
+            )
+            .order_by(DailyRecallQueue.due_date.asc())
+        )
+        queue_item = queue_result.scalars().first()
+        if queue_item:
+            queue_item.completed = 1
+            queue_item.rating = rating
+            queue_item.rated_at = now
 
         await session.commit()
 
