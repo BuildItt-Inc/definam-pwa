@@ -57,7 +57,16 @@
   "overrides": {
     "postcss": "^8.5.10",
     "ejs": "^3.1.10",
-    "serialize-javascript": "^7.0.3"
+    "serialize-javascript": "^7.0.3",
+    "@opentelemetry/core": "2.8.0",
+    "@onesignal/node-onesignal": {
+      "form-data": "2.5.6"
+    },
+    "openai": {
+      "@types/node-fetch": {
+        "form-data": "4.0.6"
+      }
+    }
   },
   "engines": {
     "node": ">=20"
