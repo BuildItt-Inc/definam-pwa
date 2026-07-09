@@ -23,8 +23,11 @@ async def check():
 
         # If topics table exists, show its columns
         if "topics" in tables:
-            inspector = inspect(conn)
-            columns = [c["name"] for c in inspector.get_columns("topics")]
+            def get_columns(sync_conn):
+                inspector = inspect(sync_conn)
+                return [c["name"] for c in inspector.get_columns("topics")]
+
+            columns = await conn.run_sync(get_columns)
             print("\n[INFO] Topics columns:", columns)
         else:
             print("\n[WARN] Topics table not found yet.")
