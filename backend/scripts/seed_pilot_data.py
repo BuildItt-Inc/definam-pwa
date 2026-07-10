@@ -4,17 +4,19 @@ Seed pilot school subjects, chapters, and topics.
 Run: python -m scripts.seed_pilot_data --file data.json
 """
 
+import argparse
 import asyncio
 import json
-import sys
-import argparse
 import uuid
+
 from sqlalchemy import select
+
 from app.db.database import db_session
-from app.db.models import Subject, Chapter, Topic
+from app.db.models import Chapter, Subject, Topic
+
 
 async def seed_from_json(file_path: str):
-    with open(file_path, 'r') as f:
+    with open(file_path) as f:
         data = json.load(f)
 
     async with db_session() as session:

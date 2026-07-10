@@ -9,6 +9,7 @@ import argparse
 import asyncio
 import logging
 import random
+
 from google import genai
 from sqlalchemy import select, update
 
