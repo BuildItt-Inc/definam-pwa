@@ -352,13 +352,17 @@ class ChatMessage(Base):
     )
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # user, assistant
     content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # NEW: Token tracking columns
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
 
     topic: Mapped[Topic | None] = relationship("Topic", back_populates="chat_messages")
     user: Mapped[User] = relationship("User")
-
 
 # ── Chat Daily Usage (Rate Limiting) ──────────────────────────────────────
 
