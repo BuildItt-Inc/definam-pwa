@@ -22,6 +22,7 @@ const config: Config = {
         "gold-darker": "#412402",
         "coral-tint": "rgba(232,93,58,0.12)",
         "coral-dark": "#7A2C15",
+        "jade-tint-border": "#9FE1CB",
       },
       fontFamily: {
         syne: ["var(--font-syne)", "sans-serif"],
