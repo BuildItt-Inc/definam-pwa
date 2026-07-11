@@ -39,7 +39,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await loginUser(values);
-      router.push('/dashboard');
+      router.push('/student');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setBannerError('Invalid username or password');

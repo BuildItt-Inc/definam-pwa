@@ -40,7 +40,7 @@ export default function OrgCodePage() {
         user_agent: navigator.userAgent,
         ip: '0.0.0.0',
       });
-      router.push('/dashboard');
+      router.push('/student');
     } catch (err) {
       if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
         setBannerError(err.message || 'Invalid or already used access code');
