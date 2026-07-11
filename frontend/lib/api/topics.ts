@@ -96,7 +96,7 @@ export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
 }
 
 // ── getHomeData ────────────────────────────────────────────────────────────
-// Real: GET /api/v1/student/home
+// Real: GET /api/v1/students/dashboard
 
 export async function getHomeData(): Promise<HomeData> {
   if (USE_MOCK) {
@@ -105,7 +105,7 @@ export async function getHomeData(): Promise<HomeData> {
   }
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/home`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/students/dashboard`,
     { headers: authHeaders() },
   );
   return handleResponse<HomeData>(res);
