@@ -11,7 +11,7 @@ from sqlalchemy.types import Date
 from app.api.deps import CurrentUserDep
 from app.core.exceptions import NotFoundError
 from app.db.database import db_session
-from app.db.models import DailyRecallQueue, School, User
+from app.db.models import DailyRecallQueue, School, TopicReview, User
 
 router = APIRouter(tags=["students"])
 
@@ -135,3 +135,69 @@ def _compute_streak(days_desc: list, today: date) -> int:
 
     return streak
 
+
+# ── GET /students/me/heatmap ─────────────────────────────────────────────────
+
+
+@router.get("/me/heatmap")
+async def get_heatmap(claims: CurrentUserDep) -> list[dict]:
+    """
+    Return a 90-day study activity heatmap for the student.
+
+    Always returns exactly 90 entries (one per calendar day, newest last).
+    Each entry has ``date`` (ISO-8601) and ``count`` (activities that day).
+    """
+    from datetime import timedelta
+
+    user_id: str = claims["sub"]
+    now = datetime.now(UTC)
+    today = now.date()
+    start = today - timedelta(days=89)  # inclusive, giving 90 days total
+
+    async with db_session() as session:
+        # TopicReview activity: days the student reviewed a topic
+        reviews_result = await session.execute(
+            select(
+                func.date_trunc("day", TopicReview.last_reviewed_at)
+                .cast(Date)
+                .label("day"),
+                func.count().label("cnt"),
+            )
+            .where(
+                and_(
+                    TopicReview.user_id == user_id,
+                    TopicReview.last_reviewed_at >= func.cast(start, type_=Date),
+                )
+            )
+            .group_by(text("day"))
+        )
+        counts: dict[date, int] = {row.day: row.cnt for row in reviews_result}
+
+        # DailyRecallQueue completions: add to counts
+        queue_result = await session.execute(
+            select(
+                func.date_trunc("day", DailyRecallQueue.due_date)
+                .cast(Date)
+                .label("day"),
+                func.count().label("cnt"),
+            )
+            .where(
+                and_(
+                    DailyRecallQueue.user_id == user_id,
+                    DailyRecallQueue.completed == 1,
+                    DailyRecallQueue.due_date >= func.cast(start, type_=Date),
+                )
+            )
+            .group_by(text("day"))
+        )
+        for row in queue_result:
+            counts[row.day] = counts.get(row.day, 0) + row.cnt
+
+    # Build the full 90-day spine, filling zeros where there was no activity
+    return [
+        {
+            "date": (start + timedelta(days=i)).isoformat(),
+            "count": counts.get(start + timedelta(days=i), 0),
+        }
+        for i in range(90)
+    ]

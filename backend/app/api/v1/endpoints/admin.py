@@ -32,6 +32,75 @@ class RevokeRequest(BaseModel):
     code_id: str
 
 
+# ── SCR-10 · Admin Stats ───────────────────────────────────────────────────
+
+
+@router.get("/stats")
+async def get_admin_stats(claims: AdminDep) -> dict:
+    """
+    Return the four headline stat cards for the admin dashboard (SCR-10).
+
+    Fields: total_students, avg_accuracy, overdue_recall_count, active_subjects_count.
+    Org admins are scoped to their own school's students.
+    """
+    org_id = claims.get("org_id")
+    now = datetime.now(UTC)
+
+    async with db_session() as session:
+        # Total students in this school
+        total_q = select(func.count(User.id)).where(User.role == "student_org")
+        if org_id:
+            total_q = total_q.where(User.org_id == org_id)
+        total_students = (await session.execute(total_q)).scalar() or 0
+
+        # Average accuracy across all TopicReviews for school students
+        avg_q = select(func.avg(TopicReview.accuracy_score)).join(
+            User, TopicReview.user_id == User.id
+        )
+        if org_id:
+            avg_q = avg_q.where(User.org_id == org_id)
+        avg_accuracy = (await session.execute(avg_q)).scalar()
+        avg_accuracy = round(float(avg_accuracy), 1) if avg_accuracy is not None else 0.0
+
+        # Overdue recall count (incomplete items past due date)
+        overdue_q = select(func.count(DailyRecallQueue.id)).join(
+            User, DailyRecallQueue.user_id == User.id
+        ).where(
+            and_(
+                DailyRecallQueue.completed == 0,
+                DailyRecallQueue.due_date < now,
+            )
+        )
+        if org_id:
+            overdue_q = overdue_q.where(User.org_id == org_id)
+        overdue_recall_count = (await session.execute(overdue_q)).scalar() or 0
+
+        # Distinct active subjects (topics reviewed in the last 7 days)
+        from datetime import timedelta
+
+        from app.db.models import Chapter, Subject, Topic
+
+        week_ago = now - timedelta(days=7)
+        subjects_q = (
+            select(func.count(func.distinct(Subject.id)))
+            .join(Chapter, Subject.id == Chapter.subject_id)
+            .join(Topic, Chapter.id == Topic.chapter_id)
+            .join(TopicReview, Topic.id == TopicReview.topic_id)
+            .join(User, TopicReview.user_id == User.id)
+            .where(TopicReview.last_reviewed_at >= week_ago)
+        )
+        if org_id:
+            subjects_q = subjects_q.where(User.org_id == org_id)
+        active_subjects_count = (await session.execute(subjects_q)).scalar() or 0
+
+    return {
+        "total_students": int(total_students),
+        "avg_accuracy": avg_accuracy,
+        "overdue_recall_count": int(overdue_recall_count),
+        "active_subjects_count": int(active_subjects_count),
+    }
+
+
 # ── SCR-12 · Access Codes Table ────────────────────────────────────────────
 
 
