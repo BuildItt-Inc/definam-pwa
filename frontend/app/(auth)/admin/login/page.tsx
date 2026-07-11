@@ -22,6 +22,7 @@ import {
   type ChangePasswordFormValues,
 } from '@/lib/validations/auth';
 import { loginUser, changePassword, ApiError } from '@/lib/api/auth';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -243,23 +244,14 @@ export default function AdminLoginPage() {
             </p>
 
             {/* Gold warning banner */}
-            <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-gold/10 border border-gold/30 mb-7">
-              <AlertTriangle
-                size={18}
-                strokeWidth={2}
-                className="text-gold flex-shrink-0 mt-0.5"
-                aria-hidden
-              />
-              <div>
-                <p className="text-[13px] font-bold text-gold leading-none mb-1">
-                  First Login — Change Your Password
-                </p>
-                <p className="text-[12px] text-gold/80 leading-snug">
-                  You&apos;re using a temporary password. Set a permanent one before
-                  you continue.
-                </p>
-              </div>
-            </div>
+            <InfoCard
+              tone="gold"
+              icon={AlertTriangle}
+              iconStyle="bare"
+              title="First Login — Change Your Password"
+              body="You're using a temporary password. Set a permanent one before you continue."
+              className="mb-7"
+            />
 
             <form
               onSubmit={handleChangeSubmit(onChangePasswordSubmit)}

@@ -18,6 +18,7 @@ import {
 
 import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth';
 import { registerUser, ApiError } from '@/lib/api/auth';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -103,22 +104,13 @@ export default function RegisterPage() {
 
       <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
         {/* Payment confirmed card */}
-        <div className="flex items-center gap-3 bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-3.5 mb-7">
-          <CircleCheck
-            size={20}
-            strokeWidth={2}
-            className="text-jade flex-shrink-0"
-            aria-hidden
-          />
-          <div>
-            <p className="text-[13px] font-bold text-jade-dark leading-none">
-              Payment confirmed
-            </p>
-            <p className="text-[12px] text-[#0F6E56] mt-1 leading-none">
-              Access code sent to your email
-            </p>
-          </div>
-        </div>
+        <InfoCard
+          icon={CircleCheck}
+          iconStyle="bare"
+          title="Payment confirmed"
+          body="Access code sent to your email"
+          className="mb-7"
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           {/* ── Username ── */}

@@ -16,6 +16,7 @@ import {
 
 import { verifyPayment } from '@/lib/api/payment';
 import type { VerifyOrgPaymentResponse } from '@/types/payment';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 // ── State type ─────────────────────────────────────────────────────────────
 
@@ -132,7 +133,7 @@ function CallbackContent() {
         </p>
 
         {/* What's next */}
-        <div className="w-full text-left bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-4 mb-7">
+        <InfoCard className="px-4 py-4 mb-7 w-full text-left">
           <p className="text-[11px] font-bold uppercase tracking-wide text-jade-dark mb-3">
             Next steps
           </p>
@@ -156,7 +157,7 @@ function CallbackContent() {
               Log in with your username and password from then on
             </li>
           </ol>
-        </div>
+        </InfoCard>
 
         <Link
           href="/register"
@@ -188,7 +189,7 @@ function CallbackContent() {
         </p>
 
         {/* Confirmation card */}
-        <div className="w-full bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-4 mb-7">
+        <InfoCard className="px-4 py-4 mb-7 w-full">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-jade rounded-lg flex items-center justify-center flex-shrink-0">
               <Building2 size={15} strokeWidth={2} className="text-white" aria-hidden />
@@ -224,7 +225,7 @@ function CallbackContent() {
               </span>
             </div>
           )}
-        </div>
+        </InfoCard>
 
         <p className="text-[12px] text-ink/40 leading-snug max-w-[280px]">
           Share the access codes with your students. They log in using their

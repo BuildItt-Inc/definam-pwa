@@ -14,6 +14,7 @@ import {
 
 import { orgLoginSchema, type OrgLoginFormValues } from '@/lib/validations/auth';
 import { orgLogin, ApiError } from '@/lib/api/auth';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 export default function OrgCodePage() {
   const router = useRouter();
@@ -72,20 +73,13 @@ export default function OrgCodePage() {
       <main className="px-5 pt-6 pb-12 md:max-w-md md:mx-auto md:pt-8">
 
         {/* ── Info card ── */}
-        <div className="flex items-start gap-3 bg-jade-tint border border-[#9FE1CB] rounded-xl p-4 mb-6">
-          <div className="w-9 h-9 bg-jade rounded-xl flex items-center justify-center flex-shrink-0">
-            <Building2 size={17} strokeWidth={2} className="text-white" aria-hidden />
-          </div>
-          <div>
-            <p className="text-[13px] font-bold text-jade-dark leading-none mb-1">
-              Your school paid for your access
-            </p>
-            <p className="text-[12px] text-[#0F6E56] leading-snug">
-              Enter the unique code your school gave you. This code is your
-              permanent login — no password needed.
-            </p>
-          </div>
-        </div>
+        <InfoCard
+          icon={Building2}
+          iconStyle="pill"
+          title="Your school paid for your access"
+          body="Enter the unique code your school gave you. This code is your permanent login — no password needed."
+          className="mb-6"
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
