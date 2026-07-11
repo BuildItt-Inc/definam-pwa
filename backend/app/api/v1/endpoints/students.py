@@ -11,7 +11,15 @@ from sqlalchemy.types import Date
 from app.api.deps import CurrentUserDep
 from app.core.exceptions import NotFoundError
 from app.db.database import db_session
-from app.db.models import DailyRecallQueue, School, TopicReview, User
+from app.db.models import (
+    Chapter,
+    DailyRecallQueue,
+    School,
+    Subject,
+    Topic,
+    TopicReview,
+    User,
+)
 
 router = APIRouter(tags=["students"])
 
@@ -99,16 +107,74 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
         completed_today_count = summary_row.completed_today or 0
         total_pending_count = summary_row.total_pending or 0
 
+        # Recall queue: topics due today or overdue
+        queue_q = (
+            select(
+                DailyRecallQueue.topic_id,
+                Topic.title.label("topic_title"),
+                Subject.name.label("subject"),
+            )
+            .join(Topic, DailyRecallQueue.topic_id == Topic.id)
+            .join(Chapter, Topic.chapter_id == Chapter.id)
+            .join(Subject, Chapter.subject_id == Subject.id)
+            .where(
+                and_(
+                    DailyRecallQueue.user_id == user_id,
+                    DailyRecallQueue.completed == 0,
+                    func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) <= today,
+                )
+            )
+            .limit(10)
+        )
+        queue_rows = await session.execute(queue_q)
+        recall_queue = [
+            {
+                "topic_id": r.topic_id,
+                "topic_title": r.topic_title,
+                "subject": r.subject,
+            }
+            for r in queue_rows
+        ]
+
+        # Recent topics: topics recently reviewed by this student
+        recent_q = (
+            select(
+                TopicReview.topic_id,
+                Topic.title.label("topic_title"),
+                Subject.name.label("subject"),
+                TopicReview.accuracy_score.label("mastery_percent"),
+            )
+            .join(Topic, TopicReview.topic_id == Topic.id)
+            .join(Chapter, Topic.chapter_id == Chapter.id)
+            .join(Subject, Chapter.subject_id == Subject.id)
+            .where(TopicReview.user_id == user_id)
+            .order_by(TopicReview.last_reviewed_at.desc())
+            .limit(5)
+        )
+        recent_rows = await session.execute(recent_q)
+        recent_topics = [
+            {
+                "topic_id": r.topic_id,
+                "topic_title": r.topic_title,
+                "subject": r.subject,
+                "mastery_percent": int(r.mastery_percent or 0),
+            }
+            for r in recent_rows
+        ]
+
     return {
         "id": user.id,
         "username": user.username,
-        "school_name": school_name,
+        "student_name": user.username,  # Frontend expects student_name
+        "school_name": school_name or "Independent Learner",
         "streak_days": streak,
         "recall_summary": {
             "due_today": int(due_today_count),
             "completed_today": int(completed_today_count),
             "total_pending": int(total_pending_count),
         },
+        "recall_queue": recall_queue,
+        "recent_topics": recent_topics,
     }
 
 
