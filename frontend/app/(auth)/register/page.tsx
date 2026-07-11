@@ -47,7 +47,7 @@ export default function RegisterPage() {
         access_code: values.access_code, // already trimmed + uppercased by zod transform
       });
 
-      router.push('/dashboard');
+      router.push('/student');
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 409) {

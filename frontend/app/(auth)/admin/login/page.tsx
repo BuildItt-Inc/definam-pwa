@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
       if (data.force_password_change) {
         setForcePasswordChange(true);
       } else {
-        router.push('/admin/dashboard');
+        router.push('/admin');
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -87,7 +87,7 @@ export default function AdminLoginPage() {
         new_password: values.new_password,
         confirm_password: values.confirm_password,
       });
-      router.push('/admin/dashboard');
+      router.push('/admin');
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setChangeBannerError(err.message || 'Something went wrong. Please try again.');
