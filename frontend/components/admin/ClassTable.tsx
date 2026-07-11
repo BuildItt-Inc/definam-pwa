@@ -143,7 +143,7 @@ export function ClassTable({ students, activeSubjects, onViewStudent }: ClassTab
               return (
                 <tr
                   key={student.id}
-                  className={`${rowBg} hover:bg-[#EAF3DE] transition-colors group`}
+                  className={`${rowBg} hover:bg-jade-tint transition-colors group`}
                 >
                   {/* Name */}
                   <td className="px-4 py-[9px] border-b border-gray-100">

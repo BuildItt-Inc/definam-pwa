@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # validator runs; the validator normalises it to list[str] at runtime.
     allowed_origins: str | list[str] = "http://localhost:3000"
 
+    # ── Redis ──────────────────────────────────────────────
+    redis_url: str = "redis://localhost:6379"
+
     # ── Database ───────────────────────────────────────────
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
 
@@ -37,16 +40,15 @@ class Settings(BaseSettings):
     smtp_username: str = ""
     smtp_password: str = ""
 
-    # ── AI ────────────────────────────────────────────────────
-    openai_api_key: str = ""
-    anthropic_api_key: str = ""
+    # ── AI — Chat & content generation (Groq / Llama) ────────
     groq_api_key: str = ""
+
+    # ── AI — Embeddings (Gemini text-embedding-004) ────────────
     gemini_api_key: str = ""
 
+    # ── Push notifications (OneSignal) ────────────────────────
     onesignal_app_id: str = ""
     onesignal_api_key: str = ""
-
-    redis_url: str = "redis://localhost:6379"
 
     @field_validator("database_url", mode="before")
     @classmethod

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { initializeOrgPayment, PaymentError } from '@/lib/api/payment';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 // ── Zod schema ─────────────────────────────────────────────────────────────
 
@@ -139,19 +140,13 @@ export default function OrgPayPage() {
       <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
 
         {/* Info card */}
-        <div className="flex items-start gap-3 bg-[#EAF3DE] border border-[#9FE1CB] rounded-xl p-4 mb-5">
-          <div className="w-9 h-9 bg-jade rounded-xl flex items-center justify-center flex-shrink-0">
-            <Building2 size={17} strokeWidth={2} className="text-white" aria-hidden />
-          </div>
-          <div>
-            <p className="text-[13px] font-bold text-[#085041] leading-none mb-1">
-              For Schools &amp; Organisations
-            </p>
-            <p className="text-[12px] text-[#0F6E56] leading-snug">
-              Pay for all your students at once. You get an admin dashboard + access codes to share.
-            </p>
-          </div>
-        </div>
+        <InfoCard
+          icon={Building2}
+          iconStyle="pill"
+          title="For Schools & Organisations"
+          body="Pay for all your students at once. You get an admin dashboard + access codes to share."
+          className="mb-5"
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
@@ -238,7 +233,7 @@ export default function OrgPayPage() {
           </div>
 
           {/* ── Price summary (client-side preview) ── */}
-          <div className="bg-[#EAF3DE] border border-[#9FE1CB] rounded-xl px-4 py-3.5 mb-5">
+          <div className="bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-3.5 mb-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] text-[#0F6E56]">
                 {displayCount > 0
@@ -247,8 +242,8 @@ export default function OrgPayPage() {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[14px] font-bold text-[#085041]">Total</span>
-              <span className="font-syne text-[18px] font-black text-[#085041] tracking-tight">
+              <span className="text-[14px] font-bold text-jade-dark">Total</span>
+              <span className="font-syne text-[18px] font-black text-jade-dark tracking-tight">
                 {formatNaira(total)}
               </span>
             </div>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Seed test subjects, chapters, and topics into the database.
-Run: python seed_test_data.py
+Run: python tests/seed_test_data.py
 """
 
 import asyncio
