@@ -1,73 +1,203 @@
+"""Student-facing endpoints: dashboard summary."""
+
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime
 
 from fastapi import APIRouter
-from sqlalchemy import select
+from sqlalchemy import and_, case, func, select, text
+from sqlalchemy.types import Date
 
 from app.api.deps import CurrentUserDep
+from app.core.exceptions import NotFoundError
 from app.db.database import db_session
-from app.db.models import DailyRecallQueue, TopicReview
+from app.db.models import DailyRecallQueue, School, TopicReview, User
 
-router = APIRouter(prefix="/students", tags=["students"])
+router = APIRouter(tags=["students"])
+
+
+@router.get("/dashboard")
+async def get_dashboard(claims: CurrentUserDep) -> dict:
+    """
+    Return a single-shot dashboard payload for the home screen.
+
+    Includes: student name, school name, streak (days), and recall summary.
+    Individual students will have school_name = null.
+    """
+    user_id: str = claims["sub"]
+    now = datetime.now(UTC)
+    today = now.date()
+
+    async with db_session() as session:
+        # Fetch user + school in one join
+        result = await session.execute(
+            select(User, School.name.label("school_name"))
+            .outerjoin(School, User.org_id == School.id)
+            .where(User.id == user_id)
+        )
+        row = result.one_or_none()
+        if not row:
+            raise NotFoundError("User not found.")
+        user, school_name = row
+
+        # Streak: consecutive calendar days (desc) with at least one
+        # completed recall session, counting from today or yesterday
+        completed_days_result = await session.execute(
+            select(
+                func.date_trunc("day", DailyRecallQueue.due_date)
+                .cast(Date)
+                .label("day")
+            )
+            .where(
+                and_(
+                    DailyRecallQueue.user_id == user_id,
+                    DailyRecallQueue.completed == 1,
+                )
+            )
+            .group_by(text("day"))
+            .order_by(text("day desc"))
+        )
+        completed_days = [r.day for r in completed_days_result]
+        streak = _compute_streak(completed_days, today)
+
+        # Recall summary: run a single query to get all counts
+        recall_summary_query = select(
+            func.sum(
+                case(
+                    (
+                        and_(
+                            DailyRecallQueue.completed == 0,
+                            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) == today,
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("due_today"),
+            func.sum(
+                case(
+                    (
+                        and_(
+                            DailyRecallQueue.completed == 1,
+                            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) == today,
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("completed_today"),
+            func.sum(
+                case(
+                    (DailyRecallQueue.completed == 0, 1),
+                    else_=0,
+                )
+            ).label("total_pending"),
+        ).where(DailyRecallQueue.user_id == user_id)
+
+        summary_row = (await session.execute(recall_summary_query)).one()
+        due_today_count = summary_row.due_today or 0
+        completed_today_count = summary_row.completed_today or 0
+        total_pending_count = summary_row.total_pending or 0
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "school_name": school_name,
+        "streak_days": streak,
+        "recall_summary": {
+            "due_today": int(due_today_count),
+            "completed_today": int(completed_today_count),
+            "total_pending": int(total_pending_count),
+        },
+    }
+
+
+def _compute_streak(days_desc: list, today: date) -> int:
+    """Count consecutive calendar days (desc-ordered) ending today or yesterday."""
+    from datetime import timedelta
+
+    if not days_desc:
+        return 0
+
+    streak = 0
+    expected = today
+
+    for d in days_desc:
+        if d == expected:
+            streak += 1
+            expected = d - timedelta(days=1)
+        elif streak == 0 and d == today - timedelta(days=1):
+            # Allow streak starting from yesterday if no session yet today
+            streak += 1
+            expected = d - timedelta(days=1)
+        else:
+            break
+
+    return streak
+
+
+# ── GET /students/me/heatmap ─────────────────────────────────────────────────
 
 
 @router.get("/me/heatmap")
-async def get_student_heatmap(claims: CurrentUserDep) -> list[dict]:
+async def get_heatmap(claims: CurrentUserDep) -> list[dict]:
     """
-    Return a 90-day study activity heatmap for the authenticated student.
-    Includes days with 0 activity.
+    Return a 90-day study activity heatmap for the student.
+
+    Always returns exactly 90 entries (one per calendar day, newest last).
+    Each entry has ``date`` (ISO-8601) and ``count`` (activities that day).
     """
-    user_id = claims["sub"]
-    today = datetime.now(UTC).date()
-    start_date = today - timedelta(days=89)
-    start_datetime = datetime.combine(start_date, datetime.min.time(), tzinfo=UTC)
+    from datetime import timedelta
+
+    user_id: str = claims["sub"]
+    now = datetime.now(UTC)
+    today = now.date()
+    start = today - timedelta(days=89)  # inclusive, giving 90 days total
 
     async with db_session() as session:
-        # Fetch topic reviews created in the last 90 days
-        reviews_stmt = (
-            select(TopicReview.created_at, TopicReview.topic_id)
-            .where(
-                TopicReview.user_id == user_id,
-                TopicReview.created_at >= start_datetime,
+        # TopicReview activity: days the student reviewed a topic
+        reviews_result = await session.execute(
+            select(
+                func.date_trunc("day", TopicReview.last_reviewed_at)
+                .cast(Date)
+                .label("day"),
+                func.count().label("cnt"),
             )
-        )
-        reviews_result = await session.execute(reviews_stmt)
-        reviews = reviews_result.all()
-
-        # Fetch completed daily recall queue items rated in the last 90 days
-        queue_stmt = (
-            select(DailyRecallQueue.rated_at, DailyRecallQueue.topic_id)
             .where(
-                DailyRecallQueue.user_id == user_id,
-                DailyRecallQueue.completed == 1,
-                DailyRecallQueue.rated_at >= start_datetime,
+                and_(
+                    TopicReview.user_id == user_id,
+                    TopicReview.last_reviewed_at >= func.cast(start, type_=Date),
+                )
             )
+            .group_by(text("day"))
         )
-        queue_result = await session.execute(queue_stmt)
-        queue_items = queue_result.all()
+        counts: dict[date, int] = {row.day: row.cnt for row in reviews_result}
 
-    # Group by date and count distinct topic_ids per day
-    activity_by_date: dict[str, set[str]] = {}
+        # DailyRecallQueue completions: add to counts
+        queue_result = await session.execute(
+            select(
+                func.date_trunc("day", DailyRecallQueue.due_date)
+                .cast(Date)
+                .label("day"),
+                func.count().label("cnt"),
+            )
+            .where(
+                and_(
+                    DailyRecallQueue.user_id == user_id,
+                    DailyRecallQueue.completed == 1,
+                    DailyRecallQueue.due_date >= func.cast(start, type_=Date),
+                )
+            )
+            .group_by(text("day"))
+        )
+        for row in queue_result:
+            counts[row.day] = counts.get(row.day, 0) + row.cnt
 
-    for dt, topic_id in reviews:
-        if dt:
-            date_str = dt.date().isoformat()
-            activity_by_date.setdefault(date_str, set()).add(topic_id)
-
-    for dt, topic_id in queue_items:
-        if dt:
-            date_str = dt.date().isoformat()
-            activity_by_date.setdefault(date_str, set()).add(topic_id)
-
-    # Build the 90-day heatmap response
-    heatmap = []
-    for i in range(90):
-        current_date = (start_date + timedelta(days=i)).isoformat()
-        distinct_topics = activity_by_date.get(current_date, set())
-        heatmap.append({
-            "date": current_date,
-            "count": len(distinct_topics),
-        })
-
-    return heatmap
+    # Build the full 90-day spine, filling zeros where there was no activity
+    return [
+        {
+            "date": (start + timedelta(days=i)).isoformat(),
+            "count": counts.get(start + timedelta(days=i), 0),
+        }
+        for i in range(90)
+    ]

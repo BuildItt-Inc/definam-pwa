@@ -1,4 +1,4 @@
-export const USE_MOCK = true;
+export const USE_MOCK = false;
 
 // Simulate network latency so loading states are testable.
 // Set to 0 when running unit tests that don't need skeleton delays.
