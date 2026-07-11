@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from io import StringIO
 
 from fastapi import APIRouter
@@ -81,6 +81,7 @@ async def list_codes(claims: AdminDep) -> dict:
     return {
         "subscription": {
             # Stubbed for MVP — no term/expiry columns in DB yet
+            "school_name": school_name,
             "term": "Term 3 2026",
             "status": "active",
             "total_seats": total,
@@ -234,17 +235,22 @@ async def get_student_detail(student_id: str, claims: AdminDep) -> dict:
             .order_by(text("day desc"))
         )
         completed_days = [row.day for row in completed_days_result]
-        streak = _compute_streak(completed_days)
+        streak = _compute_streak(completed_days, now.date())
 
         # Chat sessions: group ChatMessage rows by (topic_id, calendar-day)
+        # Limit to the most recent 200 messages to avoid loading unbounded history
         msgs_result = await session.execute(
             select(ChatMessage, Topic.title.label("topic_title"))
             .outerjoin(Topic, ChatMessage.topic_id == Topic.id)
             .where(ChatMessage.user_id == student_id)
-            .order_by(ChatMessage.created_at.asc())
+            .order_by(ChatMessage.created_at.desc())
+            .limit(200)
         )
+        messages = list(msgs_result)
+        messages.reverse()  # Process chronologically
+
         sessions_map: dict[tuple, dict] = {}
-        for msg, topic_title in msgs_result:
+        for msg, topic_title in messages:
             day_key = msg.created_at.date().isoformat()
             session_key = (msg.topic_id or "general", day_key)
             if session_key not in sessions_map:
@@ -280,14 +286,13 @@ async def get_student_detail(student_id: str, claims: AdminDep) -> dict:
     }
 
 
-def _compute_streak(days_desc: list) -> int:
+def _compute_streak(days_desc: list, today: date) -> int:
     """Count consecutive calendar days (desc-ordered) ending today or yesterday."""
-    from datetime import date, timedelta
+    from datetime import timedelta
 
     if not days_desc:
         return 0
 
-    today = date.today()
     streak = 0
     expected = today
 
@@ -303,3 +308,4 @@ def _compute_streak(days_desc: list) -> int:
             break
 
     return streak
+

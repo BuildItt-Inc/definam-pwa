@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from fastapi import APIRouter
-from sqlalchemy import and_, func, select, text
+from sqlalchemy import and_, case, func, select, text
 from sqlalchemy.types import Date
 
 from app.api.deps import CurrentUserDep
@@ -58,65 +58,46 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
             .order_by(text("day desc"))
         )
         completed_days = [r.day for r in completed_days_result]
-        streak = _compute_streak(completed_days)
+        streak = _compute_streak(completed_days, today)
 
-        # Recall summary
-        recall_result = await session.execute(
-            select(
-                func.count().label("total_pending"),
-                func.sum(
-                    func.cast(
+        # Recall summary: run a single query to get all counts
+        recall_summary_query = select(
+            func.sum(
+                case(
+                    (
                         and_(
-                            DailyRecallQueue.due_date < func.now(),
                             DailyRecallQueue.completed == 0,
+                            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) == today,
                         ),
-                        type_=func.count().type,
-                    )
-                ).label("overdue"),
-            ).where(
-                and_(
-                    DailyRecallQueue.user_id == user_id,
-                    DailyRecallQueue.completed == 0,
+                        1,
+                    ),
+                    else_=0,
                 )
-            )
-        )
-        # Simpler — run two targeted queries for clarity
-        due_today_count = (
-            await session.execute(
-                select(func.count()).where(
-                    and_(
-                        DailyRecallQueue.user_id == user_id,
-                        DailyRecallQueue.completed == 0,
-                        func.date_trunc("day", DailyRecallQueue.due_date).cast(Date)
-                        == today,
-                    )
+            ).label("due_today"),
+            func.sum(
+                case(
+                    (
+                        and_(
+                            DailyRecallQueue.completed == 1,
+                            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) == today,
+                        ),
+                        1,
+                    ),
+                    else_=0,
                 )
-            )
-        ).scalar() or 0
+            ).label("completed_today"),
+            func.sum(
+                case(
+                    (DailyRecallQueue.completed == 0, 1),
+                    else_=0,
+                )
+            ).label("total_pending"),
+        ).where(DailyRecallQueue.user_id == user_id)
 
-        completed_today_count = (
-            await session.execute(
-                select(func.count()).where(
-                    and_(
-                        DailyRecallQueue.user_id == user_id,
-                        DailyRecallQueue.completed == 1,
-                        func.date_trunc("day", DailyRecallQueue.due_date).cast(Date)
-                        == today,
-                    )
-                )
-            )
-        ).scalar() or 0
-
-        total_pending_count = (
-            await session.execute(
-                select(func.count()).where(
-                    and_(
-                        DailyRecallQueue.user_id == user_id,
-                        DailyRecallQueue.completed == 0,
-                    )
-                )
-            )
-        ).scalar() or 0
+        summary_row = (await session.execute(recall_summary_query)).one()
+        due_today_count = summary_row.due_today or 0
+        completed_today_count = summary_row.completed_today or 0
+        total_pending_count = summary_row.total_pending or 0
 
     return {
         "id": user.id,
@@ -131,14 +112,13 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
     }
 
 
-def _compute_streak(days_desc: list) -> int:
+def _compute_streak(days_desc: list, today: date) -> int:
     """Count consecutive calendar days (desc-ordered) ending today or yesterday."""
-    from datetime import date, timedelta
+    from datetime import timedelta
 
     if not days_desc:
         return 0
 
-    today = date.today()
     streak = 0
     expected = today
 
@@ -154,3 +134,4 @@ def _compute_streak(days_desc: list) -> int:
             break
 
     return streak
+
