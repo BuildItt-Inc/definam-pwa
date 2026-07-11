@@ -67,7 +67,7 @@ async def seed():
                 for i in range(1, 11)
             ]
             session.add_all(codes)
-            print(f"[SUCCESS] Seeded 10 org access codes for school")
+            print("[SUCCESS] Seeded 10 org access codes for school")
 
         # ── Admin user ─────────────────────────────────────────────────────
         existing_admin = (
