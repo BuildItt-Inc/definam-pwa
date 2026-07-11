@@ -52,12 +52,12 @@ export function InfoCard({
       )}
       <div>
         {title && (
-          <p className={`text-[13px] font-bold leading-none mb-1 ${tone === 'jade' ? 'text-ink' : 'text-gold'}`}>
+          <p className={`text-[13px] font-bold leading-none mb-1 ${tone === 'jade' ? 'text-jade-dark' : 'text-gold'}`}>
             {title}
           </p>
         )}
         {body && (
-          <p className={`text-[12px] leading-snug ${tone === 'jade' ? 'text-gray-600' : 'text-gold/80'}`}>
+          <p className={`text-[12px] leading-snug ${tone === 'jade' ? 'text-jade-body' : 'text-gold/80'}`}>
             {body}
           </p>
         )}
