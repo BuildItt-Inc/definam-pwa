@@ -32,6 +32,7 @@ export default function MobileSplashPage() {
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
+            />
             <circle cx="19" cy="10" r="3" className="fill-white/50" />
           </svg>
         </div>

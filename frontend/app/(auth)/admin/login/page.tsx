@@ -245,7 +245,7 @@ export default function AdminLoginPage() {
 
             {/* warn warning banner */}
             <InfoCard
-              tone="warn"
+              tone="gold"
               icon={AlertTriangle}
               iconStyle="bare"
               title="First Login — Change Your Password"
