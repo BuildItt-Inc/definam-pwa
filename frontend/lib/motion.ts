@@ -1,6 +1,6 @@
 import { Variants } from "framer-motion";
 
-export const standardEasing = [0.4, 0, 0.2, 1];
+export const standardEasing = [0.4, 0, 0.2, 1] as const;
 
 export const scaleTap = {
   whileTap: { scale: 0.97 },
