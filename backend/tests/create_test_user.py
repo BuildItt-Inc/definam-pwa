@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa
 """
 Create a test student user in the database for local development.
 Run: python tests/create_test_user.py
