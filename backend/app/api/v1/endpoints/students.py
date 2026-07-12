@@ -162,6 +162,29 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
             for r in recent_rows
         ]
 
+        # Fallback for brand new users: suggest the first 3 topics in the DB
+        if not recent_topics:
+            fallback_q = (
+                select(
+                    Topic.id.label("topic_id"),
+                    Topic.title.label("topic_title"),
+                    Subject.name.label("subject"),
+                )
+                .join(Chapter, Topic.chapter_id == Chapter.id)
+                .join(Subject, Chapter.subject_id == Subject.id)
+                .limit(3)
+            )
+            fallback_rows = await session.execute(fallback_q)
+            recent_topics = [
+                {
+                    "topic_id": r.topic_id,
+                    "topic_title": r.topic_title,
+                    "subject": r.subject,
+                    "mastery_percent": 0,
+                }
+                for r in fallback_rows
+            ]
+
     return {
         "id": user.id,
         "username": user.username,

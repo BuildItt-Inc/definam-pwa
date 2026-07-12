@@ -146,3 +146,21 @@ export async function logout(): Promise<void> {
   });
   accessToken = null;
 }
+
+export async function getAuthHeaders(): Promise<HeadersInit> {
+  if (!accessToken) {
+    try {
+      await refreshToken();
+    } catch (err) {
+      // If refresh fails (e.g., cookie expired), we're fully logged out
+      throw new ApiError(401, 'Not authenticated');
+    }
+  }
+
+  if (!accessToken) throw new ApiError(401, 'Not authenticated');
+
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+  };
+}

@@ -1,6 +1,6 @@
 import type { AdminDashboardData, StudentDetail, AccessCodesData } from '@/types/admin';
 import { USE_MOCK, MOCK_DELAY_MS } from '@/lib/api/mock/week2';
-import { ApiError } from '@/lib/api/auth';
+import { ApiError, getAuthHeaders } from '@/lib/api/auth';
 
 export async function getAdminDashboard(): Promise<AdminDashboardData> {
   if (USE_MOCK) {
@@ -11,7 +11,7 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/dashboard`,
-    { headers: { 'Content-Type': 'application/json' } },
+    { headers: await getAuthHeaders() },
   );
 
   if (!res.ok) {
@@ -33,7 +33,7 @@ export async function getStudentDetail(studentId: string): Promise<StudentDetail
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/students/${studentId}`,
-    { headers: { 'Content-Type': 'application/json' } },
+    { headers: await getAuthHeaders() },
   );
 
   if (!res.ok) {
@@ -55,7 +55,7 @@ export async function getAccessCodes(): Promise<AccessCodesData> {
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/codes`,
-    { headers: { 'Content-Type': 'application/json' } },
+    { headers: await getAuthHeaders() },
   );
 
   if (!res.ok) {
@@ -100,6 +100,7 @@ export async function downloadCodes(filter: 'all' | 'unused'): Promise<void> {
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/codes/download?filter=${filter}`,
+    { headers: await getAuthHeaders() }
   );
 
   if (!res.ok) {
