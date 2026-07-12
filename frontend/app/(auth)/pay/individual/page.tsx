@@ -60,9 +60,9 @@ export default function IndividualPayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream font-dm-sans">
+    <div className="min-h-screen bg-bg-0 font-dm-sans">
       {/* App bar */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-black/8 bg-cream">
+      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <button
           type="button"
           onClick={() => router.back()}
@@ -108,13 +108,13 @@ export default function IndividualPayPage() {
               className={[
                 'border rounded-xl transition-colors',
                 errors.email
-                  ? 'border-coral'
-                  : 'border-black/15 focus-within:border-jade',
+                  ? 'border-danger'
+                  : 'border-border-2 focus-within:border-ink',
               ].join(' ')}
             >
               <label
                 htmlFor="email"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <Mail size={11} strokeWidth={2.5} aria-hidden />
                 Email Address
@@ -131,7 +131,7 @@ export default function IndividualPayPage() {
               />
             </div>
             {errors.email && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                 {errors.email.message}
               </p>
             )}
@@ -141,7 +141,7 @@ export default function IndividualPayPage() {
           {bannerError && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug mb-4"
+              className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug mb-4"
             >
               <AlertCircle size={16} strokeWidth={2} className="flex-shrink-0 mt-0.5" aria-hidden />
               {bannerError}
@@ -152,7 +152,7 @@ export default function IndividualPayPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-4"
+            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-4"
           >
             {isLoading ? (
               <>
@@ -169,7 +169,7 @@ export default function IndividualPayPage() {
 
           {/* Email note */}
           <div className="flex items-center justify-center gap-1.5">
-            <Mail size={13} strokeWidth={2} className="text-jade flex-shrink-0" aria-hidden />
+            <Mail size={13} strokeWidth={2} className="text-ink flex-shrink-0" aria-hidden />
             <p className="text-[12px] text-ink/40">
               Your access code will be sent to this email after payment
             </p>

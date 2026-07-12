@@ -168,10 +168,10 @@ function OrbitIllustration() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white font-dm-sans text-ink">
+    <div className="min-h-screen bg-card font-dm-sans text-ink">
 
       {/* ── 1. Sticky nav ── */}
-      <header className="sticky top-0 z-10 bg-white border-b border-cream">
+      <header className="sticky top-0 z-10 bg-card border-b border-cream">
         <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Left: logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
@@ -183,29 +183,31 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-6">
             <a
               href="#how-it-works"
-              className="text-[13px] text-gray-600 hover:text-ink transition-colors"
+              className="text-[13px] text-ink-2 hover:text-ink transition-colors"
             >
               How it works
             </a>
             <Link
               href="/pay/organisation"
-              className="text-[13px] text-gray-600 hover:text-ink transition-colors"
+              className="text-[13px] text-ink-2 hover:text-ink transition-colors"
             >
               For schools
             </Link>
             <Link
               href="/login"
-              className="text-[13px] text-gray-600 hover:text-ink transition-colors"
+              className="text-[13px] text-ink-2 hover:text-ink transition-colors"
             >
               Login
             </Link>
-            <Link
-              href="/pay/individual"
-              className="flex items-center gap-1.5 bg-jade text-white text-[13px] font-semibold px-4 py-2 rounded-lg hover:bg-jade-dark transition-colors"
-            >
-              Get started
-              <ArrowRight size={14} strokeWidth={2.5} aria-hidden />
+            <div className="hidden md:block">
+              <Link
+                href="/pay/individual"
+                className="flex items-center gap-1.5 bg-ink text-white text-[13px] font-semibold px-4 py-2 rounded-lg hover:bg-ink/80 transition-colors"
+              >
+                Get Started
+                <ArrowRight size={14} strokeWidth={2.5} aria-hidden />
             </Link>
+          </div>
           </div>
 
           {/* Mobile nav */}
@@ -216,7 +218,7 @@ export default function LandingPage() {
       </header>
 
       {/* ── 2. Hero ── */}
-      <section className="relative overflow-hidden bg-white">
+      <section className="relative overflow-hidden bg-card">
         <PatternGlyphs glyphs={heroGlyphs} />
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
           {/* Left column */}
@@ -227,13 +229,13 @@ export default function LandingPage() {
             </p>
 
             {/* Headline */}
-            <h1 className="font-syne font-extrabold text-[28px] md:text-[38px] leading-tight tracking-tight text-ink">
+            <h1 className="font-syne text-[40px] md:text-[56px] font-extrabold text-ink leading-[1.1] tracking-tight">
               Learn it once.<br />
-              <span className="text-jade">Never forget it again.</span>
+              <span className="text-ink">Never forget it again.</span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-[14px] text-gray-600 leading-relaxed max-w-[400px]">
+            <p className="text-[14px] text-ink-2 leading-relaxed max-w-[400px]">
               DefinAm turns your syllabus into Nigerian examples, quick practice,
               and daily recall — so nothing you study fades before exam day.
             </p>
@@ -242,14 +244,14 @@ export default function LandingPage() {
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/pay/individual"
-                className="flex items-center gap-2 bg-jade text-white text-[14px] font-semibold px-5 py-3 rounded-xl hover:bg-jade-dark transition-colors"
+                className="flex items-center gap-2 bg-ink text-white text-[14px] font-semibold px-5 py-3 rounded-xl hover:bg-ink/80 transition-colors"
               >
                 Get started
                 <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
               </Link>
               <a
                 href="#how-it-works"
-                className="flex items-center gap-2 text-[14px] text-gray-600 hover:text-ink transition-colors"
+                className="flex items-center gap-2 text-[14px] text-ink-2 hover:text-ink transition-colors"
               >
                 <PlayCircle size={16} strokeWidth={2} aria-hidden />
                 See how it works
@@ -261,7 +263,7 @@ export default function LandingPage() {
               {['WAEC aligned', 'NECO aligned', 'JAMB aligned'].map((label) => (
                 <span
                   key={label}
-                  className="bg-jade-tint text-jade-dark text-[12px] font-medium px-3 py-1 rounded-full"
+                  className="bg-bg-1 border border-border-2 text-ink text-[12px] font-bold px-3 py-1 rounded-[16px] border border-border-2"
                 >
                   {label}
                 </span>
@@ -277,12 +279,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── 3. How it works ── */}
-      <section id="how-it-works" className="relative overflow-hidden bg-white">
+      <section id="how-it-works" className="relative overflow-hidden bg-card">
         <PatternGlyphs glyphs={howItWorksGlyphs} />
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
           {/* Intro */}
-          <div className="text-center mb-16">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-jade mb-3">
+          <div className="w-full md:w-1/2">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-ink mb-3">
               How it works
             </p>
             <h2 className="font-syne font-extrabold text-[22px] md:text-[26px] text-ink">
@@ -293,29 +295,31 @@ export default function LandingPage() {
           {/* Row 1 — image left, text right */}
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center mb-16 md:mb-24">
             {/* Card */}
-            <div className="bg-jade-tint rounded-2xl p-6">
-              <div className="bg-white rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+            <div className="w-full md:w-1/2 mt-8 md:mt-0 relative">
+            {/* Mockup card */}
+            <div className="bg-bg-1 border border-border-2 rounded-[24px] p-6 shadow-sm">
+              <div className="flex items-start justify-between mb-6">
                 {/* Progress strip */}
                 <div className="flex gap-1.5">
-                  {[0, 1, 2, 3, 4].map((i) => (
+                  {[0, 1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className={`h-1.5 flex-1 rounded-full ${i < 2 ? 'bg-jade' : 'bg-gray-200'}`}
+                      className={`h-1.5 flex-1 rounded-[16px] ${i < 2 ? 'bg-ink' : 'bg-border-2'}`}
                     />
                   ))}
                 </div>
-                {/* Badge */}
-                <span className="self-start bg-jade-tint text-jade-dark text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                  Local example
+                </div>
+                <span className="self-start bg-bg-0 border border-border-2 text-ink text-[11px] font-bold px-3 py-1.5 rounded-[16px]">
+                  Topic 2 of 4
                 </span>
                 {/* Body */}
-                <p className="text-[13px] text-gray-700 leading-relaxed">
+                <p className="text-[13px] text-ink-2 leading-relaxed">
                   A trader at Alaba Market solves P = −2x² + 20x − 30 to find
                   her break-even point — a quadratic equation, same as your WAEC
                   paper.
                 </p>
                 {/* Caption */}
-                <p className="text-[11px] text-gray-400">Step 2 of 5 · Nigerian example</p>
+                <p className="text-[11px] text-muted">Step 2 of 5 · Nigerian example</p>
               </div>
             </div>
 
@@ -324,7 +328,7 @@ export default function LandingPage() {
               <h3 className="font-syne font-extrabold text-[20px] md:text-[22px] text-ink">
                 Every topic, five ways in
               </h3>
-              <p className="text-[14px] text-gray-600 leading-relaxed">
+              <p className="text-[14px] text-ink-2 leading-relaxed">
                 Definition, Nigerian example, visual breakdown, practice, then an
                 AI tutor that asks questions instead of just giving answers. No
                 topic is one flat page of text.
@@ -339,7 +343,7 @@ export default function LandingPage() {
               <h3 className="font-syne font-extrabold text-[20px] md:text-[22px] text-ink">
                 Nothing fades. Ever.
               </h3>
-              <p className="text-[14px] text-gray-600 leading-relaxed">
+              <p className="text-[14px] text-ink-2 leading-relaxed">
                 Every topic you study gets scheduled for review right before
                 you&apos;d naturally forget it. Your streak, your accuracy, your
                 weak spots — tracked automatically.
@@ -348,16 +352,18 @@ export default function LandingPage() {
 
             {/* Card */}
             <div className="bg-gold-tint rounded-2xl p-6 md:order-2">
-              <div className="bg-white rounded-xl p-5 flex flex-col gap-4 shadow-sm">
+              <div className="bg-card rounded-xl p-5 flex flex-col gap-4 shadow-sm">
                 {/* Stats */}
                 <div className="flex gap-6">
-                  <div>
-                    <p className="text-[28px] font-bold text-ink leading-none">8</p>
-                    <p className="text-[11px] text-gray-500 mt-0.5">day streak</p>
+                  <div className="mb-2">
+                    <p className="text-[11px] text-muted font-semibold uppercase tracking-widest">
+                      Exam Prediction
+                    </p>
+                    <p className="text-[28px] font-bold text-ink leading-none">71%</p>
                   </div>
                   <div>
-                    <p className="text-[28px] font-bold text-jade leading-none">71%</p>
-                    <p className="text-[11px] text-gray-500 mt-0.5">avg accuracy</p>
+                    <p className="text-[28px] font-bold text-ink leading-none">8</p>
+                    <p className="text-[11px] text-muted mt-0.5">day streak</p>
                   </div>
                 </div>
                 {/* Decorative heatmap */}
@@ -374,7 +380,7 @@ export default function LandingPage() {
                   ))}
                 </div>
                 {/* Caption */}
-                <p className="text-[11px] text-gray-400">Next review: tomorrow</p>
+                <p className="text-[11px] text-muted">Next review: tomorrow</p>
               </div>
             </div>
           </div>
@@ -382,7 +388,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 4. Subject coverage ── */}
-      <section className="relative overflow-hidden border-t border-cream bg-white py-12 md:py-16">
+      <section className="relative overflow-hidden border-t border-cream bg-card py-12 md:py-16">
         <PatternGlyphs glyphs={subjectsGlyphs} />
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-6">
           <h2 className="font-syne font-extrabold text-[20px] text-ink text-center">
@@ -402,9 +408,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── 5. Closing CTA band ── */}
-      <section className="relative overflow-hidden bg-jade py-16 md:py-20">
-        <PatternGlyphs glyphs={ctaGlyphs} />
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-6 text-center">
+      <section className="relative overflow-hidden bg-ink py-16 md:py-20 text-white rounded-[24px] mx-4 md:mx-auto max-w-7xl mb-8">
+        <div className="max-w-[1200px] mx-auto px-6 lg:px-8 relative z-10 text-center">
           <h2 className="font-syne font-extrabold text-[22px] md:text-[26px] text-white">
             Start learning today
           </h2>
@@ -413,7 +418,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/pay/individual"
-            className="flex items-center gap-2 bg-white text-jade text-[14px] font-semibold px-6 py-3 rounded-xl hover:bg-jade-tint transition-colors"
+            className="flex items-center gap-2 bg-card text-jade text-[14px] font-semibold px-6 py-3 rounded-xl hover:bg-jade-tint transition-colors"
           >
             Get started
             <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
@@ -422,7 +427,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── 6. Footer ── */}
-      <footer className="border-t border-cream bg-white">
+      <footer className="border-t border-cream bg-card">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 grid md:grid-cols-3 gap-10">
           {/* Col 1 — brand */}
           <div className="flex flex-col gap-3 md:col-span-1">
@@ -430,22 +435,22 @@ export default function LandingPage() {
               <LogoMark size={22} />
               <span className="font-syne font-bold text-[15px] text-ink">DefinAm</span>
             </div>
-            <p className="text-[13px] text-gray-500 leading-relaxed max-w-[220px]">
+            <p className="text-[13px] text-muted leading-relaxed max-w-[220px]">
               Nigeria&apos;s AI learning brain for WAEC, NECO and JAMB.
             </p>
           </div>
 
           {/* Col 2 — Product */}
           <div className="flex flex-col gap-3">
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-400">
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted">
               Product
             </p>
             <nav className="flex flex-col gap-2">
-              <a href="#how-it-works" className="text-[14px] text-gray-600 hover:text-ink transition-colors w-fit">
+              <a href="#how-it-works" className="text-[14px] text-ink-2 hover:text-ink transition-colors w-fit">
                 How it works
               </a>
-              <span className="text-[14px] text-gray-400 cursor-default">Pricing</span>
-              <Link href="/pay/organisation" className="text-[14px] text-gray-600 hover:text-ink transition-colors w-fit">
+              <span className="text-[14px] text-muted cursor-default">Pricing</span>
+              <Link href="/pay/organisation" className="text-[14px] text-ink-2 hover:text-ink transition-colors w-fit">
                 For schools
               </Link>
             </nav>
@@ -453,20 +458,20 @@ export default function LandingPage() {
 
           {/* Col 3 — Company */}
           <div className="flex flex-col gap-3">
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-gray-400">
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-muted">
               Company
             </p>
             <nav className="flex flex-col gap-2">
-              <span className="text-[14px] text-gray-400 cursor-default">Contact</span>
-              <span className="text-[14px] text-gray-400 cursor-default">Privacy policy</span>
-              <span className="text-[14px] text-gray-400 cursor-default">Terms of service</span>
+              <span className="text-[14px] text-muted cursor-default">Contact</span>
+              <span className="text-[14px] text-muted cursor-default">Privacy policy</span>
+              <span className="text-[14px] text-muted cursor-default">Terms of service</span>
             </nav>
           </div>
         </div>
 
         {/* Bottom bar */}
         <div className="border-t border-cream max-w-6xl mx-auto px-4 sm:px-6 py-5">
-          <p className="text-[12px] text-gray-400">© DefinAm 2026 · Made in Nigeria</p>
+          <p className="text-[12px] text-muted">© DefinAm 2026 · Made in Nigeria</p>
         </div>
       </footer>
     </div>

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { scaleTap, staggerContainer, staggerItem } from '@/lib/motion';
 import {
   ChevronLeft,
   Download,
@@ -16,10 +18,22 @@ interface StudentDetailProps {
   student: StudentDetail;
 }
 
-function accuracyBarColor(accuracy: number): string {
-  if (accuracy >= 60) return 'bg-jade';
-  if (accuracy >= 40) return 'bg-gold';
-  return 'bg-coral';
+function AccuracyBar({ accuracy }: { accuracy: number }) {
+  const fillColor =
+    accuracy >= 60 ? 'bg-ink' : accuracy >= 40 ? 'bg-gray-400' : 'bg-bg-3';
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-14 h-1 bg-bg-1 border border-border-2 rounded-full overflow-hidden shrink-0">
+        <div
+          className={`h-full rounded-full ${fillColor} transition-all duration-500`}
+          style={{ width: `${accuracy}%` }}
+        />
+      </div>
+      <span className="text-[11px] font-semibold text-muted">
+        {accuracy}%
+      </span>
+    </div>
+  );
 }
 
 function StatusPill({
@@ -30,16 +44,17 @@ function StatusPill({
   streakDays: number;
 }) {
   const base =
-    'inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-sm border';
+    'inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-[16px] border';
 
   if (status === 'on_track') {
     return (
-      <span className={`${base} bg-jade text-white border-jade`}>
+      <span className={`${base} bg-bg-0 text-ink border-border-2 shadow-sm`}>
+        <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
         Active
         {streakDays > 0 && (
           <>
-            <span className="opacity-60">·</span>
-            <Flame size={11} strokeWidth={1.5} />
+            <span className="text-gray-300">·</span>
+            <Flame size={12} strokeWidth={2} className="text-muted" />
             {streakDays} days
           </>
         )}
@@ -48,13 +63,15 @@ function StatusPill({
   }
   if (status === 'overdue') {
     return (
-      <span className={`${base} bg-[#555555] text-white border-[#555555]`}>
+      <span className={`${base} bg-bg-1 text-warning border-border-2`}>
+        <span className="w-1.5 h-1.5 rounded-full bg-warning shrink-0" />
         Overdue
       </span>
     );
   }
   return (
-    <span className={`${base} bg-transparent text-[#555555] border-gray-300`}>
+    <span className={`${base} bg-bg-0 text-muted border-border-2`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
       Not Started
     </span>
   );
@@ -69,81 +86,76 @@ function NextReviewCell({
 }) {
   if (nextReview === 'Today' && overdue) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-coral">
-        <AlertCircle size={11} strokeWidth={1.5} />
+      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-error bg-error/10 px-2 py-0.5 rounded-[12px]">
+        <AlertCircle size={11} strokeWidth={2} />
         Today
       </span>
     );
   }
   if (nextReview === 'Today') {
-    return <span className="text-[11px] font-medium text-jade">Today</span>;
+    return <span className="inline-flex items-center text-[11px] font-bold text-ink bg-bg-1 border border-border-2 px-2 py-0.5 rounded-[12px]">Today</span>;
   }
-  return <span className="text-[11px] text-gray-400">{nextReview}</span>;
+  return <span className="text-[11px] font-medium text-muted">{nextReview}</span>;
 }
 
 function TopicHistoryTable({ topics }: { topics: TopicHistory[] }) {
   return (
-    <div>
-      <h2 className="font-syne text-[13px] font-extrabold text-ink mb-2">
+    <div className="bg-bg-0 border border-border-2 rounded-[24px] p-4 shadow-sm flex flex-col">
+      <h2 className="text-[14px] font-extrabold text-ink mb-4 px-2 tracking-tight">
         Topic History
       </h2>
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="py-2 px-3 text-left text-[9px] font-bold uppercase tracking-wider text-gray-400">
+            <tr className="border-b border-border-2">
+              <th className="py-2 px-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 Topic
               </th>
-              <th className="py-2 px-3 text-left text-[9px] font-bold uppercase tracking-wider text-gray-400">
+              <th className="py-2 px-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 Accuracy
               </th>
-              <th className="py-2 px-3 text-left text-[9px] font-bold uppercase tracking-wider text-gray-400">
+              <th className="py-2 px-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 Next Review
               </th>
-              <th className="py-2 px-3 text-left text-[9px] font-bold uppercase tracking-wider text-gray-400">
+              <th className="py-2 px-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 EF
               </th>
             </tr>
           </thead>
-          <tbody>
-            {topics.map((topic) => (
-              <tr
+          <motion.tbody
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
+            {topics.map((topic, idx) => (
+              <motion.tr
                 key={topic.topic_id}
-                className="border-b border-gray-100 last:border-0 hover:bg-jade/5 transition-colors"
+                variants={staggerItem}
+                className="border-b border-border-2 last:border-0 hover:bg-bg-1 transition-colors"
               >
-                <td className="py-2.5 px-3 text-[11px] font-semibold text-ink">
+                <td className="py-3 px-3 text-[12px] font-bold text-ink">
                   {topic.topic_title}
                 </td>
-                <td className="py-2.5 px-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-14 h-1 bg-gray-100 rounded-full border border-gray-200 overflow-hidden shrink-0">
-                      <div
-                        className={`h-full rounded-full ${accuracyBarColor(topic.accuracy)}`}
-                        style={{ width: `${topic.accuracy}%` }}
-                      />
-                    </div>
-                    <span className="text-[11px] text-gray-500">
-                      {topic.accuracy}%
-                    </span>
-                  </div>
+                <td className="py-3 px-3">
+                  <AccuracyBar accuracy={topic.accuracy} />
                 </td>
-                <td className="py-2.5 px-3">
+                <td className="py-3 px-3">
                   <NextReviewCell
                     nextReview={topic.next_review}
                     overdue={topic.overdue}
                   />
                 </td>
-                <td className="py-2.5 px-3">
+                <td className="py-3 px-3">
                   <span
-                    className="text-[11px] text-gray-400 cursor-default"
+                    className="inline-block text-[11px] font-mono font-bold bg-bg-1 border border-border-2 text-ink px-1.5 py-0.5 rounded-[6px] cursor-default"
                     title="Ease Factor — higher means better retention"
                   >
                     {topic.ease_factor.toFixed(1)}
                   </span>
                 </td>
-              </tr>
+              </motion.tr>
             ))}
-          </tbody>
+          </motion.tbody>
         </table>
       </div>
     </div>
@@ -162,107 +174,113 @@ function ChatLogsPanel({ sessions }: { sessions: ChatSession[] }) {
   }
 
   return (
-    <div>
-      <div className="mb-2">
-        <h2 className="font-syne text-[13px] font-extrabold text-ink">
-          AI Chat Logs
-        </h2>
-        <p className="text-[10px] text-gray-400">(Teacher Read-Only)</p>
+    <div className="bg-bg-0 border border-border-2 rounded-[24px] p-4 shadow-sm flex flex-col">
+      <div className="mb-4 px-2 flex justify-between items-end">
+        <div>
+          <h2 className="text-[14px] font-extrabold text-ink tracking-tight flex items-center gap-2">
+            AI Chat Logs
+            <span className="bg-bg-1 text-ink border border-border-2 text-[9px] px-2 py-0.5 rounded-[12px] uppercase tracking-widest">
+              Grounded AI
+            </span>
+          </h2>
+          <p className="text-[11px] font-medium text-muted mt-1">(Teacher Read-Only)</p>
+        </div>
+        <p className="text-[10px] font-bold text-muted tracking-widest uppercase">
+          {sessions.length} Sessions · {totalMessages} Msgs
+        </p>
       </div>
-
-      <p className="text-[11px] font-bold text-ink mb-1.5">All Chat Sessions</p>
 
       <div className="flex flex-col gap-2">
         {sessions.map((session, index) => {
           const isExpanded = expandedId === session.id;
           return (
-            <div
+            <motion.div
+              layout
               key={session.id}
-              className="bg-white border border-gray-200 rounded-lg overflow-hidden"
+              className="bg-bg-0 border border-border-2 rounded-[16px] overflow-hidden"
             >
               <button
                 onClick={() => toggle(session.id)}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-bg-1 transition-colors"
               >
                 <span
-                  className={`text-[11px] font-semibold shrink-0 ${
-                    index === 0 ? 'text-jade' : 'text-gray-400'
+                  className={`text-[12px] font-bold shrink-0 ${
+                    index === 0 ? 'text-ink' : 'text-muted'
                   }`}
                 >
                   {session.date}
                 </span>
                 <span className="text-[10px] text-gray-300">·</span>
-                <span className="text-[11px] text-gray-500">
+                <span className="text-[12px] font-medium text-muted">
                   {session.subject}
                 </span>
                 <span className="text-[10px] text-gray-300">·</span>
-                <span className="text-[11px] text-gray-500 truncate">
+                <span className="text-[12px] font-semibold text-ink truncate">
                   {session.topic}
                 </span>
-                <span className="ml-auto text-[10px] text-gray-300 shrink-0">
+                <span className="ml-auto text-[11px] font-bold text-muted bg-bg-1 px-2 py-0.5 rounded-[12px] shrink-0">
                   {session.message_count} msgs
                 </span>
-                {isExpanded ? (
-                  <ChevronUp
-                    size={12}
-                    strokeWidth={1.5}
-                    className="text-gray-400 shrink-0"
-                  />
-                ) : (
+                <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
                   <ChevronDown
-                    size={12}
-                    strokeWidth={1.5}
-                    className="text-gray-400 shrink-0"
+                    size={14}
+                    strokeWidth={2}
+                    className="text-muted shrink-0 ml-1"
                   />
-                )}
+                </motion.div>
               </button>
 
-              {isExpanded && (
-                <div className="px-3 pb-3 border-t border-gray-100 bg-gray-50">
-                  <div className="flex flex-col gap-2.5 pt-2.5">
-                    {session.preview_messages.map((msg, i) => (
-                      <div key={i} className="flex gap-2">
-                        <span
-                          className={`text-[10px] font-bold min-w-[30px] shrink-0 ${
-                            msg.role === 'ai' ? 'text-jade' : 'text-gray-400'
-                          }`}
-                        >
-                          {msg.role === 'ai' ? 'AI' : 'Student'}
-                        </span>
-                        <span className="text-[11px] text-gray-500 leading-relaxed">
-                          {msg.content}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-4 pb-4 border-t border-border-2 bg-bg-1/50"
+                  >
+                    <div className="flex flex-col gap-3 pt-4">
+                      {session.preview_messages.map((msg, i) => (
+                        <div key={i} className="flex gap-3">
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-[8px] border border-border-2 h-fit shrink-0 ${
+                              msg.role === 'ai' ? 'bg-ink text-white' : 'bg-bg-0 text-ink'
+                            }`}
+                          >
+                            {msg.role === 'ai' ? 'AI' : 'Student'}
+                          </span>
+                          <span className="text-[13px] font-medium text-ink-2 leading-relaxed mt-0.5">
+                            {msg.content}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           );
         })}
       </div>
-
-      <p className="mt-2 text-[10px] text-gray-300">
-        {sessions.length} sessions this week · {totalMessages} messages total
-      </p>
     </div>
   );
 }
 
 export function StudentDetail({ student }: StudentDetailProps) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-bg-1">
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-5 py-2.5 flex items-center gap-3 shrink-0">
-        <Link
-          href="/admin"
-          className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-ink border border-gray-200 rounded px-2.5 py-1.5 transition-colors"
-        >
-          <ChevronLeft size={12} strokeWidth={1.5} />
-          Back to Class
-        </Link>
+      <div className="bg-bg-0 border-b border-border-2 px-6 py-4 flex flex-wrap items-center gap-4 shrink-0 shadow-sm z-10 relative">
+        <motion.div {...scaleTap}>
+          <Link
+            href="/admin"
+            className="flex items-center gap-1.5 text-[12px] font-bold text-muted hover:text-ink hover:bg-bg-1 border border-border-2 rounded-[16px] px-3 py-1.5 transition-colors"
+          >
+            <ChevronLeft size={14} strokeWidth={2} />
+            Back
+          </Link>
+        </motion.div>
 
-        <h1 className="font-syne text-[13px] font-extrabold text-ink ml-2">
+        <h1 className="text-[16px] font-extrabold text-ink tracking-tight">
           {student.name}
         </h1>
 
@@ -272,16 +290,19 @@ export function StudentDetail({ student }: StudentDetailProps) {
         />
 
         <div className="ml-auto">
-          <button className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-600 border border-gray-200 rounded px-3 py-1.5 hover:bg-gray-50 transition-colors">
-            <Download size={12} strokeWidth={1.5} />
-            Export This Student
-          </button>
+          <motion.button
+            {...scaleTap}
+            className="flex items-center gap-2 text-[12px] font-bold text-ink bg-bg-0 border border-border-2 rounded-[16px] px-4 py-2 hover:bg-ink hover:text-white transition-colors"
+          >
+            <Download size={14} strokeWidth={2} />
+            Export Data
+          </motion.button>
         </div>
       </div>
 
       {/* Two-column body */}
-      <div className="flex-1 p-5 bg-gray-50 overflow-y-auto">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="flex-1 p-6 overflow-y-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
           <TopicHistoryTable topics={student.topic_history} />
           <ChatLogsPanel sessions={student.chat_sessions} />
         </div>

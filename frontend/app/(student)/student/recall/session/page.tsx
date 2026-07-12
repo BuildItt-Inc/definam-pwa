@@ -163,8 +163,8 @@ export default function RecallSessionPage() {
             </div>
 
             {/* Model answer card */}
-            <div className="mb-4 rounded-xl bg-white px-4 py-4">
-              <p className="mb-2 font-dm-sans text-[9px] font-bold uppercase tracking-wider text-gray-400">
+            <div className="mb-4 rounded-xl bg-card px-4 py-4">
+              <p className="mb-2 font-dm-sans text-[9px] font-bold uppercase tracking-wider text-muted">
                 Model Answer
               </p>
               <p className="font-dm-sans text-[13px] leading-relaxed text-ink">

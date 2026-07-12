@@ -38,7 +38,7 @@ export function PracticeQuestion({
   return (
     <div>
       {/* Question card */}
-      <div className="mb-4 rounded-xl border-[1.5px] border-ink bg-white px-4 py-4">
+      <div className="mb-4 rounded-xl border-[1.5px] border-ink bg-card px-4 py-4">
         <p className="mb-2 font-dm-sans text-[10px] font-bold uppercase tracking-wider text-jade">
           Practice Question
         </p>
@@ -61,8 +61,8 @@ export function PracticeQuestion({
                 : isWrongSelected(opt)
                   ? 'border-coral bg-coral text-white'
                   : isOther(opt)
-                    ? 'cursor-default border-gray-100 bg-white text-gray-300'
-                    : 'border-gray-200 bg-white text-ink active:bg-gray-50',
+                    ? 'cursor-default border-border bg-card text-gray-300'
+                    : 'border-border-2 bg-card text-ink active:bg-bg-0',
             ].join(' ')}
           >
             <span className="flex-shrink-0 font-bold">{opt}.</span>

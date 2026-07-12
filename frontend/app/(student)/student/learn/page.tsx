@@ -12,25 +12,25 @@ import { BottomNav } from '@/components/student/BottomNav';
 
 function BrowseSkeleton() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       {/* Appbar */}
-      <div className="flex items-center border-b border-gray-100 px-4 py-3.5">
-        <div className="h-5 w-16 animate-pulse rounded bg-gray-200" />
+      <div className="flex items-center border-b border-border px-4 py-3.5">
+        <div className="h-5 w-16 animate-pulse rounded bg-bg-3" />
       </div>
       {/* Search bar */}
-      <div className="mx-3 my-2 h-10 animate-pulse rounded-lg bg-gray-100" />
+      <div className="mx-3 my-2 h-10 animate-pulse rounded-lg bg-bg-2" />
       {/* Subject rows */}
       {[1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
-          className="flex items-center gap-3 border-b border-gray-100 px-4 py-3"
+          className="flex items-center gap-3 border-b border-border px-4 py-3"
         >
-          <div className="h-8 w-8 flex-shrink-0 animate-pulse rounded-lg bg-gray-200" />
+          <div className="h-8 w-8 flex-shrink-0 animate-pulse rounded-lg bg-bg-3" />
           <div className="flex-1 space-y-2">
-            <div className="h-3 w-36 animate-pulse rounded bg-gray-200" />
-            <div className="h-2.5 w-28 animate-pulse rounded bg-gray-100" />
+            <div className="h-3 w-36 animate-pulse rounded bg-bg-3" />
+            <div className="h-2.5 w-28 animate-pulse rounded bg-bg-2" />
           </div>
-          <div className="h-5 w-8 animate-pulse rounded-[3px] bg-gray-100" />
+          <div className="h-5 w-8 animate-pulse rounded-[3px] bg-bg-2" />
         </div>
       ))}
     </div>
@@ -57,7 +57,7 @@ export default function BrowsePage() {
   if (fetchError) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-center font-dm-sans text-sm text-gray-500">{fetchError}</p>
+        <p className="text-center font-dm-sans text-sm text-muted">{fetchError}</p>
       </div>
     );
   }
@@ -72,23 +72,23 @@ export default function BrowsePage() {
     : subjects;
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-card">
 
       {/* ── SCR-05a · Appbar ─────────────────────────────────────────────── */}
-      <header className="flex items-center border-b border-gray-100 px-4 py-3.5">
+      <header className="flex items-center border-b border-border px-4 py-3.5">
         <h1 className="font-syne text-[17px] font-bold text-ink">Browse</h1>
       </header>
 
       {/* ── Search bar ───────────────────────────────────────────────────── */}
       <div className="px-3 py-2">
-        <label className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-          <Search size={15} strokeWidth={1.5} className="flex-shrink-0 text-gray-400" />
+        <label className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5">
+          <Search size={15} strokeWidth={1.5} className="flex-shrink-0 text-muted" />
           <input
             type="search"
             placeholder="Search topics..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent font-dm-sans text-[13px] text-ink placeholder:text-gray-400 focus:outline-none"
+            className="flex-1 bg-transparent font-dm-sans text-[13px] text-ink placeholder:text-muted focus:outline-none"
           />
         </label>
       </div>
@@ -102,7 +102,7 @@ export default function BrowsePage() {
               strokeWidth={1.5}
               className="mb-3 text-gray-300"
             />
-            <p className="font-dm-sans text-[13px] text-gray-400">
+            <p className="font-dm-sans text-[13px] text-muted">
               No subjects found
             </p>
           </div>

@@ -27,7 +27,7 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-200 bg-white">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-border-2 bg-card">
       {TABS.map(({ label, icon: Icon, href }) => {
         // Exact match for /student so /student/learn doesn't also highlight Home.
         const isActive = pathname
@@ -42,14 +42,14 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
             key={href}
             href={href}
             className={`flex flex-1 flex-col items-center gap-1 pb-4 pt-2 text-[10px] font-semibold transition-colors ${
-              isActive ? 'text-jade' : 'text-gray-400'
+              isActive ? 'text-jade' : 'text-muted'
             }`}
           >
             <span className="relative">
               <Icon
                 size={20}
                 strokeWidth={1.5}
-                className={isActive ? 'text-jade' : 'text-gray-400'}
+                className={isActive ? 'text-jade' : 'text-muted'}
               />
               {showBadge && (
                 <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-jade px-0.5 text-[9px] font-bold text-white">

@@ -9,19 +9,19 @@ import type { AccessCodesData } from '@/types/admin';
 // ── Skeleton ───────────────────────────────────────────────────────────────
 
 function SkeletonBlock({ className }: { className: string }) {
-  return <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />;
+  return <div className={`animate-pulse bg-bg-3 rounded-lg ${className}`} />;
 }
 
 function LoadingSkeleton() {
   return (
     <div className="flex flex-col h-full">
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-5 py-[10px] flex items-center animate-pulse">
-        <div className="h-4 w-44 bg-gray-200 rounded" />
+      <div className="bg-card border-b border-border-2 px-5 py-[10px] flex items-center animate-pulse">
+        <div className="h-4 w-44 bg-bg-3 rounded" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-5 bg-gray-50 space-y-4">
+      <div className="flex-1 overflow-y-auto p-5 bg-bg-0 space-y-4">
         {/* Subscription banner */}
         <SkeletonBlock className="h-[52px] w-full" />
 
@@ -39,14 +39,14 @@ function LoadingSkeleton() {
         </div>
 
         {/* Table */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden animate-pulse">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-3">
-            <div className="h-7 w-52 bg-gray-200 rounded-md" />
-            <div className="ml-auto h-7 w-32 bg-gray-100 rounded-md" />
+        <div className="bg-card border border-border-2 rounded-lg overflow-hidden animate-pulse">
+          <div className="px-4 py-3 border-b border-border-2 flex items-center gap-3">
+            <div className="h-7 w-52 bg-bg-3 rounded-md" />
+            <div className="ml-auto h-7 w-32 bg-bg-2 rounded-md" />
           </div>
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="px-4 py-[9px] border-b border-gray-100 last:border-b-0">
-              <div className="h-4 bg-gray-100 rounded" style={{ width: i % 3 === 0 ? '80%' : '60%' }} />
+            <div key={i} className="px-4 py-[9px] border-b border-border last:border-b-0">
+              <div className="h-4 bg-bg-2 rounded" style={{ width: i % 3 === 0 ? '80%' : '60%' }} />
             </div>
           ))}
         </div>
@@ -92,7 +92,7 @@ export default function AdminIdsPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full min-h-[300px]">
-        <p className="text-[13px] text-coral font-semibold">{error}</p>
+        <p className="text-[13px] text-danger font-semibold">{error}</p>
       </div>
     );
   }
@@ -104,26 +104,25 @@ export default function AdminIdsPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-5 py-[10px] flex items-center shrink-0">
+      <div className="bg-card border-b border-border-2 px-5 py-[10px] flex items-center shrink-0">
         <h1 className="font-syne text-[14px] font-extrabold text-ink leading-tight tracking-tight">
           Access ID Management
         </h1>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-5 bg-gray-50 space-y-4">
+      <div className="flex-1 overflow-y-auto p-5 bg-bg-0 space-y-4">
 
         {/* Subscription banner */}
         <div
-          className="flex items-center gap-3 bg-jade-tint border border-[#9FE1CB] rounded-lg px-4 py-3"
-          style={{ borderLeft: '3px solid #1B6B4A' }}
+          className="flex items-center gap-3 bg-bg-1 border border-border-2 rounded-lg px-4 py-3"
         >
-          <Building2 size={18} strokeWidth={1.5} className="text-jade shrink-0" />
+          <Building2 size={18} strokeWidth={1.5} className="text-ink shrink-0" />
           <div>
-            <p className="text-[12px] font-bold text-jade leading-tight">
+            <p className="text-[12px] font-bold text-ink leading-tight">
               {subscription.term} Subscription Active
             </p>
-            <p className="text-[11px] text-jade/70 mt-0.5">
+            <p className="text-[11px] text-ink/70 mt-0.5">
               {subscription.total_seats.toLocaleString()} seats purchased · Expires{' '}
               {subscription.expires_at}
             </p>
@@ -133,27 +132,27 @@ export default function AdminIdsPage() {
         {/* 3 Stat cards */}
         <div className="grid grid-cols-3 gap-4">
           {/* Total IDs — neutral */}
-          <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
+          <div className="bg-bg-2 border border-border-2 rounded-lg p-4">
             <div className="text-[26px] font-black text-ink leading-none tracking-tight">
               {stats.total.toLocaleString()}
             </div>
-            <div className="text-[10px] text-gray-400 mt-2">Total IDs</div>
+            <div className="text-[10px] text-muted mt-2">Total IDs</div>
           </div>
 
-          {/* Activated — jade tint */}
-          <div className="bg-jade-tint border border-[#9FE1CB] rounded-lg p-4">
-            <div className="text-[26px] font-black text-jade leading-none tracking-tight">
+          {/* Activated — success tint */}
+          <div className="bg-bg-1 border border-border-2 rounded-lg p-4">
+            <div className="text-[26px] font-black text-success leading-none tracking-tight">
               {stats.activated.toLocaleString()}
             </div>
-            <div className="text-[10px] text-gray-400 mt-2">Activated</div>
+            <div className="text-[10px] text-muted mt-2">Activated</div>
           </div>
 
-          {/* Unused — gold tint */}
-          <div className="bg-gold-tint border border-[#E5C97A] rounded-lg p-4">
-            <div className="text-[26px] font-black text-gold leading-none tracking-tight">
+          {/* Unused — warn tint */}
+          <div className="bg-bg-1 border border-border-2 rounded-lg p-4">
+            <div className="text-[26px] font-black text-warn leading-none tracking-tight">
               {stats.unused.toLocaleString()}
             </div>
-            <div className="text-[10px] text-gray-400 mt-2">Unused</div>
+            <div className="text-[10px] text-muted mt-2">Unused</div>
           </div>
         </div>
 
@@ -162,7 +161,7 @@ export default function AdminIdsPage() {
           <button
             onClick={handleDownloadAll}
             disabled={downloadingAll}
-            className="flex items-center gap-2 px-4 py-2 bg-jade text-white text-[11px] font-bold rounded-lg hover:bg-jade/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-ink text-white text-[11px] font-bold rounded-lg hover:bg-ink/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Download size={13} strokeWidth={1.5} />
             {downloadingAll ? 'Downloading...' : 'Download All IDs'}
@@ -171,7 +170,7 @@ export default function AdminIdsPage() {
           <button
             onClick={handleDownloadUnused}
             disabled={downloadingUnused}
-            className="flex items-center gap-2 px-4 py-2 bg-transparent text-jade text-[11px] font-bold rounded-lg border-[1.5px] border-jade hover:bg-jade/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-transparent text-ink text-[11px] font-bold rounded-lg border-[1.5px] border-ink hover:bg-ink/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Download size={13} strokeWidth={1.5} />
             {downloadingUnused ? 'Downloading...' : 'Download Unused Only'}

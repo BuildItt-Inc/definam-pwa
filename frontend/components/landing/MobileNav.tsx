@@ -24,7 +24,7 @@ export default function MobileNav() {
 
   const overlay = (
     <div
-      className={`fixed inset-0 z-50 bg-white flex flex-col transition-opacity duration-200 ${
+      className={`fixed inset-0 z-50 bg-card flex flex-col transition-opacity duration-200 ${
         open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
     >
@@ -41,7 +41,7 @@ export default function MobileNav() {
         <button
           onClick={() => setOpen(false)}
           aria-label="Close menu"
-          className="flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-ink hover:bg-gray-100 transition-colors"
+          className="flex items-center justify-center w-9 h-9 rounded-md text-ink-2 hover:text-ink hover:bg-bg-2 transition-colors"
         >
           <X size={20} strokeWidth={2} aria-hidden />
         </button>
@@ -91,7 +91,7 @@ export default function MobileNav() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Open menu"
-        className="flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:text-ink hover:bg-gray-100 transition-colors"
+        className="flex items-center justify-center w-9 h-9 rounded-md text-ink-2 hover:text-ink hover:bg-bg-2 transition-colors"
       >
         <Menu size={20} strokeWidth={2} aria-hidden />
       </button>

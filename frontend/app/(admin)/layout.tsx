@@ -7,7 +7,7 @@ export default function AdminLayout({
   const { school_name, class_name, teacher_name, location } = mockAdminData;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-bg-0">
       <AdminSidebar
         schoolName={school_name}
         className={class_name}

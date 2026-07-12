@@ -33,14 +33,14 @@ export function TopicListItem({ topic, onClick }: TopicListItemProps) {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors active:bg-gray-50"
+      className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors active:bg-bg-0"
     >
       {/* Title + subtitle */}
       <span className="min-w-0 flex-1">
         <span className="block font-dm-sans text-[13px] font-bold text-ink">
           {topic.title}
         </span>
-        <span className="mt-0.5 block font-dm-sans text-[11px] text-gray-400">
+        <span className="mt-0.5 block font-dm-sans text-[11px] text-muted">
           {subtitle}
         </span>
       </span>

@@ -52,9 +52,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream font-dm-sans">
+    <div className="min-h-screen bg-bg-0 font-dm-sans">
       {/* App bar */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-black/8 bg-cream">
+      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <button
           type="button"
           onClick={() => router.back()}
@@ -84,13 +84,13 @@ export default function LoginPage() {
               className={[
                 'border rounded-xl transition-colors',
                 errors.username
-                  ? 'border-coral'
-                  : 'border-black/15 focus-within:border-jade',
+                  ? 'border-error'
+                  : 'border-border-2 focus-within:border-ink',
               ].join(' ')}
             >
               <label
                 htmlFor="username"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <User size={11} strokeWidth={2.5} aria-hidden />
                 Username
@@ -107,7 +107,7 @@ export default function LoginPage() {
               />
             </div>
             {errors.username && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-error">
                 {errors.username.message}
               </p>
             )}
@@ -119,13 +119,13 @@ export default function LoginPage() {
               className={[
                 'border rounded-xl transition-colors',
                 errors.password
-                  ? 'border-coral'
-                  : 'border-black/15 focus-within:border-jade',
+                  ? 'border-error'
+                  : 'border-border-2 focus-within:border-ink',
               ].join(' ')}
             >
               <label
                 htmlFor="password"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <Lock size={11} strokeWidth={2.5} aria-hidden />
                 Password
@@ -154,7 +154,7 @@ export default function LoginPage() {
               </div>
             </div>
             {errors.password && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-error">
                 {errors.password.message}
               </p>
             )}
@@ -164,7 +164,7 @@ export default function LoginPage() {
           <div className="flex justify-end mb-7 pr-0.5">
             <Link
               href="/forgot-password"
-              className="text-[12px] font-bold text-jade hover:text-jade/75 transition-colors"
+              className="text-[12px] font-bold text-ink hover:text-ink/75 transition-colors"
             >
               Forgot password?
             </Link>
@@ -174,7 +174,7 @@ export default function LoginPage() {
           {bannerError && (
             <div
               role="alert"
-              className="mb-4 flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug"
+              className="mb-4 flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-error/10 border border-error/25 text-error text-[13px] font-medium leading-snug"
             >
               {bannerError}
             </div>
@@ -184,7 +184,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 mb-8 shadow-sm"
+            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 mb-8 shadow-sm"
           >
             {isSubmitting ? (
               <>
@@ -204,7 +204,7 @@ export default function LoginPage() {
             New?{' '}
             <Link
               href="/pay/individual"
-              className="text-jade font-bold hover:text-jade/75 transition-colors"
+              className="text-ink font-bold hover:text-ink/75 transition-colors"
             >
               Pay as Individual
             </Link>{' '}

@@ -14,7 +14,7 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
     const topicNames = queue.map((item) => item.topic_title).join(' · ');
 
     return (
-      <div className="relative z-10 rounded-xl border-[1.5px] border-jade bg-white p-3 shadow-sm">
+      <div className="relative z-10 rounded-xl border-[1.5px] border-jade bg-card p-3 shadow-sm">
         {/* Label row */}
         <div className="mb-1.5 flex items-center gap-1.5">
           <span className="h-[6px] w-[6px] flex-shrink-0 rounded-full bg-jade" />
@@ -32,7 +32,7 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
         </p>
 
         {/* Topic names — two-line max then ellipsis */}
-        <p className="mb-3 line-clamp-2 font-dm-sans text-[11px] leading-snug text-gray-400">
+        <p className="mb-3 line-clamp-2 font-dm-sans text-[11px] leading-snug text-muted">
           {topicNames}
         </p>
 
@@ -50,12 +50,12 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
 
   /* ── SCR-04b: Empty state ───────────────────────────────────────────── */
   return (
-    <div className="relative z-10 flex flex-col items-center rounded-xl border-[1.5px] border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center">
+    <div className="relative z-10 flex flex-col items-center rounded-xl border-[1.5px] border-dashed border-border-2 bg-bg-0 px-4 py-6 text-center">
       <BookOpen size={22} strokeWidth={1.5} className="mb-2.5 text-gray-300" />
       <p className="mb-1 font-syne text-[14px] font-bold text-ink">
         Nothing to recall yet
       </p>
-      <p className="font-dm-sans text-[12px] leading-relaxed text-gray-400">
+      <p className="font-dm-sans text-[12px] leading-relaxed text-muted">
         Study a topic first — it&apos;ll show up here when it&apos;s time to review.
       </p>
     </div>

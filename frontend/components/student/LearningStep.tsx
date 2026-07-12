@@ -43,7 +43,7 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
 
       {/* Step 1 — plain content card on white */}
       {step === 1 && (
-        <div className="mb-3 rounded-lg bg-white px-4 py-3.5 shadow-sm">{body}</div>
+        <div className="mb-3 rounded-lg bg-card px-4 py-3.5 shadow-sm">{body}</div>
       )}
 
       {/* Step 2 — jade left-border accent card */}
@@ -56,12 +56,12 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
       {/* Step 3 — monospace code-style card, preserve line breaks */}
       {step === 3 && (
         <>
-          <div className="mb-2 rounded-lg bg-white p-4">
+          <div className="mb-2 rounded-lg bg-card p-4">
             <pre className="whitespace-pre-wrap font-mono text-[12px] leading-loose text-ink">
               {content}
             </pre>
           </div>
-          <p className="rounded-md border border-dashed border-gray-300 px-3 py-1.5 font-dm-sans text-[11px] text-gray-400">
+          <p className="rounded-md border border-dashed border-gray-300 px-3 py-1.5 font-dm-sans text-[11px] text-muted">
             Text diagrams only in V1 — image generation is V2.
           </p>
         </>

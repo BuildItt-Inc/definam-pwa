@@ -15,7 +15,7 @@ import { PracticeQuestion } from '@/components/student/PracticeQuestion';
 function MasteryBadge({ mastery }: { mastery: number | null }) {
   if (mastery === null || mastery === 0) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-gray-500">
+      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-muted">
         —
       </span>
     );
@@ -38,12 +38,12 @@ function ListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <div key={i} className="flex items-center gap-3 border-b border-border px-4 py-3">
           <div className="flex-1 space-y-2">
-            <div className="h-3 w-48 animate-pulse rounded bg-gray-200" />
-            <div className="h-2.5 w-20 animate-pulse rounded bg-gray-100" />
+            <div className="h-3 w-48 animate-pulse rounded bg-bg-3" />
+            <div className="h-2.5 w-20 animate-pulse rounded bg-bg-2" />
           </div>
-          <div className="h-5 w-8 animate-pulse rounded-[3px] bg-gray-100" />
+          <div className="h-5 w-8 animate-pulse rounded-[3px] bg-bg-2" />
         </div>
       ))}
     </div>
@@ -54,7 +54,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <BookOpen size={32} strokeWidth={1.5} className="mb-3 text-gray-300" />
-      <p className="font-dm-sans text-[13px] text-gray-400">{message}</p>
+      <p className="font-dm-sans text-[13px] text-muted">{message}</p>
     </div>
   );
 }
@@ -63,9 +63,9 @@ function EmptyState({ message }: { message: string }) {
 
 function PageSkeleton() {
   return (
-    <div className="min-h-screen bg-white">
-      <div className="border-b border-gray-100 px-4 py-3.5">
-        <div className="h-5 w-24 animate-pulse rounded bg-gray-200" />
+    <div className="min-h-screen bg-card">
+      <div className="border-b border-border px-4 py-3.5">
+        <div className="h-5 w-24 animate-pulse rounded bg-bg-3" />
       </div>
       <ListSkeleton />
     </div>
@@ -97,7 +97,7 @@ function ChaptersView({
 
   if (fetchError) {
     return (
-      <div className="px-4 py-6 text-center font-dm-sans text-sm text-gray-500">
+      <div className="px-4 py-6 text-center font-dm-sans text-sm text-muted">
         {fetchError}
       </div>
     );
@@ -108,7 +108,7 @@ function ChaptersView({
 
   return (
     <>
-      <p className="px-4 py-1.5 font-dm-sans text-[11px] text-gray-400">
+      <p className="px-4 py-1.5 font-dm-sans text-[11px] text-muted">
         SS2 Syllabus · {chapters.length} chapters
       </p>
       <div>
@@ -122,15 +122,15 @@ function ChaptersView({
                   `/student/learn/${subjectId}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(chapter.title)}&subject=${encodeURIComponent(subjectName)}`,
                 )
               }
-              className={`flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors last:border-b-0 active:bg-gray-50 ${
-                inProgress ? 'bg-gray-50' : 'bg-white'
+              className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 active:bg-bg-0 ${
+                inProgress ? 'bg-bg-0' : 'bg-card'
               }`}
             >
               <span className="min-w-0 flex-1">
                 <span className="block font-dm-sans text-[13px] font-bold text-ink">
                   {chapter.title}
                 </span>
-                <span className="mt-0.5 block font-dm-sans text-[11px] text-gray-400">
+                <span className="mt-0.5 block font-dm-sans text-[11px] text-muted">
                   {chapter.topic_count} topics{inProgress ? ' · In Progress' : ''}
                 </span>
               </span>
@@ -163,7 +163,7 @@ function TopicsView({ chapterId }: { chapterId: string }) {
 
   if (fetchError) {
     return (
-      <div className="px-4 py-6 text-center font-dm-sans text-sm text-gray-500">
+      <div className="px-4 py-6 text-center font-dm-sans text-sm text-muted">
         {fetchError}
       </div>
     );
@@ -174,7 +174,7 @@ function TopicsView({ chapterId }: { chapterId: string }) {
 
   return (
     <>
-      <p className="px-4 py-1.5 font-dm-sans text-[11px] text-gray-400">
+      <p className="px-4 py-1.5 font-dm-sans text-[11px] text-muted">
         {topics.length} topics · WAEC-aligned
       </p>
       <div>
@@ -234,11 +234,11 @@ function LearningFlowSkeleton() {
       </div>
       <div className="flex-1 bg-cream px-4 py-5">
         <div className="mb-4 flex items-center gap-2">
-          <div className="h-6 w-6 animate-pulse rounded-md bg-gray-200" />
-          <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
+          <div className="h-6 w-6 animate-pulse rounded-md bg-bg-3" />
+          <div className="h-4 w-32 animate-pulse rounded bg-bg-3" />
         </div>
-        <div className="mb-3 h-28 animate-pulse rounded-lg bg-gray-200" />
-        <div className="h-12 animate-pulse rounded-lg bg-gray-200" />
+        <div className="mb-3 h-28 animate-pulse rounded-lg bg-bg-3" />
+        <div className="h-12 animate-pulse rounded-lg bg-bg-3" />
       </div>
     </div>
   );
@@ -303,7 +303,7 @@ function LearningTopBar({
           <div
             key={i}
             className={`h-[3px] flex-1 rounded-full transition-colors ${
-              i < step ? 'bg-white' : 'bg-white/20'
+              i < step ? 'bg-card' : 'bg-white/20'
             }`}
           />
         ))}
@@ -371,7 +371,7 @@ function ScoreSummary({
         >
           {isGood ? 'Great work!' : 'Keep practicing!'}
         </p>
-        <p className="mt-1 font-dm-sans text-[13px] text-gray-500">
+        <p className="mt-1 font-dm-sans text-[13px] text-muted">
           {score} correct out of {total}
         </p>
       </div>
@@ -400,9 +400,9 @@ function AITutorScaffold({
   onHome: () => void;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-card">
       {/* Appbar */}
-      <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
+      <header className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-ink">
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
@@ -411,7 +411,7 @@ function AITutorScaffold({
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-syne text-[14px] font-bold text-ink">AI Tutor</p>
-          <p className="truncate font-dm-sans text-[11px] text-gray-400">{topicTitle}</p>
+          <p className="truncate font-dm-sans text-[11px] text-muted">{topicTitle}</p>
         </div>
       </header>
 
@@ -430,7 +430,7 @@ function AITutorScaffold({
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-jade/10">
             <Bot size={16} strokeWidth={1.5} className="text-jade" />
           </div>
-          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3 font-dm-sans text-[13px] leading-relaxed text-ink">
+          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-bg-2 px-4 py-3 font-dm-sans text-[13px] leading-relaxed text-ink">
             Good work on practice. What part of{' '}
             <span className="font-bold">{topicTitle}</span> is still confusing you?
           </div>
@@ -447,7 +447,7 @@ function AITutorScaffold({
           </button>
           <button
             onClick={onHome}
-            className="flex w-full items-center justify-center rounded-lg border border-gray-200 py-3.5 font-dm-sans text-[14px] font-semibold text-gray-600 active:bg-gray-50"
+            className="flex w-full items-center justify-center rounded-lg border border-border-2 py-3.5 font-dm-sans text-[14px] font-semibold text-ink-2 active:bg-bg-0"
           >
             Back to Home
           </button>
@@ -455,8 +455,8 @@ function AITutorScaffold({
       </main>
 
       {/* Disabled chat input */}
-      <div className="border-t border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+      <div className="border-t border-border px-4 py-3">
+        <div className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5">
           <input
             type="text"
             disabled
@@ -547,9 +547,9 @@ function LearningFlow({
 
   if (fetchError) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white px-6">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-6">
         <BookOpen size={36} strokeWidth={1.5} className="text-gray-300" />
-        <p className="text-center font-dm-sans text-[13px] text-gray-400">{fetchError}</p>
+        <p className="text-center font-dm-sans text-[13px] text-muted">{fetchError}</p>
         <button onClick={onExit} className="font-dm-sans text-[13px] font-bold text-jade">
           Go back
         </button>
@@ -615,7 +615,7 @@ function LearningFlow({
               isLast={questionIndex === totalQuestions - 1}
             />
           ) : (
-            <div className="text-center py-8 font-dm-sans text-sm text-gray-500">
+            <div className="text-center py-8 font-dm-sans text-sm text-muted">
               No practice questions available for this topic.
             </div>
           )
@@ -665,8 +665,8 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
 
   // view=chapters or view=topics → browse layout with shared appbar
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
+    <div className="flex min-h-screen flex-col bg-card">
+      <header className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <button
           onClick={() => router.back()}
           aria-label="Go back"

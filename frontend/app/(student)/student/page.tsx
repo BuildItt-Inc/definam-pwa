@@ -44,7 +44,7 @@ function getGreeting(): string {
 
 function HomeSkeleton() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       {/* Header */}
       <div className="bg-ink px-4 pb-8 pt-5">
         <div className="mb-1.5 h-3 w-20 animate-pulse rounded bg-white/10" />
@@ -54,7 +54,7 @@ function HomeSkeleton() {
       </div>
       {/* Recall card */}
       <div className="-mt-3 px-3">
-        <div className="h-32 animate-pulse rounded-xl bg-gray-100" />
+        <div className="h-32 animate-pulse rounded-xl bg-bg-2" />
       </div>
       {/* Pills + topics */}
       <div className="mt-5 px-4">
@@ -62,7 +62,7 @@ function HomeSkeleton() {
           {[80, 56, 64, 52].map((w, i) => (
             <div
               key={i}
-              className="h-7 animate-pulse rounded-full bg-gray-100"
+              className="h-7 animate-pulse rounded-full bg-bg-2"
               style={{ width: w }}
             />
           ))}
@@ -70,13 +70,13 @@ function HomeSkeleton() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="flex items-center gap-3 border-b border-gray-100 py-3"
+            className="flex items-center gap-3 border-b border-border py-3"
           >
-            <div className="h-8 w-8 flex-shrink-0 animate-pulse rounded-lg bg-gray-200" />
+            <div className="h-8 w-8 flex-shrink-0 animate-pulse rounded-lg bg-bg-3" />
             <div className="flex-1 space-y-2">
-              <div className="h-3 w-40 animate-pulse rounded bg-gray-200" />
-              <div className="h-2.5 w-24 animate-pulse rounded bg-gray-100" />
-              <div className="h-[3px] w-[70px] animate-pulse rounded-full bg-gray-100" />
+              <div className="h-3 w-40 animate-pulse rounded bg-bg-3" />
+              <div className="h-2.5 w-24 animate-pulse rounded bg-bg-2" />
+              <div className="h-[3px] w-[70px] animate-pulse rounded-full bg-bg-2" />
             </div>
           </div>
         ))}
@@ -100,11 +100,11 @@ function TopicRow({
   return (
     <Link
       href={`/student/learn/${topic.topic_id}`}
-      className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 last:border-b-0"
+      className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0"
     >
       {/* Subject icon */}
-      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white">
-        <Icon size={14} strokeWidth={1.5} className="text-gray-500" />
+      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-border-2 bg-card">
+        <Icon size={14} strokeWidth={1.5} className="text-muted" />
       </span>
 
       {/* Info */}
@@ -112,12 +112,12 @@ function TopicRow({
         <span className="block truncate font-dm-sans text-[13px] font-bold text-ink">
           {topic.topic_title}
         </span>
-        <span className="mt-0.5 block font-dm-sans text-[11px] text-gray-400">
+        <span className="mt-0.5 block font-dm-sans text-[11px] text-muted">
           {topic.subject}
           {isEmpty ? ' · Not started' : ''}
         </span>
         {!isEmpty && (
-          <span className="mt-1.5 block h-[3px] w-[70px] overflow-hidden rounded-full bg-gray-100">
+          <span className="mt-1.5 block h-[3px] w-[70px] overflow-hidden rounded-full bg-bg-2">
             <span
               className={`block h-full rounded-full ${barFill}`}
               style={{ width: `${topic.mastery_percent}%` }}
@@ -168,7 +168,7 @@ export default function StudentHomePage() {
   if (fetchError) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-center font-dm-sans text-sm text-gray-500">
+        <p className="text-center font-dm-sans text-sm text-muted">
           {fetchError}
         </p>
       </div>
@@ -182,7 +182,7 @@ export default function StudentHomePage() {
   const hasQueue = recall_queue.length > 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-card">
 
       {/* ── SCR-04 · Dark header ─────────────────────────────────────────── */}
       <header className="bg-ink px-4 pb-7 pt-5">
@@ -242,7 +242,7 @@ export default function StudentHomePage() {
                   className={`flex-shrink-0 rounded-full border px-3 py-1 font-dm-sans text-[11px] font-bold transition-colors ${
                     activePill === i
                       ? 'border-jade bg-jade text-white'
-                      : 'border-gray-200 text-ink'
+                      : 'border-border-2 text-ink'
                   }`}
                 >
                   {pill}

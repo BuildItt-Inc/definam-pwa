@@ -5,9 +5,59 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Backgrounds: Warm, paper-like ivory instead of cold grays */
+    --bg-0:   #FAF8F5; /* Deepest background (app body) */
+    --bg-1:   #FFFFFF; /* Elevated surfaces (cards, modals) */
+    --bg-2:   #F2EFEA; /* Hover states, secondary buttons */
+    --bg-3:   #E7E2DA; /* Deepest structural gray */
+  
+    /* Cards */
+    --card:   #FFFFFF; /* Pure white for high-contrast floating elements */
+    --card-2: #FAF8F5; /* Blends into bg-0 for flat cards */
+  
+    /* Borders: Ultra-subtle, slightly warm transparency */
+    --border:   rgba(45, 38, 30, 0.08); /* 8% opacity dark brown/ink */
+    --border-2: rgba(45, 38, 30, 0.14); /* 14% opacity for active borders */
+  
+    /* Typography: Ink instead of pure #000000 */
+    --ink:   #181715; /* Primary text, headings */
+    --ink-2: #282623; /* High-emphasis secondary text */
+    --muted: #6A665E; /* Standard secondary text (timestamps, labels) */
+    --faint: #9E988E; /* Placeholder text, disabled states */
+  
+    /* Semantic UI Colors (Strictly for status) */
+    --success:    #16A34A; /* Tailwind green-600 */
+    --success-bg: rgba(22, 163, 74, 0.08);
+    
+    --warn:       #D97706; /* Tailwind amber-600 */
+    --warn-bg:    rgba(217, 119, 6, 0.08);
+    
+    --danger:     #DC2626; /* Tailwind red-600 */
+    --danger-bg:  rgba(220, 38, 38, 0.08);
+  
+    /* Border Radii Tokens */
+    --radius-sm: 6px;
+    --radius:    10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --radius-full: 9999px;
+  }
+
   body {
     margin: 0;
     min-height: 100vh;
     font-family: "DM Sans", sans-serif;
+    @apply bg-bg-0 text-ink;
+  }
+
+  /* Fix for browser autofill overriding background colors */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--bg-0) inset !important;
+    -webkit-text-fill-color: var(--ink) !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 }
