@@ -8,6 +8,7 @@ Run inside the Coolify backend container:
 from __future__ import annotations
 
 import asyncio
+
 from sqlalchemy import select
 
 from app.db.database import db_session

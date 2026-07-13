@@ -9,6 +9,10 @@ interface MathContentProps {
   allowBlock?: boolean;
 }
 
+interface KatexRenderer {
+  renderToString: (tex: string, options?: { displayMode?: boolean; throwOnError?: boolean }) => string;
+}
+
 /**
  * MathContent
  * -----------
@@ -35,8 +39,8 @@ export function MathContent({
 
     let attempts = 0;
     const render = () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const katex = (window as any).katex;
+      const globalWindow = window as unknown as { katex?: KatexRenderer };
+      const katex = globalWindow.katex;
       if (!katex) {
         if (attempts++ < 30) setTimeout(render, 100);
         return;
@@ -59,8 +63,7 @@ export function MathContent({
 
 function buildHtml(
   text: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  katex: any,
+  katex: KatexRenderer,
   allowBlock: boolean,
 ): string {
   // Split into paragraphs on double newlines first
@@ -83,8 +86,7 @@ function buildHtml(
 
 function renderInline(
   text: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  katex: any,
+  katex: KatexRenderer,
   allowBlock: boolean,
 ): string {
   const segments = splitMath(text, allowBlock);
