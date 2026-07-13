@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Sparkles, Zap } from 'lucide-react';
 import type { RecallItem } from '@/types/topics';
 import { QualityRating } from '@/components/student/QualityRating';
-import { mockHomeData } from '@/lib/api/mock/data';
+import { submitRecallRating } from '@/lib/api/topics';
+import { getHomeData } from '@/lib/api/topics';
 
 // ── Session page ──────────────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ export default function RecallSessionPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [streakDays, setStreakDays] = useState<number | null>(null);
   const startTime = useRef<number>(Date.now());
 
   useEffect(() => {
@@ -46,13 +48,28 @@ export default function RecallSessionPage() {
   const total = queue.length;
   const currentItem = queue[currentIndex];
   const elapsedMinutes = Math.max(1, Math.round((Date.now() - startTime.current) / 60000));
-  const newStreak = mockHomeData.streak_days + 1;
 
-  function handleRate(_rating: number) {
+  async function handleRate(rating: number) {
+    // Submit rating to real backend — this marks the DailyRecallQueue item
+    // as completed and advances SM-2 scheduling, which is what the streak query counts.
+    try {
+      await submitRecallRating(currentItem.topic_id, rating);
+    } catch {
+      // Non-fatal — still advance the UI
+    }
+
     if (currentIndex < total - 1) {
       setCurrentIndex((i) => i + 1);
       setAnswerRevealed(false);
     } else {
+      // Session complete — fetch authoritative streak from dashboard
+      try {
+        const home = await getHomeData();
+        setStreakDays(home.streak_days);
+      } catch {
+        // If dashboard fetch fails, show a safe fallback
+        setStreakDays(null);
+      }
       setCompleted(true);
     }
   }
@@ -76,7 +93,7 @@ export default function RecallSessionPage() {
           <div className="flex items-center justify-center gap-2">
             <Zap size={18} strokeWidth={1.5} className="text-gold" />
             <span className="font-syne text-[40px] font-black leading-none text-white">
-              {newStreak}
+              {streakDays !== null ? streakDays : '—'}
             </span>
           </div>
           <p className="mt-1 font-dm-sans text-[11px] text-white/40">days in a row</p>
@@ -84,7 +101,7 @@ export default function RecallSessionPage() {
 
         {/* Next review hint */}
         <p className="mb-8 w-full max-w-xs text-left font-dm-sans text-[11px] leading-relaxed text-white/30">
-          Next reviews: Tomorrow → Quadratic Equations · In 4 days → Linear Equations
+          Your next reviews are scheduled automatically based on your ratings.
         </p>
 
         {/* Navigation */}

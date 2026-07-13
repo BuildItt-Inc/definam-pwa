@@ -1,4 +1,11 @@
 import type { Subject, Chapter, Topic, TopicDetail, HomeData, RecallItem, ProgressData } from '@/types/topics';
+
+export interface RecallSubmitResult {
+  topic_id: string;
+  interval_days: number;
+  next_review_at: string;
+  streak_days?: number; // returned after submit so UI can update without refetching dashboard
+}
 import { ApiError, getAuthHeaders } from '@/lib/api/auth';
 import { USE_MOCK, MOCK_DELAY_MS } from '@/lib/api/mock/week2';
 import {
@@ -132,4 +139,27 @@ export async function getProgressData(): Promise<ProgressData> {
     { headers: await getAuthHeaders() },
   );
   return handleResponse<ProgressData>(res);
+}
+
+// ── submitRecallRating ─────────────────────────────────────────────────────
+// Real: POST /api/v1/topics/:id/recall
+
+export async function submitRecallRating(
+  topicId: string,
+  rating: number,
+): Promise<RecallSubmitResult> {
+  if (USE_MOCK) {
+    await delay();
+    return { topic_id: topicId, interval_days: 1, next_review_at: new Date().toISOString() };
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}/recall`,
+    {
+      method: 'POST',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ rating }),
+    },
+  );
+  return handleResponse<RecallSubmitResult>(res);
 }

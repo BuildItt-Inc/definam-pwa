@@ -152,11 +152,18 @@ export async function logout(): Promise<void> {
 
 export async function getAuthHeaders(): Promise<HeadersInit> {
   if (!accessToken) {
+    // First attempt
     try {
       await refreshToken();
-    } catch (err) {
-      // If refresh fails (e.g., cookie expired), we're fully logged out
-      throw new ApiError(401, 'Not authenticated');
+    } catch {
+      // Mobile Safari can delay cross-origin cookie transmission on first load.
+      // Wait briefly and retry once before declaring the session gone.
+      await new Promise((r) => setTimeout(r, 800));
+      try {
+        await refreshToken();
+      } catch {
+        throw new ApiError(401, 'Not authenticated');
+      }
     }
   }
 
