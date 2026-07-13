@@ -16,7 +16,6 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { getHomeData } from '@/lib/api/topics';
 import type { HomeData, RecentTopic } from '@/types/topics';
-import { ApiError } from '@/lib/api/auth';
 import { RecallCard } from '@/components/student/RecallCard';
 import { BottomNav } from '@/components/student/BottomNav';
 
@@ -161,7 +160,12 @@ export default function StudentHomePage() {
     getHomeData()
       .then(setData)
       .catch((err: unknown) => {
-        if (err instanceof ApiError && err.status === 401) {
+        // getAuthHeaders() already attempts a silent token refresh before
+        // throwing. If we still get an error here, the session is truly gone.
+        const is401 =
+          err instanceof Error &&
+          (err.message === 'Not authenticated' || (err as { status?: number }).status === 401);
+        if (is401) {
           router.replace('/login');
         } else {
           setFetchError(err instanceof Error ? err.message : 'Failed to load');
