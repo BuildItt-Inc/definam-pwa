@@ -41,7 +41,7 @@ from app.schemas.auth import (
 logger = logging.getLogger(__name__)
 
 
-async def register(body: RegisterRequest) -> dict:
+async def register(body: RegisterRequest) -> tuple[str, str]:
     """
     Validate an individual access code, create a user row with a bcrypt
     password hash, and activate the code.
@@ -75,7 +75,7 @@ async def register(body: RegisterRequest) -> dict:
     )
     await activate_code(code_row["id"], user_id)
 
-    return {"message": "Account created successfully"}
+    return user_id, "student_individual"
 
 
 async def login(body: LoginRequest) -> dict:
