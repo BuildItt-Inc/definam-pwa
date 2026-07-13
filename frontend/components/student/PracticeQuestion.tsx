@@ -55,9 +55,10 @@ export function PracticeQuestion({
           <button
             key={opt}
             onClick={() => handleSelect(opt)}
-            disabled={revealed}
+            tabIndex={revealed ? -1 : undefined}
             className={[
               'flex w-full items-center gap-3 rounded-lg border-[1.5px] px-3.5 py-3 text-left font-dm-sans text-[13px] font-semibold transition-colors',
+              revealed ? 'pointer-events-none' : '',
               isCorrectOpt(opt)
                 ? 'border-jade bg-jade text-white'
                 : isWrongSelected(opt)
