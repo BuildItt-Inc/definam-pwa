@@ -31,6 +31,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     },
   );
@@ -79,6 +80,7 @@ export async function registerUser(
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     },
   );
@@ -103,6 +105,7 @@ export async function orgLogin(
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     },
   );
