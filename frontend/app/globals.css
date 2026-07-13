@@ -61,3 +61,39 @@
     transition: background-color 5000s ease-in-out 0s;
   }
 }
+
+/* ── Math content typography ─────────────────────────────────────────────── */
+
+/* Each paragraph in a MathContent block gets bottom margin */
+.math-content .math-para {
+  display: block;
+  margin-bottom: 0.85rem;
+  line-height: 1.75;
+}
+.math-content .math-para:last-child {
+  margin-bottom: 0;
+}
+
+/* Display math: centred block with generous vertical space */
+.math-content .math-block {
+  display: block;
+  text-align: center;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+/* KaTeX inline tweaks */
+.katex {
+  font-size: 1.05em;
+}
+
+/* Error fallback */
+.math-err {
+  font-family: monospace;
+  background: rgba(220, 38, 38, 0.08);
+  color: #DC2626;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+

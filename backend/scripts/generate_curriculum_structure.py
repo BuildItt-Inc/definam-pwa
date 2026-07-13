@@ -8,14 +8,15 @@ syllabus structure.
 
 from __future__ import annotations
 
-import argparse
 import asyncio
 import json
 import logging
 import uuid
-from sqlalchemy import select
+from typing import Any
+
 from google import genai
 from groq import Groq
+from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.db.database import db_session

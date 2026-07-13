@@ -250,8 +250,9 @@ async def is_webhook_processed(reference: str) -> bool:
 
 async def get_all_subjects() -> list[dict[str, Any]]:
     """Return all subjects with chapter and topic counts."""
-    from app.db.models import Subject, Chapter, Topic
     from sqlalchemy import func
+
+    from app.db.models import Chapter, Subject, Topic
 
     async with db_session() as session:
         stmt = (
@@ -283,8 +284,9 @@ async def get_all_subjects() -> list[dict[str, Any]]:
 
 async def get_chapters_by_subject(subject_id: str) -> list[dict[str, Any]]:
     """Return all chapters for a given subject with topic counts."""
-    from app.db.models import Chapter, Topic
     from sqlalchemy import func
+
+    from app.db.models import Chapter, Topic
 
     async with db_session() as session:
         stmt = (
@@ -368,8 +370,9 @@ async def update_topic_status(
     topic_id: str, current_status: str, new_status: str
 ) -> bool:
     """Update topic status if it matches current_status. Returns True if updated."""
-    from app.db.models import Topic
     from sqlalchemy import update
+
+    from app.db.models import Topic
 
     async with db_session() as session:
         result = await session.execute(
@@ -388,8 +391,9 @@ async def update_topic_content(
     practice_questions: list[dict],
 ) -> None:
     """Update educational content and practice questions for a topic."""
-    from app.db.models import Topic
     from sqlalchemy import update
+
+    from app.db.models import Topic
 
     async with db_session() as session:
         await session.execute(

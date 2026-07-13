@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from app.api.deps import CurrentUserDep
 from app.core.exceptions import NotFoundError
 from app.db import database
+from app.services.content_generator import generate_all_topic_content
 
 router = APIRouter()
 
@@ -47,12 +48,14 @@ async def get_topic(
     topic = await database.get_topic_by_id(str(topic_id), published_only=True)
     if not topic:
         raise NotFoundError("Topic not found or not published.")
-    
-    # Check if content needs to be generated on the fly (Lazy Generation/Cache)
-    if not topic.get("content_step1") or topic.get("content_step1") == "Content is being prepared.":
-        from app.services.content_generator import generate_all_topic_content
+
+    # Lazy JIT generation: generate and cache content if missing
+    content_missing = (
+        not topic.get("content_step1")
+        or topic.get("content_step1") == "Content is being prepared."
+    )
+    if content_missing:
         generated = await generate_all_topic_content(topic["title"])
-        
         await database.update_topic_content(
             str(topic_id),
             generated["content_step1"],
@@ -60,21 +63,20 @@ async def get_topic(
             generated["content_step3"],
             generated["practice_questions"],
         )
-        # Update our dictionary with the generated content
         topic.update(generated)
-        
+
     return {
         "step1": {
             "title": "Simple Definition",
-            "content": topic.get("content_step1")
+            "content": topic.get("content_step1"),
         },
         "step2": {
             "title": "Nigerian Example",
-            "content": topic.get("content_step2")
+            "content": topic.get("content_step2"),
         },
         "step3": {
             "title": "Visual Breakdown",
-            "content": topic.get("content_step3")
+            "content": topic.get("content_step3"),
         },
-        "practice_questions": topic.get("practice_questions") or []
+        "practice_questions": topic.get("practice_questions") or [],
     }

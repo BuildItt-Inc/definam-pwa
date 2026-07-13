@@ -5,29 +5,34 @@ import { useEffect, useRef } from 'react';
 interface MathContentProps {
   content: string;
   className?: string;
-  /** If true, block display equations ($$...$$) are centred. Default true. */
+  /** If true, $$...$$ renders as a centred display block. Default true. */
   allowBlock?: boolean;
 }
 
 /**
  * MathContent
  * -----------
- * Renders a string that may contain LaTeX math delimited by:
- *   - $...$ for inline math
- *   - $$...$$ for display (block) math
+ * Renders mixed prose + LaTeX math content.
  *
- * All other text is rendered as-is. Line breaks (\n) become visual line breaks.
+ * Delimiters:
+ *   $$...$$  →  display (block) math, centred
+ *   $...$    →  inline math
  *
- * Uses KaTeX loaded from CDN (window.katex). Falls back to plain text gracefully
- * if KaTeX hasn't loaded yet on very slow connections.
+ * Double newlines (\n\n) become paragraph breaks.
+ * Single newlines (\n) become line breaks within a paragraph.
+ *
+ * KaTeX is loaded from CDN (window.katex). Falls back to plain text gracefully.
  */
-export function MathContent({ content, className = '', allowBlock = true }: MathContentProps) {
+export function MathContent({
+  content,
+  className = '',
+  allowBlock = true,
+}: MathContentProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!ref.current || !content) return;
 
-    // Poll for KaTeX up to 3s — it's loaded via afterInteractive CDN script
     let attempts = 0;
     const render = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,28 +41,21 @@ export function MathContent({ content, className = '', allowBlock = true }: Math
         if (attempts++ < 30) setTimeout(render, 100);
         return;
       }
-
-      const el = ref.current!;
-      el.innerHTML = buildHtml(content, katex, allowBlock);
+      ref.current!.innerHTML = buildHtml(content, katex, allowBlock);
     };
 
     render();
   }, [content, allowBlock]);
 
-  // Render plain text immediately (SSR + first paint), then hydrate with math
+  // Server-side / first-paint: show plain text, hydrate after KaTeX loads
   return (
-    <div
-      ref={ref}
-      className={`math-content leading-relaxed ${className}`}
-      suppressHydrationWarning
-    >
-      {/* Plain text fallback rendered server-side */}
+    <div ref={ref} className={`math-content ${className}`} suppressHydrationWarning>
       {content}
     </div>
   );
 }
 
-// ── Build HTML string with KaTeX-rendered math segments ───────────────────
+// ── HTML builder ───────────────────────────────────────────────────────────
 
 function buildHtml(
   text: string,
@@ -65,27 +63,49 @@ function buildHtml(
   katex: any,
   allowBlock: boolean,
 ): string {
-  // Split on $$...$$ (display) and $...$ (inline)
-  // Order matters: match $$ first so we don't accidentally eat display delimiters
-  const parts = splitMath(text, allowBlock);
+  // Split into paragraphs on double newlines first
+  const paragraphs = text.split(/\n{2,}/);
 
-  return parts
+  return paragraphs
+    .map((para) => {
+      const trimmed = para.trim();
+      if (!trimmed) return '';
+
+      // Render inline content (may contain $...$ and $$...$$)
+      const inner = renderInline(trimmed, katex, allowBlock);
+
+      // Each paragraph gets its own block — line breaks inside become <br>
+      return `<p class="math-para">${inner}</p>`;
+    })
+    .filter(Boolean)
+    .join('');
+}
+
+function renderInline(
+  text: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  katex: any,
+  allowBlock: boolean,
+): string {
+  const segments = splitMath(text, allowBlock);
+
+  return segments
     .map((part) => {
       if (part.type === 'block') {
         try {
-          return `<div class="math-block my-4 overflow-x-auto text-center">${katex.renderToString(part.math, { displayMode: true, throwOnError: false })}</div>`;
+          return `<span class="math-block">${katex.renderToString(part.math, { displayMode: true, throwOnError: false })}</span>`;
         } catch {
-          return `<div class="math-block my-4 text-center font-mono text-sm">${escapeHtml(part.math)}</div>`;
+          return `<code class="math-err">${escapeHtml(part.math)}</code>`;
         }
       }
       if (part.type === 'inline') {
         try {
           return katex.renderToString(part.math, { displayMode: false, throwOnError: false });
         } catch {
-          return `<span class="font-mono text-sm">${escapeHtml(part.math)}</span>`;
+          return `<code class="math-err">${escapeHtml(part.math)}</code>`;
         }
       }
-      // Plain text — convert \n to <br> and preserve spacing
+      // Plain text — single newlines become <br>
       return part.text
         .split('\n')
         .map((line) => escapeHtml(line))
@@ -94,6 +114,8 @@ function buildHtml(
     .join('');
 }
 
+// ── Math segment splitter ──────────────────────────────────────────────────
+
 type Segment =
   | { type: 'block'; math: string }
   | { type: 'inline'; math: string }
@@ -101,7 +123,6 @@ type Segment =
 
 function splitMath(text: string, allowBlock: boolean): Segment[] {
   const segments: Segment[] = [];
-  // Regex: match $$...$$ or $...$ (non-greedy, no newlines inside inline)
   const pattern = allowBlock
     ? /(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/g
     : /(\$[^$\n]+?\$)/g;
@@ -110,22 +131,18 @@ function splitMath(text: string, allowBlock: boolean): Segment[] {
   let match: RegExpExecArray | null;
 
   while ((match = pattern.exec(text)) !== null) {
-    // Text before this match
     if (match.index > lastIndex) {
       segments.push({ type: 'text', text: text.slice(lastIndex, match.index) });
     }
-
     const raw = match[1];
     if (allowBlock && raw.startsWith('$$')) {
       segments.push({ type: 'block', math: raw.slice(2, -2).trim() });
     } else {
       segments.push({ type: 'inline', math: raw.slice(1, -1).trim() });
     }
-
     lastIndex = match.index + raw.length;
   }
 
-  // Remaining text
   if (lastIndex < text.length) {
     segments.push({ type: 'text', text: text.slice(lastIndex) });
   }

@@ -21,14 +21,15 @@ client_groq = AsyncGroq(api_key=settings.groq_api_key) if settings.groq_api_key 
 
 PROMPT_STEP1 = """
 You are a friendly Nigerian tutor writing for secondary school students.
-Explain the topic "{title}" in 2–3 clear, plain-English sentences.
+Explain the topic "{title}" in 2–3 short paragraphs (not one long block).
 Use a relatable Nigerian example (market, NEPA, jollof rice, naira, etc.) where natural.
 
 FORMATTING RULES (CRITICAL):
+- Separate each paragraph with a BLANK LINE (two newlines).
 - Wrap ALL mathematical expressions in single dollar signs: $expression$
 - Examples: $x^2 + 5x + 6 = 0$, $\\frac{{250x}}{{0.5}}$, $500x$, $\\times$, $\\div$
 - Use proper LaTeX: \\frac{{a}}{{b}} for fractions, x^2 for squares, x_1 for subscripts
-- Never write math operators as plain text (no asterisks for multiply, no / for divide in expressions)
+- Never write math operators as plain text inside an expression
 - Keep surrounding prose in plain English, only the math parts in $ $
 
 Return only the explanation text. No greeting or intro.
@@ -36,15 +37,14 @@ Return only the explanation text. No greeting or intro.
 
 PROMPT_STEP2 = """
 You are a friendly Nigerian tutor writing for secondary school students.
-Provide a clear, step-by-step worked example of "{title}" set in a Nigerian context (market, naira, etc.).
-Each step should be on its own line, numbered. Show all working clearly.
+Provide a clear, numbered step-by-step worked example of "{title}" set in a Nigerian context (market, naira, etc.).
 
 FORMATTING RULES (CRITICAL):
+- Each numbered step MUST be on its own paragraph separated by a BLANK LINE.
+- Format steps like: Step 1: [label]\n\n[working]\n\nStep 2: ...
 - Wrap ALL mathematical expressions in single dollar signs: $expression$
 - Examples: $500x - 2000 = 0$, $x = \\frac{{2000}}{{100}} = 20$, $\\therefore$
 - Use proper LaTeX: \\frac{{a}}{{b}} for fractions, \\times for multiplication, \\div for division
-- Write each equation step on its own line for clarity
-- Never write math as plain text operators (* / etc.) inside an equation
 - Prose text stays in plain English, only the math in $ $
 
 Return only the worked example text. No greeting or intro.
