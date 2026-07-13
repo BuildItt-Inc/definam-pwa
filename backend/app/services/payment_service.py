@@ -82,7 +82,7 @@ async def initiate_individual(
     Embeds payment_type metadata so the webhook can route correctly.
     """
     settings = get_settings()
-    callback_url = f"{settings.frontend_url.rstrip('/')}/pay/success?type=individual"
+    callback_url = f"{settings.frontend_url.rstrip('/')}/pay/callback?type=individual"
 
     data = await _initiate_transaction(
         email=str(body.email),
@@ -103,7 +103,7 @@ async def initiate_org(body: OrgPaymentRequest) -> OrgPaymentResponse:
     """
     settings = get_settings()
     total_kobo = body.student_count * INDIVIDUAL_AMOUNT_KOBO
-    callback_url = f"{settings.frontend_url.rstrip('/')}/pay/success?type=org"
+    callback_url = f"{settings.frontend_url.rstrip('/')}/pay/callback?type=individual"
 
     data = await _initiate_transaction(
         email=str(body.school_email),

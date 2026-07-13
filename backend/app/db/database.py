@@ -45,6 +45,7 @@ async def get_access_code(code: str) -> dict[str, Any] | None:
             "school_id": row.school_id,
             "activated_by": row.activated_by,
             "device_fingerprint": row.device_fingerprint,
+            "email": row.email, 
         }
 
 
@@ -89,8 +90,8 @@ async def bulk_insert_codes(org_id: str, codes: list[str]) -> None:
         session.add_all(rows)
 
 
-async def insert_individual_code(code: str) -> None:
-    """Insert a single individual access code generated after payment."""
+async def insert_individual_code(code: str, email: str) -> None:
+    """Insert a single individual access code with the email it was issued to."""
     async with db_session() as session:
         session.add(
             AccessCode(
@@ -99,6 +100,7 @@ async def insert_individual_code(code: str) -> None:
                 school_id=None,
                 type="individual",
                 status="pending",
+                email=email,
             )
         )
 
@@ -115,18 +117,20 @@ async def create_student_user(
     password_hash: str | None = None,
     device_fingerprint: str | None = None,
     force_password_change: bool = False,
+    email: str | None = None,   # <-- add this
 ) -> None:
-    """Create a user record in PostgreSQL."""
+    """Create a user record in PostgreSQL, optionally with email."""
     async with db_session() as session:
         session.add(
             User(
                 id=user_id,
-                username=username or user_id,  # fallback for org students
+                username=username or user_id,
                 password_hash=password_hash,
                 role=role,
                 org_id=org_id,
                 device_fingerprint=device_fingerprint,
                 force_password_change=force_password_change,
+                email=email,   # <-- store email
             )
         )
 

@@ -63,6 +63,7 @@ class User(Base):
         UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     username: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    email: Mapped[str | None] = mapped_column(String(255), index=True, nullable=True)
     password_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
     role: Mapped[str] = mapped_column(
         String(50), nullable=False
@@ -95,6 +96,7 @@ class AccessCode(Base):
         UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     type: Mapped[str] = mapped_column(String(20), nullable=False)  # individual | org
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="pending"
