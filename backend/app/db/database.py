@@ -402,4 +402,3 @@ async def update_topic_content(
                 practice_questions=practice_questions,
             )
         )
-        await session.commit()
