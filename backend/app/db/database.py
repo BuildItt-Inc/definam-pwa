@@ -249,40 +249,68 @@ async def is_webhook_processed(reference: str) -> bool:
 
 
 async def get_all_subjects() -> list[dict[str, Any]]:
-    """Return all subjects."""
-    from app.db.models import Subject
+    """Return all subjects with chapter and topic counts."""
+    from app.db.models import Subject, Chapter, Topic
+    from sqlalchemy import func
 
     async with db_session() as session:
-        result = await session.execute(select(Subject).order_by(Subject.created_at))
-        return [
-            {
-                "id": row.id,
-                "name": row.name,
-                "class_level": row.class_level,
-            }
-            for row in result.scalars()
-        ]
+        stmt = (
+            select(
+                Subject,
+                func.count(func.distinct(Chapter.id)).label("chapter_count"),
+                func.count(func.distinct(Topic.id)).label("topic_count"),
+            )
+            .outerjoin(Chapter, Subject.id == Chapter.subject_id)
+            .outerjoin(Topic, Chapter.id == Topic.chapter_id)
+            .group_by(Subject.id)
+            .order_by(Subject.created_at)
+        )
+        result = await session.execute(stmt)
+        
+        subjects = []
+        for row in result.all():
+            subject_obj = row[0]
+            subjects.append({
+                "id": subject_obj.id,
+                "name": subject_obj.name,
+                "class_level": subject_obj.class_level,
+                "chapter_count": row.chapter_count,
+                "topic_count": row.topic_count,
+                "mastery_percent": None,
+            })
+        return subjects
 
 
 async def get_chapters_by_subject(subject_id: str) -> list[dict[str, Any]]:
-    """Return all chapters for a given subject."""
-    from app.db.models import Chapter
+    """Return all chapters for a given subject with topic counts."""
+    from app.db.models import Chapter, Topic
+    from sqlalchemy import func
 
     async with db_session() as session:
-        result = await session.execute(
-            select(Chapter)
+        stmt = (
+            select(
+                Chapter,
+                func.count(Topic.id).label("topic_count")
+            )
+            .outerjoin(Topic, Chapter.id == Topic.chapter_id)
             .where(Chapter.subject_id == subject_id)
+            .group_by(Chapter.id)
             .order_by(Chapter.chapter_num)
         )
-        return [
-            {
-                "id": row.id,
-                "subject_id": row.subject_id,
-                "chapter_num": row.chapter_num,
-                "title": row.title,
-            }
-            for row in result.scalars()
-        ]
+        result = await session.execute(stmt)
+        
+        chapters = []
+        for row in result.all():
+            ch_obj = row[0]
+            chapters.append({
+                "id": ch_obj.id,
+                "subject_id": ch_obj.subject_id,
+                "chapter_num": ch_obj.chapter_num,
+                "title": ch_obj.title,
+                "topic_count": row.topic_count,
+                "mastery_percent": None,
+            })
+        return chapters
 
 
 async def get_topics_by_chapter(
@@ -303,6 +331,8 @@ async def get_topics_by_chapter(
                 "chapter_id": row.chapter_id,
                 "title": row.title,
                 "status": row.status,
+                "mastery_percent": None,
+                "last_studied_at": None,
             }
             for row in result.scalars()
         ]

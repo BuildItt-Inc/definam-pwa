@@ -47,4 +47,19 @@ async def get_topic(
     topic = await database.get_topic_by_id(str(topic_id), published_only=True)
     if not topic:
         raise NotFoundError("Topic not found or not published.")
-    return topic
+    
+    return {
+        "step1": {
+            "title": "Simple Definition",
+            "content": topic.get("content_step1") or "Content is being prepared."
+        },
+        "step2": {
+            "title": "Nigerian Example",
+            "content": topic.get("content_step2") or "Content is being prepared."
+        },
+        "step3": {
+            "title": "Visual Breakdown",
+            "content": topic.get("content_step3") or "Content is being prepared."
+        },
+        "practice_questions": topic.get("practice_questions") or []
+    }
