@@ -14,6 +14,7 @@ import json
 import logging
 import uuid
 from sqlalchemy import select
+from google import genai
 from groq import Groq
 
 from app.core.config import get_settings
@@ -27,8 +28,9 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
-# Initialize Groq if API key is available
+# Initialize API clients
 groq_client = Groq(api_key=settings.groq_api_key) if settings.groq_api_key else None
+gemini_client = genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
 
 # ── Fallback Curriculum Definition ────────────────────────────────────────
 
@@ -365,37 +367,59 @@ Do not include any introductory text, markdown code blocks, or explanations. Onl
 
 
 def generate_subject_curriculum(subject_name: str) -> list[dict[str, Any]] | None:
-    """Call Groq to generate a complete syllabus for a subject."""
-    if not groq_client:
-        return None
-
+    """Call Gemini or Groq to generate a complete syllabus for a subject."""
     prompt = PROMPT_TEMPLATE.format(subject_name=subject_name)
-    try:
-        completion = groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
-            max_tokens=2000,
-        )
-        text = completion.choices[0].message.content.strip()
 
-        # Clean markdown wrappers if any
-        if text.startswith("```"):
-            lines = text.split("\n")
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines[-1].startswith("```"):
-                lines = lines[:-1]
-            text = "\n".join(lines).strip()
-
-        parsed = json.loads(text)
-        if isinstance(parsed, list) and len(parsed) >= 5:
-            logger.info(
-                f"Successfully generated {len(parsed)} chapters for {subject_name} via Groq."
+    # 1. Try Gemini
+    if gemini_client:
+        try:
+            logger.info(f"Generating curriculum for {subject_name} via Gemini...")
+            response = gemini_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
             )
-            return parsed
-    except Exception as e:
-        logger.error(f"Failed to generate curriculum for {subject_name}: {e}")
+            text = response.text.strip()
+            if text.startswith("```"):
+                lines = text.split("\n")
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                text = "\n".join(lines).strip()
+            
+            parsed = json.loads(text)
+            if isinstance(parsed, list) and len(parsed) >= 5:
+                logger.info(f"Successfully generated {len(parsed)} chapters for {subject_name} via Gemini.")
+                return parsed
+        except Exception as e:
+            logger.error(f"Failed to generate curriculum via Gemini for {subject_name}: {e}")
+
+    # 2. Try Groq (Fallback)
+    if groq_client:
+        try:
+            logger.info(f"Generating curriculum for {subject_name} via Groq...")
+            completion = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=2000,
+            )
+            text = completion.choices[0].message.content.strip()
+            if text.startswith("```"):
+                lines = text.split("\n")
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                text = "\n".join(lines).strip()
+
+            parsed = json.loads(text)
+            if isinstance(parsed, list) and len(parsed) >= 5:
+                logger.info(f"Successfully generated {len(parsed)} chapters for {subject_name} via Groq.")
+                return parsed
+        except Exception as e:
+            logger.error(f"Failed to generate curriculum via Groq for {subject_name}: {e}")
+
     return None
 
 

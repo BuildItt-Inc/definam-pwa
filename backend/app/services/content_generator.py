@@ -1,4 +1,4 @@
-"""Service to dynamically generate learning content and questions on-demand via Groq."""
+"""Service to dynamically generate learning content and questions on-demand via Gemini and Groq."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Any
 
+from google import genai
 from groq import AsyncGroq
 
 from app.core.config import get_settings
@@ -14,8 +15,9 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-# Initialize AsyncGroq only if API key is present
-client = AsyncGroq(api_key=settings.groq_api_key) if settings.groq_api_key else None
+# Initialize API clients based on available keys
+client_gemini = genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
+client_groq = AsyncGroq(api_key=settings.groq_api_key) if settings.groq_api_key else None
 
 PROMPT_STEP1 = """
 You are a Nigerian tutor. Explain the topic "{title}" in 2–3 plain sentences using simple language. No jargon.
@@ -50,7 +52,7 @@ Each object must have the following keys:
 
 
 def get_fallback_content(title: str) -> dict[str, Any]:
-    """Fallback curriculum text when Groq API key is missing or fails."""
+    """Fallback curriculum text when both Gemini and Groq API keys are missing or fail."""
     return {
         "content_step1": (
             f"{title} is a core topic in the WAEC syllabus. This lesson covers the fundamental concepts, "
@@ -83,12 +85,60 @@ def get_fallback_content(title: str) -> dict[str, Any]:
     }
 
 
-async def generate_step(prompt: str) -> str:
-    """Call Groq API to generate a single step."""
-    if not client:
+# ── Gemini Async Generators ────────────────────────────────────────────────
+
+async def generate_gemini_step(prompt: str) -> str:
+    """Generate a step content via Gemini."""
+    if not client_gemini:
         return ""
     try:
-        completion = await client.chat.completions.create(
+        response = await client_gemini.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+        return response.text.strip()
+    except Exception as e:
+        logger.error(f"Gemini step generation error: {e}")
+        return ""
+
+
+async def generate_gemini_questions(prompt: str) -> list[dict[str, Any]]:
+    """Generate practice questions via Gemini."""
+    if not client_gemini:
+        return []
+    try:
+        response = await client_gemini.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+        text = response.text.strip()
+
+        # Strip markdown syntax if LLM returns it
+        if text.startswith("```"):
+            lines = text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines[-1].startswith("```"):
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
+
+        parsed = json.loads(text)
+        if isinstance(parsed, list):
+            return parsed
+        return []
+    except Exception as e:
+        logger.error(f"Gemini questions generation error: {e}")
+        return []
+
+
+# ── Groq Async Generators ──────────────────────────────────────────────────
+
+async def generate_groq_step(prompt: str) -> str:
+    """Generate a step content via Groq."""
+    if not client_groq:
+        return ""
+    try:
+        completion = await client_groq.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
@@ -100,12 +150,12 @@ async def generate_step(prompt: str) -> str:
         return ""
 
 
-async def generate_questions(prompt: str) -> list[dict[str, Any]]:
-    """Call Groq API to generate multiple choice questions."""
-    if not client:
+async def generate_groq_questions(prompt: str) -> list[dict[str, Any]]:
+    """Generate practice questions via Groq."""
+    if not client_groq:
         return []
     try:
-        completion = await client.chat.completions.create(
+        completion = await client_groq.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
@@ -131,31 +181,52 @@ async def generate_questions(prompt: str) -> list[dict[str, Any]]:
         return []
 
 
-async def generate_all_topic_content(title: str) -> dict[str, Any]:
-    """Concurrently generate steps 1-3 and practice questions for a topic."""
-    if not client:
-        logger.warning(
-            f"Groq API key not set. Using fallback content for topic: {title}"
-        )
-        return get_fallback_content(title)
+# ── Core Router ────────────────────────────────────────────────────────────
 
+async def generate_all_topic_content(title: str) -> dict[str, Any]:
+    """Concurrently generate steps 1-3 and practice questions for a topic.
+
+    Tries Gemini first, then falls back to Groq, then falls back to static template.
+    """
     step1_p = PROMPT_STEP1.format(title=title)
     step2_p = PROMPT_STEP2.format(title=title)
     step3_p = PROMPT_STEP3.format(title=title)
     questions_p = PROMPT_QUESTIONS.format(title=title)
 
-    step1, step2, step3, questions = await asyncio.gather(
-        generate_step(step1_p),
-        generate_step(step2_p),
-        generate_step(step3_p),
-        generate_questions(questions_p),
-    )
+    # 1. Try Gemini
+    if client_gemini:
+        logger.info(f"Generating content for '{title}' via Gemini...")
+        step1, step2, step3, questions = await asyncio.gather(
+            generate_gemini_step(step1_p),
+            generate_gemini_step(step2_p),
+            generate_gemini_step(step3_p),
+            generate_gemini_questions(questions_p),
+        )
+        if step1 and step2 and step3:
+            return {
+                "content_step1": step1,
+                "content_step2": step2,
+                "content_step3": step3,
+                "practice_questions": questions or get_fallback_content(title)["practice_questions"],
+            }
 
-    # If any call failed, replace with default step content
-    fallback = get_fallback_content(title)
-    return {
-        "content_step1": step1 or fallback["content_step1"],
-        "content_step2": step2 or fallback["content_step2"],
-        "content_step3": step3 or fallback["content_step3"],
-        "practice_questions": questions or fallback["practice_questions"],
-    }
+    # 2. Try Groq (Fallback)
+    if client_groq:
+        logger.info(f"Generating content for '{title}' via Groq...")
+        step1, step2, step3, questions = await asyncio.gather(
+            generate_groq_step(step1_p),
+            generate_groq_step(step2_p),
+            generate_groq_step(step3_p),
+            generate_groq_questions(questions_p),
+        )
+        if step1 and step2 and step3:
+            return {
+                "content_step1": step1,
+                "content_step2": step2,
+                "content_step3": step3,
+                "practice_questions": questions or get_fallback_content(title)["practice_questions"],
+            }
+
+    # 3. Static fallback
+    logger.warning(f"No API key available or API calls failed. Using fallback template for '{title}'.")
+    return get_fallback_content(title)
