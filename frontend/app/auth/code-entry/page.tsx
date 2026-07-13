@@ -210,7 +210,7 @@ export default function CodeEntryPage() {
           ))}
         </div>
 
-        <Link href="/auth/login" style={{
+        <Link href="/login" style={{
           width: '100%',
           display: 'block',
           border: '1px solid rgba(255,255,255,0.15)',
