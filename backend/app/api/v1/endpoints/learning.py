@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+import re
 from typing import Any
 from uuid import UUID
 
@@ -43,16 +42,33 @@ async def get_chapter_topics(
 async def get_topic(
     topic_id: UUID,
     _: CurrentUserDep,
+    regenerate: bool = False,
 ) -> dict[str, Any]:
     """Get a single topic. Returns 404 if not published."""
     topic = await database.get_topic_by_id(str(topic_id), published_only=True)
     if not topic:
         raise NotFoundError("Topic not found or not published.")
 
-    # Lazy JIT generation: generate and cache content if missing
+    # Auto-detect old plain-text math (e.g. 1/3, 3/4 or P = 500x - 8500) without LaTeX $ delimiters
+    step1_text = topic.get("content_step1") or ""
+    has_plain_math = False
+    if (
+        step1_text
+        and "$" not in step1_text
+        and (
+            re.search(r'\b\d+/\d+\b', step1_text)
+            or re.search(r'\b[a-zA-Z\d\s\+\-\*\/]+=[a-zA-Z\d\s\+\-\*\/]+', step1_text)
+        )
+    ):
+        has_plain_math = True
+
+
+    # Lazy JIT generation: generate and cache content if missing or contains unformatted plain math
     content_missing = (
         not topic.get("content_step1")
         or topic.get("content_step1") == "Content is being prepared."
+        or has_plain_math
+        or regenerate
     )
     if content_missing:
         generated = await generate_all_topic_content(topic["title"])
@@ -64,6 +80,7 @@ async def get_topic(
             generated["practice_questions"],
         )
         topic.update(generated)
+
 
     return {
         "step1": {

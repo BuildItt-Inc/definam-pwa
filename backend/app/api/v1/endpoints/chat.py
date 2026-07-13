@@ -23,6 +23,27 @@ router = APIRouter(tags=["chat"])
 _DAILY_CHAT_LIMIT = 50
 
 
+@router.get("/chat/history")
+async def chat_history(
+    topic_id: str,
+    claims: CurrentUserDep,
+) -> list[dict]:
+    """Retrieve chat message history for a given topic."""
+    user_id: str = claims["sub"]
+    async with db_session() as session:
+        result = await session.execute(
+            select(ChatMessage)
+            .where(ChatMessage.user_id == user_id, ChatMessage.topic_id == topic_id)
+            .order_by(ChatMessage.created_at.asc())
+            .limit(20)
+        )
+        return [
+            {"role": msg.role, "content": msg.content}
+            for msg in result.scalars().all()
+        ]
+
+
+
 @router.get("/chat/stream")
 async def chat_stream(
     topic_id: str,

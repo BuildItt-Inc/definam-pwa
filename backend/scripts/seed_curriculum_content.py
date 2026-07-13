@@ -19,25 +19,25 @@ from app.db.models import Topic
 SPECIAL_CONTENTS = {
     "Quadratic Equations": {
         "content_step1": (
-            "A quadratic equation is any equation where the highest power of the unknown is 2. "
-            "It always takes the form ax² + bx + c = 0, where a ≠ 0, and b and c are any real numbers. "
-            "The variable x is what you solve for. Every quadratic has at most two solutions — called the roots."
+            "A quadratic equation is any equation where the highest power of the unknown is $2$. "
+            "It always takes the form $ax^2 + bx + c = 0$, where $a \\neq 0$, and $b$ and $c$ are any real numbers. "
+            "The variable $x$ is what you solve for. Every quadratic has at most two solutions — called the roots."
         ),
         "content_step2": (
-            "A trader at Alaba Market, Lagos sells generators. Her monthly profit P (in thousands of naira) "
-            "is modelled by P = −2x² + 20x − 30, where x is the number of generators sold. To find her break-even points "
-            "she sets P = 0 and solves the quadratic. This exact type of problem appears regularly in WAEC Mathematics."
+            "A trader at Alaba Market, Lagos sells generators. Her monthly profit $P$ (in thousands of naira) "
+            "is modelled by $P = -2x^2 + 20x - 30$, where $x$ is the number of generators sold. To find her break-even points "
+            "she sets $P = 0$ and solves the quadratic. This exact type of problem appears regularly in WAEC Mathematics."
         ),
         "content_step3": (
-            "ax² + bx + c = 0\n"
-            "├── a = coefficient of x² (must not be 0)\n"
-            "├── b = coefficient of x\n"
-            "├── c = constant term\n"
+            "$ax^2 + bx + c = 0$\n"
+            "├── $a$ = coefficient of $x^2$ (must not be $0$)\n"
+            "├── $b$ = coefficient of $x$\n"
+            "├── $c$ = constant term\n"
             "└── Solve by:\n"
             "    ├── Factorisation — split into two brackets\n"
-            "    ├── Completing the square — rewrite as (x + p)² = q\n"
-            "    └── Quadratic formula: x = (−b ± √(b² − 4ac)) / 2a\n\n"
-            "The discriminant b² − 4ac tells you how many roots exist:\n"
+            "    ├── Completing the square — rewrite as $(x + p)^2 = q$\n"
+            "    └── Quadratic formula: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$\n\n"
+            "The discriminant $b^2 - 4ac$ tells you how many roots exist:\n"
             "  > 0 → two real roots\n"
             "  = 0 → one repeated root\n"
             "  < 0 → no real roots"
@@ -48,98 +48,98 @@ SPECIAL_CONTENTS = {
                 "question": "Which of the following is a quadratic equation?",
                 "options": {
                     "A": "3x + 7 = 0",
-                    "B": "x² + 5x − 6 = 0",
-                    "C": "x³ − 2x = 0",
+                    "B": "$x^2 + 5x - 6 = 0$",
+                    "C": "$x^3 - 2x = 0$",
                     "D": "2/x + 1 = 0"
                 },
                 "answer": "B",
-                "explanation": "A quadratic equation has the highest power of the variable equal to 2. Only option B satisfies this condition."
+                "explanation": "A quadratic equation has the highest power of the variable equal to $2$. Only option B satisfies this condition."
             },
             {
                 "type": "mcq",
-                "question": "Solve: x² − 5x + 6 = 0",
+                "question": "Solve: $x^2 - 5x + 6 = 0$",
                 "options": {
-                    "A": "x = −2 and x = −3",
-                    "B": "x = 2 and x = 3",
-                    "C": "x = 1 and x = 6",
-                    "D": "x = −1 and x = −6"
+                    "A": "$x = -2$ and $x = -3$",
+                    "B": "$x = 2$ and $x = 3$",
+                    "C": "$x = 1$ and $x = 6$",
+                    "D": "$x = -1$ and $x = -6$"
                 },
                 "answer": "B",
-                "explanation": "Factorising gives (x − 2)(x − 3) = 0. Setting each bracket to zero gives x = 2 or x = 3."
+                "explanation": "Factorising gives $(x - 2)(x - 3) = 0$. Setting each bracket to zero gives $x = 2$ or $x = 3$."
             }
         ]
     },
     "Linear Equations": {
         "content_step1": (
-            "A linear equation is an equation in which the highest power of the unknown variable is 1. "
-            "It takes the general form ax + b = 0, where a ≠ 0. The solution is a single value of the variable "
+            "A linear equation is an equation in which the highest power of the unknown variable is $1$. "
+            "It takes the general form $ax + b = 0$, where $a \\neq 0$. The solution is a single value of the variable "
             "that makes both sides equal."
         ),
         "content_step2": (
             "A danfo bus driver in Lagos charges ₦500 per passenger. His daily expenses (fuel, conductor's share, "
-            "and park levy) total ₦8,500. His daily profit is P = 500x − 8,500. Setting P = 0 to break even gives "
-            "500x = 8,500, so x = 17 passengers."
+            "and park levy) total ₦8,500. His daily profit is $P = 500x - 8500$. Setting $P = 0$ to break even gives "
+            "$500x = 8500$, so $x = 17$ passengers."
         ),
         "content_step3": (
-            "Standard form: ax + b = 0\n"
-            "├── a = coefficient of x (must not be 0)\n"
-            "├── b = constant term\n"
-            "└── Solution: x = −b ÷ a\n\n"
+            "Standard form: $ax + b = 0$\n"
+            "├── $a$ = coefficient of $x$ (must not be $0$)\n"
+            "├── $b$ = constant term\n"
+            "└── Solution: $x = -\\frac{b}{a}$\n\n"
             "Steps to solve:\n"
             "├── 1. Expand all brackets\n"
-            "├── 2. Move x terms to one side, constants to the other\n"
-            "└── 3. Divide by the coefficient of x"
+            "├── 2. Move $x$ terms to one side, constants to the other\n"
+            "└── 3. Divide by the coefficient of $x$"
         ),
         "practice_questions": [
             {
                 "type": "mcq",
-                "question": "Solve: 5x − 3 = 2x + 9",
+                "question": "Solve: $5x - 3 = 2x + 9$",
                 "options": {
-                    "A": "x = 2",
-                    "B": "x = 3",
-                    "C": "x = 4",
-                    "D": "x = 6"
+                    "A": "$x = 2$",
+                    "B": "$x = 3$",
+                    "C": "$x = 4$",
+                    "D": "$x = 6$"
                 },
                 "answer": "C",
-                "explanation": "Collect terms: 3x = 12, which gives x = 4."
+                "explanation": "Collect terms: $3x = 12$, which gives $x = 4$."
             }
         ]
     },
     "Simultaneous Equations": {
         "content_step1": (
             "Simultaneous equations are two or more equations containing the same unknowns that must "
-            "be satisfied at the same time. The solution is the coordinate pair (x, y) where they intersect."
+            "be satisfied at the same time. The solution is the coordinate pair $(x, y)$ where they intersect."
         ),
         "content_step2": (
-            "A Mama Put seller in Abuja sells rice and beans. One customer pays ₦10,500 for 2 plates of rice and 3 of beans. "
-            "The next pays ₦6,500 for 1 rice and 2 beans. System: 2r + 3b = 10,500 and r + 2b = 6,500. Solving gives rice = ₦1,500."
+            "A Mama Put seller in Abuja sells rice and beans. One customer pays ₦10,500 for $2$ plates of rice and $3$ of beans. "
+            "The next pays ₦6,500 for $1$ rice and $2$ beans. System: $2r + 3b = 10500$ and $r + 2b = 6500$. Solving gives rice $r = 1500$."
         ),
         "content_step3": (
             "Two equations, two unknowns:\n"
-            "  ax + by = p  ... (1)\n"
-            "  cx + dy = q  ... (2)\n\n"
+            "  $ax + by = p$  ... (1)\n"
+            "  $cx + dy = q$  ... (2)\n\n"
             "Method 1 — Elimination: Multiply to match coefficients, then add/subtract.\n"
             "Method 2 — Substitution: Make one variable the subject and substitute into the other."
         ),
         "practice_questions": [
             {
                 "type": "mcq",
-                "question": "Solve: x + y = 10 and x − y = 4",
+                "question": "Solve: $x + y = 10$ and $x - y = 4$",
                 "options": {
-                    "A": "x = 7, y = 3",
-                    "B": "x = 6, y = 4",
-                    "C": "x = 8, y = 2",
-                    "D": "x = 5, y = 5"
+                    "A": "$x = 7, y = 3$",
+                    "B": "$x = 6, y = 4$",
+                    "C": "$x = 8, y = 2$",
+                    "D": "$x = 5, y = 5$"
                 },
                 "answer": "A",
-                "explanation": "Adding the two equations yields 2x = 14 -> x = 7. Thus y = 3."
+                "explanation": "Adding the two equations yields $2x = 14 \\implies x = 7$. Thus $y = 3$."
             }
         ]
     },
     "Acids & Bases": {
         "content_step1": (
-            "Acids are substances that produce hydrogen ions (H⁺) when dissolved in water, turning blue litmus paper red. "
-            "Bases are substances that react with acids to form salt and water only, producing hydroxide ions (OH⁻) in solution."
+            "Acids are substances that produce hydrogen ions ($H^+$) when dissolved in water, turning blue litmus paper red. "
+            "Bases are substances that react with acids to form salt and water only, producing hydroxide ions ($OH^-$) in solution."
         ),
         "content_step2": (
             "When making West African soap (black soap) in Nigeria, palm bunch ash (which contains potassium hydroxide, a base) "
@@ -246,8 +246,23 @@ async def seed_content() -> None:
         
         updated_count = 0
         for topic in topics:
-            # Check if topic already has content; if it has some, skip to be safe unless empty
-            if topic.content_step1 and topic.content_step1 != "Content is being prepared.":
+            # Overwrite if content is missing, or is preparing, or has plain text math without LaTeX $ signs
+            has_no_latex = False
+            is_mathy = any(x in topic.title.lower() for x in ["equation", "fraction", "math", "decimal", "algebra", "indices", "surds"])
+            if (
+                topic.content_step1
+                and "$" not in topic.content_step1
+                and (is_mathy or "/" in topic.content_step1 or "=" in topic.content_step1)
+            ):
+                has_no_latex = True
+
+
+            should_update = (
+                not topic.content_step1
+                or topic.content_step1 == "Content is being prepared."
+                or has_no_latex
+            )
+            if not should_update:
                 continue
             
             # Retrieve special content or fallback
@@ -264,6 +279,7 @@ async def seed_content() -> None:
             
         await session.commit()
         print(f"[OK] Seeded educational content for {updated_count} topics in the database.")
+
 
 
 if __name__ == "__main__":
