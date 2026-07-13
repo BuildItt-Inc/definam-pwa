@@ -25,22 +25,28 @@ _COOKIE_NAME = "refresh_token"
 
 
 def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
-    """Attach the refresh token as a Secure, HttpOnly, SameSite=Strict cookie."""
+    """Attach the refresh token as a Secure, HttpOnly, SameSite=None cookie.
+
+    SameSite=None is required because the frontend (Vercel) and backend
+    (Coolify) are on different origins. SameSite=Strict silently blocks the
+    cookie from being sent on cross-origin requests, breaking token refresh.
+    SameSite=None + Secure=True is the correct pairing for cross-origin cookies.
+    """
     settings = get_settings()
     max_age = settings.jwt_refresh_expire_days * 24 * 60 * 60  # seconds
     response.set_cookie(
         key=_COOKIE_NAME,
         value=refresh_token,
         httponly=True,
-        secure=True,  # requires HTTPS in production; harmless over localhost
-        samesite="strict",
+        secure=True,  # required when samesite="none"
+        samesite="none",  # must be 'none' for cross-origin (Vercel → Coolify)
         max_age=max_age,
-        path="/api/v1/auth",  # scoped — only sent to auth endpoints
+        path="/",  # widened so both /refresh and /logout can receive the cookie
     )
 
 
 def _clear_refresh_cookie(response: Response) -> None:
-    response.delete_cookie(key=_COOKIE_NAME, path="/api/v1/auth")
+    response.delete_cookie(key=_COOKIE_NAME, path="/", samesite="none", secure=True)
 
 
 @router.post("/register", status_code=201)

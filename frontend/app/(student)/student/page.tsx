@@ -16,6 +16,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { getHomeData } from '@/lib/api/topics';
 import type { HomeData, RecentTopic } from '@/types/topics';
+import { ApiError } from '@/lib/api/auth';
 import { RecallCard } from '@/components/student/RecallCard';
 import { BottomNav } from '@/components/student/BottomNav';
 
@@ -160,9 +161,13 @@ export default function StudentHomePage() {
     getHomeData()
       .then(setData)
       .catch((err: unknown) => {
-        setFetchError(err instanceof Error ? err.message : 'Failed to load');
+        if (err instanceof ApiError && err.status === 401) {
+          router.replace('/login');
+        } else {
+          setFetchError(err instanceof Error ? err.message : 'Failed to load');
+        }
       });
-  }, []);
+  }, [router]);
 
   /* Error state */
   if (fetchError) {
