@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Check, X, ChevronRight } from 'lucide-react';
 import type { PracticeQuestion as PracticeQuestionData } from '@/types/topics';
+import { MathContent } from '@/components/student/MathContent';
 
 type Option = 'A' | 'B' | 'C' | 'D';
 const OPTIONS: Option[] = ['A', 'B', 'C', 'D'];
@@ -42,9 +43,10 @@ export function PracticeQuestion({
         <p className="mb-2 font-dm-sans text-[10px] font-bold uppercase tracking-wider text-jade">
           Practice Question
         </p>
-        <p className="font-syne text-[15px] font-bold leading-snug text-ink">
-          {question.question}
-        </p>
+        <MathContent
+          content={question.question}
+          className="font-syne text-[15px] font-bold leading-snug text-ink"
+        />
       </div>
 
       {/* Options */}
@@ -66,7 +68,11 @@ export function PracticeQuestion({
             ].join(' ')}
           >
             <span className="flex-shrink-0 font-bold">{opt}.</span>
-            <span className="flex-1">{question.options[opt]}</span>
+            <MathContent
+              content={question.options[opt]}
+              allowBlock={false}
+              className="flex-1 text-inherit"
+            />
             {isCorrectOpt(opt) && (
               <Check size={16} strokeWidth={2.5} className="flex-shrink-0" />
             )}
@@ -89,7 +95,11 @@ export function PracticeQuestion({
               ? 'Correct! '
               : `Not quite — the answer is ${question.answer}. `}
           </span>
-          {question.explanation}
+          <MathContent
+            content={question.explanation}
+            allowBlock={false}
+            className="inline text-inherit"
+          />
         </div>
       )}
 
