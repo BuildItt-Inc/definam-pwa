@@ -133,7 +133,7 @@ function ChaptersView({
                   {chapter.title}
                 </p>
                 <p className="font-dm-sans text-[11px] text-muted">
-                  {chapter.topics_count} topics
+                  {chapter.topic_count} topics
                 </p>
               </div>
               <MasteryBadge mastery={chapter.mastery_percent} />
