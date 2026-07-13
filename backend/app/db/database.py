@@ -369,6 +369,7 @@ async def update_topic_status(
 ) -> bool:
     """Update topic status if it matches current_status. Returns True if updated."""
     from app.db.models import Topic
+    from sqlalchemy import update
 
     async with db_session() as session:
         result = await session.execute(
@@ -377,3 +378,28 @@ async def update_topic_status(
             .values(status=new_status)
         )
         return result.rowcount > 0
+
+
+async def update_topic_content(
+    topic_id: str,
+    content_step1: str,
+    content_step2: str,
+    content_step3: str,
+    practice_questions: list[dict],
+) -> None:
+    """Update educational content and practice questions for a topic."""
+    from app.db.models import Topic
+    from sqlalchemy import update
+
+    async with db_session() as session:
+        await session.execute(
+            update(Topic)
+            .where(Topic.id == topic_id)
+            .values(
+                content_step1=content_step1,
+                content_step2=content_step2,
+                content_step3=content_step3,
+                practice_questions=practice_questions,
+            )
+        )
+        await session.commit()

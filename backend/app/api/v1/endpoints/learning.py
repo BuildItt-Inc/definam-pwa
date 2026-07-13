@@ -48,18 +48,33 @@ async def get_topic(
     if not topic:
         raise NotFoundError("Topic not found or not published.")
     
+    # Check if content needs to be generated on the fly (Lazy Generation/Cache)
+    if not topic.get("content_step1") or topic.get("content_step1") == "Content is being prepared.":
+        from app.services.content_generator import generate_all_topic_content
+        generated = await generate_all_topic_content(topic["title"])
+        
+        await database.update_topic_content(
+            str(topic_id),
+            generated["content_step1"],
+            generated["content_step2"],
+            generated["content_step3"],
+            generated["practice_questions"],
+        )
+        # Update our dictionary with the generated content
+        topic.update(generated)
+        
     return {
         "step1": {
             "title": "Simple Definition",
-            "content": topic.get("content_step1") or "Content is being prepared."
+            "content": topic.get("content_step1")
         },
         "step2": {
             "title": "Nigerian Example",
-            "content": topic.get("content_step2") or "Content is being prepared."
+            "content": topic.get("content_step2")
         },
         "step3": {
             "title": "Visual Breakdown",
-            "content": topic.get("content_step3") or "Content is being prepared."
+            "content": topic.get("content_step3")
         },
         "practice_questions": topic.get("practice_questions") or []
     }
