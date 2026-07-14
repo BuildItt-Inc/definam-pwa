@@ -78,7 +78,19 @@ function buildHtml(
       const inner = renderInline(trimmed, katex, allowBlock);
 
       // Each paragraph gets its own block — line breaks inside become <br>
-      return `<p class="math-para">${inner}</p>`;
+      // Detect "Step X:" or "**Step X:**"
+      const stepMatch = inner.match(/^(<strong class="font-bold text-ink">)?(Step \d+[:.]?)(<\/strong>)?(.*?)$/);
+      if (stepMatch) {
+        const stepNumber = stepMatch[2]; // e.g. "Step 1:"
+        const restOfLine = stepMatch[4].trim(); // e.g. "Introduction to Data Collection"
+        
+        return `<div class="mt-6 mb-3">
+          <h4 class="text-[15px] font-bold text-brand uppercase tracking-wider mb-1">${stepNumber} ${restOfLine}</h4>
+        </div>`;
+      }
+
+      // Also detect generic "Phase X:" or similar if needed, but Step is most common
+      return `<p class="math-para mb-3">${inner}</p>`;
     })
     .filter(Boolean)
     .join('');

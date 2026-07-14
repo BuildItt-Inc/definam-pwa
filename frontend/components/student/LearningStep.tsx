@@ -14,12 +14,12 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
     <div>
       {/* Step number + title row */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[8px] bg-brand text-[15px] font-black text-white shadow-brand-sm">
+        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[14px] font-bold text-white shadow-sm">
           {step}
         </span>
         <span className="text-[16px] font-bold text-ink">{title}</span>
         {step === 2 && (
-          <span className="ml-auto flex flex-shrink-0 items-center gap-1 rounded-[6px] bg-brand/10 border border-brand/20 px-2 py-1 text-[12px] font-bold text-brand">
+          <span className="ml-auto flex flex-shrink-0 items-center gap-1.5 rounded-full bg-brand/5 border border-brand/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand">
             <Flag size={10} strokeWidth={2} />
             Nigerian Context
           </span>
@@ -38,7 +38,8 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
 
       {/* ── Step 2 — Nigerian Example ────────────────────────────────────── */}
       {step === 2 && (
-        <div className="mb-3 rounded-2xl border-l-[4px] border-brand bg-brand/5 px-5 py-5 shadow-sm">
+        <div className="mb-3 rounded-2xl bg-gradient-to-br from-brand/5 to-card px-5 py-5 shadow-sm border border-border"
+          >
           <MathContent
             content={content}
             className="step-body text-[14.5px] leading-[1.75] text-ink"
