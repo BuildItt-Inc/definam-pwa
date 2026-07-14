@@ -50,13 +50,14 @@ export default function SettingsPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
-    Promise.all([getMe(), getHomeData()])
-      .then(([meData, homeData]) => {
+    async function load() {
+      try {
+        const meData = await getMe();
+        const homeData = await getHomeData();
         setMe(meData);
         setSchoolName(homeData.school_name);
         setNameInput(meData.username);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         const is401 =
           err instanceof Error &&
           (err.message === 'Not authenticated' || (err as { status?: number }).status === 401);
@@ -65,7 +66,9 @@ export default function SettingsPage() {
         } else {
           setFetchError(err instanceof Error ? err.message : 'Failed to load');
         }
-      });
+      }
+    }
+    void load();
   }, [router]);
 
   async function handleLogout() {
