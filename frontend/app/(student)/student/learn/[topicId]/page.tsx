@@ -17,20 +17,20 @@ import { getChatHistory, sendChatMessageStream, type ChatMessage } from '@/lib/a
 function MasteryBadge({ mastery }: { mastery: number | null }) {
   if (mastery === null || mastery === 0) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 text-[10px] font-bold text-muted">
+      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 text-[16px] font-bold text-muted">
         —
       </span>
     );
   }
   if (mastery >= 60) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[10px] font-bold text-white">
+      <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[16px] font-bold text-white">
         {mastery}%
       </span>
     );
   }
   return (
-    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 text-[10px] font-bold text-white">
+    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 text-[16px] font-bold text-white">
       {mastery}%
     </span>
   );
@@ -56,7 +56,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <BookOpen size={32} strokeWidth={1.5} className="mb-3 text-gray-300" />
-      <p className="text-[13px] text-muted">{message}</p>
+      <p className="text-[15px] text-muted">{message}</p>
     </div>
   );
 }
@@ -110,7 +110,7 @@ function ChaptersView({
 
   return (
     <>
-      <p className="px-4 py-1.5 text-[11px] text-muted">
+      <p className="px-4 py-1.5 text-[15px] text-muted">
         SS2 Syllabus · {chapters.length} chapters
       </p>
       <div>
@@ -129,10 +129,10 @@ function ChaptersView({
               className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 active:bg-bg-0 ${ inProgress ? 'bg-bg-0' : 'bg-card' }`}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[13px] font-bold text-ink">
+                <span className="block text-[15px] font-bold text-ink">
                   {chapter.title}
                 </span>
-                <span className="mt-0.5 block text-[11px] text-muted">
+                <span className="mt-0.5 block text-[15px] text-muted">
                   {chapter.topic_count} topics{inProgress ? ' · In Progress' : ''}
                 </span>
               </span>
@@ -176,7 +176,7 @@ function TopicsView({ chapterId }: { chapterId: string }) {
 
   return (
     <>
-      <p className="px-4 py-1.5 text-[11px] text-muted">
+      <p className="px-4 py-1.5 text-[15px] text-muted">
         {topics.length} topics · WAEC-aligned
       </p>
       <div>
@@ -280,20 +280,20 @@ function LearningTopBar({
         </button>
 
         {isPracticeStep ? (
-          <p className="flex-1 text-[12px] text-white/60">
+          <p className="flex-1 text-[16px] text-white/60">
             {showScoreSummary
               ? 'Practice complete'
               : `Question ${questionIndex + 1} of ${totalQuestions}`}
           </p>
         ) : (
-          <p className="min-w-0 flex-1 truncate font-bold text-[13px] font-black text-white">
+          <p className="min-w-0 flex-1 truncate font-bold text-[15px] font-black text-white">
             {topicTitle}
           </p>
         )}
 
         <button
           onClick={onExit}
-          className="flex-shrink-0 text-[11px] text-white/30 active:text-white/60"
+          className="flex-shrink-0 text-[15px] text-white/30 active:text-white/60"
         >
           Exit
         </button>
@@ -359,7 +359,7 @@ function ScoreSummary({
         >
           {isGood ? 'Great work!' : 'Keep practicing!'}
         </p>
-        <p className="mt-1 text-[13px] text-muted">
+        <p className="mt-1 text-[15px] text-muted">
           {score} correct out of {total}
         </p>
       </div>
@@ -493,14 +493,14 @@ function AITutorScaffold({
           <Bot size={18} strokeWidth={1.5} className="text-ink" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-[14px] font-bold text-ink">AI Tutor</p>
-          <p className="truncate text-[11px] text-muted">{topicTitle}</p>
+          <p className="font-bold text-[16px] font-bold text-ink">AI Tutor</p>
+          <p className="truncate text-[15px] text-muted">{topicTitle}</p>
         </div>
       </header>
 
       {/* Coming-soon banner */}
       <div className="border-b border-ink/20 bg-ink/5 px-4 py-2.5">
-        <p className="text-[12px] leading-relaxed text-ink">
+        <p className="text-[16px] leading-relaxed text-ink">
           AI tutor will be available once content is reviewed and approved. You can still browse
           other topics.
         </p>
@@ -513,7 +513,7 @@ function AITutorScaffold({
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
             <Bot size={16} strokeWidth={1.5} className="text-ink" />
           </div>
-          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-bg-2 px-4 py-3 text-[13px] leading-relaxed text-ink">
+          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-bg-2 px-4 py-3 text-[15px] leading-relaxed text-ink">
             Good work on practice. What part of{' '}
             <span className="font-bold">{topicTitle}</span> is still confusing you?
           </div>
@@ -545,7 +545,7 @@ function AITutorScaffold({
             type="text"
             disabled
             placeholder="AI tutor coming soon..."
-            className="flex-1 bg-transparent text-[13px] placeholder:text-gray-300 focus:outline-none"
+            className="flex-1 bg-transparent text-[15px] placeholder:text-gray-300 focus:outline-none"
           />
           <MessageSquare size={18} strokeWidth={1.5} className="flex-shrink-0 text-gray-200" />
         </div>
@@ -633,8 +633,8 @@ function LearningFlow({
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-6">
         <BookOpen size={36} strokeWidth={1.5} className="text-gray-300" />
-        <p className="text-center text-[13px] text-muted">{fetchError}</p>
-        <button onClick={onExit} className="text-[13px] font-bold text-ink">
+        <p className="text-center text-[15px] text-muted">{fetchError}</p>
+        <button onClick={onExit} className="text-[15px] font-bold text-ink">
           Go back
         </button>
       </div>

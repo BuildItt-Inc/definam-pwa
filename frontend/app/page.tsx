@@ -202,12 +202,12 @@ export default function LandingPage() {
             <div className="hidden md:block">
               <Link
                 href="/pay/individual"
-                className="flex items-center gap-1.5 bg-ink text-white text-[13px] font-semibold px-4 py-2 rounded-lg hover:bg-ink/80 transition-colors"
+                className="btn-primary px-4 py-2 text-[14px] flex items-center gap-1.5 rounded-lg"
               >
                 Get Started
                 <ArrowRight size={14} strokeWidth={2.5} aria-hidden />
-            </Link>
-          </div>
+              </Link>
+            </div>
           </div>
 
           {/* Mobile nav */}
@@ -244,16 +244,16 @@ export default function LandingPage() {
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/pay/individual"
-                className="flex items-center gap-2 bg-ink text-white text-[14px] font-semibold px-5 py-3 rounded-xl hover:bg-ink/80 transition-colors"
+                className="btn-primary px-6 py-3.5 text-[15px] flex items-center gap-2 shadow-brand-sm rounded-xl"
               >
                 Get started
-                <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
+                <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
               </Link>
               <a
                 href="#how-it-works"
-                className="flex items-center gap-2 text-[14px] text-ink-2 hover:text-ink transition-colors"
+                className="btn-secondary px-6 py-3.5 text-[15px] flex items-center gap-2 bg-transparent border-0 shadow-none hover:bg-bg-1 rounded-xl"
               >
-                <PlayCircle size={16} strokeWidth={2} aria-hidden />
+                <PlayCircle size={18} strokeWidth={2.5} aria-hidden />
                 See how it works
               </a>
             </div>
@@ -413,16 +413,18 @@ export default function LandingPage() {
           <h2 className="font-bold font-extrabold text-[22px] md:text-[26px] text-white">
             Start learning today
           </h2>
-          <p className="text-[14px] text-white/75 max-w-[360px]">
+          <p className="text-[15px] text-white/75 max-w-[360px] mx-auto mb-8 mt-4">
             Join students preparing smarter for WAEC, NECO and JAMB.
           </p>
-          <Link
-            href="/pay/individual"
-            className="flex items-center gap-2 bg-card text-ink text-[14px] font-semibold px-6 py-3 rounded-xl hover:bg-ink-tint transition-colors"
-          >
-            Get started
-            <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
-          </Link>
+          <div className="flex justify-center">
+            <Link
+              href="/pay/individual"
+              className="bg-white text-ink text-[15px] font-bold px-6 py-3.5 rounded-xl hover:bg-gray-100 active:scale-[0.98] transition-all flex items-center gap-2 shadow-sm"
+            >
+              Get started
+              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+            </Link>
+          </div>
         </div>
       </section>
 

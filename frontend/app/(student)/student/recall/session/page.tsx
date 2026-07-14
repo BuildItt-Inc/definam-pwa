@@ -80,14 +80,14 @@ export default function RecallSessionPage() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-bg-0 px-5 py-10 text-center">
         <Sparkles size={32} strokeWidth={2} className="mb-3 text-brand" />
         <h1 className="mb-1 text-[24px] font-bold text-ink">All done!</h1>
-        <p className="mb-8 text-[13px] text-muted">
+        <p className="mb-8 text-[15px] text-muted">
           {total} {total === 1 ? 'topic' : 'topics'} reviewed · {elapsedMinutes}{' '}
           {elapsedMinutes === 1 ? 'minute' : 'minutes'}
         </p>
 
         {/* Streak card */}
         <div className="mb-6 w-full max-w-xs rounded-2xl border border-brand/20 bg-brand/5 px-6 py-5 shadow-sm">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted">
+          <p className="mb-2 text-[16px] font-bold uppercase tracking-wider text-muted">
             Streak
           </p>
           <div className="flex items-center justify-center gap-2">
@@ -96,11 +96,11 @@ export default function RecallSessionPage() {
               {streakDays ?? '-'}
             </span>
           </div>
-          <p className="mt-1 text-[11px] font-semibold text-muted">days in a row</p>
+          <p className="mt-1 text-[15px] font-semibold text-muted">days in a row</p>
         </div>
 
         {/* Next review hint */}
-        <p className="mb-8 w-full max-w-xs text-center text-[12px] leading-relaxed text-muted">
+        <p className="mb-8 w-full max-w-xs text-center text-[16px] leading-relaxed text-muted">
           Your spaced repetition schedule has been updated.
         </p>
 
@@ -133,7 +133,7 @@ export default function RecallSessionPage() {
           {!answerRevealed && (
             <button
               onClick={() => router.push('/student/recall')}
-              className="text-[13px] font-semibold text-white/40 active:opacity-70"
+              className="text-[15px] font-semibold text-white/40 active:opacity-70"
             >
               <ArrowLeft size={18} strokeWidth={1.5} />
             </button>
@@ -141,7 +141,7 @@ export default function RecallSessionPage() {
           <p className="flex-1 font-bold text-[15px] font-bold text-white">
             Daily Recall
           </p>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] text-white/60">
+          <span className="rounded-full bg-white/10 px-3 py-1 text-[15px] text-white/60">
             {currentIndex + 1} / {total}
           </span>
         </div>
@@ -151,20 +151,20 @@ export default function RecallSessionPage() {
           /* ── SCR-07b · Question hidden ── */
           <>
             <div className="mb-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-5 text-center">
-              <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-white/40">
+              <p className="mb-3 text-[16px] font-bold uppercase tracking-wider text-white/40">
                 {currentItem.subject} · {currentItem.topic_title}
               </p>
               <p className="font-bold text-[15px] font-bold leading-snug text-white">
                 {currentItem.question}
               </p>
-              <p className="mt-4 text-[11px] text-white/30">
+              <p className="mt-4 text-[15px] text-white/30">
                 Tap to reveal answer ↓
               </p>
             </div>
 
             <button
               onClick={() => setAnswerRevealed(true)}
-              className="w-full rounded-xl border border-white/20 bg-white/10 py-3.5 text-[14px] font-bold text-white active:opacity-70"
+              className="w-full rounded-xl border border-white/20 bg-white/10 py-3.5 text-[16px] font-bold text-white active:opacity-70"
             >
               Show Answer
             </button>
@@ -174,7 +174,7 @@ export default function RecallSessionPage() {
           <>
             {/* Collapsed question */}
             <div className="mb-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center">
-              <p className="text-[12px] font-semibold leading-snug text-white/70">
+              <p className="text-[16px] font-semibold leading-snug text-white/70">
                 {currentItem.question}
               </p>
             </div>
@@ -184,13 +184,13 @@ export default function RecallSessionPage() {
               <p className="mb-2 text-[9px] font-bold uppercase tracking-wider text-muted">
                 Model Answer
               </p>
-              <p className="text-[13px] leading-relaxed text-ink">
+              <p className="text-[15px] leading-relaxed text-ink">
                 {currentItem.model_answer}
               </p>
             </div>
 
             {/* Rating prompt */}
-            <p className="mb-3 text-center text-[11px] font-semibold text-white/50">
+            <p className="mb-3 text-center text-[15px] font-semibold text-white/50">
               How well did you remember this?
             </p>
 

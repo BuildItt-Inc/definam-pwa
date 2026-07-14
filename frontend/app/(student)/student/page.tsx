@@ -109,10 +109,10 @@ function TopicRow({
 
       {/* Info */}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-bold text-ink">
+        <span className="block truncate text-[15px] font-bold text-ink">
           {topic.topic_title}
         </span>
-        <span className="mt-0.5 block text-[11px] text-muted">
+        <span className="mt-0.5 block text-[15px] text-muted">
           {topic.subject}
           {isEmpty ? ' · Not started' : ''}
         </span>
@@ -128,7 +128,7 @@ function TopicRow({
 
       {/* Right action */}
       {isEmpty ? (
-        <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[10px] font-bold text-white">
+        <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[16px] font-bold text-white">
           Start →
         </span>
       ) : (
@@ -195,13 +195,13 @@ export default function StudentHomePage() {
 
       {/* ── SCR-04 · Dark header ─────────────────────────────────────────── */}
       <header className="bg-ink px-4 pb-7 pt-safe">
-        <p className="mb-0.5 text-[11px] text-white/50">
+        <p className="mb-0.5 text-[15px] text-white/50">
           {greeting}
         </p>
         <h1 className="mb-0.5 font-bold text-[22px] leading-tight text-white">
           {student_name}
         </h1>
-        <p className="mb-3 text-[11px] text-white/40">{school_name}</p>
+        <p className="mb-3 text-[15px] text-white/40">{school_name}</p>
 
         {/* Streak pill */}
         <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
@@ -209,7 +209,7 @@ export default function StudentHomePage() {
           <span className="font-bold text-[18px] leading-none text-white">
             {streak_days}
           </span>
-          <span className="text-[11px] text-white/60">
+          <span className="text-[15px] text-white/60">
             {streak_days === 0 ? 'Start your streak!' : 'day streak'}
           </span>
         </div>
@@ -231,12 +231,12 @@ export default function StudentHomePage() {
           <section className="mb-6">
             {/* Heading row */}
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-[13px] font-bold text-ink">
+              <span className="text-[15px] font-bold text-ink">
                 Browse Topics
               </span>
               <Link
                 href="/student/learn"
-                className="text-[12px] font-semibold text-brand hover:text-brand-dark"
+                className="text-[16px] font-semibold text-brand hover:text-brand-dark"
               >
                 See all
               </Link>
@@ -248,7 +248,7 @@ export default function StudentHomePage() {
                 <button
                   key={pill}
                   onClick={() => setActivePill(i)}
-                  className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-[16px] font-semibold transition-colors ${
                     activePill === i
                       ? 'border-brand bg-brand text-white shadow-brand-sm'
                       : 'border-border-2 bg-bg-1 text-muted hover:bg-bg-2 hover:text-ink'
@@ -269,7 +269,7 @@ export default function StudentHomePage() {
         ) : (
           /* ── SCR-04b · Start here section ────────────────────────────── */
           <section className="mt-4">
-            <p className="mb-2 px-4 text-[13px] font-bold text-ink">
+            <p className="mb-2 px-4 text-[15px] font-bold text-ink">
               Start here
             </p>
             <div>

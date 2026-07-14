@@ -63,7 +63,7 @@ function StatCard({ variant, value, label }: StatCardProps) {
             {value}
           </span>
         </div>
-        <span className="text-[11px] font-semibold text-white/70">{label}</span>
+        <span className="text-[15px] font-semibold text-white/70">{label}</span>
       </div>
     );
   }
@@ -71,7 +71,7 @@ function StatCard({ variant, value, label }: StatCardProps) {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200/80 bg-card px-3 py-4">
       <span className="font-bold text-[28px] font-black leading-none text-ink">{value}</span>
-      <span className="mt-1 text-[11px] text-muted">{label}</span>
+      <span className="mt-1 text-[15px] text-muted">{label}</span>
     </div>
   );
 }
@@ -82,7 +82,7 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
   return (
     <div className="mb-4 overflow-hidden rounded-xl border border-border-2">
       <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-        <span className="text-[11px] font-bold text-ink">Subject Mastery</span>
+        <span className="text-[15px] font-bold text-ink">Subject Mastery</span>
       </div>
       <div className="bg-card px-4 py-3">
         {data.map((item, idx) => {
@@ -91,11 +91,11 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
           return (
             <div key={item.subject} className={idx < data.length - 1 ? 'mb-3' : ''}>
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-[13px] font-semibold text-ink">
+                <span className="text-[15px] font-semibold text-ink">
                   {item.subject}
                 </span>
                 <span
-                  className={`text-[13px] font-bold ${ isGood ? 'text-ink' : 'text-ink-2' }`}
+                  className={`text-[15px] font-bold ${ isGood ? 'text-ink' : 'text-ink-2' }`}
                 >
                   {pctText}
                 </span>
@@ -119,7 +119,7 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
 function HeatmapSection({ data }: { data: number[] }) {
   return (
     <div className="mb-4 rounded-xl border border-border-2 bg-card px-4 py-3">
-      <p className="mb-3 text-[11px] font-bold text-ink">
+      <p className="mb-3 text-[15px] font-bold text-ink">
         Study Activity — 3 Months
       </p>
 
@@ -172,7 +172,7 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
   return (
     <div className="mb-4 overflow-hidden rounded-xl border border-border-2">
       <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-        <span className="text-[11px] font-bold text-ink">Upcoming Reviews</span>
+        <span className="text-[15px] font-bold text-ink">Upcoming Reviews</span>
       </div>
       <div className="bg-card">
         {data.map((item, idx) => {
@@ -194,11 +194,11 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
               <span
                 className={`h-2 w-2 flex-shrink-0 rounded-full ${dotClass}`}
               />
-              <span className="min-w-0 flex-1 text-[13px] font-semibold text-ink">
+              <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">
                 {item.topic_title}
               </span>
               <span
-                className={`flex-shrink-0 text-[12px] font-bold ${ isToday ? 'text-ink' : 'text-muted' }`}
+                className={`flex-shrink-0 text-[16px] font-bold ${ isToday ? 'text-ink' : 'text-muted' }`}
               >
                 {item.due}
               </span>

@@ -94,7 +94,7 @@ export default function RecallPage() {
           </button>
           <div>
             <h1 className="text-[17px] font-bold text-ink">Daily Recall</h1>
-            <p className="text-[11px] text-muted">{dateLabel}</p>
+            <p className="text-[15px] text-muted">{dateLabel}</p>
           </div>
         </header>
 
@@ -103,7 +103,7 @@ export default function RecallPage() {
           <h2 className="mb-2 text-[17px] font-bold text-ink">
             You&apos;re all caught up!
           </h2>
-          <p className="mb-6 text-[13px] leading-relaxed text-muted">
+          <p className="mb-6 text-[15px] leading-relaxed text-muted">
             Nothing to review today. Come back tomorrow to keep your streak going.
           </p>
           <button
@@ -134,7 +134,7 @@ export default function RecallPage() {
         </button>
         <div>
           <h1 className="text-[17px] font-bold text-ink">Daily Recall</h1>
-          <p className="text-[11px] text-muted">{dateLabel}</p>
+          <p className="text-[15px] text-muted">{dateLabel}</p>
         </div>
       </header>
 
@@ -144,10 +144,10 @@ export default function RecallPage() {
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3.5 shadow-sm">
           <BookMarked size={22} strokeWidth={2} className="flex-shrink-0 text-brand" />
           <div className="flex-1">
-            <p className="text-[13px] font-bold text-ink">
+            <p className="text-[15px] font-bold text-ink">
               {queue.length} {queue.length === 1 ? 'topic' : 'topics'} due today
             </p>
-            <p className="flex items-center gap-1 text-[11px] text-muted">
+            <p className="flex items-center gap-1 text-[15px] text-muted">
               <Clock size={10} strokeWidth={2} />
               ~{minuteEstimate} minutes
             </p>
@@ -176,10 +176,10 @@ export default function RecallPage() {
                 <BookOpen size={14} strokeWidth={2} className="text-muted" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-bold text-ink">
+                <p className="text-[15px] font-bold text-ink">
                   {item.topic_title}
                 </p>
-                <p className="text-[11px] font-medium text-muted">
+                <p className="text-[15px] font-medium text-muted">
                   {item.subject} · Due today
                 </p>
               </div>

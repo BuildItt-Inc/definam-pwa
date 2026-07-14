@@ -88,7 +88,7 @@ export default function BrowsePage() {
             placeholder="Search topics..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent text-[13px] text-ink placeholder:text-muted focus:outline-none"
+            className="flex-1 bg-transparent text-[15px] text-ink placeholder:text-muted focus:outline-none"
           />
         </label>
       </div>
@@ -102,7 +102,7 @@ export default function BrowsePage() {
               strokeWidth={1.5}
               className="mb-3 text-gray-300"
             />
-            <p className="text-[13px] text-muted">
+            <p className="text-[15px] text-muted">
               No subjects found
             </p>
           </div>
