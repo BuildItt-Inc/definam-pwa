@@ -26,7 +26,6 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#FFFFFF',
 };
 
 // ─── Glyph data ───────────────────────────────────────────────────────────────

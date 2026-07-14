@@ -46,7 +46,7 @@ function HomeSkeleton() {
   return (
     <div className="min-h-screen bg-card">
       {/* Header */}
-      <div className="bg-ink px-4 pb-8 pt-safe-offset-8">
+      <div className="bg-ink px-4 pb-8 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
         <div className="mb-1.5 h-3 w-20 animate-pulse rounded bg-white/10" />
         <div className="mb-1.5 h-7 w-44 animate-pulse rounded bg-white/20" />
         <div className="mb-4 h-3 w-52 animate-pulse rounded bg-white/10" />
@@ -194,7 +194,7 @@ export default function StudentHomePage() {
     <div className="page-with-nav bg-bg-0 page-enter">
 
       {/* ── 1. Header ── */}
-      <div className="bg-ink px-4 pb-8 pt-safe-offset-8">
+      <div className="bg-ink px-4 pb-8 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
         <p className="mb-0.5 text-[13px] text-white/50">
           {greeting},
         </p>

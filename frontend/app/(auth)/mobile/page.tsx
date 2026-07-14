@@ -4,7 +4,6 @@ import { KeyRound, LogIn } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'DefinAm',
-  themeColor: '#0A0F1E',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

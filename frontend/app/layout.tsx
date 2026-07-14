@@ -9,6 +9,16 @@ const inter = Inter({
   display: 'swap',
 });
 
+import type { Viewport } from 'next';
+
+export const viewport: Viewport = {
+  themeColor: '#111827',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+};
+
 export const metadata: Metadata = {
   title: 'DefinAm PWA',
   description: "Nigeria's AI learning brain for secondary school students",
