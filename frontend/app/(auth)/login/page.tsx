@@ -160,16 +160,6 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* ── Forgot password ── */}
-          <div className="flex justify-end mb-7 pr-0.5">
-            <Link
-              href="/forgot-password"
-              className="text-[12px] font-bold text-ink hover:text-ink/75 transition-colors"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
           {/* ── Error banner ── */}
           {bannerError && (
             <div
