@@ -2,7 +2,7 @@
 
 ## What was done
 
-Removed three dead routes and one broken link from the frontend on branch `fix/dead-routes-and-settings`.
+Removed two dead routes and one broken link from the frontend on branch fix/dead-routes-and-settings.
 
 ## Files removed
 
