@@ -6,6 +6,7 @@ import type {
   RegisterResponse,
   OrgLoginRequest,
   OrgLoginResponse,
+  UserMe,
 } from '@/types/auth';
 
 export class ApiError extends Error {
@@ -148,6 +149,18 @@ export async function logout(): Promise<void> {
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
   });
   accessToken = null;
+}
+
+export async function getMe(): Promise<UserMe> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, { headers });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: '' }));
+    throw new ApiError(res.status, body.error ?? '');
+  }
+
+  return res.json() as Promise<UserMe>;
 }
 
 export async function getAuthHeaders(): Promise<HeadersInit> {
