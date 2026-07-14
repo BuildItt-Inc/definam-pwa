@@ -29,4 +29,4 @@ Grepped the entire `frontend/` source tree for links to `/auth/code-entry` and `
 ## Gaps / follow-ups
 
 - The `mb-7` bottom margin that the forgot-password div provided is now gone. The spacing between the password field and the error banner is tighter. If the design needs breathing room there, add `mb-7` directly to the password field's closing `</div>` or the error banner.
-- `/(auth)/mobile/code` (the real org login) should be audited separately to confirm it calls the correct API endpoint before being linked from any onboarding flow.
+- /(auth)/mobile/code (the real org login) should be audited separately to confirm it calls the correct API endpoint before being linked from any onboarding flow. Also, ensure the hardcoded IP address parameter ('0.0.0.0') is removed from the client-side request payload, as the backend should extract the client's real IP from request headers.
