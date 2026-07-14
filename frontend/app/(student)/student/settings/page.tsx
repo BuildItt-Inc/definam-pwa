@@ -14,14 +14,14 @@ const APP_VERSION = '0.1.0';
 
 function SettingsSkeleton() {
   return (
-    <div className="min-h-screen bg-cream">
-      <div className="border-b border-gray-200/60 bg-cream px-4 py-3.5">
-        <div className="h-5 w-20 animate-pulse rounded bg-gray-300/50" />
+    <div className="page-with-nav bg-bg-0">
+      <div className="border-b border-border bg-bg-0 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <div className="h-5 w-20 animate-pulse rounded bg-border-2" />
       </div>
-      <div className="px-4 py-4 pb-24">
-        <div className="mb-4 h-20 animate-pulse rounded-xl bg-gray-300/40" />
-        <div className="mb-4 h-36 animate-pulse rounded-xl bg-gray-300/40" />
-        <div className="h-10 animate-pulse rounded-xl bg-gray-300/40" />
+      <div className="px-4 py-4">
+        <div className="mb-4 h-20 animate-pulse rounded-xl bg-bg-3" />
+        <div className="mb-4 h-36 animate-pulse rounded-xl bg-bg-3" />
+        <div className="h-10 animate-pulse rounded-xl bg-bg-3" />
       </div>
     </div>
   );
@@ -134,30 +134,27 @@ export default function SettingsPage() {
   const isIndividual = me.role === 'student_individual';
 
   return (
-    <div className="flex min-h-screen flex-col bg-cream">
+    <div className="page-with-nav bg-bg-0 page-enter">
 
       {/* Appbar */}
-      <header className="border-b border-gray-200/60 bg-cream px-4 py-3.5">
-        <h1 className="font-syne text-[17px] font-bold text-ink">Settings</h1>
+      <header className="border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <h1 className="text-[17px] font-bold text-ink">Settings</h1>
       </header>
 
-      <main className="flex-1 px-4 py-4 pb-24">
+      <main className="flex-1 px-4 py-4">
 
         {/* ── Profile card ──────────────────────────────────────────────── */}
-        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card">
+        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
           <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-            <span className="font-dm-sans text-[11px] font-bold text-ink">Profile</span>
+            <span className="text-[11px] font-bold text-ink">Profile</span>
           </div>
           <div className="px-4 py-3">
-            {/* Name edit UI (Pencil button + isEditingName branch) is hidden until
-                PATCH /api/v1/students/me exists. handleSaveName, handleCancelEdit,
-                and the associated state are kept below, ready to wire up. */}
             <div className="flex items-center gap-2">
-              <span className="flex-1 font-dm-sans text-[14px] font-semibold text-ink">
+              <span className="flex-1 text-[14px] font-semibold text-ink">
                 {nameInput}
               </span>
             </div>
-            <p className="mt-1.5 font-dm-sans text-[12px] text-muted">
+            <p className="mt-1.5 text-[12px] text-muted">
               {isIndividual ? 'Independent Learner' : schoolName}
             </p>
           </div>
@@ -165,20 +162,20 @@ export default function SettingsPage() {
 
         {/* ── Change Password (individual only) ─────────────────────────── */}
         {isIndividual && (
-          <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card">
+          <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
             <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-              <span className="font-dm-sans text-[11px] font-bold text-ink">
+              <span className="text-[11px] font-bold text-ink">
                 Change Password
               </span>
             </div>
             <form onSubmit={handleChangePassword} className="px-4 py-3">
               <div className="mb-3">
-                <label className="mb-1 block font-dm-sans text-[11px] text-muted">
+                <label className="mb-1 block text-[11px] font-semibold text-muted">
                   New Password
                 </label>
                 <input
                   type="password"
-                  className="w-full rounded-lg border border-border-2 bg-bg-0 px-3 py-2 font-dm-sans text-[13px] text-ink outline-none focus:border-jade"
+                  className="input-field"
                   value={pwForm.new_password}
                   onChange={(e) => setPwForm((f) => ({ ...f, new_password: e.target.value }))}
                   autoComplete="new-password"
@@ -186,12 +183,12 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="mb-3">
-                <label className="mb-1 block font-dm-sans text-[11px] text-muted">
+                <label className="mb-1 block text-[11px] font-semibold text-muted">
                   Confirm Password
                 </label>
                 <input
                   type="password"
-                  className="w-full rounded-lg border border-border-2 bg-bg-0 px-3 py-2 font-dm-sans text-[13px] text-ink outline-none focus:border-jade"
+                  className="input-field"
                   value={pwForm.confirm_password}
                   onChange={(e) =>
                     setPwForm((f) => ({ ...f, confirm_password: e.target.value }))
@@ -201,17 +198,17 @@ export default function SettingsPage() {
                 />
               </div>
               {pwError && (
-                <p className="mb-2 font-dm-sans text-[12px] text-coral">{pwError}</p>
+                <p className="mb-2 text-[12px] text-danger">{pwError}</p>
               )}
               {pwSuccess && (
-                <p className="mb-2 font-dm-sans text-[12px] text-jade">
+                <p className="mb-2 text-[12px] text-success">
                   Password updated successfully.
                 </p>
               )}
               <button
                 type="submit"
                 disabled={pwLoading}
-                className="w-full rounded-lg bg-jade py-2.5 font-dm-sans text-[13px] font-bold text-white disabled:opacity-60"
+                className="btn-primary w-full shadow-brand-sm disabled:opacity-60"
               >
                 {pwLoading ? 'Saving…' : 'Save Password'}
               </button>
@@ -223,14 +220,14 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={() => setShowLogoutConfirm(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border-2 bg-card py-3 font-dm-sans text-[13px] font-bold text-coral"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border-2 bg-card py-3.5 text-[14px] font-bold text-danger hover:bg-bg-0 active:bg-bg-1 transition-all"
         >
-          <LogOut size={16} strokeWidth={1.5} />
+          <LogOut size={16} strokeWidth={2} />
           Log Out
         </button>
 
         {/* App version */}
-        <p className="mt-8 text-center font-dm-sans text-[11px] text-muted">
+        <p className="mt-8 text-center text-[11px] text-muted">
           v{APP_VERSION}
         </p>
 
@@ -248,7 +245,7 @@ export default function SettingsPage() {
             className="w-full max-w-md rounded-t-2xl bg-card px-5 pb-8 pt-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="mb-5 font-dm-sans text-[14px] font-semibold text-ink">
+            <p className="mb-5 text-[14px] font-bold text-ink">
               {isIndividual
                 ? 'Log out?'
                 : 'You’ll need your access code to log back in. Log out?'}
@@ -257,7 +254,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 rounded-xl border border-border-2 py-3 font-dm-sans text-[13px] font-bold text-ink"
+                className="btn-secondary flex-1"
               >
                 Cancel
               </button>
@@ -265,7 +262,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={handleLogout}
                 disabled={logoutLoading}
-                className="flex-1 rounded-xl bg-coral py-3 font-dm-sans text-[13px] font-bold text-white disabled:opacity-60"
+                className="flex-1 rounded-xl bg-danger py-3.5 text-[14px] font-bold text-white disabled:opacity-60 active:opacity-90"
               >
                 {logoutLoading ? 'Signing out…' : 'Log Out'}
               </button>
