@@ -5,88 +5,205 @@
 
 @layer base {
   :root {
-    /* Backgrounds: Warm, paper-like ivory instead of cold grays */
-    --bg-0:   #FAF8F5; /* Deepest background (app body) */
-    --bg-1:   #FFFFFF; /* Elevated surfaces (cards, modals) */
-    --bg-2:   #F2EFEA; /* Hover states, secondary buttons */
-    --bg-3:   #E7E2DA; /* Deepest structural gray */
-  
-    /* Cards */
-    --card:   #FFFFFF; /* Pure white for high-contrast floating elements */
-    --card-2: #FAF8F5; /* Blends into bg-0 for flat cards */
-  
-    /* Borders: Ultra-subtle, slightly warm transparency */
-    --border:   rgba(45, 38, 30, 0.08); /* 8% opacity dark brown/ink */
-    --border-2: rgba(45, 38, 30, 0.14); /* 14% opacity for active borders */
-  
-    /* Typography: Ink instead of pure #000000 */
-    --ink:   #181715; /* Primary text, headings */
-    --ink-2: #282623; /* High-emphasis secondary text */
-    --muted: #6A665E; /* Standard secondary text (timestamps, labels) */
-    --faint: #9E988E; /* Placeholder text, disabled states */
-  
-    /* Semantic UI Colors (Strictly for status) */
-    --success:    #16A34A; /* Tailwind green-600 */
+    /* ── Backgrounds ──────────────────────────────────────────────────────── */
+    --bg-0:   #F6FAF7; /* App body — very soft green-white */
+    --bg-1:   #FFFFFF; /* Cards, modals, elevated surfaces */
+    --bg-2:   #EEF5F0; /* Hover, secondary buttons, chips */
+    --bg-3:   #DDE9E1; /* Deepest structural */
+
+    /* ── Cards ────────────────────────────────────────────────────────────── */
+    --card:   #FFFFFF;
+    --card-2: #F6FAF7;
+
+    /* ── Borders ──────────────────────────────────────────────────────────── */
+    --border:   rgba(22, 101, 52, 0.10);  /* 10% green-tinted */
+    --border-2: rgba(22, 101, 52, 0.18);  /* 18% active borders */
+
+    /* ── Typography ───────────────────────────────────────────────────────── */
+    --ink:   #111827; /* Near-black, primary */
+    --ink-2: #1F2937; /* High-emphasis secondary */
+    --muted: #6B7280; /* Labels, timestamps */
+    --faint: #9CA3AF; /* Placeholders, disabled */
+
+    /* ── Brand Green (Accent) ─────────────────────────────────────────────── */
+    --brand:        #16A34A; /* Primary green — Tailwind green-600 */
+    --brand-dark:   #15803D; /* Hover / pressed state */
+    --brand-light:  #4ADE80; /* Bright highlight */
+    --brand-tint:   rgba(22, 163, 74, 0.10);  /* Soft green fill */
+    --brand-tint-b: rgba(22, 163, 74, 0.20);  /* Slightly stronger */
+
+    /* ── Semantic ─────────────────────────────────────────────────────────── */
+    --success:    #16A34A;
     --success-bg: rgba(22, 163, 74, 0.08);
-    
-    --warn:       #D97706; /* Tailwind amber-600 */
+
+    --warn:       #D97706;
     --warn-bg:    rgba(217, 119, 6, 0.08);
-    
-    --danger:     #DC2626; /* Tailwind red-600 */
+
+    --danger:     #DC2626;
     --danger-bg:  rgba(220, 38, 38, 0.08);
-  
-    /* Border Radii Tokens */
-    --radius-sm: 6px;
-    --radius:    10px;
-    --radius-lg: 14px;
-    --radius-xl: 18px;
+
+    /* ── Legacy aliases (keep — remote team uses these) ──────────────────── */
+    --jade:           #16A34A;
+    --jade-light:     #4ADE80;
+    --jade-tint:      rgba(22, 163, 74, 0.10);
+    --jade-tint-border: rgba(22, 163, 74, 0.25);
+    --jade-dark:      #15803D;
+
+    /* ── Radius ───────────────────────────────────────────────────────────── */
+    --radius-sm:   6px;
+    --radius:      10px;
+    --radius-lg:   14px;
+    --radius-xl:   20px;
     --radius-full: 9999px;
+
+    /* ── Shadows ──────────────────────────────────────────────────────────── */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  /* ── Base resets ────────────────────────────────────────────────────────── */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    /* Prevent layout shift from scrollbar appearance */
+    overflow-y: scroll;
+    /* Smooth scrolling everywhere */
+    scroll-behavior: smooth;
+    /* Prevent text size inflate on mobile orientation change */
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     margin: 0;
-    min-height: 100vh;
-    font-family: "DM Sans", sans-serif;
-    @apply bg-bg-0 text-ink;
+    min-height: 100dvh; /* dvh = dynamic viewport height — fixes mobile chrome bar */
+    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Inter ligatures */
+    @apply bg-bg-0 text-ink antialiased;
   }
 
-  /* Fix for browser autofill overriding background colors */
+  /* ── Mobile safe area (bottom nav never overlaps OS bar) ─────────────────── */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* ── Autofill style fix ─────────────────────────────────────────────────── */
   input:-webkit-autofill,
-  input:-webkit-autofill:hover, 
-  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px var(--bg-0) inset !important;
     -webkit-text-fill-color: var(--ink) !important;
     transition: background-color 5000s ease-in-out 0s;
   }
+
+  /* ── Focus ring ─────────────────────────────────────────────────────────── */
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ── Tap highlight removal on mobile ─────────────────────────────────────── */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── Smooth transitions on interactive elements ─────────────────────────── */
+  button, a, input, select, textarea {
+    transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── Scrollbar styling ──────────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
 }
 
-/* ── Math content typography ─────────────────────────────────────────────── */
+/* ── Utility: page container ────────────────────────────────────────────────── */
+@layer components {
+  /* Full screen page that accounts for bottom nav */
+  .page-with-nav {
+    @apply flex min-h-dvh flex-col pb-[72px];
+  }
 
-/* Each paragraph in a MathContent block gets bottom margin */
+  /* Standard card */
+  .card {
+    @apply rounded-xl bg-card shadow-sm border border-border;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3.5 text-[15px] font-semibold text-white shadow-sm active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed;
+    transition: background-color 150ms ease, transform 100ms ease, box-shadow 150ms ease;
+  }
+  .btn-primary:hover:not(:disabled) { background-color: var(--brand-dark); }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-5 py-3.5 text-[15px] font-semibold text-ink active:scale-[0.97] disabled:opacity-50;
+    transition: background-color 150ms ease, transform 100ms ease;
+  }
+  .btn-secondary:hover:not(:disabled) { background-color: var(--bg-2); }
+
+  /* Ghost / outline button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-[15px] font-semibold text-brand active:scale-[0.97];
+    transition: background-color 150ms ease, transform 100ms ease;
+  }
+  .btn-ghost:hover:not(:disabled) { background-color: var(--brand-tint); }
+
+  /* Input field wrapper */
+  .input-field {
+    @apply w-full rounded-xl border border-border-2 bg-bg-1 px-4 py-3 text-[15px] text-ink placeholder:text-faint focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+  .input-field.error {
+    @apply border-danger focus:border-danger focus:ring-red-500/20;
+  }
+
+  /* Subject / accent pill */
+  .pill-brand {
+    @apply inline-flex items-center gap-1 rounded-full bg-brand-tint px-2.5 py-0.5 text-[11px] font-semibold text-brand;
+  }
+
+  /* Animated page entry */
+  .page-enter {
+    animation: pageEnter 250ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  @keyframes pageEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-bg-2;
+  }
+}
+
+/* ── Math / KaTeX typography ─────────────────────────────────────────────────── */
 .math-content .math-para {
   display: block;
   margin-bottom: 0.85rem;
   line-height: 1.75;
 }
-.math-content .math-para:last-child {
-  margin-bottom: 0;
-}
-
-/* Display math: centred block with generous vertical space */
+.math-content .math-para:last-child { margin-bottom: 0; }
 .math-content .math-block {
   display: block;
   text-align: center;
   margin: 1rem 0;
   overflow-x: auto;
 }
-
-/* KaTeX inline tweaks */
-.katex {
-  font-size: 1.05em;
-}
-
-/* Error fallback */
+.katex { font-size: 1.05em; }
 .math-err {
   font-family: monospace;
   background: rgba(220, 38, 38, 0.08);
@@ -95,4 +212,3 @@
   border-radius: 4px;
   font-size: 0.9em;
 }
-

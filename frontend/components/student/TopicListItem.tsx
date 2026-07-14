@@ -33,25 +33,25 @@ export function TopicListItem({ topic, onClick }: TopicListItemProps) {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors active:bg-bg-0"
+      className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-1"
     >
       {/* Title + subtitle */}
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-bold text-ink">
+        <span className="block text-[14px] font-bold text-ink">
           {topic.title}
         </span>
-        <span className="mt-0.5 block text-[11px] text-muted">
+        <span className="mt-0.5 block text-[11px] font-medium text-muted">
           {subtitle}
         </span>
       </span>
 
-      {/* Action badge — wireframe: studied = jade "Study →", not yet = grey "Start →" */}
+      {/* Action badge */}
       {studied ? (
-        <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[10px] font-bold text-white">
+        <span className="flex-shrink-0 rounded-[4px] bg-brand px-2 py-0.5 text-[10px] font-bold text-white shadow-brand-sm">
           Study →
         </span>
       ) : (
-        <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 text-[10px] font-bold text-white">
+        <span className="flex-shrink-0 rounded-[4px] bg-ink px-2 py-0.5 text-[10px] font-bold text-white">
           Start →
         </span>
       )}

@@ -39,11 +39,11 @@ export function PracticeQuestion({
   return (
     <div>
       {/* Question card */}
-      <div className="mb-4 rounded-xl border-[1.5px] border-ink bg-card px-4 py-4">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-ink">
+      <div className="mb-4 rounded-2xl border-[1.5px] border-border bg-card px-5 py-5 shadow-sm">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted">
           Practice Question
         </p>
-        <p className="font-bold text-[15px] font-bold leading-snug text-ink">
+        <p className="text-[16px] font-bold leading-relaxed text-ink">
           {question.question}
         </p>
       </div>
@@ -56,14 +56,14 @@ export function PracticeQuestion({
             onClick={() => handleSelect(opt)}
             tabIndex={revealed ? -1 : undefined}
             className={[
-              'flex w-full items-center gap-3 rounded-lg border-[1.5px] px-3.5 py-3 text-left  text-[13px] font-semibold transition-colors',
+              'flex w-full items-center gap-3 rounded-xl border-[1.5px] px-4 py-3.5 text-left text-[14px] font-semibold transition-all',
               isCorrectOpt(opt)
-                ? 'border-ink bg-ink text-white'
+                ? 'border-brand bg-brand text-white shadow-brand-sm'
                 : isWrongSelected(opt)
                   ? 'border-danger bg-danger text-white'
                   : isOther(opt)
-                    ? 'cursor-default border-border bg-card text-gray-300'
-                    : 'border-border-2 bg-card text-ink active:bg-bg-0',
+                    ? 'cursor-default border-border bg-card text-muted opacity-60'
+                    : 'border-border-2 bg-card text-ink hover:bg-bg-0 hover:border-brand/40 active:bg-bg-1',
             ].join(' ')}
           >
             <span className="flex-shrink-0 font-bold">{opt}.</span>
@@ -85,7 +85,7 @@ export function PracticeQuestion({
       {/* Explanation — shown after reveal */}
       {revealed && (
         <div
-          className={`mb-5 rounded-lg px-4 py-3 text-[13px] leading-relaxed ${ gotItRight ? 'bg-ink/10 text-ink' : 'bg-danger-bg text-danger' }`}
+          className={`mb-6 rounded-xl px-5 py-4 text-[14px] leading-relaxed shadow-sm ${ gotItRight ? 'bg-brand/10 text-brand-dark' : 'bg-danger/10 text-danger-dark' }`}
         >
           <span className="font-bold">
             {gotItRight
@@ -104,7 +104,7 @@ export function PracticeQuestion({
       {revealed && (
         <button
           onClick={() => onComplete(gotItRight)}
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink py-3.5 text-[14px] font-bold text-white active:opacity-90"
+          className="btn-primary w-full shadow-brand-sm"
         >
           {isLast ? 'Finish Practice' : 'Next Question'}
           <ChevronRight size={18} strokeWidth={2.5} />

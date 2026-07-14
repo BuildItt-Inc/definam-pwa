@@ -268,7 +268,7 @@ function LearningTopBar({
   const isPracticeStep = step === 4;
 
   return (
-    <div className="bg-ink px-4 pb-2.5 pt-3">
+    <div className="bg-ink px-4 pb-2.5 pt-[calc(env(safe-area-inset-top)+12px)]">
       {/* Navigation row */}
       <div className="mb-2.5 flex items-center gap-2">
         <button
@@ -365,7 +365,7 @@ function ScoreSummary({
       </div>
       <button
         onClick={onContinue}
-        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink py-3.5 text-[14px] font-bold text-white active:opacity-90"
+        className="btn-primary w-full shadow-brand-sm"
       >
         Continue to AI Tutor
         <ChevronRight size={18} strokeWidth={2.5} />
@@ -518,19 +518,20 @@ function AITutorScaffold({
             <span className="font-bold">{topicTitle}</span> is still confusing you?
           </div>
         </div>
+      </main>
 
       {/* Bottom control CTAs if inactive */}
       {!isLoading && messages.length > 2 && (
-        <div className="px-4 py-2 flex gap-2 justify-center bg-bg-0 border-t border-border/50">
+        <div className="flex gap-2 justify-center bg-bg-0 border-t border-border px-4 py-3 pb-safe">
           <button
             onClick={onBrowse}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink py-3.5 text-[14px] font-bold text-white active:opacity-90"
+            className="btn-primary flex-1 shadow-brand-sm"
           >
             Browse Topics
           </button>
           <button
             onClick={onHome}
-            className="flex w-full items-center justify-center rounded-lg border border-border-2 py-3.5 text-[14px] font-semibold text-ink-2 active:bg-bg-0"
+            className="btn-secondary flex-1"
           >
             Back Home
           </button>
@@ -677,10 +678,10 @@ function LearningFlow({
               title={getStepContent(detail!, step).title}
               content={getStepContent(detail!, step).content}
             />
-            <div className="mt-5">
+            <div className="mt-5 pb-safe">
               <button
                 onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4 | 5)}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink py-3.5 text-[14px] font-bold text-white active:opacity-90"
+                className="btn-primary w-full shadow-brand-sm"
               >
                 {STEP_CTA[step]}
                 <ChevronRight size={18} strokeWidth={2.5} />

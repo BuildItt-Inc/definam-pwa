@@ -191,35 +191,35 @@ export default function StudentHomePage() {
   const hasQueue = recall_queue.length > 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
+    <div className="page-with-nav bg-bg-0 page-enter">
 
       {/* ── SCR-04 · Dark header ─────────────────────────────────────────── */}
-      <header className="bg-ink px-4 pb-7 pt-5">
+      <header className="bg-ink px-4 pb-7 pt-safe">
         <p className="mb-0.5 text-[11px] text-white/50">
           {greeting}
         </p>
-        <h1 className="mb-0.5 font-bold text-[22px] font-black leading-tight text-white">
+        <h1 className="mb-0.5 font-bold text-[22px] leading-tight text-white">
           {student_name}
         </h1>
         <p className="mb-3 text-[11px] text-white/40">{school_name}</p>
 
         {/* Streak pill */}
         <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
-          <Flame size={16} strokeWidth={1.5} className="text-ink-2" />
-          <span className="font-bold text-[18px] font-black leading-none text-white">
+          <Flame size={16} strokeWidth={2} className="text-brand-light" />
+          <span className="font-bold text-[18px] leading-none text-white">
             {streak_days}
           </span>
-          <span className="text-[11px] text-white/50">
+          <span className="text-[11px] text-white/60">
             {streak_days === 0 ? 'Start your streak!' : 'day streak'}
           </span>
         </div>
       </header>
 
       {/* ── Main scroll area ─────────────────────────────────────────────── */}
-      <main className="flex-1 pb-20">
+      <main className="flex-1 px-4">
 
         {/* Recall card — negative margin pulls it over header bottom edge */}
-        <div className="-mt-3 px-3">
+        <div className="-mt-3 mb-6">
           <RecallCard
             queue={recall_queue}
             onStart={() => router.push('/student/recall')}
@@ -228,27 +228,31 @@ export default function StudentHomePage() {
 
         {hasQueue ? (
           /* ── SCR-04a · Browse Topics section ─────────────────────────── */
-          <section className="mt-4">
+          <section className="mb-6">
             {/* Heading row */}
-            <div className="mb-3 flex items-center justify-between px-4">
+            <div className="mb-3 flex items-center justify-between">
               <span className="text-[13px] font-bold text-ink">
                 Browse Topics
               </span>
               <Link
                 href="/student/learn"
-                className="text-[12px] font-semibold text-ink"
+                className="text-[12px] font-semibold text-brand hover:text-brand-dark"
               >
                 See all
               </Link>
             </div>
 
             {/* Subject filter pills — visual selection only in V1 */}
-            <div className="mb-3 flex gap-2 overflow-x-auto px-4 pb-0.5">
+            <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
               {PILLS.map((pill, i) => (
                 <button
                   key={pill}
                   onClick={() => setActivePill(i)}
-                  className={`flex-shrink-0 rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${ activePill === i ? 'border-ink bg-ink text-white' : 'border-border-2 text-ink' }`}
+                  className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                    activePill === i
+                      ? 'border-brand bg-brand text-white shadow-brand-sm'
+                      : 'border-border-2 bg-bg-1 text-muted hover:bg-bg-2 hover:text-ink'
+                  }`}
                 >
                   {pill}
                 </button>

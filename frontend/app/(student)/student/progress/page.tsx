@@ -56,14 +56,14 @@ interface StatCardProps {
 function StatCard({ variant, value, label }: StatCardProps) {
   if (variant === 'streak') {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl bg-ink px-3 py-4">
+      <div className="flex flex-col items-center justify-center rounded-xl bg-ink px-3 py-4 shadow-sm">
         <div className="mb-1 flex items-center gap-1.5">
-          <Flame size={22} strokeWidth={1.5} className="text-white/80" />
-          <span className="font-bold text-[28px] font-black leading-none text-white">
+          <Flame size={22} strokeWidth={2} className="text-brand-light" />
+          <span className="text-[28px] font-black leading-none text-white">
             {value}
           </span>
         </div>
-        <span className="text-[11px] text-white/70">{label}</span>
+        <span className="text-[11px] font-semibold text-white/70">{label}</span>
       </div>
     );
   }
@@ -235,14 +235,14 @@ export default function ProgressPage() {
   if (!data) return <ProgressSkeleton />;
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg-0">
+    <div className="page-with-nav bg-bg-0 page-enter">
 
       {/* Appbar */}
-      <header className="border-b border-gray-200/60 bg-bg-0 px-4 py-3.5">
-        <h1 className="font-bold text-[17px] font-bold text-ink">My Progress</h1>
+      <header className="border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <h1 className="text-[17px] font-bold text-ink">My Progress</h1>
       </header>
 
-      <main className="flex-1 px-4 py-4 pb-24">
+      <main className="flex-1 px-4 py-4">
 
         {/* ── Stat cards 2×2 ──────────────────────────────────────────────── */}
         <div className="mb-4 grid grid-cols-2 gap-3">

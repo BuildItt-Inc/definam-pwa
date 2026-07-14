@@ -72,16 +72,16 @@ export default function BrowsePage() {
     : subjects;
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
+    <div className="page-with-nav bg-card page-enter">
 
       {/* ── SCR-05a · Appbar ─────────────────────────────────────────────── */}
-      <header className="flex items-center border-b border-border px-4 py-3.5">
-        <h1 className="font-bold text-[17px] font-bold text-ink">Browse</h1>
+      <header className="flex items-center border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <h1 className="text-[17px] font-bold text-ink">Browse</h1>
       </header>
 
       {/* ── Search bar ───────────────────────────────────────────────────── */}
-      <div className="px-3 py-2">
-        <label className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5">
+      <div className="px-3 py-2 border-b border-border-2 bg-bg-0">
+        <label className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-1 px-3 py-2.5 focus-within:border-brand focus-within:ring-1 focus-within:ring-brand/20 transition-all">
           <Search size={15} strokeWidth={1.5} className="flex-shrink-0 text-muted" />
           <input
             type="search"
@@ -94,7 +94,7 @@ export default function BrowsePage() {
       </div>
 
       {/* ── Subject list ─────────────────────────────────────────────────── */}
-      <main className="flex-1 pb-20">
+      <main className="flex-1">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
             <BookOpen
