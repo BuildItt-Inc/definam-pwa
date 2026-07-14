@@ -38,8 +38,8 @@ export default function LoginPage() {
     setBannerError(null);
     setIsSubmitting(true);
     try {
-      await loginUser(values);
-      router.push('/student');
+      const { role } = await loginUser(values);
+      router.push(role === 'admin' ? '/admin' : '/student');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setBannerError('Invalid username or password');

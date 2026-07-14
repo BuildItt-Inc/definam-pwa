@@ -263,7 +263,7 @@ export default function LandingPage() {
               {['WAEC aligned', 'NECO aligned', 'JAMB aligned'].map((label) => (
                 <span
                   key={label}
-                  className="bg-bg-1 border border-border-2 text-ink text-[12px] font-bold px-3 py-1 rounded-[16px] border border-border-2"
+                  className="bg-bg-1 border border-border-2 text-ink text-[12px] font-bold px-3 py-1 rounded-[16px] border-border-2"
                 >
                   {label}
                 </span>
