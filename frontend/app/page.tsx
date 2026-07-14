@@ -168,7 +168,7 @@ function OrbitIllustration() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-card font-dm-sans text-ink">
+    <div className="min-h-screen bg-card text-ink">
 
       {/* ── 1. Sticky nav ── */}
       <header className="sticky top-0 z-10 bg-card border-b border-cream">
@@ -176,7 +176,7 @@ export default function LandingPage() {
           {/* Left: logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <LogoMark size={28} />
-            <span className="font-syne font-bold text-[17px] text-ink">DefinAm</span>
+            <span className="font-bold font-bold text-[17px] text-ink">DefinAm</span>
           </Link>
 
           {/* Desktop nav */}
@@ -224,12 +224,12 @@ export default function LandingPage() {
           {/* Left column */}
           <div className="flex flex-col gap-6">
             {/* Eyebrow */}
-            <p className="text-[11px] font-bold uppercase tracking-widest text-gold-dark">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-ink-2-dark">
               AI study coach for WAEC, NECO and JAMB
             </p>
 
             {/* Headline */}
-            <h1 className="font-syne text-[40px] md:text-[56px] font-extrabold text-ink leading-[1.1] tracking-tight">
+            <h1 className="font-bold text-[40px] md:text-[56px] font-extrabold text-ink leading-[1.1] tracking-tight">
               Learn it once.<br />
               <span className="text-ink">Never forget it again.</span>
             </h1>
@@ -287,7 +287,7 @@ export default function LandingPage() {
             <p className="text-[11px] font-bold uppercase tracking-widest text-ink mb-3">
               How it works
             </p>
-            <h2 className="font-syne font-extrabold text-[22px] md:text-[26px] text-ink">
+            <h2 className="font-bold font-extrabold text-[22px] md:text-[26px] text-ink">
               Built around how you actually remember
             </h2>
           </div>
@@ -325,7 +325,7 @@ export default function LandingPage() {
 
             {/* Text */}
             <div className="flex flex-col gap-4">
-              <h3 className="font-syne font-extrabold text-[20px] md:text-[22px] text-ink">
+              <h3 className="font-bold font-extrabold text-[20px] md:text-[22px] text-ink">
                 Every topic, five ways in
               </h3>
               <p className="text-[14px] text-ink-2 leading-relaxed">
@@ -340,7 +340,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
             {/* Text */}
             <div className="flex flex-col gap-4 md:order-1">
-              <h3 className="font-syne font-extrabold text-[20px] md:text-[22px] text-ink">
+              <h3 className="font-bold font-extrabold text-[20px] md:text-[22px] text-ink">
                 Nothing fades. Ever.
               </h3>
               <p className="text-[14px] text-ink-2 leading-relaxed">
@@ -351,7 +351,7 @@ export default function LandingPage() {
             </div>
 
             {/* Card */}
-            <div className="bg-gold-tint rounded-2xl p-6 md:order-2">
+            <div className="bg-ink-2-tint rounded-2xl p-6 md:order-2">
               <div className="bg-card rounded-xl p-5 flex flex-col gap-4 shadow-sm">
                 {/* Stats */}
                 <div className="flex gap-6">
@@ -391,7 +391,7 @@ export default function LandingPage() {
       <section className="relative overflow-hidden border-t border-cream bg-card py-12 md:py-16">
         <PatternGlyphs glyphs={subjectsGlyphs} />
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-6">
-          <h2 className="font-syne font-extrabold text-[20px] text-ink text-center">
+          <h2 className="font-bold font-extrabold text-[20px] text-ink text-center">
             Built for every WAEC subject
           </h2>
           <div className="flex flex-wrap justify-center gap-2">
@@ -410,7 +410,7 @@ export default function LandingPage() {
       {/* ── 5. Closing CTA band ── */}
       <section className="relative overflow-hidden bg-ink py-16 md:py-20 text-white rounded-[24px] mx-4 md:mx-auto max-w-7xl mb-8">
         <div className="max-w-[1200px] mx-auto px-6 lg:px-8 relative z-10 text-center">
-          <h2 className="font-syne font-extrabold text-[22px] md:text-[26px] text-white">
+          <h2 className="font-bold font-extrabold text-[22px] md:text-[26px] text-white">
             Start learning today
           </h2>
           <p className="text-[14px] text-white/75 max-w-[360px]">
@@ -418,7 +418,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/pay/individual"
-            className="flex items-center gap-2 bg-card text-jade text-[14px] font-semibold px-6 py-3 rounded-xl hover:bg-jade-tint transition-colors"
+            className="flex items-center gap-2 bg-card text-ink text-[14px] font-semibold px-6 py-3 rounded-xl hover:bg-ink-tint transition-colors"
           >
             Get started
             <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
@@ -433,7 +433,7 @@ export default function LandingPage() {
           <div className="flex flex-col gap-3 md:col-span-1">
             <div className="flex items-center gap-2">
               <LogoMark size={22} />
-              <span className="font-syne font-bold text-[15px] text-ink">DefinAm</span>
+              <span className="font-bold font-bold text-[15px] text-ink">DefinAm</span>
             </div>
             <p className="text-[13px] text-muted leading-relaxed max-w-[220px]">
               Nigeria&apos;s AI learning brain for WAEC, NECO and JAMB.

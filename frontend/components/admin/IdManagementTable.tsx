@@ -75,11 +75,7 @@ export function IdManagementTable({
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`px-4 py-1.5 text-[11px] font-bold rounded-[12px] transition-colors ${
-                statusFilter === tab.key
-                  ? 'bg-ink text-white shadow-sm'
-                  : 'text-muted hover:text-ink'
-              }`}
+              className={`px-4 py-1.5 text-[11px] font-bold rounded-[12px] transition-colors ${ statusFilter === tab.key ? 'bg-ink text-white shadow-sm' : 'text-muted hover:text-ink' }`}
             >
               {tab.label}
             </button>

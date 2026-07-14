@@ -95,7 +95,7 @@ function TopicRow({
   isEmpty: boolean;
 }) {
   const Icon = subjectIcon(topic.subject);
-  const barFill = topic.mastery_percent >= 50 ? 'bg-jade' : 'bg-gray-400';
+  const barFill = topic.mastery_percent >= 50 ? 'bg-ink' : 'bg-gray-400';
 
   return (
     <Link
@@ -109,10 +109,10 @@ function TopicRow({
 
       {/* Info */}
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-dm-sans text-[13px] font-bold text-ink">
+        <span className="block truncate text-[13px] font-bold text-ink">
           {topic.topic_title}
         </span>
-        <span className="mt-0.5 block font-dm-sans text-[11px] text-muted">
+        <span className="mt-0.5 block text-[11px] text-muted">
           {topic.subject}
           {isEmpty ? ' · Not started' : ''}
         </span>
@@ -128,7 +128,7 @@ function TopicRow({
 
       {/* Right action */}
       {isEmpty ? (
-        <span className="flex-shrink-0 rounded-[3px] bg-jade px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+        <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[10px] font-bold text-white">
           Start →
         </span>
       ) : (
@@ -177,7 +177,7 @@ export default function StudentHomePage() {
   if (fetchError) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-center font-dm-sans text-sm text-muted">
+        <p className="text-center text-sm text-muted">
           {fetchError}
         </p>
       </div>
@@ -195,21 +195,21 @@ export default function StudentHomePage() {
 
       {/* ── SCR-04 · Dark header ─────────────────────────────────────────── */}
       <header className="bg-ink px-4 pb-7 pt-5">
-        <p className="mb-0.5 font-dm-sans text-[11px] text-white/50">
+        <p className="mb-0.5 text-[11px] text-white/50">
           {greeting}
         </p>
-        <h1 className="mb-0.5 font-syne text-[22px] font-black leading-tight text-white">
+        <h1 className="mb-0.5 font-bold text-[22px] font-black leading-tight text-white">
           {student_name}
         </h1>
-        <p className="mb-3 font-dm-sans text-[11px] text-white/40">{school_name}</p>
+        <p className="mb-3 text-[11px] text-white/40">{school_name}</p>
 
         {/* Streak pill */}
         <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
-          <Flame size={16} strokeWidth={1.5} className="text-gold" />
-          <span className="font-syne text-[18px] font-black leading-none text-white">
+          <Flame size={16} strokeWidth={1.5} className="text-ink-2" />
+          <span className="font-bold text-[18px] font-black leading-none text-white">
             {streak_days}
           </span>
-          <span className="font-dm-sans text-[11px] text-white/50">
+          <span className="text-[11px] text-white/50">
             {streak_days === 0 ? 'Start your streak!' : 'day streak'}
           </span>
         </div>
@@ -231,12 +231,12 @@ export default function StudentHomePage() {
           <section className="mt-4">
             {/* Heading row */}
             <div className="mb-3 flex items-center justify-between px-4">
-              <span className="font-dm-sans text-[13px] font-bold text-ink">
+              <span className="text-[13px] font-bold text-ink">
                 Browse Topics
               </span>
               <Link
                 href="/student/learn"
-                className="font-dm-sans text-[12px] font-semibold text-jade"
+                className="text-[12px] font-semibold text-ink"
               >
                 See all
               </Link>
@@ -248,11 +248,7 @@ export default function StudentHomePage() {
                 <button
                   key={pill}
                   onClick={() => setActivePill(i)}
-                  className={`flex-shrink-0 rounded-full border px-3 py-1 font-dm-sans text-[11px] font-bold transition-colors ${
-                    activePill === i
-                      ? 'border-jade bg-jade text-white'
-                      : 'border-border-2 text-ink'
-                  }`}
+                  className={`flex-shrink-0 rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${ activePill === i ? 'border-ink bg-ink text-white' : 'border-border-2 text-ink' }`}
                 >
                   {pill}
                 </button>
@@ -269,7 +265,7 @@ export default function StudentHomePage() {
         ) : (
           /* ── SCR-04b · Start here section ────────────────────────────── */
           <section className="mt-4">
-            <p className="mb-2 px-4 font-dm-sans text-[13px] font-bold text-ink">
+            <p className="mb-2 px-4 text-[13px] font-bold text-ink">
               Start here
             </p>
             <div>

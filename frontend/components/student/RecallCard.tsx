@@ -14,32 +14,32 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
     const topicNames = queue.map((item) => item.topic_title).join(' · ');
 
     return (
-      <div className="relative z-10 rounded-xl border-[1.5px] border-jade bg-card p-3 shadow-sm">
+      <div className="relative z-10 rounded-xl border-[1.5px] border-ink bg-card p-3 shadow-sm">
         {/* Label row */}
         <div className="mb-1.5 flex items-center gap-1.5">
-          <span className="h-[6px] w-[6px] flex-shrink-0 rounded-full bg-jade" />
-          <span className="font-dm-sans text-[10px] font-bold uppercase tracking-widest text-jade">
+          <span className="h-[6px] w-[6px] flex-shrink-0 rounded-full bg-ink" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-ink">
             Daily Recall
           </span>
-          <span className="ml-auto flex-shrink-0 rounded-[3px] bg-jade px-1.5 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+          <span className="ml-auto flex-shrink-0 rounded-[3px] bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">
             {queue.length} due
           </span>
         </div>
 
         {/* Title */}
-        <p className="mb-0.5 font-syne text-[17px] font-black leading-tight text-ink">
+        <p className="mb-0.5 font-bold text-[17px] font-black leading-tight text-ink">
           Time to Review
         </p>
 
         {/* Topic names — two-line max then ellipsis */}
-        <p className="mb-3 line-clamp-2 font-dm-sans text-[11px] leading-snug text-muted">
+        <p className="mb-3 line-clamp-2 text-[11px] leading-snug text-muted">
           {topicNames}
         </p>
 
         {/* CTA button */}
         <button
           onClick={onStart}
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-jade py-2.5 font-dm-sans text-[13px] font-bold text-white active:opacity-90"
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink py-2.5 text-[13px] font-bold text-white active:opacity-90"
         >
           Start Recall Session
           <ChevronRight size={16} strokeWidth={2.5} />
@@ -52,10 +52,10 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
   return (
     <div className="relative z-10 flex flex-col items-center rounded-xl border-[1.5px] border-dashed border-border-2 bg-bg-0 px-4 py-6 text-center">
       <BookOpen size={22} strokeWidth={1.5} className="mb-2.5 text-gray-300" />
-      <p className="mb-1 font-syne text-[14px] font-bold text-ink">
+      <p className="mb-1 font-bold text-[14px] font-bold text-ink">
         Nothing to recall yet
       </p>
-      <p className="font-dm-sans text-[12px] leading-relaxed text-muted">
+      <p className="text-[12px] leading-relaxed text-muted">
         Study a topic first — it&apos;ll show up here when it&apos;s time to review.
       </p>
     </div>

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function MobileSplashPage() {
   return (
-    <main className="min-h-dvh bg-ink font-dm-sans flex flex-col items-center justify-center px-6 py-8">
+    <main className="min-h-dvh bg-ink flex flex-col items-center justify-center px-6 py-8">
       <div className="flex flex-col items-center w-full max-w-[280px] md:max-w-[380px] text-center">
 
         {/* ── Logo mark ── */}
@@ -38,7 +38,7 @@ export default function MobileSplashPage() {
         </div>
 
         {/* ── Wordmark ── */}
-        <h1 className="font-syne text-[30px] md:text-[36px] font-black text-white tracking-[-1px] leading-none mb-2">
+        <h1 className="font-bold text-[30px] md:text-[36px] font-black text-white tracking-[-1px] leading-none mb-2">
           DefinAm
         </h1>
 

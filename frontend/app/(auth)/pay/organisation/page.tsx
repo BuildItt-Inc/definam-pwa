@@ -121,7 +121,7 @@ export default function OrgPayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-0 font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
       {/* App bar */}
       <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <button
@@ -243,7 +243,7 @@ export default function OrgPayPage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[14px] font-bold text-ink">Total</span>
-              <span className="font-syne text-[18px] font-black text-ink tracking-tight">
+              <span className="font-bold text-[18px] font-black text-ink tracking-tight">
                 {formatNaira(total)}
               </span>
             </div>

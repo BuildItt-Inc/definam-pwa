@@ -52,7 +52,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-0 font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
       {/* App bar */}
       <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <button
@@ -70,7 +70,7 @@ export default function LoginPage() {
 
       <main className="px-5 pt-8 pb-12 md:max-w-md md:mx-auto md:pt-12">
         {/* Page heading */}
-        <h1 className="font-syne text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
+        <h1 className="font-bold text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
           Welcome back
         </h1>
         <p className="text-[13px] text-ink/50 mb-8">

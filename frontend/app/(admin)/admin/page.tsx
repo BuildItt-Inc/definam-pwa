@@ -168,7 +168,7 @@ export default function AdminHomePage() {
       {/* Top bar */}
       <div className="bg-card border-b border-border-2 px-5 py-[10px] flex items-center gap-3 shrink-0">
         <div>
-          <h1 className="font-syne text-[14px] font-extrabold text-ink leading-tight tracking-tight">
+          <h1 className="font-bold text-[14px] font-extrabold text-ink leading-tight tracking-tight">
             Class Overview
           </h1>
           <p className="text-[10px] text-muted mt-0.5">

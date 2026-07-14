@@ -42,8 +42,7 @@ const config: Config = {
         cream:              "#F5F0E8",
       },
       fontFamily: {
-        syne: ["var(--font-syne)", "sans-serif"],
-        "dm-sans": ["var(--font-dm-sans)", "sans-serif"],
+        sans: ['var(--font-inter)'],
       },
       keyframes: {
         "orbit-cw": {

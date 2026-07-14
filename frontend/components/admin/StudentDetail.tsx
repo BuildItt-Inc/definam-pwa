@@ -204,9 +204,7 @@ function ChatLogsPanel({ sessions }: { sessions: ChatSession[] }) {
                 className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-bg-1 transition-colors"
               >
                 <span
-                  className={`text-[12px] font-bold shrink-0 ${
-                    index === 0 ? 'text-ink' : 'text-muted'
-                  }`}
+                  className={`text-[12px] font-bold shrink-0 ${ index === 0 ? 'text-ink' : 'text-muted' }`}
                 >
                   {session.date}
                 </span>
@@ -242,9 +240,7 @@ function ChatLogsPanel({ sessions }: { sessions: ChatSession[] }) {
                       {session.preview_messages.map((msg, i) => (
                         <div key={i} className="flex gap-3">
                           <span
-                            className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-[8px] border border-border-2 h-fit shrink-0 ${
-                              msg.role === 'ai' ? 'bg-ink text-white' : 'bg-bg-0 text-ink'
-                            }`}
+                            className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-[8px] border border-border-2 h-fit shrink-0 ${ msg.role === 'ai' ? 'bg-ink text-white' : 'bg-bg-0 text-ink' }`}
                           >
                             {msg.role === 'ai' ? 'AI' : 'Student'}
                           </span>

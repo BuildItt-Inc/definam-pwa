@@ -27,20 +27,20 @@ const SUBJECT_ICONS: Record<string, LucideIcon> = {
 function MasteryBadge({ mastery }: { mastery: number | null }) {
   if (mastery === null || mastery === 0) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-muted">
+      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 text-[10px] font-bold text-muted">
         —
       </span>
     );
   }
   if (mastery >= 60) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] bg-jade px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+      <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[10px] font-bold text-white">
         {mastery}%
       </span>
     );
   }
   return (
-    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 text-[10px] font-bold text-white">
       {mastery}%
     </span>
   );
@@ -68,10 +68,10 @@ export function SubjectCard({ subject, onClick }: SubjectCardProps) {
 
       {/* Name + count */}
       <span className="min-w-0 flex-1">
-        <span className="block font-dm-sans text-[13px] font-bold text-ink">
+        <span className="block text-[13px] font-bold text-ink">
           {subject.name}
         </span>
-        <span className="mt-0.5 block font-dm-sans text-[11px] text-muted">
+        <span className="mt-0.5 block text-[11px] text-muted">
           {subject.chapter_count} chapters · {subject.topic_count} topics
         </span>
       </span>

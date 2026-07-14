@@ -57,7 +57,7 @@ export default function BrowsePage() {
   if (fetchError) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-center font-dm-sans text-sm text-muted">{fetchError}</p>
+        <p className="text-center text-sm text-muted">{fetchError}</p>
       </div>
     );
   }
@@ -76,7 +76,7 @@ export default function BrowsePage() {
 
       {/* ── SCR-05a · Appbar ─────────────────────────────────────────────── */}
       <header className="flex items-center border-b border-border px-4 py-3.5">
-        <h1 className="font-syne text-[17px] font-bold text-ink">Browse</h1>
+        <h1 className="font-bold text-[17px] font-bold text-ink">Browse</h1>
       </header>
 
       {/* ── Search bar ───────────────────────────────────────────────────── */}
@@ -88,7 +88,7 @@ export default function BrowsePage() {
             placeholder="Search topics..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent font-dm-sans text-[13px] text-ink placeholder:text-muted focus:outline-none"
+            className="flex-1 bg-transparent text-[13px] text-ink placeholder:text-muted focus:outline-none"
           />
         </label>
       </div>
@@ -102,7 +102,7 @@ export default function BrowsePage() {
               strokeWidth={1.5}
               className="mb-3 text-gray-300"
             />
-            <p className="font-dm-sans text-[13px] text-muted">
+            <p className="text-[13px] text-muted">
               No subjects found
             </p>
           </div>

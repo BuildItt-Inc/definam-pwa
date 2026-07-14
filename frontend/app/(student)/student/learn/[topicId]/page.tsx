@@ -17,20 +17,20 @@ import { getChatHistory, sendChatMessageStream, type ChatMessage } from '@/lib/a
 function MasteryBadge({ mastery }: { mastery: number | null }) {
   if (mastery === null || mastery === 0) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-muted">
+      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 text-[10px] font-bold text-muted">
         —
       </span>
     );
   }
   if (mastery >= 60) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] bg-jade px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+      <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[10px] font-bold text-white">
         {mastery}%
       </span>
     );
   }
   return (
-    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 text-[10px] font-bold text-white">
       {mastery}%
     </span>
   );
@@ -56,7 +56,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <BookOpen size={32} strokeWidth={1.5} className="mb-3 text-gray-300" />
-      <p className="font-dm-sans text-[13px] text-muted">{message}</p>
+      <p className="text-[13px] text-muted">{message}</p>
     </div>
   );
 }
@@ -99,7 +99,7 @@ function ChaptersView({
 
   if (fetchError) {
     return (
-      <div className="px-4 py-6 text-center font-dm-sans text-sm text-muted">
+      <div className="px-4 py-6 text-center text-sm text-muted">
         {fetchError}
       </div>
     );
@@ -110,7 +110,7 @@ function ChaptersView({
 
   return (
     <>
-      <p className="px-4 py-1.5 font-dm-sans text-[11px] text-muted">
+      <p className="px-4 py-1.5 text-[11px] text-muted">
         SS2 Syllabus · {chapters.length} chapters
       </p>
       <div>
@@ -126,16 +126,16 @@ function ChaptersView({
                   )}&subject=${encodeURIComponent(subjectName)}`,
                 )
               }
-              className="flex w-full items-center gap-3 border-b border-border bg-card px-4 py-3.5 text-left active:bg-bg-0"
+              className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 active:bg-bg-0 ${ inProgress ? 'bg-bg-0' : 'bg-card' }`}
             >
-              <div className="min-w-0 flex-1">
-                <p className="font-syne text-[14px] font-bold text-ink">
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-bold text-ink">
                   {chapter.title}
-                </p>
-                <p className="font-dm-sans text-[11px] text-muted">
-                  {chapter.topic_count} topics
-                </p>
-              </div>
+                </span>
+                <span className="mt-0.5 block text-[11px] text-muted">
+                  {chapter.topic_count} topics{inProgress ? ' · In Progress' : ''}
+                </span>
+              </span>
               <MasteryBadge mastery={chapter.mastery_percent} />
               <ChevronRight size={18} strokeWidth={1.5} className="text-gray-300" />
             </button>
@@ -165,7 +165,7 @@ function TopicsView({ chapterId }: { chapterId: string }) {
 
   if (fetchError) {
     return (
-      <div className="px-4 py-6 text-center font-dm-sans text-sm text-muted">
+      <div className="px-4 py-6 text-center text-sm text-muted">
         {fetchError}
       </div>
     );
@@ -176,7 +176,7 @@ function TopicsView({ chapterId }: { chapterId: string }) {
 
   return (
     <>
-      <p className="px-4 py-1.5 font-dm-sans text-[11px] text-muted">
+      <p className="px-4 py-1.5 text-[11px] text-muted">
         {topics.length} topics · WAEC-aligned
       </p>
       <div>
@@ -234,7 +234,7 @@ function LearningFlowSkeleton() {
           ))}
         </div>
       </div>
-      <div className="flex-1 bg-cream px-4 py-5">
+      <div className="flex-1 bg-bg-0 px-4 py-5">
         <div className="mb-4 flex items-center gap-2">
           <div className="h-6 w-6 animate-pulse rounded-md bg-bg-3" />
           <div className="h-4 w-32 animate-pulse rounded bg-bg-3" />
@@ -280,20 +280,20 @@ function LearningTopBar({
         </button>
 
         {isPracticeStep ? (
-          <p className="flex-1 font-dm-sans text-[12px] text-white/60">
+          <p className="flex-1 text-[12px] text-white/60">
             {showScoreSummary
               ? 'Practice complete'
               : `Question ${questionIndex + 1} of ${totalQuestions}`}
           </p>
         ) : (
-          <p className="min-w-0 flex-1 truncate font-syne text-[13px] font-black text-white">
+          <p className="min-w-0 flex-1 truncate font-bold text-[13px] font-black text-white">
             {topicTitle}
           </p>
         )}
 
         <button
           onClick={onExit}
-          className="flex-shrink-0 font-dm-sans text-[11px] text-white/30 active:text-white/60"
+          className="flex-shrink-0 text-[11px] text-white/30 active:text-white/60"
         >
           Exit
         </button>
@@ -304,9 +304,7 @@ function LearningTopBar({
         {STEP_LABELS.map((_, i) => (
           <div
             key={i}
-            className={`h-[3px] flex-1 rounded-full transition-colors ${
-              i < step ? 'bg-card' : 'bg-white/20'
-            }`}
+            className={`h-[3px] flex-1 rounded-full transition-colors ${ i < step ? 'bg-card' : 'bg-white/20' }`}
           />
         ))}
       </div>
@@ -320,13 +318,7 @@ function LearningTopBar({
             return (
               <span
                 key={i}
-                className={`flex-1 text-center font-dm-sans text-[9px] ${
-                  isDone
-                    ? 'text-white/50'
-                    : isCurrent
-                      ? 'font-bold text-white'
-                      : 'text-white/30'
-                }`}
+                className={`flex-1 text-center text-[9px] ${ isDone ? 'text-white/50' : isCurrent ? 'font-bold text-white' : 'text-white/30' }`}
               >
                 {isDone ? `${label} ✓` : label}
               </span>
@@ -355,31 +347,25 @@ function ScoreSummary({
   return (
     <div>
       <div
-        className={`mb-6 rounded-xl border-2 px-4 py-8 text-center ${
-          isGood ? 'border-jade bg-jade/10' : 'border-gold bg-gold/10'
-        }`}
+        className={`mb-6 rounded-xl border-2 px-4 py-8 text-center ${ isGood ? 'border-ink bg-ink/10' : 'border-gold bg-ink-2/10' }`}
       >
         <p
-          className={`font-syne text-[40px] font-black leading-none ${
-            isGood ? 'text-jade' : 'text-gold'
-          }`}
+          className={`font-bold text-[40px] font-black leading-none ${ isGood ? 'text-ink' : 'text-ink-2' }`}
         >
           {score}/{total}
         </p>
         <p
-          className={`mt-2 font-syne text-[16px] font-bold ${
-            isGood ? 'text-jade' : 'text-gold'
-          }`}
+          className={`mt-2 font-bold text-[16px] font-bold ${ isGood ? 'text-ink' : 'text-ink-2' }`}
         >
           {isGood ? 'Great work!' : 'Keep practicing!'}
         </p>
-        <p className="mt-1 font-dm-sans text-[13px] text-muted">
+        <p className="mt-1 text-[13px] text-muted">
           {score} correct out of {total}
         </p>
       </div>
       <button
         onClick={onContinue}
-        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-jade py-3.5 font-dm-sans text-[14px] font-bold text-white active:opacity-90"
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink py-3.5 text-[14px] font-bold text-white active:opacity-90"
       >
         Continue to AI Tutor
         <ChevronRight size={18} strokeWidth={2.5} />
@@ -503,98 +489,65 @@ function AITutorScaffold({
         <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-ink">
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-jade/10">
-          <Bot size={18} strokeWidth={1.5} className="text-jade" />
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
+          <Bot size={18} strokeWidth={1.5} className="text-ink" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-syne text-[14px] font-bold text-ink">AI Socratic Tutor</p>
-          <p className="truncate font-dm-sans text-[11px] text-muted">{topicTitle}</p>
+          <p className="font-bold text-[14px] font-bold text-ink">AI Tutor</p>
+          <p className="truncate text-[11px] text-muted">{topicTitle}</p>
         </div>
       </header>
 
-      {/* Message List area */}
-      <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {isHistoryLoading ? (
-          <div className="flex h-40 items-center justify-center">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-jade border-t-transparent" />
+      {/* Coming-soon banner */}
+      <div className="border-b border-ink/20 bg-ink/5 px-4 py-2.5">
+        <p className="text-[12px] leading-relaxed text-ink">
+          AI tutor will be available once content is reviewed and approved. You can still browse
+          other topics.
+        </p>
+      </div>
+
+      {/* Chat area */}
+      <main className="flex flex-1 flex-col px-4 pb-4 pt-4">
+        {/* AI opening message bubble */}
+        <div className="flex items-start gap-2">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
+            <Bot size={16} strokeWidth={1.5} className="text-ink" />
           </div>
-        ) : (
-          messages.map((msg, index) => {
-            const isAssistant = msg.role === 'assistant';
-            return (
-              <div
-                key={index}
-                className={`flex items-start gap-2.5 ${!isAssistant ? 'flex-row-reverse' : ''}`}
-              >
-                {isAssistant && (
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-jade/10">
-                    <Bot size={16} strokeWidth={1.5} className="text-jade" />
-                  </div>
-                )}
-                <div
-                  className={`max-w-[78%] rounded-2xl px-4 py-3 font-dm-sans text-[13px] leading-relaxed shadow-sm ${
-                    isAssistant
-                      ? 'rounded-tl-sm bg-card text-ink border border-border'
-                      : 'rounded-tr-sm bg-jade text-white'
-                  }`}
-                >
-                  {msg.content === '' && isLoading && index === messages.length - 1 ? (
-                    <div className="flex gap-1 py-1">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted/40 [animation-delay:-0.3s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted/40 [animation-delay:-0.15s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted/40" />
-                    </div>
-                  ) : (
-                    <MathContent content={msg.content} className="text-inherit" />
-                  )}
-                </div>
-              </div>
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
-      </main>
+          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-bg-2 px-4 py-3 text-[13px] leading-relaxed text-ink">
+            Good work on practice. What part of{' '}
+            <span className="font-bold">{topicTitle}</span> is still confusing you?
+          </div>
+        </div>
 
       {/* Bottom control CTAs if inactive */}
       {!isLoading && messages.length > 2 && (
         <div className="px-4 py-2 flex gap-2 justify-center bg-bg-0 border-t border-border/50">
           <button
             onClick={onBrowse}
-            className="flex-1 rounded-lg border border-border bg-card py-2 text-center font-dm-sans text-[11px] font-semibold text-muted active:bg-bg-2"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink py-3.5 text-[14px] font-bold text-white active:opacity-90"
           >
             Browse Topics
           </button>
           <button
             onClick={onHome}
-            className="flex-1 rounded-lg border border-border bg-card py-2 text-center font-dm-sans text-[11px] font-semibold text-muted active:bg-bg-2"
+            className="flex w-full items-center justify-center rounded-lg border border-border-2 py-3.5 text-[14px] font-semibold text-ink-2 active:bg-bg-0"
           >
             Back Home
           </button>
         </div>
       )}
 
-      {/* Message input */}
-      <div className="border-t border-border bg-card px-4 py-3">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-2 rounded-lg border border-border bg-bg-0 px-3 py-2">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              disabled={isLoading || isHistoryLoading}
-              placeholder={isLoading ? 'AI Tutor is thinking...' : 'Ask a question...'}
-              className="flex-1 bg-transparent font-dm-sans text-[13px] placeholder:text-muted focus:outline-none disabled:opacity-50"
-            />
-            <MessageSquare size={16} className="text-muted/50" />
-          </div>
-          <button
-            type="submit"
-            disabled={!inputMessage.trim() || isLoading || isHistoryLoading}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-jade text-white disabled:opacity-40 active:opacity-90 transition-opacity"
-          >
-            <Send size={15} />
-          </button>
-        </form>
+      {/* Disabled chat input */}
+      <div className="border-t border-border px-4 py-3">
+        <div className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5">
+          <input
+            type="text"
+            disabled
+            placeholder="AI tutor coming soon..."
+            className="flex-1 bg-transparent text-[13px] placeholder:text-gray-300 focus:outline-none"
+          />
+          <MessageSquare size={18} strokeWidth={1.5} className="flex-shrink-0 text-gray-200" />
+        </div>
       </div>
     </div>
   );
@@ -679,8 +632,8 @@ function LearningFlow({
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-6">
         <BookOpen size={36} strokeWidth={1.5} className="text-gray-300" />
-        <p className="text-center font-dm-sans text-[13px] text-muted">{fetchError}</p>
-        <button onClick={onExit} className="font-dm-sans text-[13px] font-bold text-jade">
+        <p className="text-center text-[13px] text-muted">{fetchError}</p>
+        <button onClick={onExit} className="text-[13px] font-bold text-ink">
           Go back
         </button>
       </div>
@@ -715,7 +668,7 @@ function LearningFlow({
         onExit={onExit}
       />
 
-      <main className="flex-1 overflow-y-auto bg-cream px-4 py-5">
+      <main className="flex-1 overflow-y-auto bg-bg-0 px-4 py-5">
         {/* Steps 1–3 — content card + CTA */}
         {(step === 1 || step === 2 || step === 3) && (
           <>
@@ -727,7 +680,7 @@ function LearningFlow({
             <div className="mt-5">
               <button
                 onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4 | 5)}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-jade py-3.5 font-dm-sans text-[14px] font-bold text-white active:opacity-90"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ink py-3.5 text-[14px] font-bold text-white active:opacity-90"
               >
                 {STEP_CTA[step]}
                 <ChevronRight size={18} strokeWidth={2.5} />
@@ -746,7 +699,7 @@ function LearningFlow({
               isLast={questionIndex === totalQuestions - 1}
             />
           ) : (
-            <div className="text-center py-8 font-dm-sans text-sm text-muted">
+            <div className="text-center py-8 text-sm text-muted">
               No practice questions available for this topic.
             </div>
           )
@@ -803,7 +756,7 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
         >
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
-        <h1 className="min-w-0 flex-1 truncate font-syne text-[17px] font-bold text-ink">
+        <h1 className="min-w-0 flex-1 truncate font-bold text-[17px] font-bold text-ink">
           {name}
         </h1>
       </header>

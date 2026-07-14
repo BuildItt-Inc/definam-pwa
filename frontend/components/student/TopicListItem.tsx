@@ -37,21 +37,21 @@ export function TopicListItem({ topic, onClick }: TopicListItemProps) {
     >
       {/* Title + subtitle */}
       <span className="min-w-0 flex-1">
-        <span className="block font-dm-sans text-[13px] font-bold text-ink">
+        <span className="block text-[13px] font-bold text-ink">
           {topic.title}
         </span>
-        <span className="mt-0.5 block font-dm-sans text-[11px] text-muted">
+        <span className="mt-0.5 block text-[11px] text-muted">
           {subtitle}
         </span>
       </span>
 
       {/* Action badge — wireframe: studied = jade "Study →", not yet = grey "Start →" */}
       {studied ? (
-        <span className="flex-shrink-0 rounded-[3px] bg-jade px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+        <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[10px] font-bold text-white">
           Study →
         </span>
       ) : (
-        <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+        <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 text-[10px] font-bold text-white">
           Start →
         </span>
       )}

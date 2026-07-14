@@ -122,7 +122,7 @@ function CallbackContent() {
           <CircleCheck size={30} strokeWidth={2} className="text-white" aria-hidden />
         </div>
 
-        <h1 className="font-syne text-[26px] font-black text-ink tracking-tight leading-none mb-2">
+        <h1 className="font-bold text-[26px] font-black text-ink tracking-tight leading-none mb-2">
           Payment Successful
         </h1>
         <p className="text-[13px] text-ink/50 mb-1.5">
@@ -178,7 +178,7 @@ function CallbackContent() {
           <CircleCheck size={30} strokeWidth={2} className="text-white" aria-hidden />
         </div>
 
-        <h1 className="font-syne text-[26px] font-black text-ink tracking-tight leading-none mb-2">
+        <h1 className="font-bold text-[26px] font-black text-ink tracking-tight leading-none mb-2">
           Payment Successful
         </h1>
         {state.orgName && (
@@ -220,7 +220,7 @@ function CallbackContent() {
           {state.totalAmountNaira > 0 && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-border-2">
               <span className="text-[12px] font-medium text-ink">Total paid</span>
-              <span className="font-syne text-[14px] font-black text-ink tracking-tight">
+              <span className="font-bold text-[14px] font-black text-ink tracking-tight">
                 ₦{state.totalAmountNaira.toLocaleString('en-NG')}
               </span>
             </div>
@@ -242,7 +242,7 @@ function CallbackContent() {
         <AlertCircle size={28} strokeWidth={2} className="text-danger" aria-hidden />
       </div>
 
-      <h1 className="font-syne text-[24px] font-black text-ink tracking-tight leading-none mb-2">
+      <h1 className="font-bold text-[24px] font-black text-ink tracking-tight leading-none mb-2">
         Verification Failed
       </h1>
       <p className="text-[13px] text-ink/50 leading-snug mb-8 max-w-[280px]">
@@ -291,7 +291,7 @@ function LoadingFallback() {
 
 export default function CallbackPage() {
   return (
-    <div className="min-h-screen bg-bg-0 font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
       {/* App bar */}
       <header className="flex items-center px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <span className="text-[15px] font-bold text-ink tracking-tight">

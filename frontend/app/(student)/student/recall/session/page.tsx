@@ -78,43 +78,43 @@ export default function RecallSessionPage() {
   if (completed) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-ink px-5 py-10 text-center">
-        <Sparkles size={32} strokeWidth={1.5} className="mb-3 text-gold" />
-        <h1 className="mb-1 font-syne text-[24px] font-black text-white">All done!</h1>
-        <p className="mb-8 font-dm-sans text-[12px] text-white/40">
+        <Sparkles size={32} strokeWidth={1.5} className="mb-3 text-ink-2" />
+        <h1 className="mb-1 font-bold text-[24px] font-black text-white">All done!</h1>
+        <p className="mb-8 text-[12px] text-white/40">
           {total} {total === 1 ? 'topic' : 'topics'} reviewed · {elapsedMinutes}{' '}
           {elapsedMinutes === 1 ? 'minute' : 'minutes'}
         </p>
 
         {/* Streak card */}
         <div className="mb-6 w-full max-w-xs rounded-2xl border border-white/10 bg-white/10 px-6 py-5">
-          <p className="mb-2 font-dm-sans text-[10px] font-bold uppercase tracking-wider text-white/40">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-white/40">
             Streak
           </p>
           <div className="flex items-center justify-center gap-2">
-            <Zap size={18} strokeWidth={1.5} className="text-gold" />
-            <span className="font-syne text-[40px] font-black leading-none text-white">
-              {streakDays !== null ? streakDays : '—'}
+            <Zap size={18} strokeWidth={1.5} className="text-ink-2" />
+            <span className="font-bold text-[40px] font-black leading-none text-white">
+              {newStreak}
             </span>
           </div>
-          <p className="mt-1 font-dm-sans text-[11px] text-white/40">days in a row</p>
+          <p className="mt-1 text-[11px] text-white/40">days in a row</p>
         </div>
 
         {/* Next review hint */}
-        <p className="mb-8 w-full max-w-xs text-left font-dm-sans text-[11px] leading-relaxed text-white/30">
-          Your next reviews are scheduled automatically based on your ratings.
+        <p className="mb-8 w-full max-w-xs text-left text-[11px] leading-relaxed text-white/30">
+          Next reviews: Tomorrow → Quadratic Equations · In 4 days → Linear Equations
         </p>
 
         {/* Navigation */}
         <div className="flex w-full max-w-xs flex-col gap-3">
           <button
             onClick={() => router.push('/student/learn')}
-            className="rounded-xl bg-jade py-3.5 font-syne text-[14px] font-bold text-white active:opacity-90"
+            className="rounded-xl bg-ink py-3.5 font-bold text-[14px] font-bold text-white active:opacity-90"
           >
             Browse More Topics →
           </button>
           <button
             onClick={() => router.push('/student')}
-            className="rounded-xl border border-white/20 py-3.5 font-dm-sans text-[13px] font-semibold text-white/60 active:opacity-70"
+            className="rounded-xl border border-white/20 py-3.5 text-[13px] font-semibold text-white/60 active:opacity-70"
           >
             Back to Home
           </button>
@@ -133,15 +133,15 @@ export default function RecallSessionPage() {
           {!answerRevealed && (
             <button
               onClick={() => router.push('/student/recall')}
-              className="font-dm-sans text-[13px] font-semibold text-white/40 active:opacity-70"
+              className="text-[13px] font-semibold text-white/40 active:opacity-70"
             >
               <ArrowLeft size={18} strokeWidth={1.5} />
             </button>
           )}
-          <p className="flex-1 font-syne text-[15px] font-bold text-white">
+          <p className="flex-1 font-bold text-[15px] font-bold text-white">
             Daily Recall
           </p>
-          <span className="rounded-full bg-white/10 px-3 py-1 font-dm-sans text-[11px] text-white/60">
+          <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] text-white/60">
             {currentIndex + 1} / {total}
           </span>
         </div>
@@ -151,20 +151,20 @@ export default function RecallSessionPage() {
           /* ── SCR-07b · Question hidden ── */
           <>
             <div className="mb-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-5 text-center">
-              <p className="mb-3 font-dm-sans text-[10px] font-bold uppercase tracking-wider text-white/40">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-white/40">
                 {currentItem.subject} · {currentItem.topic_title}
               </p>
-              <p className="font-syne text-[15px] font-bold leading-snug text-white">
+              <p className="font-bold text-[15px] font-bold leading-snug text-white">
                 {currentItem.question}
               </p>
-              <p className="mt-4 font-dm-sans text-[11px] text-white/30">
+              <p className="mt-4 text-[11px] text-white/30">
                 Tap to reveal answer ↓
               </p>
             </div>
 
             <button
               onClick={() => setAnswerRevealed(true)}
-              className="w-full rounded-xl border border-white/20 bg-white/10 py-3.5 font-dm-sans text-[14px] font-bold text-white active:opacity-70"
+              className="w-full rounded-xl border border-white/20 bg-white/10 py-3.5 text-[14px] font-bold text-white active:opacity-70"
             >
               Show Answer
             </button>
@@ -174,23 +174,23 @@ export default function RecallSessionPage() {
           <>
             {/* Collapsed question */}
             <div className="mb-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center">
-              <p className="font-dm-sans text-[12px] font-semibold leading-snug text-white/70">
+              <p className="text-[12px] font-semibold leading-snug text-white/70">
                 {currentItem.question}
               </p>
             </div>
 
             {/* Model answer card */}
             <div className="mb-4 rounded-xl bg-card px-4 py-4">
-              <p className="mb-2 font-dm-sans text-[9px] font-bold uppercase tracking-wider text-muted">
+              <p className="mb-2 text-[9px] font-bold uppercase tracking-wider text-muted">
                 Model Answer
               </p>
-              <p className="font-dm-sans text-[13px] leading-relaxed text-ink">
+              <p className="text-[13px] leading-relaxed text-ink">
                 {currentItem.model_answer}
               </p>
             </div>
 
             {/* Rating prompt */}
-            <p className="mb-3 text-center font-dm-sans text-[11px] font-semibold text-white/50">
+            <p className="mb-3 text-center text-[11px] font-semibold text-white/50">
               How well did you remember this?
             </p>
 

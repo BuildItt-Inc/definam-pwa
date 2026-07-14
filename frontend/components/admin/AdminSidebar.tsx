@@ -110,7 +110,7 @@ function SidebarBody({
     <div className="flex flex-col h-full bg-bg-0">
       {/* Logo row */}
       <div className="flex items-center justify-between px-4 py-[14px] border-b border-border-2">
-        <span className="font-syne text-[15px] font-extrabold text-ink tracking-tight">
+        <span className="font-bold text-[15px] font-extrabold text-ink tracking-tight">
           DefinAm
         </span>
         {onClose && (
@@ -151,11 +151,7 @@ function SidebarBody({
                     <Link
                       href={item.href}
                       onClick={onClose}
-                      className={`flex items-center gap-[10px] px-3 py-2 text-[12px] font-semibold rounded-[24px] transition-colors ${
-                        isActive
-                          ? 'bg-bg-1 text-ink shadow-sm border border-border-2'
-                          : 'text-muted hover:bg-bg-1 hover:text-ink'
-                      }`}
+                      className={`flex items-center gap-[10px] px-3 py-2 text-[12px] font-semibold rounded-[24px] transition-colors ${ isActive ? 'bg-bg-1 text-ink shadow-sm border border-border-2' : 'text-muted hover:bg-bg-1 hover:text-ink' }`}
                     >
                       <item.icon size={14} strokeWidth={2} />
                       {item.label}

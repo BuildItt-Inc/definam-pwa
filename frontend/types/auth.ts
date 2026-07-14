@@ -28,6 +28,7 @@ export interface ChangePasswordRequest {
 export interface RegisterRequest {
   username: string;
   password: string;
+  confirm_password: string;
   access_code: string;
 }
 

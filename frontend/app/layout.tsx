@@ -1,18 +1,11 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Syne, DM_Sans } from 'next/font/google';
-import Script from 'next/script';
+import { Inter } from 'next/font/google';
 
-const syne = Syne({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-syne',
-  weight: ['400', '600', '700', '800'],
-});
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-dm-sans',
-  weight: ['400', '600'],
+  variable: '--font-inter',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -34,7 +27,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${syne.variable} ${dmSans.variable} font-dm-sans bg-bg-0 text-ink antialiased`}
+        className={`${inter.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}
       >
         {children}
         {/* KaTeX JS — loaded after page content, never blocks render */}

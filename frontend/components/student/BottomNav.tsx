@@ -41,18 +41,16 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
           <Link
             key={href}
             href={href}
-            className={`flex flex-1 flex-col items-center gap-1 pb-4 pt-2 text-[10px] font-semibold transition-colors ${
-              isActive ? 'text-jade' : 'text-muted'
-            }`}
+            className={`flex flex-1 flex-col items-center gap-1 pb-4 pt-2 text-[10px] font-semibold transition-colors ${ isActive ? 'text-ink' : 'text-muted' }`}
           >
             <span className="relative">
               <Icon
                 size={20}
                 strokeWidth={1.5}
-                className={isActive ? 'text-jade' : 'text-muted'}
+                className={isActive ? 'text-ink' : 'text-muted'}
               />
               {showBadge && (
-                <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-jade px-0.5 text-[9px] font-bold text-white">
+                <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-ink px-0.5 text-[9px] font-bold text-white">
                   {recallCount}
                 </span>
               )}

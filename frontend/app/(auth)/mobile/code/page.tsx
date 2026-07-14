@@ -53,7 +53,7 @@ export default function OrgCodePage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-0 font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
 
       {/* ── App bar ── */}
       <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0">

@@ -111,7 +111,7 @@ export default function AdminLoginPage() {
   //  RENDER
   // ═════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-bg-0 font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
       {/* App bar */}
       <header className="flex items-center px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <span className="text-[15px] font-bold text-ink tracking-tight">
@@ -124,7 +124,7 @@ export default function AdminLoginPage() {
         {/* ── LOGIN FORM (hidden once force password change is active) ── */}
         {!forcePasswordChange && (
           <>
-            <h1 className="font-syne text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
+            <h1 className="font-bold text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
               School Admin Login
             </h1>
             <p className="text-[13px] text-ink/50 mb-8">
@@ -236,7 +236,7 @@ export default function AdminLoginPage() {
         {/* ── FORCE PASSWORD CHANGE BLOCK ─────────────────────────────── */}
         {forcePasswordChange && (
           <>
-            <h1 className="font-syne text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
+            <h1 className="font-bold text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
               Change Your Password
             </h1>
             <p className="text-[13px] text-ink/50 mb-6">

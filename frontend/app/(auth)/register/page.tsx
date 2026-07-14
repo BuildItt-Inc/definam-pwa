@@ -44,6 +44,7 @@ export default function RegisterPage() {
       await registerUser({
         username: values.username,
         password: values.password,
+        confirm_password: values.confirm_password,
         access_code: values.access_code, // already trimmed + uppercased by zod transform
       });
 
@@ -80,15 +81,15 @@ export default function RegisterPage() {
     return [
       'border rounded-xl transition-colors',
       hasError
-        ? 'border-coral'
-        : 'border-black/15 focus-within:border-jade',
+        ? 'border-danger'
+        : 'border-border focus-within:border-ink',
     ].join(' ');
   }
 
   return (
-    <div className="min-h-screen bg-cream font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
       {/* App bar */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-black/8 bg-cream">
+      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border bg-bg-0">
         <button
           type="button"
           onClick={() => router.back()}
@@ -118,7 +119,7 @@ export default function RegisterPage() {
             <div className={fieldBorder(!!errors.username)}>
               <label
                 htmlFor="username"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <User size={11} strokeWidth={2.5} aria-hidden />
                 Username
@@ -135,7 +136,7 @@ export default function RegisterPage() {
               />
             </div>
             {errors.username && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                 {errors.username.message}
               </p>
             )}
@@ -146,7 +147,7 @@ export default function RegisterPage() {
             <div className={fieldBorder(!!errors.password)}>
               <label
                 htmlFor="password"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <Lock size={11} strokeWidth={2.5} aria-hidden />
                 Password
@@ -175,7 +176,7 @@ export default function RegisterPage() {
               </div>
             </div>
             {errors.password && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                 {errors.password.message}
               </p>
             )}
@@ -186,7 +187,7 @@ export default function RegisterPage() {
             <div className={fieldBorder(!!errors.confirm_password)}>
               <label
                 htmlFor="confirm-password"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <Lock size={11} strokeWidth={2.5} aria-hidden />
                 Confirm Password
@@ -217,7 +218,7 @@ export default function RegisterPage() {
               </div>
             </div>
             {errors.confirm_password && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                 {errors.confirm_password.message}
               </p>
             )}
@@ -228,7 +229,7 @@ export default function RegisterPage() {
             <div className={fieldBorder(!!errors.access_code)}>
               <label
                 htmlFor="access-code"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <KeyRound size={11} strokeWidth={2.5} aria-hidden />
                 Access Code (from your email)
@@ -245,7 +246,7 @@ export default function RegisterPage() {
               />
             </div>
             {errors.access_code && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                 {errors.access_code.message}
               </p>
             )}
@@ -255,7 +256,7 @@ export default function RegisterPage() {
           {bannerError && (
             <div
               role="alert"
-              className="mb-4 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug"
+              className="mb-4 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/20 text-danger text-[13px] font-medium leading-snug"
             >
               {bannerError}
             </div>
@@ -265,7 +266,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
+            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink-2 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
           >
             {isSubmitting ? (
               <>

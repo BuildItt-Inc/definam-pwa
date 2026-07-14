@@ -27,14 +27,14 @@ export function QualityRating({ onRate }: QualityRatingProps) {
             className={[
               'flex flex-col items-center rounded-lg py-2.5 transition-opacity active:opacity-70',
               isPerfect
-                ? 'border border-white bg-jade text-white'
+                ? 'border border-white bg-ink text-white'
                 : isStruggling
                   ? 'border border-dashed border-white/40 bg-transparent text-white'
                   : 'border border-white/40 bg-transparent text-white',
             ].join(' ')}
           >
-            <span className="font-syne text-[14px] font-black leading-tight">{value}</span>
-            <span className="mt-0.5 font-dm-sans text-[8px] font-semibold leading-tight">
+            <span className="font-bold text-[14px] font-black leading-tight">{value}</span>
+            <span className="mt-0.5 text-[8px] font-semibold leading-tight">
               {label}
             </span>
           </button>

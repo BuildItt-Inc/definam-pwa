@@ -105,7 +105,7 @@ export default function AdminIdsPage() {
     <div className="flex flex-col h-full">
       {/* Top bar */}
       <div className="bg-card border-b border-border-2 px-5 py-[10px] flex items-center shrink-0">
-        <h1 className="font-syne text-[14px] font-extrabold text-ink leading-tight tracking-tight">
+        <h1 className="font-bold text-[14px] font-extrabold text-ink leading-tight tracking-tight">
           Access ID Management
         </h1>
       </div>
