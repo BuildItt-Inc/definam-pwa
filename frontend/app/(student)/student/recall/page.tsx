@@ -94,7 +94,7 @@ export default function RecallPage() {
           </button>
           <div>
             <h1 className="text-[17px] font-bold text-ink">Daily Recall</h1>
-            <p className="text-[15px] text-muted">{dateLabel}</p>
+            <p className="text-[13px] text-muted">{dateLabel}</p>
           </div>
         </header>
 
@@ -134,7 +134,7 @@ export default function RecallPage() {
         </button>
         <div>
           <h1 className="text-[17px] font-bold text-ink">Daily Recall</h1>
-          <p className="text-[15px] text-muted">{dateLabel}</p>
+          <p className="text-[13px] text-muted">{dateLabel}</p>
         </div>
       </header>
 
@@ -147,7 +147,7 @@ export default function RecallPage() {
             <p className="text-[15px] font-bold text-ink">
               {queue.length} {queue.length === 1 ? 'topic' : 'topics'} due today
             </p>
-            <p className="flex items-center gap-1 text-[15px] text-muted">
+            <p className="flex items-center gap-1 text-[13px] text-muted">
               <Clock size={10} strokeWidth={2} />
               ~{minuteEstimate} minutes
             </p>
@@ -179,7 +179,7 @@ export default function RecallPage() {
                 <p className="text-[15px] font-bold text-ink">
                   {item.topic_title}
                 </p>
-                <p className="text-[15px] font-medium text-muted">
+                <p className="text-[13px] font-medium text-muted">
                   {item.subject} · Due today
                 </p>
               </div>

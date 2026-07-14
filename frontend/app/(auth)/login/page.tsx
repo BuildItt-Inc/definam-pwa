@@ -52,9 +52,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-0 page-enter">
+    <div className="min-h-screen bg-card md:bg-bg-0 page-enter flex flex-col">
       {/* App bar */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border bg-bg-0">
+      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border bg-card md:hidden">
         <button
           type="button"
           onClick={() => router.back()}
@@ -68,12 +68,13 @@ export default function LoginPage() {
         </span>
       </header>
 
-      <main className="px-5 pt-8 pb-12 md:max-w-md md:mx-auto md:pt-12">
+      <main className="flex-1 flex flex-col justify-center px-5 py-12 md:max-w-md md:mx-auto w-full">
+        <div className="md:bg-card md:border md:border-border md:rounded-2xl md:p-8 md:shadow-sm">
         {/* Page heading */}
-        <h1 className="text-[28px] font-bold text-ink tracking-tight leading-none mb-1.5">
+        <h1 className="text-[28px] font-bold text-ink tracking-tight leading-none mb-2 md:text-center">
           Welcome back
         </h1>
-        <p className="text-[15px] text-muted mb-8">
+        <p className="text-[15px] text-muted mb-8 md:text-center">
           Login with your username and password
         </p>
 
@@ -82,7 +83,7 @@ export default function LoginPage() {
           <div className="mb-4">
             <label
               htmlFor="username"
-              className="flex items-center gap-1.5 mb-1 text-[12px] font-bold uppercase tracking-wide text-muted"
+              className="block mb-2 text-[14px] font-medium text-ink"
             >
               <User size={12} strokeWidth={2.5} aria-hidden />
               Username
@@ -102,10 +103,10 @@ export default function LoginPage() {
           </div>
 
           {/* ── Password ── */}
-          <div className="mb-8">
+          <div className="mb-6">
             <label
               htmlFor="password"
-              className="flex items-center gap-1.5 mb-1 text-[12px] font-bold uppercase tracking-wide text-muted"
+              className="block mb-2 text-[14px] font-medium text-ink"
             >
               <Lock size={12} strokeWidth={2.5} aria-hidden />
               Password
@@ -174,6 +175,7 @@ export default function LoginPage() {
               Sign up here
             </Link>
           </p>
+        </div>
         </div>
       </main>
     </div>

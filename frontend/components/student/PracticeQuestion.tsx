@@ -40,7 +40,7 @@ export function PracticeQuestion({
     <div>
       {/* Question card */}
       <div className="mb-4 rounded-2xl border-[1.5px] border-border bg-card px-5 py-5 shadow-sm">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted">
+        <p className="mb-2 text-[12px] font-bold uppercase tracking-wider text-muted">
           Practice Question
         </p>
         <p className="text-[16px] font-bold leading-relaxed text-ink">
@@ -56,7 +56,7 @@ export function PracticeQuestion({
             onClick={() => handleSelect(opt)}
             tabIndex={revealed ? -1 : undefined}
             className={[
-              'flex w-full items-center gap-3 rounded-xl border-[1.5px] px-4 py-3.5 text-left text-[14px] font-semibold transition-all',
+              'flex w-full items-center gap-3 rounded-xl border-[1.5px] px-4 py-3.5 text-left text-[16px] font-semibold transition-all',
               isCorrectOpt(opt)
                 ? 'border-brand bg-brand text-white shadow-brand-sm'
                 : isWrongSelected(opt)
@@ -85,7 +85,7 @@ export function PracticeQuestion({
       {/* Explanation — shown after reveal */}
       {revealed && (
         <div
-          className={`mb-6 rounded-xl px-5 py-4 text-[14px] leading-relaxed shadow-sm ${ gotItRight ? 'bg-brand/10 text-brand-dark' : 'bg-danger/10 text-danger-dark' }`}
+          className={`mb-6 rounded-xl px-5 py-4 text-[16px] leading-relaxed shadow-sm ${ gotItRight ? 'bg-brand/10 text-brand-dark' : 'bg-danger/10 text-danger-dark' }`}
         >
           <span className="font-bold">
             {gotItRight

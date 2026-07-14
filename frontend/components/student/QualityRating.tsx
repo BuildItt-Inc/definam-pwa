@@ -33,7 +33,7 @@ export function QualityRating({ onRate }: QualityRatingProps) {
                   : 'border border-white/40 bg-transparent text-white',
             ].join(' ')}
           >
-            <span className="font-bold text-[14px] font-black leading-tight">{value}</span>
+            <span className="font-bold text-[16px] font-black leading-tight">{value}</span>
             <span className="mt-0.5 text-[8px] font-semibold leading-tight">
               {label}
             </span>

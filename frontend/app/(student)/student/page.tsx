@@ -46,7 +46,7 @@ function HomeSkeleton() {
   return (
     <div className="min-h-screen bg-card">
       {/* Header */}
-      <div className="bg-ink px-4 pb-8 pt-5">
+      <div className="bg-ink px-4 pb-8 pt-safe-offset-8">
         <div className="mb-1.5 h-3 w-20 animate-pulse rounded bg-white/10" />
         <div className="mb-1.5 h-7 w-44 animate-pulse rounded bg-white/20" />
         <div className="mb-4 h-3 w-52 animate-pulse rounded bg-white/10" />
@@ -103,8 +103,8 @@ function TopicRow({
       className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0"
     >
       {/* Subject icon */}
-      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-border-2 bg-card">
-        <Icon size={14} strokeWidth={1.5} className="text-muted" />
+      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-brand/20 bg-brand/10">
+        <Icon size={14} strokeWidth={1.5} className="text-brand" />
       </span>
 
       {/* Info */}
@@ -112,7 +112,7 @@ function TopicRow({
         <span className="block truncate text-[15px] font-bold text-ink">
           {topic.topic_title}
         </span>
-        <span className="mt-0.5 block text-[15px] text-muted">
+        <span className="mt-0.5 block text-[13px] text-muted">
           {topic.subject}
           {isEmpty ? ' · Not started' : ''}
         </span>
@@ -128,7 +128,7 @@ function TopicRow({
 
       {/* Right action */}
       {isEmpty ? (
-        <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[16px] font-bold text-white">
+        <span className="flex-shrink-0 rounded-md bg-brand px-3 py-1 text-[12px] font-bold text-white shadow-sm hover:bg-brand-dark transition-colors">
           Start →
         </span>
       ) : (
@@ -193,15 +193,15 @@ export default function StudentHomePage() {
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
 
-      {/* ── SCR-04 · Dark header ─────────────────────────────────────────── */}
-      <header className="bg-ink px-4 pb-7 pt-safe">
-        <p className="mb-0.5 text-[15px] text-white/50">
-          {greeting}
+      {/* ── 1. Header ── */}
+      <div className="bg-ink px-4 pb-8 pt-safe-offset-8">
+        <p className="mb-0.5 text-[13px] text-white/50">
+          {greeting},
         </p>
         <h1 className="mb-0.5 font-bold text-[22px] leading-tight text-white">
           {student_name}
         </h1>
-        <p className="mb-3 text-[15px] text-white/40">{school_name}</p>
+        <p className="mb-3 text-[13px] text-white/40">{school_name}</p>
 
         {/* Streak pill */}
         <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
@@ -209,11 +209,11 @@ export default function StudentHomePage() {
           <span className="font-bold text-[18px] leading-none text-white">
             {streak_days}
           </span>
-          <span className="text-[15px] text-white/60">
+          <span className="text-[13px] text-white/60">
             {streak_days === 0 ? 'Start your streak!' : 'day streak'}
           </span>
         </div>
-      </header>
+      </div>
 
       {/* ── Main scroll area ─────────────────────────────────────────────── */}
       <main className="flex-1 px-4">
@@ -236,7 +236,7 @@ export default function StudentHomePage() {
               </span>
               <Link
                 href="/student/learn"
-                className="text-[16px] font-semibold text-brand hover:text-brand-dark"
+                className="text-[14px] font-semibold text-brand hover:text-brand-dark"
               >
                 See all
               </Link>
@@ -248,7 +248,7 @@ export default function StudentHomePage() {
                 <button
                   key={pill}
                   onClick={() => setActivePill(i)}
-                  className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-[16px] font-semibold transition-colors ${
+                  className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-[14px] font-semibold transition-colors ${
                     activePill === i
                       ? 'border-brand bg-brand text-white shadow-brand-sm'
                       : 'border-border-2 bg-bg-1 text-muted hover:bg-bg-2 hover:text-ink'

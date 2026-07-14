@@ -41,7 +41,7 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
           <Link
             key={href}
             href={href}
-            className={`flex flex-1 flex-col items-center justify-center gap-1 pb-3 pt-2 text-[10px] font-semibold transition-all duration-200 ${
+            className={`flex flex-1 flex-col items-center justify-center gap-1 pb-3 pt-2 text-[12px] font-semibold transition-all duration-200 ${
               isActive ? 'text-brand scale-105' : 'text-faint hover:text-muted'
             }`}
           >
@@ -52,7 +52,7 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
                 className={`transition-colors ${isActive ? 'text-brand fill-brand/20' : 'text-faint'}`}
               />
               {showBadge && (
-                <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-card animate-pulse-brand">
+                <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-danger px-1 text-[12px] font-bold text-white shadow-sm ring-2 ring-card animate-pulse-brand">
                   {recallCount}
                 </span>
               )}

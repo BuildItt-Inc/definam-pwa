@@ -14,12 +14,12 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
     <div>
       {/* Step number + title row */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[8px] bg-brand text-[13px] font-black text-white shadow-brand-sm">
+        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[8px] bg-brand text-[15px] font-black text-white shadow-brand-sm">
           {step}
         </span>
         <span className="text-[16px] font-bold text-ink">{title}</span>
         {step === 2 && (
-          <span className="ml-auto flex flex-shrink-0 items-center gap-1 rounded-[6px] bg-brand/10 border border-brand/20 px-2 py-1 text-[10px] font-bold text-brand">
+          <span className="ml-auto flex flex-shrink-0 items-center gap-1 rounded-[6px] bg-brand/10 border border-brand/20 px-2 py-1 text-[12px] font-bold text-brand">
             <Flag size={10} strokeWidth={2} />
             Nigerian Context
           </span>
@@ -59,12 +59,12 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
                   key={i}
                   content={line}
                   allowBlock={false}
-                  className="block font-mono text-[13px] leading-relaxed text-ink"
+                  className="block font-mono text-[15px] leading-relaxed text-ink"
                 />
               ),
             )}
           </div>
-          <p className="rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-[11px] text-muted">
+          <p className="rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-[13px] text-muted">
             Text diagrams only in V1 — image generation is V2.
           </p>
         </div>

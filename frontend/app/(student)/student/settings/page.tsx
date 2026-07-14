@@ -146,7 +146,7 @@ export default function SettingsPage() {
         {/* ── Profile card ──────────────────────────────────────────────── */}
         <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
           <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-            <span className="text-[15px] font-bold text-ink">Profile</span>
+            <span className="text-[13px] font-bold text-ink">Profile</span>
           </div>
           <div className="px-4 py-3">
             <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ export default function SettingsPage() {
                 {nameInput}
               </span>
             </div>
-            <p className="mt-1.5 text-[16px] text-muted">
+            <p className="mt-1.5 text-[14px] text-muted">
               {isIndividual ? 'Independent Learner' : schoolName}
             </p>
           </div>
@@ -164,13 +164,13 @@ export default function SettingsPage() {
         {isIndividual && (
           <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
             <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-              <span className="text-[15px] font-bold text-ink">
+              <span className="text-[13px] font-bold text-ink">
                 Change Password
               </span>
             </div>
             <form onSubmit={handleChangePassword} className="px-4 py-3">
               <div className="mb-3">
-                <label className="mb-1 block text-[15px] font-semibold text-muted">
+                <label className="mb-1 block text-[13px] font-semibold text-muted">
                   New Password
                 </label>
                 <input
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="mb-3">
-                <label className="mb-1 block text-[15px] font-semibold text-muted">
+                <label className="mb-1 block text-[13px] font-semibold text-muted">
                   Confirm Password
                 </label>
                 <input
@@ -198,10 +198,10 @@ export default function SettingsPage() {
                 />
               </div>
               {pwError && (
-                <p className="mb-2 text-[16px] text-danger">{pwError}</p>
+                <p className="mb-2 text-[14px] text-danger">{pwError}</p>
               )}
               {pwSuccess && (
-                <p className="mb-2 text-[16px] text-success">
+                <p className="mb-2 text-[14px] text-success">
                   Password updated successfully.
                 </p>
               )}
@@ -227,7 +227,7 @@ export default function SettingsPage() {
         </button>
 
         {/* App version */}
-        <p className="mt-8 text-center text-[15px] text-muted">
+        <p className="mt-8 text-center text-[13px] text-muted">
           v{APP_VERSION}
         </p>
 
