@@ -16,14 +16,14 @@
 -      await loginUser(values);
 -      router.push('/student');
 +      const { role } = await loginUser(values);
-+      router.push(role === 'admin' ? '/admin' : '/student');
++      router.push(role === 'admin' ? '/admin/login' : '/student');
 ```
 
 ## Role values confirmed
 
 From `types/auth.ts` — `LoginResponse.role: string` carries:
 
-- `"admin"` → redirect to `/admin`
+- `"admin"` → redirect to `/admin/login` (not `/admin` directly — so the existing `force_password_change` inline flow on that page runs before granting dashboard access)
 - `"student_individual"` → redirect to `/student`
 - `"student_org"` → redirect to `/student`
 
