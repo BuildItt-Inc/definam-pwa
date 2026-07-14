@@ -27,7 +27,7 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-border bg-card pb-safe pt-1 shadow-[0_-4px_16px_rgba(0,0,0,0.02)]">
+    <nav className="fixed -bottom-[100px] left-0 right-0 z-50 flex border-t border-border bg-card pb-[calc(env(safe-area-inset-bottom)+100px)] pt-1 shadow-[0_-4px_16px_rgba(0,0,0,0.02)]">
       {TABS.map(({ label, icon: Icon, href }) => {
         // Exact match for /student so /student/learn doesn't also highlight Home.
         const isActive = pathname

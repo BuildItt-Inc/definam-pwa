@@ -69,6 +69,7 @@
   }
 
   html {
+    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
     overflow-x: hidden; /* Prevent page horizontal scroll */
     /* Prevent layout shift from scrollbar appearance */
     overflow-y: scroll;
@@ -79,6 +80,7 @@
   }
 
   body {
+    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
     overflow-x: hidden; /* Prevent page horizontal scroll */
     margin: 0;
     min-height: 100dvh; /* dvh = dynamic viewport height — fixes mobile chrome bar */
