@@ -48,3 +48,12 @@ export interface OrgLoginResponse {
   access_token: string;
   role: string;
 }
+
+// ── GET /api/v1/auth/me ───────────────────────────────────────────────────
+
+export interface UserMe {
+  id: string;
+  username: string;
+  role: string;
+  org_id: string | null;
+}
