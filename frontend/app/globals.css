@@ -69,6 +69,7 @@
   }
 
   html {
+    overflow-x: hidden; /* Prevent page horizontal scroll */
     /* Prevent layout shift from scrollbar appearance */
     overflow-y: scroll;
     /* Smooth scrolling everywhere */
@@ -78,6 +79,7 @@
   }
 
   body {
+    overflow-x: hidden; /* Prevent page horizontal scroll */
     margin: 0;
     min-height: 100dvh; /* dvh = dynamic viewport height — fixes mobile chrome bar */
     font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
@@ -212,3 +214,7 @@
   border-radius: 4px;
   font-size: 0.9em;
 }
+
+/* Fix for extremely long inline math causing page overflows */
+.math-inline { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; }
+.math-inline::-webkit-scrollbar { display: none; }

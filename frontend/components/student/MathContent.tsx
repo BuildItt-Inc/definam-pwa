@@ -114,7 +114,7 @@ function renderInline(
       }
       if (part.type === 'inline') {
         try {
-          return katex.renderToString(part.math, { displayMode: false, throwOnError: false });
+          return `<span class="math-inline">${katex.renderToString(part.math, { displayMode: false, throwOnError: false })}</span>`;
         } catch {
           return `<code class="math-err">${escapeHtml(part.math)}</code>`;
         }
