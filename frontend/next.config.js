@@ -1,32 +1,30 @@
-<<<<<<< Updated upstream
-/** @type {import("next").NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-};
-module.exports = nextConfig;
-=======
-let withPWA = null;
-try {
-  const p = require("next-pwa");
-  withPWA = typeof p === "function" ? p : p && typeof p.default === "function" ? p.default : null;
-} catch (e) {
-  // next-pwa not available or failed to load (e.g. missing optional peer deps)
-  withPWA = null;
-}
-
+/** @type {import('next').NextConfig} */
 const baseConfig = {
   reactStrictMode: true,
 };
 
-if (withPWA) {
-  module.exports = withPWA({
-    ...baseConfig,
-    pwa: {
-      dest: "public",
-      disable: process.env.NODE_ENV === "development",
-    },
-  });
-} else {
-  module.exports = baseConfig;
+let nextConfig = baseConfig;
+
+try {
+  const pwaFactory = require('next-pwa');
+  // next-pwa v5: factory takes PWA options and returns a HOC
+  const withPWA =
+    typeof pwaFactory === 'function'
+      ? pwaFactory
+      : pwaFactory && typeof pwaFactory.default === 'function'
+        ? pwaFactory.default
+        : null;
+
+  if (withPWA) {
+    nextConfig = withPWA({
+      dest: 'public',
+      disable: process.env.NODE_ENV === 'development',
+      register: true,
+      skipWaiting: true,
+    })(baseConfig);
+  }
+} catch (e) {
+  // next-pwa not available — fall back to plain config
 }
->>>>>>> Stashed changes
+
+module.exports = nextConfig;

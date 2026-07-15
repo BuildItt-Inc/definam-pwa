@@ -12,8 +12,6 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { Subject } from '@/types/topics';
 
-// ── Subject → icon ─────────────────────────────────────────────────────────
-
 const SUBJECT_ICONS: Record<string, LucideIcon> = {
   Mathematics: Calculator,
   Chemistry: FlaskConical,
@@ -22,32 +20,6 @@ const SUBJECT_ICONS: Record<string, LucideIcon> = {
   Economics: TrendingUp,
 };
 
-// ── Mastery badge ──────────────────────────────────────────────────────────
-
-function MasteryBadge({ mastery }: { mastery: number | null }) {
-  if (mastery === null || mastery === 0) {
-    return (
-      <span className="flex-shrink-0 rounded-[4px] border border-border-2 bg-bg-1 px-2 py-0.5 text-[12px] font-bold text-muted">
-        —
-      </span>
-    );
-  }
-  if (mastery >= 60) {
-    return (
-      <span className="flex-shrink-0 rounded-[4px] bg-brand px-2 py-0.5 text-[12px] font-bold text-white shadow-brand-sm">
-        {mastery}%
-      </span>
-    );
-  }
-  return (
-    <span className="flex-shrink-0 rounded-[4px] bg-ink px-2 py-0.5 text-[12px] font-bold text-white">
-      {mastery}%
-    </span>
-  );
-}
-
-// ── Component ──────────────────────────────────────────────────────────────
-
 interface SubjectCardProps {
   subject: Subject;
   onClick: () => void;
@@ -55,30 +27,46 @@ interface SubjectCardProps {
 
 export function SubjectCard({ subject, onClick }: SubjectCardProps) {
   const Icon = SUBJECT_ICONS[subject.name] ?? BookOpen;
+  const mastery = subject.mastery_percent;
 
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-1"
+      className="flex w-full items-center gap-3 border-b border-[#F3F4F6] px-4 py-4 text-left transition-colors hover:bg-[#F9FAFB] active:bg-[#F3F4F6]"
     >
-      {/* Subject icon box */}
-      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand/5 border border-brand/10 text-brand">
-        <Icon size={16} strokeWidth={2} />
+      {/* Icon */}
+      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4] border border-[#BBF7D0]">
+        <Icon size={16} strokeWidth={1.8} className="text-[#16A34A]" />
       </span>
 
-      {/* Name + count */}
+      {/* Name and meta */}
       <span className="min-w-0 flex-1">
-        <span className="block text-[16px] font-bold text-ink">
+        <span className="block text-[15px] font-semibold text-[#111827]">
           {subject.name}
         </span>
-        <span className="mt-0.5 block text-[13px] font-medium text-muted">
-          {subject.chapter_count} chapters · {subject.topic_count} topics
+        <span className="mt-0.5 block text-[13px] text-[#9CA3AF]">
+          {subject.chapter_count} chapters
         </span>
       </span>
 
-      <MasteryBadge mastery={subject.mastery_percent} />
+      {/* Mastery */}
+      {mastery !== null && mastery > 0 ? (
+        <span
+          className={`flex-shrink-0 rounded-md px-2 py-0.5 text-[12px] font-semibold ${
+            mastery >= 60
+              ? 'bg-[#F0FDF4] text-[#16A34A]'
+              : 'bg-[#F3F4F6] text-[#6B7280]'
+          }`}
+        >
+          {mastery}%
+        </span>
+      ) : (
+        <span className="flex-shrink-0 rounded-md bg-[#F3F4F6] px-2 py-0.5 text-[12px] font-medium text-[#9CA3AF]">
+          New
+        </span>
+      )}
 
-      <ChevronRight size={16} strokeWidth={2} className="flex-shrink-0 text-faint" />
+      <ChevronRight size={15} strokeWidth={1.5} className="flex-shrink-0 text-[#D1D5DB] ml-1" />
     </button>
   );
 }
