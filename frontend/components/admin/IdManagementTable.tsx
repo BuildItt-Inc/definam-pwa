@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Search } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from '@/lib/motion';
 import type { AccessCode } from '@/types/admin';
 
 interface IdManagementTableProps {
@@ -50,34 +52,30 @@ export function IdManagementTable({
   });
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="bg-bg-0 border border-border-2 rounded-[24px] overflow-hidden shadow-sm">
       {/* Toolbar: search + status filter */}
-      <div className="px-4 py-3 border-b border-gray-200 flex flex-wrap items-center gap-3">
-        <div className="relative">
+      <div className="px-6 py-4 border-b border-border-2 bg-bg-1/50 flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
           <Search
-            size={12}
-            strokeWidth={1.5}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            size={14}
+            strokeWidth={2}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
           />
           <input
             type="text"
             placeholder="Search by code or student..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-7 pr-3 py-1.5 text-[11px] border border-gray-200 rounded-md bg-gray-50 w-56 focus:outline-none focus:ring-1 focus:ring-jade focus:border-jade placeholder:text-gray-400"
+            className="pl-9 pr-4 py-2 text-[12px] font-semibold border border-border-2 rounded-[16px] bg-bg-0 w-full focus:outline-none focus:border-ink transition-colors placeholder:text-muted placeholder:font-medium text-ink"
           />
         </div>
 
-        <div className="flex items-center gap-0.5 bg-gray-100 rounded-md p-0.5 ml-auto">
+        <div className="flex items-center gap-1 bg-bg-1 border border-border-2 rounded-[16px] p-1 sm:ml-auto">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`px-3 py-1 text-[11px] font-semibold rounded transition-colors ${
-                statusFilter === tab.key
-                  ? 'bg-jade text-white'
-                  : 'text-gray-500 hover:text-jade'
-              }`}
+              className={`px-4 py-1.5 text-[11px] font-bold rounded-[12px] transition-colors ${ statusFilter === tab.key ? 'bg-ink text-white shadow-sm' : 'text-muted hover:text-ink' }`}
             >
               {tab.label}
             </button>
@@ -89,73 +87,83 @@ export function IdManagementTable({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-4 py-[7px] text-left text-[10px] font-bold uppercase tracking-[0.06em] text-gray-400">
+            <tr className="bg-bg-0 border-b border-border-2">
+              <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 Access Code
               </th>
-              <th className="px-4 py-[7px] text-left text-[10px] font-bold uppercase tracking-[0.06em] text-gray-400">
+              <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 Student Name
               </th>
-              <th className="px-4 py-[7px] text-left text-[10px] font-bold uppercase tracking-[0.06em] text-gray-400">
+              <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 Status
               </th>
-              <th className="px-4 py-[7px] text-left text-[10px] font-bold uppercase tracking-[0.06em] text-gray-400">
+              <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 Activated
               </th>
             </tr>
           </thead>
-          <tbody>
+          <motion.tbody
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {filtered.length === 0 ? (
               <tr>
                 <td
                   colSpan={4}
-                  className="px-4 py-10 text-center text-[12px] text-gray-400"
+                  className="px-6 py-12 text-center text-[12px] font-medium text-muted"
                 >
                   No codes match your search.
                 </td>
               </tr>
             ) : (
-              filtered.map((code) => (
-                <tr
-                  key={code.id}
-                  className="border-b border-gray-100 last:border-b-0 hover:bg-jade-tint transition-colors"
-                >
-                  <td className="px-4 py-[9px]">
-                    <span className="font-mono font-bold text-[13px] tracking-wider text-ink">
-                      {code.code}
-                    </span>
-                  </td>
-                  <td className="px-4 py-[9px] text-[12px]">
-                    {code.student_name ? (
-                      <span className="text-ink font-medium">{code.student_name}</span>
-                    ) : (
-                      <span className="text-gray-400 italic">— Not yet used</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-[9px]">
-                    {code.status === 'active' ? (
-                      <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-jade text-white">
-                        Active
+              filtered.map((code, idx) => {
+                const rowBg = idx % 2 === 0 ? 'bg-bg-0' : 'bg-bg-1/30';
+                return (
+                  <motion.tr
+                    variants={staggerItem}
+                    key={code.id}
+                    className={`border-b border-border-2 last:border-b-0 hover:bg-bg-1 transition-colors ${rowBg}`}
+                  >
+                    <td className="px-6 py-4">
+                      <span className="font-mono font-bold text-[14px] tracking-widest text-ink">
+                        {code.code}
                       </span>
-                    ) : (
-                      <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded border border-gray-300 text-gray-500">
-                        Unused
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-[9px] text-[12px] text-gray-500">
-                    {formatDate(code.activated_at)}
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td className="px-6 py-4 text-[13px]">
+                      {code.student_name ? (
+                        <span className="text-ink font-bold">{code.student_name}</span>
+                      ) : (
+                        <span className="text-muted font-medium italic">— Not yet used</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {code.status === 'active' ? (
+                        <span className="inline-flex items-center px-3 py-1 text-[10px] font-bold rounded-[16px] bg-bg-0 text-ink border border-border-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-success mr-2" />
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 text-[10px] font-bold rounded-[16px] bg-bg-0 text-muted border border-border-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 mr-2" />
+                          Unused
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-[12px] font-medium text-muted">
+                      {formatDate(code.activated_at)}
+                    </td>
+                  </motion.tr>
+                );
+              })
             )}
-          </tbody>
+          </motion.tbody>
         </table>
       </div>
 
-      {/* Footer count */}
-      <div className="px-4 py-2 border-t border-gray-100 text-[10px] text-gray-400">
-        Showing {filtered.length} of {codes.length} codes
+      {/* Footer */}
+      <div className="px-6 py-4 bg-bg-1/30 text-[11px] font-medium text-muted border-t border-border-2">
+        Showing {filtered.length} of {codes.length} total codes
       </div>
     </div>
   );

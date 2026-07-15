@@ -21,7 +21,7 @@ export default function PatternGlyphs({ glyphs }: { glyphs: Glyph[] }) {
             transform: `rotate(${g.rotate}deg)`,
             fontSize: `${g.size}px`,
             color: g.color,
-            fontFamily: 'var(--font-syne), sans-serif',
+            fontFamily: 'var(--font-bold), sans-serif',
             fontWeight: 800,
             pointerEvents: 'none',
             userSelect: 'none',

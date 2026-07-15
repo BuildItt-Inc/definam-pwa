@@ -63,6 +63,7 @@ class User(Base):
         UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     username: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    email: Mapped[str | None] = mapped_column(String(255), index=True, nullable=True)
     password_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
     role: Mapped[str] = mapped_column(
         String(50), nullable=False
@@ -95,6 +96,7 @@ class AccessCode(Base):
         UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
     )
     code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     type: Mapped[str] = mapped_column(String(20), nullable=False)  # individual | org
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="pending"
@@ -352,13 +354,17 @@ class ChatMessage(Base):
     )
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # user, assistant
     content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # NEW: Token tracking columns
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
 
     topic: Mapped[Topic | None] = relationship("Topic", back_populates="chat_messages")
     user: Mapped[User] = relationship("User")
-
 
 # ── Chat Daily Usage (Rate Limiting) ──────────────────────────────────────
 

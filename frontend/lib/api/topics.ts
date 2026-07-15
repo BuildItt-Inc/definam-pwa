@@ -1,5 +1,12 @@
 import type { Subject, Chapter, Topic, TopicDetail, HomeData, RecallItem, ProgressData } from '@/types/topics';
-import { ApiError, getAccessToken } from '@/lib/api/auth';
+
+export interface RecallSubmitResult {
+  topic_id: string;
+  interval_days: number;
+  next_review_at: string;
+  streak_days?: number; // returned after submit so UI can update without refetching dashboard
+}
+import { ApiError, getAuthHeaders } from '@/lib/api/auth';
 import { USE_MOCK, MOCK_DELAY_MS } from '@/lib/api/mock/week2';
 import {
   mockSubjects,
@@ -12,15 +19,6 @@ import {
 } from '@/lib/api/mock/data';
 
 const delay = () => new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
-
-function authHeaders(): HeadersInit {
-  const token = getAccessToken();
-  if (!token) throw new ApiError(401, 'Not authenticated');
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  };
-}
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -40,7 +38,7 @@ export async function getSubjects(): Promise<Subject[]> {
   }
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects`, {
-    headers: authHeaders(),
+    headers: await getAuthHeaders(),
   });
   return handleResponse<Subject[]>(res);
 }
@@ -56,7 +54,7 @@ export async function getChapters(subjectId: string): Promise<Chapter[]> {
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects/${subjectId}/chapters`,
-    { headers: authHeaders() },
+    { headers: await getAuthHeaders() },
   );
   return handleResponse<Chapter[]>(res);
 }
@@ -72,7 +70,7 @@ export async function getTopics(chapterId: string): Promise<Topic[]> {
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chapters/${chapterId}/topics`,
-    { headers: authHeaders() },
+    { headers: await getAuthHeaders() },
   );
   return handleResponse<Topic[]>(res);
 }
@@ -90,13 +88,13 @@ export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}`,
-    { headers: authHeaders() },
+    { headers: await getAuthHeaders() },
   );
   return handleResponse<TopicDetail>(res);
 }
 
 // ── getHomeData ────────────────────────────────────────────────────────────
-// Real: GET /api/v1/student/home
+// Real: GET /api/v1/students/dashboard
 
 export async function getHomeData(): Promise<HomeData> {
   if (USE_MOCK) {
@@ -105,8 +103,8 @@ export async function getHomeData(): Promise<HomeData> {
   }
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/home`,
-    { headers: authHeaders() },
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/students/dashboard`,
+    { headers: await getAuthHeaders() },
   );
   return handleResponse<HomeData>(res);
 }
@@ -122,7 +120,7 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/recall/queue`,
-    { headers: authHeaders() },
+    { headers: await getAuthHeaders() },
   );
   return handleResponse<RecallItem[]>(res);
 }
@@ -138,7 +136,30 @@ export async function getProgressData(): Promise<ProgressData> {
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/progress`,
-    { headers: authHeaders() },
+    { headers: await getAuthHeaders() },
   );
   return handleResponse<ProgressData>(res);
+}
+
+// ── submitRecallRating ─────────────────────────────────────────────────────
+// Real: POST /api/v1/topics/:id/recall
+
+export async function submitRecallRating(
+  topicId: string,
+  rating: number,
+): Promise<RecallSubmitResult> {
+  if (USE_MOCK) {
+    await delay();
+    return { topic_id: topicId, interval_days: 1, next_review_at: new Date().toISOString() };
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}/recall`,
+    {
+      method: 'POST',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ rating }),
+    },
+  );
+  return handleResponse<RecallSubmitResult>(res);
 }

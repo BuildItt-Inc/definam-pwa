@@ -1,7 +1,7 @@
 'use client';
 
-import DOMPurify from 'isomorphic-dompurify';
 import { Flag } from 'lucide-react';
+import { MathContent } from '@/components/student/MathContent';
 
 interface LearningStepProps {
   step: 1 | 2 | 3;
@@ -9,62 +9,66 @@ interface LearningStepProps {
   content: string;
 }
 
-function hasHtmlTags(str: string): boolean {
-  return /<[a-z][\s\S]*>/i.test(str);
-}
-
 export function LearningStep({ step, title, content }: LearningStepProps) {
-  const isHtml = hasHtmlTags(content);
-
-  const body = isHtml ? (
-    <p
-      className="font-dm-sans text-[14px] leading-relaxed text-ink"
-      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
-    />
-  ) : (
-    <p className="font-dm-sans text-[14px] leading-relaxed text-ink">{content}</p>
-  );
-
   return (
     <div>
       {/* Step number + title row */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-jade font-syne text-[11px] font-black text-white">
+        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[14px] font-bold text-white shadow-sm">
           {step}
         </span>
-        <span className="font-syne text-[15px] font-bold text-ink">{title}</span>
+        <span className="text-[16px] font-bold text-ink">{title}</span>
         {step === 2 && (
-          <span className="ml-auto flex flex-shrink-0 items-center gap-1 rounded-[3px] bg-jade px-1.5 py-0.5 font-dm-sans text-[9px] font-bold text-white">
-            <Flag size={9} strokeWidth={2} />
-            Local
+          <span className="ml-auto flex flex-shrink-0 items-center gap-1.5 rounded-full bg-brand/5 border border-brand/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand">
+            <Flag size={10} strokeWidth={2} />
+            Nigerian Context
           </span>
         )}
       </div>
 
-      {/* Step 1 — plain content card on white */}
+      {/* ── Step 1 — Simple Definition ──────────────────────────────────── */}
       {step === 1 && (
-        <div className="mb-3 rounded-lg bg-white px-4 py-3.5 shadow-sm">{body}</div>
-      )}
-
-      {/* Step 2 — jade left-border accent card */}
-      {step === 2 && (
-        <div className="mb-3 rounded-r-lg border-l-4 border-jade bg-jade/10 py-3.5 pl-4 pr-4">
-          {body}
+        <div className="mb-3 rounded-2xl bg-card px-5 py-4 shadow-sm border border-border">
+          <MathContent
+            content={content}
+            className="step-body text-[14.5px] leading-[1.75] text-ink"
+          />
         </div>
       )}
 
-      {/* Step 3 — monospace code-style card, preserve line breaks */}
+      {/* ── Step 2 — Nigerian Example ────────────────────────────────────── */}
+      {step === 2 && (
+        <div className="mb-3 rounded-2xl bg-gradient-to-br from-brand/5 to-card px-5 py-5 shadow-sm border border-border"
+          >
+          <MathContent
+            content={content}
+            className="step-body text-[14.5px] leading-[1.75] text-ink"
+          />
+        </div>
+      )}
+
+      {/* ── Step 3 — Visual Breakdown ────────────────────────────────────── */}
       {step === 3 && (
-        <>
-          <div className="mb-2 rounded-lg bg-white p-4">
-            <pre className="whitespace-pre-wrap font-mono text-[12px] leading-loose text-ink">
-              {content}
-            </pre>
+        <div className="rounded-2xl bg-white px-5 py-5 shadow-sm">
+          {/* Line-by-line so tree chars (├──) and math coexist cleanly */}
+          <div className="space-y-1.5">
+            {content.split('\n').map((line, i) =>
+              line.trim() === '' ? (
+                <div key={i} className="h-2" />
+              ) : (
+                <MathContent
+                  key={i}
+                  content={line}
+                  allowBlock={false}
+                  className="block font-mono text-[15px] leading-relaxed text-ink"
+                />
+              ),
+            )}
           </div>
-          <p className="rounded-md border border-dashed border-gray-300 px-3 py-1.5 font-dm-sans text-[11px] text-gray-400">
+          <p className="rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-[13px] text-muted">
             Text diagrams only in V1 — image generation is V2.
           </p>
-        </>
+        </div>
       )}
     </div>
   );

@@ -45,6 +45,7 @@ async def get_access_code(code: str) -> dict[str, Any] | None:
             "school_id": row.school_id,
             "activated_by": row.activated_by,
             "device_fingerprint": row.device_fingerprint,
+            "email": row.email, 
         }
 
 
@@ -89,8 +90,8 @@ async def bulk_insert_codes(org_id: str, codes: list[str]) -> None:
         session.add_all(rows)
 
 
-async def insert_individual_code(code: str) -> None:
-    """Insert a single individual access code generated after payment."""
+async def insert_individual_code(code: str, email: str) -> None:
+    """Insert a single individual access code with the email it was issued to."""
     async with db_session() as session:
         session.add(
             AccessCode(
@@ -99,6 +100,7 @@ async def insert_individual_code(code: str) -> None:
                 school_id=None,
                 type="individual",
                 status="pending",
+                email=email,
             )
         )
 
@@ -115,18 +117,20 @@ async def create_student_user(
     password_hash: str | None = None,
     device_fingerprint: str | None = None,
     force_password_change: bool = False,
+    email: str | None = None,   # <-- add this
 ) -> None:
-    """Create a user record in PostgreSQL."""
+    """Create a user record in PostgreSQL, optionally with email."""
     async with db_session() as session:
         session.add(
             User(
                 id=user_id,
-                username=username or user_id,  # fallback for org students
+                username=username or user_id,
                 password_hash=password_hash,
                 role=role,
                 org_id=org_id,
                 device_fingerprint=device_fingerprint,
                 force_password_change=force_password_change,
+                email=email,   # <-- store email
             )
         )
 
@@ -249,40 +253,70 @@ async def is_webhook_processed(reference: str) -> bool:
 
 
 async def get_all_subjects() -> list[dict[str, Any]]:
-    """Return all subjects."""
-    from app.db.models import Subject
+    """Return all subjects with chapter and topic counts."""
+    from sqlalchemy import func
+
+    from app.db.models import Chapter, Subject, Topic
 
     async with db_session() as session:
-        result = await session.execute(select(Subject).order_by(Subject.created_at))
-        return [
-            {
-                "id": row.id,
-                "name": row.name,
-                "class_level": row.class_level,
-            }
-            for row in result.scalars()
-        ]
+        stmt = (
+            select(
+                Subject,
+                func.count(func.distinct(Chapter.id)).label("chapter_count"),
+                func.count(func.distinct(Topic.id)).label("topic_count"),
+            )
+            .outerjoin(Chapter, Subject.id == Chapter.subject_id)
+            .outerjoin(Topic, Chapter.id == Topic.chapter_id)
+            .group_by(Subject.id)
+            .order_by(Subject.created_at)
+        )
+        result = await session.execute(stmt)
+        
+        subjects = []
+        for row in result.all():
+            subject_obj = row[0]
+            subjects.append({
+                "id": subject_obj.id,
+                "name": subject_obj.name,
+                "class_level": subject_obj.class_level,
+                "chapter_count": row.chapter_count,
+                "topic_count": row.topic_count,
+                "mastery_percent": None,
+            })
+        return subjects
 
 
 async def get_chapters_by_subject(subject_id: str) -> list[dict[str, Any]]:
-    """Return all chapters for a given subject."""
-    from app.db.models import Chapter
+    """Return all chapters for a given subject with topic counts."""
+    from sqlalchemy import func
+
+    from app.db.models import Chapter, Topic
 
     async with db_session() as session:
-        result = await session.execute(
-            select(Chapter)
+        stmt = (
+            select(
+                Chapter,
+                func.count(Topic.id).label("topic_count")
+            )
+            .outerjoin(Topic, Chapter.id == Topic.chapter_id)
             .where(Chapter.subject_id == subject_id)
+            .group_by(Chapter.id)
             .order_by(Chapter.chapter_num)
         )
-        return [
-            {
-                "id": row.id,
-                "subject_id": row.subject_id,
-                "chapter_num": row.chapter_num,
-                "title": row.title,
-            }
-            for row in result.scalars()
-        ]
+        result = await session.execute(stmt)
+        
+        chapters = []
+        for row in result.all():
+            ch_obj = row[0]
+            chapters.append({
+                "id": ch_obj.id,
+                "subject_id": ch_obj.subject_id,
+                "chapter_num": ch_obj.chapter_num,
+                "title": ch_obj.title,
+                "topic_count": row.topic_count,
+                "mastery_percent": None,
+            })
+        return chapters
 
 
 async def get_topics_by_chapter(
@@ -303,6 +337,8 @@ async def get_topics_by_chapter(
                 "chapter_id": row.chapter_id,
                 "title": row.title,
                 "status": row.status,
+                "mastery_percent": None,
+                "last_studied_at": None,
             }
             for row in result.scalars()
         ]
@@ -338,6 +374,8 @@ async def update_topic_status(
     topic_id: str, current_status: str, new_status: str
 ) -> bool:
     """Update topic status if it matches current_status. Returns True if updated."""
+    from sqlalchemy import update
+
     from app.db.models import Topic
 
     async with db_session() as session:
@@ -347,3 +385,28 @@ async def update_topic_status(
             .values(status=new_status)
         )
         return result.rowcount > 0
+
+
+async def update_topic_content(
+    topic_id: str,
+    content_step1: str,
+    content_step2: str,
+    content_step3: str,
+    practice_questions: list[dict],
+) -> None:
+    """Update educational content and practice questions for a topic."""
+    from sqlalchemy import update
+
+    from app.db.models import Topic
+
+    async with db_session() as session:
+        await session.execute(
+            update(Topic)
+            .where(Topic.id == topic_id)
+            .values(
+                content_step1=content_step1,
+                content_step2=content_step2,
+                content_step3=content_step3,
+                practice_questions=practice_questions,
+            )
+        )

@@ -1,18 +1,23 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Syne, DM_Sans } from 'next/font/google';
+import { Inter } from 'next/font/google';
+import Script from 'next/script';
 
-const syne = Syne({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-syne',
-  weight: ['400', '600', '700', '800'],
+  variable: '--font-inter',
+  display: 'swap',
 });
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-dm-sans',
-  weight: ['400', '600'],
-});
+import type { Viewport } from 'next';
+
+export const viewport: Viewport = {
+  themeColor: '#111827',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+};
 
 export const metadata: Metadata = {
   title: 'DefinAm PWA',
@@ -24,10 +29,24 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
+      <head>
+        {/* KaTeX CSS — renders LaTeX math beautifully, child-friendly */}
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body
-        className={`${syne.variable} ${dmSans.variable} font-dm-sans bg-[#0A0F1E] antialiased`}
+        className={`${inter.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}
       >
         {children}
+        {/* KaTeX JS — loaded after page content, never blocks render */}
+        <Script
+          src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

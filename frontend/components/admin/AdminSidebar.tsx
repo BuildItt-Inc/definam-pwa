@@ -15,6 +15,8 @@ import {
   X,
 } from 'lucide-react';
 import { logout } from '@/lib/api/auth';
+import { motion } from 'framer-motion';
+import { scaleTap } from '@/lib/motion';
 
 interface AdminSidebarProps {
   schoolName: string;
@@ -105,16 +107,16 @@ function SidebarBody({
   onClose?: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full bg-[#F0F0F0]">
+    <div className="flex flex-col h-full bg-bg-0">
       {/* Logo row */}
-      <div className="flex items-center justify-between px-4 py-[14px] border-b border-gray-200">
-        <span className="font-syne text-[15px] font-extrabold text-ink tracking-tight">
+      <div className="flex items-center justify-between px-4 py-[14px] border-b border-border-2">
+        <span className="font-bold text-[15px] font-extrabold text-ink tracking-tight">
           DefinAm
         </span>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-0.5 text-gray-400 hover:text-ink transition-colors"
+            className="p-0.5 text-muted hover:text-ink transition-colors"
             aria-label="Close menu"
           >
             <X size={16} strokeWidth={1.5} />
@@ -123,51 +125,55 @@ function SidebarBody({
       </div>
 
       {/* School info */}
-      <div className="px-4 py-3 border-b border-gray-200">
-        <p className="text-[11px] font-bold text-ink leading-tight">{schoolName}</p>
-        <p className="text-[10px] text-gray-400 mt-1 leading-tight">
-          {location} · {className} · {teacherName}
-        </p>
+      <div className="px-4 py-4 border-b border-border-2">
+        <div className="bg-bg-1 p-3 rounded-[24px]">
+          <p className="text-sm font-black text-ink leading-tight mb-1">{schoolName}</p>
+          <p className="text-[10px] text-muted font-bold uppercase tracking-wider leading-tight">
+            {location} · {className} · {teacherName}
+          </p>
+        </div>
       </div>
 
       {/* Nav sections */}
-      <nav className="flex-1 overflow-y-auto py-1">
+      <nav className="flex-1 overflow-y-auto p-2 space-y-4">
         {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
-            <p className="px-4 pt-[10px] pb-[3px] text-[9px] font-bold uppercase tracking-[0.08em] text-gray-400">
+            <p className="px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted">
               {section.label}
             </p>
-            {section.items.map((item) => {
-              const isActive = item.exact
-                ? pathname === item.activePath
-                : pathname.startsWith(item.activePath);
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`flex items-center gap-[7px] px-4 py-[7px] text-[11px] font-semibold transition-colors ${
-                    isActive
-                      ? 'bg-jade text-white'
-                      : 'text-gray-500 hover:bg-jade/10 hover:text-jade'
-                  }`}
-                >
-                  <item.icon size={13} strokeWidth={1.5} />
-                  {item.label}
-                </Link>
-              );
-            })}
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const isActive = item.exact
+                  ? pathname === item.activePath
+                  : pathname.startsWith(item.activePath);
+                return (
+                  <motion.div key={item.label} {...scaleTap}>
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      className={`flex items-center gap-[10px] px-3 py-2 text-[12px] font-semibold rounded-[24px] transition-colors ${ isActive ? 'bg-bg-1 text-ink shadow-sm border border-border-2' : 'text-muted hover:bg-bg-1 hover:text-ink' }`}
+                    >
+                      <item.icon size={14} strokeWidth={2} />
+                      {item.label}
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         ))}
 
         {/* Logout — always last */}
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-[7px] px-4 py-[7px] text-[11px] font-semibold text-gray-500 hover:bg-red-50 hover:text-coral transition-colors"
-        >
-          <LogOut size={13} strokeWidth={1.5} />
-          Logout
-        </button>
+        <div className="pt-4 border-t border-border-2 mt-4">
+          <motion.button
+            {...scaleTap}
+            onClick={onLogout}
+            className="w-full flex items-center gap-[10px] px-3 py-2 rounded-[24px] text-[12px] font-semibold text-muted hover:bg-bg-1 hover:text-error transition-colors"
+          >
+            <LogOut size={14} strokeWidth={2} />
+            Logout
+          </motion.button>
+        </div>
       </nav>
     </div>
   );
@@ -191,7 +197,7 @@ export default function AdminSidebar(props: AdminSidebarProps) {
   return (
     <>
       {/* Desktop: always visible, in-flow */}
-      <aside className="hidden md:flex flex-col w-56 h-full border-r border-gray-200 shrink-0">
+      <aside className="hidden md:flex flex-col w-64 h-full border-r border-border-2 shrink-0 bg-bg-0">
         <SidebarBody
           {...props}
           pathname={pathname}
@@ -201,7 +207,7 @@ export default function AdminSidebar(props: AdminSidebarProps) {
 
       {/* Mobile: hamburger trigger */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 p-1.5 bg-white border border-gray-200 rounded-md shadow-sm"
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-bg-0 border border-border-2 rounded-[16px] shadow-sm"
         onClick={() => setMobileOpen(true)}
         aria-label="Open menu"
       >
@@ -210,22 +216,31 @@ export default function AdminSidebar(props: AdminSidebarProps) {
 
       {/* Mobile: backdrop */}
       {mobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/40 z-40"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="md:hidden fixed inset-0 bg-ink/40 z-40 backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Mobile: slide-in panel */}
       {mobileOpen && (
-        <aside className="md:hidden fixed left-0 top-0 h-full w-56 z-50 border-r border-gray-200">
+        <motion.aside 
+          initial={{ x: "-100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "-100%" }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
+          className="md:hidden fixed left-0 top-0 h-full w-64 z-50 border-r border-border-2 bg-bg-0 shadow-2xl"
+        >
           <SidebarBody
             {...props}
             pathname={pathname}
             onLogout={handleLogout}
             onClose={() => setMobileOpen(false)}
           />
-        </aside>
+        </motion.aside>
       )}
     </>
   );

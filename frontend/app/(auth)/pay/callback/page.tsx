@@ -16,6 +16,7 @@ import {
 
 import { verifyPayment } from '@/lib/api/payment';
 import type { VerifyOrgPaymentResponse } from '@/types/payment';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 // ── State type ─────────────────────────────────────────────────────────────
 
@@ -103,7 +104,7 @@ function CallbackContent() {
         <Loader2
           size={32}
           strokeWidth={2}
-          className="text-jade animate-spin"
+          className="text-ink animate-spin"
           aria-hidden
         />
         <p className="text-[14px] font-medium text-ink/50">
@@ -117,11 +118,11 @@ function CallbackContent() {
   if (state.status === 'success' && state.paymentType === 'individual') {
     return (
       <div className="flex flex-col items-center text-center pt-4 pb-2">
-        <div className="w-[60px] h-[60px] bg-jade rounded-full flex items-center justify-center mb-5">
+        <div className="w-[60px] h-[60px] bg-ink rounded-full flex items-center justify-center mb-5">
           <CircleCheck size={30} strokeWidth={2} className="text-white" aria-hidden />
         </div>
 
-        <h1 className="font-syne text-[26px] font-black text-ink tracking-tight leading-none mb-2">
+        <h1 className="font-bold text-[26px] font-black text-ink tracking-tight leading-none mb-2">
           Payment Successful
         </h1>
         <p className="text-[13px] text-ink/50 mb-1.5">
@@ -132,35 +133,35 @@ function CallbackContent() {
         </p>
 
         {/* What's next */}
-        <div className="w-full text-left bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-4 mb-7">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-jade-dark mb-3">
+        <InfoCard className="px-4 py-4 mb-7 w-full text-left">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink mb-3">
             Next steps
           </p>
           <ol className="space-y-2">
-            <li className="flex items-start gap-2 text-[12px] text-[#0F6E56] leading-snug">
-              <span className="w-4 h-4 bg-jade text-white rounded-[4px] text-[9px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
+            <li className="flex items-start gap-2 text-[12px] text-ink/75 leading-snug">
+              <span className="w-4 h-4 bg-ink text-white rounded-[4px] text-[9px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
                 1
               </span>
               Check your email for the access code
             </li>
-            <li className="flex items-start gap-2 text-[12px] text-[#0F6E56] leading-snug">
-              <span className="w-4 h-4 bg-jade text-white rounded-[4px] text-[9px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
+            <li className="flex items-start gap-2 text-[12px] text-ink/75 leading-snug">
+              <span className="w-4 h-4 bg-ink text-white rounded-[4px] text-[9px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
                 2
               </span>
               Create your account using the code
             </li>
-            <li className="flex items-start gap-2 text-[12px] text-[#0F6E56] leading-snug">
-              <span className="w-4 h-4 bg-jade text-white rounded-[4px] text-[9px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
+            <li className="flex items-start gap-2 text-[12px] text-ink/75 leading-snug">
+              <span className="w-4 h-4 bg-ink text-white rounded-[4px] text-[9px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
                 3
               </span>
               Log in with your username and password from then on
             </li>
           </ol>
-        </div>
+        </InfoCard>
 
         <Link
           href="/register"
-          className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 shadow-sm"
+          className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 shadow-sm"
         >
           <CircleCheck size={18} strokeWidth={2.2} aria-hidden />
           Create your account
@@ -173,11 +174,11 @@ function CallbackContent() {
   if (state.status === 'success' && state.paymentType === 'organisation') {
     return (
       <div className="flex flex-col items-center text-center pt-4 pb-2">
-        <div className="w-[60px] h-[60px] bg-jade rounded-full flex items-center justify-center mb-5">
+        <div className="w-[60px] h-[60px] bg-ink rounded-full flex items-center justify-center mb-5">
           <CircleCheck size={30} strokeWidth={2} className="text-white" aria-hidden />
         </div>
 
-        <h1 className="font-syne text-[26px] font-black text-ink tracking-tight leading-none mb-2">
+        <h1 className="font-bold text-[26px] font-black text-ink tracking-tight leading-none mb-2">
           Payment Successful
         </h1>
         {state.orgName && (
@@ -188,43 +189,43 @@ function CallbackContent() {
         </p>
 
         {/* Confirmation card */}
-        <div className="w-full bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-4 mb-7">
+        <InfoCard className="px-4 py-4 mb-7 w-full">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-jade rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 bg-ink rounded-lg flex items-center justify-center flex-shrink-0">
               <Building2 size={15} strokeWidth={2} className="text-white" aria-hidden />
             </div>
             <div className="text-left">
-              <p className="text-[12px] font-bold text-jade-dark mb-0.5">
+              <p className="text-[12px] font-bold text-ink mb-0.5">
                 Check your email
               </p>
-              <p className="text-[12px] text-[#0F6E56] leading-snug break-all">
+              <p className="text-[12px] text-ink/75 leading-snug break-all">
                 {state.adminEmail}
               </p>
             </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-[#9FE1CB] space-y-1.5">
+          <div className="mt-3 pt-3 border-t border-border-2 space-y-1.5">
             {[
               'Admin login link + temporary password',
               'CSV file with all student access codes',
               'Payment receipt',
             ].map((item) => (
-              <div key={item} className="flex items-center gap-2 text-[12px] text-[#0F6E56]">
-                <Mail size={12} strokeWidth={2} className="text-jade flex-shrink-0" aria-hidden />
+              <div key={item} className="flex items-center gap-2 text-[12px] text-ink/75">
+                <Mail size={12} strokeWidth={2} className="text-ink flex-shrink-0" aria-hidden />
                 {item}
               </div>
             ))}
           </div>
 
           {state.totalAmountNaira > 0 && (
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#9FE1CB]">
-              <span className="text-[12px] font-medium text-jade-dark">Total paid</span>
-              <span className="font-syne text-[14px] font-black text-jade-dark tracking-tight">
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border-2">
+              <span className="text-[12px] font-medium text-ink">Total paid</span>
+              <span className="font-bold text-[14px] font-black text-ink tracking-tight">
                 ₦{state.totalAmountNaira.toLocaleString('en-NG')}
               </span>
             </div>
           )}
-        </div>
+        </InfoCard>
 
         <p className="text-[12px] text-ink/40 leading-snug max-w-[280px]">
           Share the access codes with your students. They log in using their
@@ -237,11 +238,11 @@ function CallbackContent() {
   // ── Error ────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col items-center text-center pt-4 pb-2">
-      <div className="w-[60px] h-[60px] bg-coral/10 border border-coral/25 rounded-full flex items-center justify-center mb-5">
-        <AlertCircle size={28} strokeWidth={2} className="text-coral" aria-hidden />
+      <div className="w-[60px] h-[60px] bg-danger-bg border border-danger/25 rounded-full flex items-center justify-center mb-5">
+        <AlertCircle size={28} strokeWidth={2} className="text-danger" aria-hidden />
       </div>
 
-      <h1 className="font-syne text-[24px] font-black text-ink tracking-tight leading-none mb-2">
+      <h1 className="font-bold text-[24px] font-black text-ink tracking-tight leading-none mb-2">
         Verification Failed
       </h1>
       <p className="text-[13px] text-ink/50 leading-snug mb-8 max-w-[280px]">
@@ -250,7 +251,7 @@ function CallbackContent() {
 
       <Link
         href="/pay/individual"
-        className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 shadow-sm mb-4"
+        className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 shadow-sm mb-4"
       >
         Try again
       </Link>
@@ -259,7 +260,7 @@ function CallbackContent() {
         Need help?{' '}
         <a
           href="mailto:support@definam.ng"
-          className="text-jade font-bold hover:text-jade/75 transition-colors"
+          className="text-ink font-bold hover:text-ink/75 transition-colors"
         >
           Contact support
         </a>
@@ -276,7 +277,7 @@ function LoadingFallback() {
       <Loader2
         size={32}
         strokeWidth={2}
-        className="text-jade animate-spin"
+        className="text-ink animate-spin"
         aria-hidden
       />
       <p className="text-[14px] font-medium text-ink/50">
@@ -290,9 +291,9 @@ function LoadingFallback() {
 
 export default function CallbackPage() {
   return (
-    <div className="min-h-screen bg-cream font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
       {/* App bar */}
-      <header className="flex items-center px-4 h-[56px] border-b border-black/8 bg-cream">
+      <header className="flex items-center px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <span className="text-[15px] font-bold text-ink tracking-tight">
           Payment
         </span>

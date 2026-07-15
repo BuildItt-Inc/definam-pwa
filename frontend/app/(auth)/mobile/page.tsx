@@ -4,7 +4,6 @@ import { KeyRound, LogIn } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'DefinAm',
-  themeColor: '#0A0F1E',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -14,11 +13,11 @@ export const metadata: Metadata = {
 
 export default function MobileSplashPage() {
   return (
-    <main className="min-h-dvh bg-ink font-dm-sans flex flex-col items-center justify-center px-6 py-8">
+    <main className="min-h-dvh bg-ink flex flex-col items-center justify-center px-6 py-8">
       <div className="flex flex-col items-center w-full max-w-[280px] md:max-w-[380px] text-center">
 
         {/* ── Logo mark ── */}
-        <div className="w-[52px] h-[52px] bg-jade rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+        <div className="w-[52px] h-[52px] bg-white/10 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
           <svg
             width="28"
             height="28"
@@ -33,12 +32,12 @@ export default function MobileSplashPage() {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <circle cx="19" cy="10" r="3" className="fill-jade-light" />
+            <circle cx="19" cy="10" r="3" className="fill-white/50" />
           </svg>
         </div>
 
         {/* ── Wordmark ── */}
-        <h1 className="font-syne text-[30px] md:text-[36px] font-black text-white tracking-[-1px] leading-none mb-2">
+        <h1 className="font-bold text-[30px] md:text-[36px] font-black text-white tracking-[-1px] leading-none mb-2">
           DefinAm
         </h1>
 
@@ -61,12 +60,12 @@ export default function MobileSplashPage() {
           <Link
             href="/mobile/code"
             className={[
-              'min-h-[52px] w-full bg-jade text-white rounded-xl',
+              'min-h-[52px] w-full bg-card text-ink rounded-xl',
               'flex items-center justify-center gap-2.5',
               'text-[14px] md:text-[15px] font-bold tracking-tight',
-              'hover:bg-jade/90 active:scale-[0.985] transition-all duration-150',
+              'hover:bg-white/90 active:scale-[0.985] transition-all duration-150',
               'focus-visible:outline-none focus-visible:ring-2',
-              'focus-visible:ring-jade focus-visible:ring-offset-2 focus-visible:ring-offset-ink',
+              'focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-ink',
             ].join(' ')}
           >
             <KeyRound size={18} strokeWidth={2.2} aria-hidden />

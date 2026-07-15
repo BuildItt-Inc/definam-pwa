@@ -11,23 +11,23 @@ import { BottomNav } from '@/components/student/BottomNav';
 
 function RecallSkeleton() {
   return (
-    <div className="min-h-screen bg-white">
-      <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
-        <div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
-        <div className="h-5 w-28 animate-pulse rounded bg-gray-200" />
+    <div className="min-h-screen bg-card">
+      <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
+        <div className="h-5 w-5 animate-pulse rounded bg-bg-3" />
+        <div className="h-5 w-28 animate-pulse rounded bg-bg-3" />
       </div>
       <div className="px-4 py-4">
-        <div className="mb-4 h-20 animate-pulse rounded-xl bg-gray-100" />
-        <div className="mb-4 h-2 animate-pulse rounded-full bg-gray-100" />
+        <div className="mb-4 h-20 animate-pulse rounded-xl bg-bg-2" />
+        <div className="mb-4 h-2 animate-pulse rounded-full bg-bg-2" />
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="mb-2 flex items-center gap-3 rounded-xl border border-gray-100 px-3.5 py-3"
+            className="mb-2 flex items-center gap-3 rounded-xl border border-border px-3.5 py-3"
           >
-            <div className="h-7 w-7 flex-shrink-0 animate-pulse rounded-lg bg-gray-200" />
+            <div className="h-7 w-7 flex-shrink-0 animate-pulse rounded-lg bg-bg-3" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-3 w-32 animate-pulse rounded bg-gray-200" />
-              <div className="h-2.5 w-20 animate-pulse rounded bg-gray-100" />
+              <div className="h-3 w-32 animate-pulse rounded bg-bg-3" />
+              <div className="h-2.5 w-20 animate-pulse rounded bg-bg-2" />
             </div>
           </div>
         ))}
@@ -66,7 +66,7 @@ export default function RecallPage() {
   if (fetchError) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-center font-dm-sans text-sm text-gray-500">{fetchError}</p>
+        <p className="text-center text-sm text-muted">{fetchError}</p>
       </div>
     );
   }
@@ -83,32 +83,32 @@ export default function RecallPage() {
   // ── Empty state ────────────────────────────────────────────────────────
   if (queue.length === 0) {
     return (
-      <div className="flex min-h-screen flex-col bg-white">
-        <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
+      <div className="page-with-nav bg-bg-0 page-enter">
+        <header className="flex items-center gap-3 border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
           <button
             onClick={() => router.push('/student')}
-            className="flex items-center text-ink active:opacity-70"
+            className="flex items-center text-ink active:scale-95 transition-transform"
             aria-label="Back"
           >
-            <ArrowLeft size={20} strokeWidth={1.5} />
+            <ArrowLeft size={20} strokeWidth={2} />
           </button>
           <div>
-            <h1 className="font-syne text-[17px] font-bold text-ink">Daily Recall</h1>
-            <p className="font-dm-sans text-[11px] text-gray-400">{dateLabel}</p>
+            <h1 className="text-[17px] font-bold text-ink">Daily Recall</h1>
+            <p className="text-[13px] text-muted">{dateLabel}</p>
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center px-6 pb-24 text-center">
-          <RefreshCw size={40} strokeWidth={1.5} className="mb-4 text-gray-300" />
-          <h2 className="mb-2 font-syne text-[17px] font-bold text-ink">
+        <main className="flex flex-1 flex-col items-center justify-center px-6 pb-6 text-center">
+          <RefreshCw size={40} strokeWidth={2} className="mb-4 text-faint" />
+          <h2 className="mb-2 text-[17px] font-bold text-ink">
             You&apos;re all caught up!
           </h2>
-          <p className="mb-6 font-dm-sans text-[13px] leading-relaxed text-gray-400">
+          <p className="mb-6 text-[15px] leading-relaxed text-muted">
             Nothing to review today. Come back tomorrow to keep your streak going.
           </p>
           <button
             onClick={() => router.push('/student/learn')}
-            className="rounded-lg border-[1.5px] border-jade px-6 py-3 font-dm-sans text-[13px] font-bold text-jade active:opacity-70"
+            className="btn-secondary"
           >
             Browse Topics
           </button>
@@ -121,65 +121,65 @@ export default function RecallPage() {
 
   // ── Queue present ──────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="page-with-nav bg-bg-0 page-enter">
 
       {/* Appbar */}
-      <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
+      <header className="flex items-center gap-3 border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
         <button
           onClick={() => router.push('/student')}
-          className="flex items-center text-ink active:opacity-70"
+          className="flex items-center text-ink active:scale-95 transition-transform"
           aria-label="Back"
         >
-          <ArrowLeft size={20} strokeWidth={1.5} />
+          <ArrowLeft size={20} strokeWidth={2} />
         </button>
         <div>
-          <h1 className="font-syne text-[17px] font-bold text-ink">Daily Recall</h1>
-          <p className="font-dm-sans text-[11px] text-gray-400">{dateLabel}</p>
+          <h1 className="text-[17px] font-bold text-ink">Daily Recall</h1>
+          <p className="text-[13px] text-muted">{dateLabel}</p>
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-4 pb-24">
+      <main className="flex-1 px-4 py-4">
 
         {/* Info card */}
-        <div className="mb-3 flex items-center gap-3 rounded-xl border border-jade/30 bg-jade/10 px-3.5 py-3.5">
-          <BookMarked size={22} strokeWidth={1.5} className="flex-shrink-0 text-jade" />
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3.5 shadow-sm">
+          <BookMarked size={22} strokeWidth={2} className="flex-shrink-0 text-brand" />
           <div className="flex-1">
-            <p className="font-syne text-[13px] font-bold text-ink">
+            <p className="text-[15px] font-bold text-ink">
               {queue.length} {queue.length === 1 ? 'topic' : 'topics'} due today
             </p>
-            <p className="flex items-center gap-1 font-dm-sans text-[11px] text-jade">
+            <p className="flex items-center gap-1 text-[13px] text-muted">
               <Clock size={10} strokeWidth={2} />
-              ~{minuteEstimate} minutes · Pre-computed at midnight
+              ~{minuteEstimate} minutes
             </p>
           </div>
           <div className="flex-shrink-0 text-center">
-            <p className="font-syne text-[16px] font-black text-ink">
+            <p className="text-[16px] font-black text-ink">
               0/{queue.length}
             </p>
-            <p className="font-dm-sans text-[9px] text-gray-400">done</p>
+            <p className="text-[9px] font-semibold text-muted">done</p>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-gray-100">
-          <div className="h-full w-0 rounded-full bg-jade" />
+        <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-bg-2">
+          <div className="h-full w-0 rounded-full bg-brand" />
         </div>
 
         {/* Topic list */}
-        <div className="mb-5 flex flex-col gap-2">
+        <div className="mb-6 flex flex-col gap-2">
           {queue.map((item) => (
             <div
               key={item.id}
-              className="flex items-center gap-3 rounded-xl border-[1.5px] border-gray-200 px-3.5 py-3"
+              className="card flex items-center gap-3 px-3.5 py-3"
             >
-              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200">
-                <BookOpen size={13} strokeWidth={1.5} className="text-gray-400" />
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-bg-1 border border-border">
+                <BookOpen size={14} strokeWidth={2} className="text-muted" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-dm-sans text-[13px] font-bold text-ink">
+                <p className="text-[15px] font-bold text-ink">
                   {item.topic_title}
                 </p>
-                <p className="font-dm-sans text-[11px] text-gray-400">
+                <p className="text-[13px] font-medium text-muted">
                   {item.subject} · Due today
                 </p>
               </div>
@@ -190,7 +190,7 @@ export default function RecallPage() {
         {/* CTA */}
         <button
           onClick={handleStartAll}
-          className="flex w-full items-center justify-center rounded-xl bg-jade py-3.5 font-syne text-[14px] font-bold text-white active:opacity-90"
+          className="btn-primary w-full shadow-brand-sm"
         >
           Start All Reviews →
         </button>

@@ -28,6 +28,7 @@ COPY --from=builder /app/.venv /app/.venv
 COPY alembic.ini ./
 COPY alembic/ ./alembic/
 COPY app/ ./app/
+COPY scripts/ ./scripts/
 
 # Put the venv on PATH so `python`, `uvicorn`, `alembic` resolve correctly
 ENV PATH="/app/.venv/bin:$PATH" \

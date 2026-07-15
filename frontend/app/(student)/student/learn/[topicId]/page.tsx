@@ -1,34 +1,36 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send } from 'lucide-react';
 import { getChapters, getTopics, getTopicDetail } from '@/lib/api/topics';
 import type { Chapter, Topic, TopicDetail } from '@/types/topics';
 import { TopicListItem } from '@/components/student/TopicListItem';
 import { BottomNav } from '@/components/student/BottomNav';
 import { LearningStep } from '@/components/student/LearningStep';
 import { PracticeQuestion } from '@/components/student/PracticeQuestion';
+import { MathContent } from '@/components/student/MathContent';
+import { getChatHistory, sendChatMessageStream, type ChatMessage } from '@/lib/api/chat';
 
 // ── Shared helpers ─────────────────────────────────────────────────────────
 
 function MasteryBadge({ mastery }: { mastery: number | null }) {
   if (mastery === null || mastery === 0) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-gray-500">
+      <span className="flex-shrink-0 rounded-[3px] border border-gray-300 px-2 py-0.5 text-[12px] font-bold text-muted">
         —
       </span>
     );
   }
   if (mastery >= 60) {
     return (
-      <span className="flex-shrink-0 rounded-[3px] bg-jade px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+      <span className="flex-shrink-0 rounded-[3px] bg-ink px-2 py-0.5 text-[12px] font-bold text-white">
         {mastery}%
       </span>
     );
   }
   return (
-    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 font-dm-sans text-[10px] font-bold text-white">
+    <span className="flex-shrink-0 rounded-[3px] bg-gray-500 px-2 py-0.5 text-[12px] font-bold text-white">
       {mastery}%
     </span>
   );
@@ -38,12 +40,12 @@ function ListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <div key={i} className="flex items-center gap-3 border-b border-border px-4 py-3">
           <div className="flex-1 space-y-2">
-            <div className="h-3 w-48 animate-pulse rounded bg-gray-200" />
-            <div className="h-2.5 w-20 animate-pulse rounded bg-gray-100" />
+            <div className="h-3 w-48 animate-pulse rounded bg-bg-3" />
+            <div className="h-2.5 w-20 animate-pulse rounded bg-bg-2" />
           </div>
-          <div className="h-5 w-8 animate-pulse rounded-[3px] bg-gray-100" />
+          <div className="h-5 w-8 animate-pulse rounded-[3px] bg-bg-2" />
         </div>
       ))}
     </div>
@@ -54,7 +56,7 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       <BookOpen size={32} strokeWidth={1.5} className="mb-3 text-gray-300" />
-      <p className="font-dm-sans text-[13px] text-gray-400">{message}</p>
+      <p className="text-[15px] text-muted">{message}</p>
     </div>
   );
 }
@@ -63,9 +65,9 @@ function EmptyState({ message }: { message: string }) {
 
 function PageSkeleton() {
   return (
-    <div className="min-h-screen bg-white">
-      <div className="border-b border-gray-100 px-4 py-3.5">
-        <div className="h-5 w-24 animate-pulse rounded bg-gray-200" />
+    <div className="min-h-screen bg-card">
+      <div className="border-b border-border px-4 py-3.5">
+        <div className="h-5 w-24 animate-pulse rounded bg-bg-3" />
       </div>
       <ListSkeleton />
     </div>
@@ -97,7 +99,7 @@ function ChaptersView({
 
   if (fetchError) {
     return (
-      <div className="px-4 py-6 text-center font-dm-sans text-sm text-gray-500">
+      <div className="px-4 py-6 text-center text-sm text-muted">
         {fetchError}
       </div>
     );
@@ -108,7 +110,7 @@ function ChaptersView({
 
   return (
     <>
-      <p className="px-4 py-1.5 font-dm-sans text-[11px] text-gray-400">
+      <p className="px-4 py-1.5 text-[13px] text-muted">
         SS2 Syllabus · {chapters.length} chapters
       </p>
       <div>
@@ -119,23 +121,23 @@ function ChaptersView({
               key={chapter.id}
               onClick={() =>
                 router.push(
-                  `/student/learn/${subjectId}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(chapter.title)}&subject=${encodeURIComponent(subjectName)}`,
+                  `/student/learn/${chapter.id}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(
+                    chapter.title,
+                  )}&subject=${encodeURIComponent(subjectName)}`,
                 )
               }
-              className={`flex w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors last:border-b-0 active:bg-gray-50 ${
-                inProgress ? 'bg-gray-50' : 'bg-white'
-              }`}
+              className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 active:bg-bg-0 ${ inProgress ? 'bg-bg-0' : 'bg-card' }`}
             >
               <span className="min-w-0 flex-1">
-                <span className="block font-dm-sans text-[13px] font-bold text-ink">
+                <span className="block text-[15px] font-bold text-ink">
                   {chapter.title}
                 </span>
-                <span className="mt-0.5 block font-dm-sans text-[11px] text-gray-400">
+                <span className="mt-0.5 block text-[13px] text-muted">
                   {chapter.topic_count} topics{inProgress ? ' · In Progress' : ''}
                 </span>
               </span>
               <MasteryBadge mastery={chapter.mastery_percent} />
-              <ChevronRight size={16} strokeWidth={1.5} className="flex-shrink-0 text-gray-300" />
+              <ChevronRight size={18} strokeWidth={1.5} className="text-gray-300" />
             </button>
           );
         })}
@@ -157,13 +159,13 @@ function TopicsView({ chapterId }: { chapterId: string }) {
     getTopics(chapterId)
       .then(setTopics)
       .catch((err: unknown) => {
-        setFetchError(err instanceof Error ? err.message : 'Failed to load');
+        setFetchError(err instanceof Error ? err.message : 'Failed to load topics');
       });
   }, [chapterId]);
 
   if (fetchError) {
     return (
-      <div className="px-4 py-6 text-center font-dm-sans text-sm text-gray-500">
+      <div className="px-4 py-6 text-center text-sm text-muted">
         {fetchError}
       </div>
     );
@@ -174,7 +176,7 @@ function TopicsView({ chapterId }: { chapterId: string }) {
 
   return (
     <>
-      <p className="px-4 py-1.5 font-dm-sans text-[11px] text-gray-400">
+      <p className="px-4 py-1.5 text-[13px] text-muted">
         {topics.length} topics · WAEC-aligned
       </p>
       <div>
@@ -232,13 +234,13 @@ function LearningFlowSkeleton() {
           ))}
         </div>
       </div>
-      <div className="flex-1 bg-cream px-4 py-5">
+      <div className="flex-1 bg-bg-0 px-4 py-5">
         <div className="mb-4 flex items-center gap-2">
-          <div className="h-6 w-6 animate-pulse rounded-md bg-gray-200" />
-          <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
+          <div className="h-6 w-6 animate-pulse rounded-md bg-bg-3" />
+          <div className="h-4 w-32 animate-pulse rounded bg-bg-3" />
         </div>
-        <div className="mb-3 h-28 animate-pulse rounded-lg bg-gray-200" />
-        <div className="h-12 animate-pulse rounded-lg bg-gray-200" />
+        <div className="mb-3 h-28 animate-pulse rounded-lg bg-bg-3" />
+        <div className="h-12 animate-pulse rounded-lg bg-bg-3" />
       </div>
     </div>
   );
@@ -266,7 +268,7 @@ function LearningTopBar({
   const isPracticeStep = step === 4;
 
   return (
-    <div className="bg-ink px-4 pb-2.5 pt-3">
+    <div className="bg-ink px-4 pb-2.5 pt-[calc(env(safe-area-inset-top)+12px)]">
       {/* Navigation row */}
       <div className="mb-2.5 flex items-center gap-2">
         <button
@@ -278,20 +280,20 @@ function LearningTopBar({
         </button>
 
         {isPracticeStep ? (
-          <p className="flex-1 font-dm-sans text-[12px] text-white/60">
+          <p className="flex-1 text-[14px] text-white/60">
             {showScoreSummary
               ? 'Practice complete'
               : `Question ${questionIndex + 1} of ${totalQuestions}`}
           </p>
         ) : (
-          <p className="min-w-0 flex-1 truncate font-syne text-[13px] font-black text-white">
+          <p className="min-w-0 flex-1 truncate font-bold text-[15px] font-black text-white">
             {topicTitle}
           </p>
         )}
 
         <button
           onClick={onExit}
-          className="flex-shrink-0 font-dm-sans text-[11px] text-white/30 active:text-white/60"
+          className="flex-shrink-0 text-[13px] text-white/30 active:text-white/60"
         >
           Exit
         </button>
@@ -302,9 +304,7 @@ function LearningTopBar({
         {STEP_LABELS.map((_, i) => (
           <div
             key={i}
-            className={`h-[3px] flex-1 rounded-full transition-colors ${
-              i < step ? 'bg-white' : 'bg-white/20'
-            }`}
+            className={`h-[3px] flex-1 rounded-full transition-colors ${ i < step ? 'bg-card' : 'bg-white/20' }`}
           />
         ))}
       </div>
@@ -318,13 +318,7 @@ function LearningTopBar({
             return (
               <span
                 key={i}
-                className={`flex-1 text-center font-dm-sans text-[9px] ${
-                  isDone
-                    ? 'text-white/50'
-                    : isCurrent
-                      ? 'font-bold text-white'
-                      : 'text-white/30'
-                }`}
+                className={`flex-1 text-center text-[9px] ${ isDone ? 'text-white/50' : isCurrent ? 'font-bold text-white' : 'text-white/30' }`}
               >
                 {isDone ? `${label} ✓` : label}
               </span>
@@ -353,31 +347,25 @@ function ScoreSummary({
   return (
     <div>
       <div
-        className={`mb-6 rounded-xl border-2 px-4 py-8 text-center ${
-          isGood ? 'border-jade bg-jade/10' : 'border-gold bg-gold/10'
-        }`}
+        className={`mb-6 rounded-xl border-2 px-4 py-8 text-center ${ isGood ? 'border-ink bg-ink/10' : 'border-gold bg-ink-2/10' }`}
       >
         <p
-          className={`font-syne text-[40px] font-black leading-none ${
-            isGood ? 'text-jade' : 'text-gold'
-          }`}
+          className={`font-bold text-[40px] font-black leading-none ${ isGood ? 'text-ink' : 'text-ink-2' }`}
         >
           {score}/{total}
         </p>
         <p
-          className={`mt-2 font-syne text-[16px] font-bold ${
-            isGood ? 'text-jade' : 'text-gold'
-          }`}
+          className={`mt-2 font-bold text-[16px] font-bold ${ isGood ? 'text-ink' : 'text-ink-2' }`}
         >
           {isGood ? 'Great work!' : 'Keep practicing!'}
         </p>
-        <p className="mt-1 font-dm-sans text-[13px] text-gray-500">
+        <p className="mt-1 text-[15px] text-muted">
           {score} correct out of {total}
         </p>
       </div>
       <button
         onClick={onContinue}
-        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-jade py-3.5 font-dm-sans text-[14px] font-bold text-white active:opacity-90"
+        className="btn-primary w-full shadow-brand-sm"
       >
         Continue to AI Tutor
         <ChevronRight size={18} strokeWidth={2.5} />
@@ -386,38 +374,133 @@ function ScoreSummary({
   );
 }
 
-// ── Step 5 — AI Tutor scaffold ──────────────────────────────────────────────
+// ── Step 5 — AI Tutor (Streaming Chat) ──────────────────────────────────────
 
 function AITutorScaffold({
+  topicId,
   topicTitle,
   onBack,
   onBrowse,
   onHome,
 }: {
+  topicId: string;
   topicTitle: string;
   onBack: () => void;
   onBrowse: () => void;
   onHome: () => void;
 }) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history on mount
+  useEffect(() => {
+    setIsHistoryLoading(true);
+    getChatHistory(topicId)
+      .then((history) => {
+        if (history && history.length > 0) {
+          setMessages(history);
+        } else {
+          // Initialize with default welcoming message
+          setMessages([
+            {
+              role: 'assistant',
+              content: `Good work on the practice questions! What part of ${topicTitle} is still confusing you? Let's discuss it!`,
+            },
+          ]);
+        }
+      })
+      .catch(() => {
+        // Fallback welcoming message if history load fails
+        setMessages([
+          {
+            role: 'assistant',
+            content: `Good work on the practice questions! What part of ${topicTitle} is still confusing you? Let's discuss it!`,
+          },
+        ]);
+      })
+      .finally(() => {
+        setIsHistoryLoading(false);
+      });
+  }, [topicId, topicTitle]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = inputMessage.trim();
+    if (!query || isLoading) return;
+
+    setInputMessage('');
+    setIsLoading(true);
+
+    // Append user message
+    const updatedMessages: ChatMessage[] = [
+      ...messages,
+      { role: 'user', content: query },
+    ];
+    setMessages(updatedMessages);
+
+    // Append temporary typing assistant bubble
+    const assistantIndex = updatedMessages.length;
+    setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+
+    let responseAccumulator = '';
+
+    await sendChatMessageStream(
+      topicId,
+      query,
+      (chunk) => {
+        responseAccumulator += chunk;
+        setMessages((prev) => {
+          const next = [...prev];
+          if (next[assistantIndex]) {
+            next[assistantIndex].content = responseAccumulator;
+          }
+          return next;
+        });
+      },
+      () => {
+        setIsLoading(false);
+      },
+      () => {
+        setMessages((prev) => {
+          const next = [...prev];
+          if (next[assistantIndex]) {
+            next[assistantIndex].content =
+              responseAccumulator || "Sorry, I couldn't reach the server. Please try again.";
+          }
+          return next;
+        });
+        setIsLoading(false);
+      }
+    );
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-bg-0">
       {/* Appbar */}
-      <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
+      <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3.5">
         <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-ink">
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-jade/10">
-          <Bot size={18} strokeWidth={1.5} className="text-jade" />
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
+          <Bot size={18} strokeWidth={1.5} className="text-ink" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-syne text-[14px] font-bold text-ink">AI Tutor</p>
-          <p className="truncate font-dm-sans text-[11px] text-gray-400">{topicTitle}</p>
+          <p className="font-bold text-[16px] font-bold text-ink">AI Tutor</p>
+          <p className="truncate text-[13px] text-muted">{topicTitle}</p>
         </div>
       </header>
 
       {/* Coming-soon banner */}
-      <div className="border-b border-jade/20 bg-jade/5 px-4 py-2.5">
-        <p className="font-dm-sans text-[12px] leading-relaxed text-jade">
+      <div className="border-b border-ink/20 bg-ink/5 px-4 py-2.5">
+        <p className="text-[14px] leading-relaxed text-ink">
           AI tutor will be available once content is reviewed and approved. You can still browse
           other topics.
         </p>
@@ -427,41 +510,42 @@ function AITutorScaffold({
       <main className="flex flex-1 flex-col px-4 pb-4 pt-4">
         {/* AI opening message bubble */}
         <div className="flex items-start gap-2">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-jade/10">
-            <Bot size={16} strokeWidth={1.5} className="text-jade" />
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
+            <Bot size={16} strokeWidth={1.5} className="text-ink" />
           </div>
-          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-3 font-dm-sans text-[13px] leading-relaxed text-ink">
+          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-bg-2 px-4 py-3 text-[15px] leading-relaxed text-ink">
             Good work on practice. What part of{' '}
             <span className="font-bold">{topicTitle}</span> is still confusing you?
           </div>
         </div>
+      </main>
 
-        {/* Navigation CTAs pushed to bottom */}
-        <div className="mt-auto flex flex-col gap-3 pt-6">
+      {/* Bottom control CTAs if inactive */}
+      {!isLoading && messages.length > 2 && (
+        <div className="flex gap-2 justify-center bg-bg-0 border-t border-border px-4 py-3 pb-safe">
           <button
             onClick={onBrowse}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-jade py-3.5 font-dm-sans text-[14px] font-bold text-white active:opacity-90"
+            className="btn-primary flex-1 shadow-brand-sm"
           >
-            Browse More Topics
-            <ChevronRight size={18} strokeWidth={2.5} />
+            Browse Topics
           </button>
           <button
             onClick={onHome}
-            className="flex w-full items-center justify-center rounded-lg border border-gray-200 py-3.5 font-dm-sans text-[14px] font-semibold text-gray-600 active:bg-gray-50"
+            className="btn-secondary flex-1"
           >
-            Back to Home
+            Back Home
           </button>
         </div>
-      </main>
+      )}
 
       {/* Disabled chat input */}
-      <div className="border-t border-gray-100 px-4 py-3">
-        <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+      <div className="border-t border-border px-4 py-3">
+        <div className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5">
           <input
             type="text"
             disabled
             placeholder="AI tutor coming soon..."
-            className="flex-1 bg-transparent font-dm-sans text-[13px] placeholder:text-gray-300 focus:outline-none"
+            className="flex-1 bg-transparent text-[15px] placeholder:text-gray-300 focus:outline-none"
           />
           <MessageSquare size={18} strokeWidth={1.5} className="flex-shrink-0 text-gray-200" />
         </div>
@@ -547,10 +631,10 @@ function LearningFlow({
 
   if (fetchError) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white px-6">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-6">
         <BookOpen size={36} strokeWidth={1.5} className="text-gray-300" />
-        <p className="text-center font-dm-sans text-[13px] text-gray-400">{fetchError}</p>
-        <button onClick={onExit} className="font-dm-sans text-[13px] font-bold text-jade">
+        <p className="text-center text-[15px] text-muted">{fetchError}</p>
+        <button onClick={onExit} className="text-[15px] font-bold text-ink">
           Go back
         </button>
       </div>
@@ -564,6 +648,7 @@ function LearningFlow({
   if (step === 5) {
     return (
       <AITutorScaffold
+        topicId={topicId}
         topicTitle={topicTitle}
         onBack={handleBack}
         onBrowse={() => router.push('/student/learn')}
@@ -584,7 +669,7 @@ function LearningFlow({
         onExit={onExit}
       />
 
-      <main className="flex-1 overflow-y-auto bg-cream px-4 py-5">
+      <main className="flex-1 overflow-y-auto bg-bg-0 px-4 py-5">
         {/* Steps 1–3 — content card + CTA */}
         {(step === 1 || step === 2 || step === 3) && (
           <>
@@ -593,10 +678,10 @@ function LearningFlow({
               title={getStepContent(detail!, step).title}
               content={getStepContent(detail!, step).content}
             />
-            <div className="mt-5">
+            <div className="mt-5 pb-safe">
               <button
                 onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4 | 5)}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-jade py-3.5 font-dm-sans text-[14px] font-bold text-white active:opacity-90"
+                className="btn-primary w-full shadow-brand-sm"
               >
                 {STEP_CTA[step]}
                 <ChevronRight size={18} strokeWidth={2.5} />
@@ -615,7 +700,7 @@ function LearningFlow({
               isLast={questionIndex === totalQuestions - 1}
             />
           ) : (
-            <div className="text-center py-8 font-dm-sans text-sm text-gray-500">
+            <div className="text-center py-8 text-sm text-muted">
               No practice questions available for this topic.
             </div>
           )
@@ -635,8 +720,6 @@ function LearningFlow({
 }
 
 // ── Inner page — reads searchParams, decides which view to render ──────────
-// Must be a separate component so Suspense can wrap it (Next.js 15 requirement
-// for useSearchParams in the App Router).
 
 function BrowseDetailInner({ topicId }: { topicId: string }) {
   const searchParams = useSearchParams();
@@ -665,8 +748,8 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
 
   // view=chapters or view=topics → browse layout with shared appbar
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5">
+    <div className="flex min-h-screen flex-col bg-card">
+      <header className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <button
           onClick={() => router.back()}
           aria-label="Go back"
@@ -674,7 +757,7 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
         >
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
-        <h1 className="min-w-0 flex-1 truncate font-syne text-[17px] font-bold text-ink">
+        <h1 className="min-w-0 flex-1 truncate font-bold text-[17px] font-bold text-ink">
           {name}
         </h1>
       </header>

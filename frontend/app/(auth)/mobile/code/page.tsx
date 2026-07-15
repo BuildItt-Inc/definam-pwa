@@ -14,6 +14,7 @@ import {
 
 import { orgLoginSchema, type OrgLoginFormValues } from '@/lib/validations/auth';
 import { orgLogin, ApiError } from '@/lib/api/auth';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 export default function OrgCodePage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function OrgCodePage() {
         user_agent: navigator.userAgent,
         ip: '0.0.0.0',
       });
-      router.push('/dashboard');
+      router.push('/student');
     } catch (err) {
       if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
         setBannerError(err.message || 'Invalid or already used access code');
@@ -52,10 +53,10 @@ export default function OrgCodePage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
 
       {/* ── App bar ── */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-black/8 bg-cream">
+      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <button
           type="button"
           onClick={() => router.push('/mobile')}
@@ -72,20 +73,13 @@ export default function OrgCodePage() {
       <main className="px-5 pt-6 pb-12 md:max-w-md md:mx-auto md:pt-8">
 
         {/* ── Info card ── */}
-        <div className="flex items-start gap-3 bg-jade-tint border border-[#9FE1CB] rounded-xl p-4 mb-6">
-          <div className="w-9 h-9 bg-jade rounded-xl flex items-center justify-center flex-shrink-0">
-            <Building2 size={17} strokeWidth={2} className="text-white" aria-hidden />
-          </div>
-          <div>
-            <p className="text-[13px] font-bold text-jade-dark leading-none mb-1">
-              Your school paid for your access
-            </p>
-            <p className="text-[12px] text-[#0F6E56] leading-snug">
-              Enter the unique code your school gave you. This code is your
-              permanent login — no password needed.
-            </p>
-          </div>
-        </div>
+        <InfoCard
+          icon={Building2}
+          iconStyle="pill"
+          title="Your school paid for your access"
+          body="Enter the unique code your school gave you. This code is your permanent login — no password needed."
+          className="mb-6"
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
@@ -98,7 +92,7 @@ export default function OrgCodePage() {
           <div
             className={[
               'rounded-xl border-2 py-4 px-4 mb-2 text-center transition-colors',
-              errors.access_code ? 'border-coral' : 'border-jade',
+              errors.access_code ? 'border-danger' : 'border-ink',
             ].join(' ')}
           >
             <input
@@ -113,8 +107,8 @@ export default function OrgCodePage() {
                 'w-full bg-transparent text-center outline-none',
                 'font-mono text-[22px] font-extrabold tracking-[0.18em] uppercase',
                 errors.access_code
-                  ? 'text-coral placeholder:text-coral/25'
-                  : 'text-jade-dark placeholder:text-jade/25',
+                  ? 'text-danger placeholder:text-danger/25'
+                  : 'text-ink placeholder:text-ink/25',
               ].join(' ')}
               {...register('access_code')}
             />
@@ -122,7 +116,7 @@ export default function OrgCodePage() {
 
           {/* ── Field error ── */}
           {errors.access_code && (
-            <p className="mb-2 ml-0.5 text-[11px] leading-none text-coral">
+            <p className="mb-2 ml-0.5 text-[11px] leading-none text-danger">
               {errors.access_code.message}
             </p>
           )}
@@ -136,7 +130,7 @@ export default function OrgCodePage() {
           {bannerError && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug mb-4"
+              className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug mb-4"
             >
               <AlertCircle
                 size={16}
@@ -152,7 +146,7 @@ export default function OrgCodePage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-8"
+            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-8"
           >
             {isSubmitting ? (
               <>
@@ -184,7 +178,7 @@ export default function OrgCodePage() {
             'Enter your code once — this device is now your DefinAm login forever',
           ] as const).map((text, i) => (
             <li key={i} className="flex items-start gap-3">
-              <span className="w-5 h-5 bg-jade-tint border border-[#9FE1CB] rounded-[5px] flex items-center justify-center text-[9px] font-black text-jade-dark flex-shrink-0 mt-0.5">
+              <span className="w-5 h-5 bg-bg-2 border border-border-2 rounded-[5px] flex items-center justify-center text-[9px] font-black text-ink flex-shrink-0 mt-0.5">
                 {i + 1}
               </span>
               <span className="text-[12px] text-ink/50 leading-snug">{text}</span>

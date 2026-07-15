@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { initializeOrgPayment, PaymentError } from '@/lib/api/payment';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 // ── Zod schema ─────────────────────────────────────────────────────────────
 
@@ -115,14 +116,14 @@ export default function OrgPayPage() {
   function fieldBorder(hasError: boolean) {
     return [
       'border rounded-xl transition-colors',
-      hasError ? 'border-coral' : 'border-black/15 focus-within:border-jade',
+      hasError ? 'border-danger' : 'border-border-2 focus-within:border-ink',
     ].join(' ');
   }
 
   return (
-    <div className="min-h-screen bg-cream font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
       {/* App bar */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-black/8 bg-cream">
+      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <button
           type="button"
           onClick={() => router.back()}
@@ -139,19 +140,13 @@ export default function OrgPayPage() {
       <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
 
         {/* Info card */}
-        <div className="flex items-start gap-3 bg-jade-tint border border-[#9FE1CB] rounded-xl p-4 mb-5">
-          <div className="w-9 h-9 bg-jade rounded-xl flex items-center justify-center flex-shrink-0">
-            <Building2 size={17} strokeWidth={2} className="text-white" aria-hidden />
-          </div>
-          <div>
-            <p className="text-[13px] font-bold text-jade-dark leading-none mb-1">
-              For Schools &amp; Organisations
-            </p>
-            <p className="text-[12px] text-[#0F6E56] leading-snug">
-              Pay for all your students at once. You get an admin dashboard + access codes to share.
-            </p>
-          </div>
-        </div>
+        <InfoCard
+          icon={Building2}
+          iconStyle="pill"
+          title="For Schools & Organisations"
+          body="Pay for all your students at once. You get an admin dashboard + access codes to share."
+          className="mb-5"
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
@@ -160,7 +155,7 @@ export default function OrgPayPage() {
             <div className={fieldBorder(!!errors.school_email)}>
               <label
                 htmlFor="school-email"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <Mail size={11} strokeWidth={2.5} aria-hidden />
                 School Email Address
@@ -177,7 +172,7 @@ export default function OrgPayPage() {
               />
             </div>
             {errors.school_email && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                 {errors.school_email.message}
               </p>
             )}
@@ -188,7 +183,7 @@ export default function OrgPayPage() {
             <div className={fieldBorder(!!errors.school_name)}>
               <label
                 htmlFor="school-name"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <GraduationCap size={11} strokeWidth={2.5} aria-hidden />
                 School Name
@@ -204,7 +199,7 @@ export default function OrgPayPage() {
               />
             </div>
             {errors.school_name && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                 {errors.school_name.message}
               </p>
             )}
@@ -215,7 +210,7 @@ export default function OrgPayPage() {
             <div className={fieldBorder(!!errors.student_count)}>
               <label
                 htmlFor="student-count"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
               >
                 <Users size={11} strokeWidth={2.5} aria-hidden />
                 Number of Students
@@ -231,24 +226,24 @@ export default function OrgPayPage() {
               />
             </div>
             {errors.student_count && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                 {errors.student_count.message}
               </p>
             )}
           </div>
 
           {/* ── Price summary (client-side preview) ── */}
-          <div className="bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-3.5 mb-5">
+          <div className="bg-bg-2 border border-border-2 rounded-xl px-4 py-3.5 mb-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] text-[#0F6E56]">
+              <span className="text-[12px] text-ink/75">
                 {displayCount > 0
                   ? `${displayCount.toLocaleString('en-NG')} students × ${formatNaira(PRICE_PER_STUDENT)}/term`
                   : `— students × ${formatNaira(PRICE_PER_STUDENT)}/term`}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[14px] font-bold text-jade-dark">Total</span>
-              <span className="font-syne text-[18px] font-black text-jade-dark tracking-tight">
+              <span className="text-[14px] font-bold text-ink">Total</span>
+              <span className="font-bold text-[18px] font-black text-ink tracking-tight">
                 {formatNaira(total)}
               </span>
             </div>
@@ -258,7 +253,7 @@ export default function OrgPayPage() {
           {bannerError && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug mb-4"
+              className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug mb-4"
             >
               <AlertCircle
                 size={16}
@@ -274,7 +269,7 @@ export default function OrgPayPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
+            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
           >
             {isLoading ? (
               <>

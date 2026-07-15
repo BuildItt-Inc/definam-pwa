@@ -18,9 +18,9 @@ function heatmapColor(level: number): string {
 
 function ProgressSkeleton() {
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-bg-0">
       {/* Appbar */}
-      <div className="border-b border-gray-200/60 bg-cream px-4 py-3.5">
+      <div className="border-b border-gray-200/60 bg-bg-0 px-4 py-3.5">
         <div className="h-5 w-28 animate-pulse rounded bg-gray-300/50" />
       </div>
 
@@ -56,22 +56,22 @@ interface StatCardProps {
 function StatCard({ variant, value, label }: StatCardProps) {
   if (variant === 'streak') {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl bg-jade px-3 py-4">
+      <div className="flex flex-col items-center justify-center rounded-xl bg-ink px-3 py-4 shadow-sm">
         <div className="mb-1 flex items-center gap-1.5">
-          <Flame size={22} strokeWidth={1.5} className="text-white/80" />
-          <span className="font-syne text-[28px] font-black leading-none text-white">
+          <Flame size={22} strokeWidth={2} className="text-brand-light" />
+          <span className="text-[28px] font-black leading-none text-white">
             {value}
           </span>
         </div>
-        <span className="font-dm-sans text-[11px] text-white/70">{label}</span>
+        <span className="text-[13px] font-semibold text-white/70">{label}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200/80 bg-white px-3 py-4">
-      <span className="font-syne text-[28px] font-black leading-none text-ink">{value}</span>
-      <span className="mt-1 font-dm-sans text-[11px] text-gray-400">{label}</span>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200/80 bg-card px-3 py-4">
+      <span className="font-bold text-[28px] font-black leading-none text-ink">{value}</span>
+      <span className="mt-1 text-[13px] text-muted">{label}</span>
     </div>
   );
 }
@@ -80,31 +80,29 @@ function StatCard({ variant, value, label }: StatCardProps) {
 
 function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border border-gray-200">
-      <div className="border-b border-gray-100 bg-gray-50 px-4 py-2.5">
-        <span className="font-dm-sans text-[11px] font-bold text-ink">Subject Mastery</span>
+    <div className="mb-4 overflow-hidden rounded-xl border border-border-2">
+      <div className="border-b border-border bg-bg-0 px-4 py-2.5">
+        <span className="text-[13px] font-bold text-ink">Subject Mastery</span>
       </div>
-      <div className="bg-white px-4 py-3">
+      <div className="bg-card px-4 py-3">
         {data.map((item, idx) => {
           const isGood = item.mastery_percent >= 60;
           const pctText = `${item.mastery_percent}%`;
           return (
             <div key={item.subject} className={idx < data.length - 1 ? 'mb-3' : ''}>
               <div className="mb-1 flex items-center justify-between">
-                <span className="font-dm-sans text-[13px] font-semibold text-ink">
+                <span className="text-[15px] font-semibold text-ink">
                   {item.subject}
                 </span>
                 <span
-                  className={`font-dm-sans text-[13px] font-bold ${
-                    isGood ? 'text-jade' : 'text-gold'
-                  }`}
+                  className={`text-[15px] font-bold ${ isGood ? 'text-ink' : 'text-ink-2' }`}
                 >
                   {pctText}
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+              <div className="h-1.5 overflow-hidden rounded-full bg-bg-2">
                 <div
-                  className={`h-full rounded-full ${isGood ? 'bg-jade' : 'bg-gold'}`}
+                  className={`h-full rounded-full ${isGood ? 'bg-ink' : 'bg-ink-2'}`}
                   style={{ width: pctText }}
                 />
               </div>
@@ -120,8 +118,8 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
 
 function HeatmapSection({ data }: { data: number[] }) {
   return (
-    <div className="mb-4 rounded-xl border border-gray-200 bg-white px-4 py-3">
-      <p className="mb-3 font-dm-sans text-[11px] font-bold text-ink">
+    <div className="mb-4 rounded-xl border border-border-2 bg-card px-4 py-3">
+      <p className="mb-3 text-[13px] font-bold text-ink">
         Study Activity — 3 Months
       </p>
 
@@ -150,7 +148,7 @@ function HeatmapSection({ data }: { data: number[] }) {
 
       {/* Legend */}
       <div className="mt-2.5 flex items-center gap-1.5">
-        <span className="font-dm-sans text-[9px] text-gray-400">Less</span>
+        <span className="text-[9px] text-muted">Less</span>
         {HEATMAP_COLORS.map((color) => (
           <div
             key={color}
@@ -162,7 +160,7 @@ function HeatmapSection({ data }: { data: number[] }) {
             }}
           />
         ))}
-        <span className="font-dm-sans text-[9px] text-gray-400">More</span>
+        <span className="text-[9px] text-muted">More</span>
       </div>
     </div>
   );
@@ -172,39 +170,35 @@ function HeatmapSection({ data }: { data: number[] }) {
 
 function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border border-gray-200">
-      <div className="border-b border-gray-100 bg-gray-50 px-4 py-2.5">
-        <span className="font-dm-sans text-[11px] font-bold text-ink">Upcoming Reviews</span>
+    <div className="mb-4 overflow-hidden rounded-xl border border-border-2">
+      <div className="border-b border-border bg-bg-0 px-4 py-2.5">
+        <span className="text-[13px] font-bold text-ink">Upcoming Reviews</span>
       </div>
-      <div className="bg-white">
+      <div className="bg-card">
         {data.map((item, idx) => {
           const isLast = idx === data.length - 1;
           const isToday = item.due.toLowerCase() === 'today';
 
           const dotClass =
             item.urgency === 'high'
-              ? 'bg-jade'
+              ? 'bg-ink'
               : item.urgency === 'medium'
-                ? 'bg-gold'
-                : 'border border-gray-300 bg-gray-100';
+                ? 'bg-ink-2'
+                : 'border border-gray-300 bg-bg-2';
 
           return (
             <div
               key={item.topic_title}
-              className={`flex items-center gap-3 px-4 py-3 ${
-                !isLast ? 'border-b border-gray-100' : ''
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 ${ !isLast ? 'border-b border-border' : '' }`}
             >
               <span
                 className={`h-2 w-2 flex-shrink-0 rounded-full ${dotClass}`}
               />
-              <span className="min-w-0 flex-1 font-dm-sans text-[13px] font-semibold text-ink">
+              <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">
                 {item.topic_title}
               </span>
               <span
-                className={`flex-shrink-0 font-dm-sans text-[12px] font-bold ${
-                  isToday ? 'text-jade' : 'text-gray-400'
-                }`}
+                className={`flex-shrink-0 text-[14px] font-bold ${ isToday ? 'text-ink' : 'text-muted' }`}
               >
                 {item.due}
               </span>
@@ -232,8 +226,8 @@ export default function ProgressPage() {
 
   if (fetchError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-cream px-6">
-        <p className="text-center font-dm-sans text-sm text-gray-500">{fetchError}</p>
+      <div className="flex min-h-screen items-center justify-center bg-bg-0 px-6">
+        <p className="text-center text-sm text-muted">{fetchError}</p>
       </div>
     );
   }
@@ -241,14 +235,14 @@ export default function ProgressPage() {
   if (!data) return <ProgressSkeleton />;
 
   return (
-    <div className="flex min-h-screen flex-col bg-cream">
+    <div className="page-with-nav bg-bg-0 page-enter">
 
       {/* Appbar */}
-      <header className="border-b border-gray-200/60 bg-cream px-4 py-3.5">
-        <h1 className="font-syne text-[17px] font-bold text-ink">My Progress</h1>
+      <header className="border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <h1 className="text-[17px] font-bold text-ink">My Progress</h1>
       </header>
 
-      <main className="flex-1 px-4 py-4 pb-24">
+      <main className="flex-1 px-4 py-4">
 
         {/* ── Stat cards 2×2 ──────────────────────────────────────────────── */}
         <div className="mb-4 grid grid-cols-2 gap-3">

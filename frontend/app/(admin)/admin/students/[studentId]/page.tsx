@@ -48,10 +48,10 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     if (error.status === 404) {
       return (
         <div className="flex flex-col items-center justify-center flex-1 gap-4 p-10 text-center">
-          <p className="text-sm font-semibold text-gray-500">Student not found</p>
+          <p className="text-sm font-semibold text-muted">Student not found</p>
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-jade border border-jade rounded px-3 py-1.5 hover:bg-jade/5 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-ink border border-ink rounded px-3 py-1.5 hover:bg-bg-2 transition-colors"
           >
             <ChevronLeft size={13} strokeWidth={1.5} />
             Back to Class
@@ -61,10 +61,10 @@ export default function StudentDetailPage({ params }: StudentDetailPageProps) {
     }
     return (
       <div className="flex flex-col items-center justify-center flex-1 gap-4 p-10 text-center">
-        <p className="text-sm font-semibold text-gray-500">Something went wrong</p>
+        <p className="text-sm font-semibold text-muted">Something went wrong</p>
         <button
           onClick={fetchStudent}
-          className="text-xs font-semibold text-jade border border-jade rounded px-3 py-1.5 hover:bg-jade/5 transition-colors"
+          className="text-xs font-semibold text-ink border border-ink rounded px-3 py-1.5 hover:bg-bg-2 transition-colors"
         >
           Try again
         </button>
@@ -81,30 +81,30 @@ function SkeletonLayout() {
   return (
     <div className="flex flex-col h-full animate-pulse">
       {/* Top bar skeleton */}
-      <div className="bg-white border-b border-gray-200 px-5 py-2.5 flex items-center gap-3 shrink-0">
-        <div className="h-7 w-28 bg-gray-200 rounded" />
-        <div className="h-5 w-40 bg-gray-200 rounded ml-2" />
-        <div className="h-6 w-24 bg-gray-200 rounded" />
-        <div className="ml-auto h-7 w-36 bg-gray-200 rounded" />
+      <div className="bg-card border-b border-border-2 px-5 py-2.5 flex items-center gap-3 shrink-0">
+        <div className="h-7 w-28 bg-bg-3 rounded" />
+        <div className="h-5 w-40 bg-bg-3 rounded ml-2" />
+        <div className="h-6 w-24 bg-bg-3 rounded" />
+        <div className="ml-auto h-7 w-36 bg-bg-3 rounded" />
       </div>
 
       {/* Two-column body skeleton */}
-      <div className="flex-1 p-5 bg-gray-50">
+      <div className="flex-1 p-5 bg-bg-0">
         <div className="grid grid-cols-2 gap-4">
           {/* Left column */}
           <div>
-            <div className="h-4 w-28 bg-gray-200 rounded mb-3" />
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="h-8 bg-gray-100 border-b border-gray-200" />
+            <div className="h-4 w-28 bg-bg-3 rounded mb-3" />
+            <div className="bg-card border border-border-2 rounded-lg overflow-hidden">
+              <div className="h-8 bg-bg-2 border-b border-border-2" />
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 px-3 py-3 border-b border-gray-100 last:border-0"
+                  className="flex items-center gap-3 px-3 py-3 border-b border-border last:border-0"
                 >
-                  <div className="h-3 w-28 bg-gray-200 rounded" />
-                  <div className="h-3 w-20 bg-gray-200 rounded" />
-                  <div className="h-3 w-16 bg-gray-200 rounded" />
-                  <div className="h-3 w-8 bg-gray-200 rounded" />
+                  <div className="h-3 w-28 bg-bg-3 rounded" />
+                  <div className="h-3 w-20 bg-bg-3 rounded" />
+                  <div className="h-3 w-16 bg-bg-3 rounded" />
+                  <div className="h-3 w-8 bg-bg-3 rounded" />
                 </div>
               ))}
             </div>
@@ -112,15 +112,15 @@ function SkeletonLayout() {
 
           {/* Right column */}
           <div>
-            <div className="h-4 w-32 bg-gray-200 rounded mb-1" />
-            <div className="h-3 w-24 bg-gray-200 rounded mb-3" />
-            <div className="h-4 w-28 bg-gray-200 rounded mb-2" />
+            <div className="h-4 w-32 bg-bg-3 rounded mb-1" />
+            <div className="h-3 w-24 bg-bg-3 rounded mb-3" />
+            <div className="h-4 w-28 bg-bg-3 rounded mb-2" />
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white border border-gray-200 rounded-lg px-3 py-3 mb-2"
+                className="bg-card border border-border-2 rounded-lg px-3 py-3 mb-2"
               >
-                <div className="h-3 w-3/4 bg-gray-200 rounded" />
+                <div className="h-3 w-3/4 bg-bg-3 rounded" />
               </div>
             ))}
           </div>

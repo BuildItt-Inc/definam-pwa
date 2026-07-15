@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -18,6 +19,7 @@ import {
 
 import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth';
 import { registerUser, ApiError } from '@/lib/api/auth';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -43,10 +45,11 @@ export default function RegisterPage() {
       await registerUser({
         username: values.username,
         password: values.password,
+        confirm_password: values.confirm_password,
         access_code: values.access_code, // already trimmed + uppercased by zod transform
       });
 
-      router.push('/dashboard');
+      router.push('/student');
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
@@ -75,75 +78,75 @@ export default function RegisterPage() {
     }
   }
 
-  function fieldBorder(hasError: boolean) {
-    return [
-      'border rounded-xl transition-colors',
-      hasError
-        ? 'border-coral'
-        : 'border-black/15 focus-within:border-jade',
-    ].join(' ');
-  }
-
   return (
-    <div className="min-h-screen bg-cream font-dm-sans">
+    <div className="min-h-screen bg-card md:bg-bg-0 page-enter flex flex-col">
       {/* App bar */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-black/8 bg-cream">
+      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border bg-card md:hidden">
         <button
           type="button"
           onClick={() => router.back()}
           aria-label="Go back"
-          className="flex items-center justify-center w-10 h-10 -ml-1 rounded-lg text-ink hover:bg-ink/6 active:bg-ink/10 transition-colors"
+          className="flex items-center justify-center w-10 h-10 -ml-1 rounded-lg text-ink hover:bg-bg-1 active:bg-bg-2 transition-colors"
         >
           <ArrowLeft size={20} strokeWidth={2.2} />
         </button>
-        <span className="text-[15px] font-bold text-ink tracking-tight">
-          Create Your Account
+        <span className="text-[17px] font-bold text-ink tracking-tight">
+          Create Account
         </span>
       </header>
 
-      <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
-        {/* Payment confirmed card */}
-        <div className="flex items-center gap-3 bg-jade-tint border border-[#9FE1CB] rounded-xl px-4 py-3.5 mb-7">
-          <CircleCheck
-            size={20}
-            strokeWidth={2}
-            className="text-jade flex-shrink-0"
-            aria-hidden
-          />
-          <div>
-            <p className="text-[13px] font-bold text-jade-dark leading-none">
-              Payment confirmed
-            </p>
-            <p className="text-[12px] text-[#0F6E56] mt-1 leading-none">
-              Access code sent to your email
-            </p>
-          </div>
-        </div>
+      <main className="flex-1 flex flex-col justify-center px-5 py-12 md:max-w-md md:mx-auto w-full">
+        <div className="md:bg-card md:border md:border-border md:rounded-2xl md:p-8 md:shadow-sm">
+        {/* Page heading */}
+        <h1 className="text-[28px] font-bold text-ink tracking-tight leading-none mb-2 md:text-center">
+          Join DefinAm
+        </h1>
+        <p className="text-[15px] text-muted mb-8 md:text-center">
+          Enter your details and access code to begin
+        </p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          {/* ── Access Code ── */}
+          <div className="mb-4">
+            <label
+              htmlFor="access_code"
+              className="block mb-2 text-[14px] font-medium text-ink"
+            >
+              <KeyRound size={12} strokeWidth={2.5} aria-hidden />
+              Access Code
+            </label>
+            <input
+              id="access_code"
+              type="text"
+              placeholder="e.g. SCH-12345"
+              className={`input-field ${errors.access_code ? 'error' : ''}`}
+              {...register('access_code')}
+            />
+            {errors.access_code && (
+              <p className="mt-1.5 text-[13px] leading-none text-danger">
+                {errors.access_code.message}
+              </p>
+            )}
+          </div>
+
           {/* ── Username ── */}
           <div className="mb-4">
-            <div className={fieldBorder(!!errors.username)}>
-              <label
-                htmlFor="username"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
-              >
-                <User size={11} strokeWidth={2.5} aria-hidden />
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                autoComplete="username"
-                spellCheck={false}
-                autoCapitalize="none"
-                placeholder="chukwuemeka_23"
-                className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
-                {...register('username')}
-              />
-            </div>
+            <label
+              htmlFor="username"
+              className="block mb-2 text-[14px] font-medium text-ink"
+            >
+              <User size={12} strokeWidth={2.5} aria-hidden />
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              placeholder="e.g. chisom123"
+              className={`input-field ${errors.username ? 'error' : ''}`}
+              {...register('username')}
+            />
             {errors.username && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 text-[13px] leading-none text-danger">
                 {errors.username.message}
               </p>
             )}
@@ -151,143 +154,114 @@ export default function RegisterPage() {
 
           {/* ── Password ── */}
           <div className="mb-4">
-            <div className={fieldBorder(!!errors.password)}>
-              <label
-                htmlFor="password"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+            <label
+              htmlFor="password"
+              className="block mb-2 text-[14px] font-medium text-ink"
+            >
+              <Lock size={12} strokeWidth={2.5} aria-hidden />
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                className={`input-field pr-12 ${errors.password ? 'error' : ''}`}
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-ink transition-colors"
               >
-                <Lock size={11} strokeWidth={2.5} aria-hidden />
-                Password
-              </label>
-              <div className="flex items-center px-3.5 pt-1.5 pb-3.5 gap-2">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  className="flex-1 min-w-0 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
-                  {...register('password')}
-                />
-                <button
-                  type="button"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="flex-shrink-0 text-ink/30 hover:text-ink/60 transition-colors p-0.5"
-                >
-                  {showPassword ? (
-                    <EyeOff size={16} strokeWidth={2} />
-                  ) : (
-                    <Eye size={16} strokeWidth={2} />
-                  )}
-                </button>
-              </div>
+                {showPassword ? (
+                  <EyeOff size={18} strokeWidth={2} />
+                ) : (
+                  <Eye size={18} strokeWidth={2} />
+                )}
+              </button>
             </div>
             {errors.password && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 text-[13px] leading-none text-danger">
                 {errors.password.message}
               </p>
             )}
           </div>
 
-          {/* ── Confirm password ── */}
-          <div className="mb-4">
-            <div className={fieldBorder(!!errors.confirm_password)}>
-              <label
-                htmlFor="confirm-password"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+          {/* ── Confirm Password ── */}
+          <div className="mb-6">
+            <label
+              htmlFor="confirm_password"
+              className="block mb-2 text-[14px] font-medium text-ink"
+            >
+              <CircleCheck size={12} strokeWidth={2.5} aria-hidden />
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                id="confirm_password"
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                className={`input-field pr-12 ${errors.confirm_password ? 'error' : ''}`}
+                {...register('confirm_password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((p) => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-ink transition-colors"
               >
-                <Lock size={11} strokeWidth={2.5} aria-hidden />
-                Confirm Password
-              </label>
-              <div className="flex items-center px-3.5 pt-1.5 pb-3.5 gap-2">
-                <input
-                  id="confirm-password"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                  className="flex-1 min-w-0 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
-                  {...register('confirm_password')}
-                />
-                <button
-                  type="button"
-                  aria-label={
-                    showConfirmPassword ? 'Hide password' : 'Show password'
-                  }
-                  onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="flex-shrink-0 text-ink/30 hover:text-ink/60 transition-colors p-0.5"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={16} strokeWidth={2} />
-                  ) : (
-                    <Eye size={16} strokeWidth={2} />
-                  )}
-                </button>
-              </div>
+                {showConfirmPassword ? (
+                  <EyeOff size={18} strokeWidth={2} />
+                ) : (
+                  <Eye size={18} strokeWidth={2} />
+                )}
+              </button>
             </div>
             {errors.confirm_password && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+              <p className="mt-1.5 text-[13px] leading-none text-danger">
                 {errors.confirm_password.message}
               </p>
             )}
           </div>
 
-          {/* ── Access code ── */}
-          <div className="mb-7">
-            <div className={fieldBorder(!!errors.access_code)}>
-              <label
-                htmlFor="access-code"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
-              >
-                <KeyRound size={11} strokeWidth={2.5} aria-hidden />
-                Access Code (from your email)
-              </label>
-              <input
-                id="access-code"
-                type="text"
-                autoComplete="off"
-                spellCheck={false}
-                autoCapitalize="characters"
-                placeholder="IND-0000-XX"
-                className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25 font-mono tracking-[0.15em] uppercase"
-                {...register('access_code')}
-              />
-            </div>
-            {errors.access_code && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
-                {errors.access_code.message}
-              </p>
-            )}
-          </div>
-
-          {/* ── Error banner ── */}
+          {/* Error Banner */}
           {bannerError && (
             <div
               role="alert"
-              className="mb-4 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug"
+              className="mb-4 flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-danger/10 border border-danger/20 text-danger text-[14px] font-medium leading-snug"
             >
               {bannerError}
             </div>
           )}
 
-          {/* ── Submit ── */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
+            className="btn-primary w-full shadow-brand-sm disabled:opacity-60 flex items-center justify-center gap-2 py-3.5 mb-8"
           >
             {isSubmitting ? (
-              <>
-                <Loader2 size={18} className="animate-spin" aria-hidden />
-                Creating account…
-              </>
+              <Loader2 size={18} className="animate-spin" />
             ) : (
               <>
-                <UserPlus size={18} strokeWidth={2.2} aria-hidden />
                 Create Account
+                <UserPlus size={18} strokeWidth={2} />
               </>
             )}
           </button>
         </form>
+
+        <div className="space-y-4">
+          <p className="text-center text-[14px] text-muted">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="font-bold text-ink underline decoration-ink/30 underline-offset-2 hover:decoration-ink transition-colors"
+            >
+              Login here
+            </Link>
+          </p>
+        </div>
+        </div>
       </main>
     </div>
   );

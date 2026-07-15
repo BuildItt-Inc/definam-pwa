@@ -6,6 +6,7 @@ import type {
   RegisterResponse,
   OrgLoginRequest,
   OrgLoginResponse,
+  UserMe,
 } from '@/types/auth';
 
 export class ApiError extends Error {
@@ -31,6 +32,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     },
   );
@@ -79,6 +81,7 @@ export async function registerUser(
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     },
   );
@@ -103,6 +106,7 @@ export async function orgLogin(
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(data),
     },
   );
@@ -145,4 +149,41 @@ export async function logout(): Promise<void> {
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
   });
   accessToken = null;
+}
+
+export async function getMe(): Promise<UserMe> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, { headers });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: '' }));
+    throw new ApiError(res.status, body.error ?? '');
+  }
+
+  return res.json() as Promise<UserMe>;
+}
+
+export async function getAuthHeaders(): Promise<HeadersInit> {
+  if (!accessToken) {
+    // First attempt
+    try {
+      await refreshToken();
+    } catch {
+      // Mobile Safari can delay cross-origin cookie transmission on first load.
+      // Wait briefly and retry once before declaring the session gone.
+      await new Promise((r) => setTimeout(r, 800));
+      try {
+        await refreshToken();
+      } catch {
+        throw new ApiError(401, 'Not authenticated');
+      }
+    }
+  }
+
+  if (!accessToken) throw new ApiError(401, 'Not authenticated');
+
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${accessToken}`,
+  };
 }

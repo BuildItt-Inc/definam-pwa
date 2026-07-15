@@ -23,6 +23,27 @@ router = APIRouter(tags=["chat"])
 _DAILY_CHAT_LIMIT = 50
 
 
+@router.get("/chat/history")
+async def chat_history(
+    topic_id: str,
+    claims: CurrentUserDep,
+) -> list[dict]:
+    """Retrieve chat message history for a given topic."""
+    user_id: str = claims["sub"]
+    async with db_session() as session:
+        result = await session.execute(
+            select(ChatMessage)
+            .where(ChatMessage.user_id == user_id, ChatMessage.topic_id == topic_id)
+            .order_by(ChatMessage.created_at.asc())
+            .limit(20)
+        )
+        return [
+            {"role": msg.role, "content": msg.content}
+            for msg in result.scalars().all()
+        ]
+
+
+
 @router.get("/chat/stream")
 async def chat_stream(
     topic_id: str,
@@ -83,13 +104,28 @@ async def chat_stream(
     # 4. Stream Groq response
     async def generate():
         full_response = ""
-        async for chunk in stream_groq_response(question, context, history):
-            full_response += chunk
-            yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+        usage_input_tokens = 0
+        usage_output_tokens = 0
 
+        async for item in stream_groq_response(question, context, history):
+            if item[0] == "chunk":
+                full_response += item[1]
+                yield f"data: {json.dumps({'chunk': item[1]})}\n\n"
+            elif item[0] == "usage":
+                usage_input_tokens = item[1]["input_tokens"]
+                usage_output_tokens = item[1]["output_tokens"]
+
+        # Save assistant message with token counts
         async with db_session() as session:
             session.add(
-                ChatMessage(user_id=user_id, topic_id=topic_id, role="assistant", content=full_response)
+                ChatMessage(
+                    user_id=user_id,
+                    topic_id=topic_id,
+                    role="assistant",
+                    content=full_response,
+                    input_tokens=usage_input_tokens,
+                    output_tokens=usage_output_tokens
+                )
             )
             await session.commit()
 

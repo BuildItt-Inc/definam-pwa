@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Cookie, Request, Response
+from fastapi import APIRouter, Cookie, HTTPException, Request, Response
 
 from app.api.deps import BearerTokenDep, CurrentUserDep
 from app.core.config import get_settings
 from app.core.exceptions import InvalidTokenError
 from app.core.limiter import limiter
-from app.db.database import get_user_by_id
+from app.core.security import create_jwt
+from app.db.database import get_user_by_id, get_user_by_username
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
@@ -25,30 +26,52 @@ _COOKIE_NAME = "refresh_token"
 
 
 def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
-    """Attach the refresh token as a Secure, HttpOnly, SameSite=Strict cookie."""
+    """Attach the refresh token as a Secure, HttpOnly, SameSite=None cookie.
+
+    SameSite=None is required because the frontend (Vercel) and backend
+    (Coolify) are on different origins. SameSite=Strict silently blocks the
+    cookie from being sent on cross-origin requests, breaking token refresh.
+    SameSite=None + Secure=True is the correct pairing for cross-origin cookies.
+    """
     settings = get_settings()
     max_age = settings.jwt_refresh_expire_days * 24 * 60 * 60  # seconds
     response.set_cookie(
         key=_COOKIE_NAME,
         value=refresh_token,
         httponly=True,
-        secure=True,  # requires HTTPS in production; harmless over localhost
-        samesite="strict",
+        secure=True,  # required when samesite="none"
+        samesite="none",  # must be 'none' for cross-origin (Vercel → Coolify)
         max_age=max_age,
-        path="/api/v1/auth",  # scoped — only sent to auth endpoints
+        path="/",  # widened so both /refresh and /logout can receive the cookie
     )
 
 
 def _clear_refresh_cookie(response: Response) -> None:
-    response.delete_cookie(key=_COOKIE_NAME, path="/api/v1/auth")
-
+    response.delete_cookie(key=_COOKIE_NAME, path="/", samesite="none", secure=True)
 
 @router.post("/register", status_code=201)
 @limiter.limit("3/minute")
 async def register(request: Request, body: RegisterRequest) -> dict:
     """Register a new individual student using a valid access code."""
-    return await auth_service.register(body)
-
+    # Call the registration service
+    await auth_service.register(body)
+    
+    # Fetch the newly created user by username
+    user = await get_user_by_username(body.username)
+    if not user:
+        raise HTTPException(404, "User not found after registration")
+    
+    # Generate JWT – `create_jwt` expects `subject` (user ID) and optional `extra_claims`
+    token = create_jwt(
+        subject=user["id"],
+        extra_claims={"role": user["role"]}
+    )
+    
+    return {
+        "access_token": token,
+        "role": user["role"],
+        "force_password_change": False
+    }
 
 @router.post(
     "/login",

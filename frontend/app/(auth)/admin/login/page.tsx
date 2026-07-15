@@ -22,6 +22,7 @@ import {
   type ChangePasswordFormValues,
 } from '@/lib/validations/auth';
 import { loginUser, changePassword, ApiError } from '@/lib/api/auth';
+import { InfoCard } from '@/components/ui/InfoCard';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -67,7 +68,7 @@ export default function AdminLoginPage() {
       if (data.force_password_change) {
         setForcePasswordChange(true);
       } else {
-        router.push('/admin/dashboard');
+        router.push('/admin');
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -86,7 +87,7 @@ export default function AdminLoginPage() {
         new_password: values.new_password,
         confirm_password: values.confirm_password,
       });
-      router.push('/admin/dashboard');
+      router.push('/admin');
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setChangeBannerError(err.message || 'Something went wrong. Please try again.');
@@ -101,8 +102,8 @@ export default function AdminLoginPage() {
     return [
       'border rounded-xl transition-colors',
       hasError
-        ? 'border-coral'
-        : 'border-black/15 focus-within:border-jade',
+        ? 'border-danger'
+        : 'border-border-2 focus-within:border-ink',
     ].join(' ');
   }
 
@@ -110,9 +111,9 @@ export default function AdminLoginPage() {
   //  RENDER
   // ═════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-cream font-dm-sans">
+    <div className="min-h-screen bg-bg-0">
       {/* App bar */}
-      <header className="flex items-center px-4 h-[56px] border-b border-black/8 bg-cream">
+      <header className="flex items-center px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <span className="text-[15px] font-bold text-ink tracking-tight">
           Admin Login
         </span>
@@ -123,7 +124,7 @@ export default function AdminLoginPage() {
         {/* ── LOGIN FORM (hidden once force password change is active) ── */}
         {!forcePasswordChange && (
           <>
-            <h1 className="font-syne text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
+            <h1 className="font-bold text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
               School Admin Login
             </h1>
             <p className="text-[13px] text-ink/50 mb-8">
@@ -137,7 +138,7 @@ export default function AdminLoginPage() {
                 <div className={fieldBorder(!!loginErrors.username)}>
                   <label
                     htmlFor="admin-username"
-                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
                   >
                     <Mail size={11} strokeWidth={2.5} aria-hidden />
                     Username (your school email)
@@ -154,7 +155,7 @@ export default function AdminLoginPage() {
                   />
                 </div>
                 {loginErrors.username && (
-                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                     {loginErrors.username.message}
                   </p>
                 )}
@@ -165,7 +166,7 @@ export default function AdminLoginPage() {
                 <div className={fieldBorder(!!loginErrors.password)}>
                   <label
                     htmlFor="admin-password"
-                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
                   >
                     <Lock size={11} strokeWidth={2.5} aria-hidden />
                     Password
@@ -194,7 +195,7 @@ export default function AdminLoginPage() {
                   </div>
                 </div>
                 {loginErrors.password && (
-                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                     {loginErrors.password.message}
                   </p>
                 )}
@@ -204,7 +205,7 @@ export default function AdminLoginPage() {
               {loginBannerError && (
                 <div
                   role="alert"
-                  className="mb-4 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug"
+                  className="mb-4 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug"
                 >
                   {loginBannerError}
                 </div>
@@ -214,7 +215,7 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={isLoginSubmitting}
-                className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
+                className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
               >
                 {isLoginSubmitting ? (
                   <>
@@ -235,31 +236,22 @@ export default function AdminLoginPage() {
         {/* ── FORCE PASSWORD CHANGE BLOCK ─────────────────────────────── */}
         {forcePasswordChange && (
           <>
-            <h1 className="font-syne text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
+            <h1 className="font-bold text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
               Change Your Password
             </h1>
             <p className="text-[13px] text-ink/50 mb-6">
               Set a permanent password before you continue.
             </p>
 
-            {/* Gold warning banner */}
-            <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-gold/10 border border-gold/30 mb-7">
-              <AlertTriangle
-                size={18}
-                strokeWidth={2}
-                className="text-gold flex-shrink-0 mt-0.5"
-                aria-hidden
-              />
-              <div>
-                <p className="text-[13px] font-bold text-gold leading-none mb-1">
-                  First Login — Change Your Password
-                </p>
-                <p className="text-[12px] text-gold/80 leading-snug">
-                  You&apos;re using a temporary password. Set a permanent one before
-                  you continue.
-                </p>
-              </div>
-            </div>
+            {/* warn warning banner */}
+            <InfoCard
+              tone="gold"
+              icon={AlertTriangle}
+              iconStyle="bare"
+              title="First Login — Change Your Password"
+              body="You're using a temporary password. Set a permanent one before you continue."
+              className="mb-7"
+            />
 
             <form
               onSubmit={handleChangeSubmit(onChangePasswordSubmit)}
@@ -270,7 +262,7 @@ export default function AdminLoginPage() {
                 <div className={fieldBorder(!!changeErrors.new_password)}>
                   <label
                     htmlFor="new-password"
-                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
                   >
                     <Lock size={11} strokeWidth={2.5} aria-hidden />
                     New Password
@@ -299,7 +291,7 @@ export default function AdminLoginPage() {
                   </div>
                 </div>
                 {changeErrors.new_password && (
-                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                     {changeErrors.new_password.message}
                   </p>
                 )}
@@ -310,7 +302,7 @@ export default function AdminLoginPage() {
                 <div className={fieldBorder(!!changeErrors.confirm_password)}>
                   <label
                     htmlFor="confirm-password"
-                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-jade cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
                   >
                     <Lock size={11} strokeWidth={2.5} aria-hidden />
                     Confirm New Password
@@ -339,7 +331,7 @@ export default function AdminLoginPage() {
                   </div>
                 </div>
                 {changeErrors.confirm_password && (
-                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-coral">
+                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
                     {changeErrors.confirm_password.message}
                   </p>
                 )}
@@ -349,7 +341,7 @@ export default function AdminLoginPage() {
               {changeBannerError && (
                 <div
                   role="alert"
-                  className="mb-4 px-4 py-3.5 rounded-xl bg-coral/10 border border-coral/25 text-coral text-[13px] font-medium leading-snug"
+                  className="mb-4 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug"
                 >
                   {changeBannerError}
                 </div>
@@ -359,7 +351,7 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={isChangeSubmitting}
-                className="w-full min-h-[52px] bg-jade text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-jade/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
+                className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
               >
                 {isChangeSubmitting ? (
                   <>

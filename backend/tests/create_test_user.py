@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+# ruff: noqa
 """
 Create a test student user in the database for local development.
 Run: python tests/create_test_user.py
 """
 
 import asyncio
+import os
+import sys
 import uuid
+sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from app.core.security import hash_password
 from app.db.database import db_session

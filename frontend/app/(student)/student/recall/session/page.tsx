@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Sparkles, Zap } from 'lucide-react';
 import type { RecallItem } from '@/types/topics';
 import { QualityRating } from '@/components/student/QualityRating';
-import { mockHomeData } from '@/lib/api/mock/data';
+import { submitRecallRating } from '@/lib/api/topics';
+import { getHomeData } from '@/lib/api/topics';
 
 // ── Session page ──────────────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ export default function RecallSessionPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [streakDays, setStreakDays] = useState<number | null>(null);
   const startTime = useRef<number>(Date.now());
 
   useEffect(() => {
@@ -46,13 +48,28 @@ export default function RecallSessionPage() {
   const total = queue.length;
   const currentItem = queue[currentIndex];
   const elapsedMinutes = Math.max(1, Math.round((Date.now() - startTime.current) / 60000));
-  const newStreak = mockHomeData.streak_days + 1;
 
-  function handleRate(_rating: number) {
+  async function handleRate(rating: number) {
+    // Submit rating to real backend — this marks the DailyRecallQueue item
+    // as completed and advances SM-2 scheduling, which is what the streak query counts.
+    try {
+      await submitRecallRating(currentItem.topic_id, rating);
+    } catch {
+      // Non-fatal — still advance the UI
+    }
+
     if (currentIndex < total - 1) {
       setCurrentIndex((i) => i + 1);
       setAnswerRevealed(false);
     } else {
+      // Session complete — fetch authoritative streak from dashboard
+      try {
+        const home = await getHomeData();
+        setStreakDays(home.streak_days);
+      } catch {
+        // If dashboard fetch fails, show a safe fallback
+        setStreakDays(null);
+      }
       setCompleted(true);
     }
   }
@@ -60,46 +77,46 @@ export default function RecallSessionPage() {
   // ── SCR-07d · All Done ──────────────────────────────────────────────────
   if (completed) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-ink px-5 py-10 text-center">
-        <Sparkles size={32} strokeWidth={1.5} className="mb-3 text-gold" />
-        <h1 className="mb-1 font-syne text-[24px] font-black text-white">All done!</h1>
-        <p className="mb-8 font-dm-sans text-[12px] text-white/40">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-bg-0 px-5 py-10 text-center">
+        <Sparkles size={32} strokeWidth={2} className="mb-3 text-brand" />
+        <h1 className="mb-1 text-[24px] font-bold text-ink">All done!</h1>
+        <p className="mb-8 text-[15px] text-muted">
           {total} {total === 1 ? 'topic' : 'topics'} reviewed · {elapsedMinutes}{' '}
           {elapsedMinutes === 1 ? 'minute' : 'minutes'}
         </p>
 
         {/* Streak card */}
-        <div className="mb-6 w-full max-w-xs rounded-2xl border border-white/10 bg-white/10 px-6 py-5">
-          <p className="mb-2 font-dm-sans text-[10px] font-bold uppercase tracking-wider text-white/40">
+        <div className="mb-6 w-full max-w-xs rounded-2xl border border-brand/20 bg-brand/5 px-6 py-5 shadow-sm">
+          <p className="mb-2 text-[12px] font-bold uppercase tracking-wider text-muted">
             Streak
           </p>
           <div className="flex items-center justify-center gap-2">
-            <Zap size={18} strokeWidth={1.5} className="text-gold" />
-            <span className="font-syne text-[40px] font-black leading-none text-white">
-              {newStreak}
+            <Zap size={22} strokeWidth={2} className="text-brand-light" />
+            <span className="text-[40px] font-black leading-none text-ink">
+              {streakDays ?? '-'}
             </span>
           </div>
-          <p className="mt-1 font-dm-sans text-[11px] text-white/40">days in a row</p>
+          <p className="mt-1 text-[13px] font-semibold text-muted">days in a row</p>
         </div>
 
         {/* Next review hint */}
-        <p className="mb-8 w-full max-w-xs text-left font-dm-sans text-[11px] leading-relaxed text-white/30">
-          Next reviews: Tomorrow → Quadratic Equations · In 4 days → Linear Equations
+        <p className="mb-8 w-full max-w-xs text-center text-[14px] leading-relaxed text-muted">
+          Your spaced repetition schedule has been updated.
         </p>
 
         {/* Navigation */}
         <div className="flex w-full max-w-xs flex-col gap-3">
           <button
             onClick={() => router.push('/student/learn')}
-            className="rounded-xl bg-jade py-3.5 font-syne text-[14px] font-bold text-white active:opacity-90"
+            className="btn-primary w-full shadow-brand-sm"
           >
-            Browse More Topics →
+            Learn Something New
           </button>
           <button
             onClick={() => router.push('/student')}
-            className="rounded-xl border border-white/20 py-3.5 font-dm-sans text-[13px] font-semibold text-white/60 active:opacity-70"
+            className="btn-secondary w-full"
           >
-            Back to Home
+            Back to Dashboard
           </button>
         </div>
       </div>
@@ -116,15 +133,15 @@ export default function RecallSessionPage() {
           {!answerRevealed && (
             <button
               onClick={() => router.push('/student/recall')}
-              className="font-dm-sans text-[13px] font-semibold text-white/40 active:opacity-70"
+              className="text-[15px] font-semibold text-white/40 active:opacity-70"
             >
               <ArrowLeft size={18} strokeWidth={1.5} />
             </button>
           )}
-          <p className="flex-1 font-syne text-[15px] font-bold text-white">
+          <p className="flex-1 font-bold text-[15px] font-bold text-white">
             Daily Recall
           </p>
-          <span className="rounded-full bg-white/10 px-3 py-1 font-dm-sans text-[11px] text-white/60">
+          <span className="rounded-full bg-white/10 px-3 py-1 text-[13px] text-white/60">
             {currentIndex + 1} / {total}
           </span>
         </div>
@@ -134,20 +151,20 @@ export default function RecallSessionPage() {
           /* ── SCR-07b · Question hidden ── */
           <>
             <div className="mb-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-5 text-center">
-              <p className="mb-3 font-dm-sans text-[10px] font-bold uppercase tracking-wider text-white/40">
+              <p className="mb-3 text-[12px] font-bold uppercase tracking-wider text-white/40">
                 {currentItem.subject} · {currentItem.topic_title}
               </p>
-              <p className="font-syne text-[15px] font-bold leading-snug text-white">
+              <p className="font-bold text-[15px] font-bold leading-snug text-white">
                 {currentItem.question}
               </p>
-              <p className="mt-4 font-dm-sans text-[11px] text-white/30">
+              <p className="mt-4 text-[13px] text-white/30">
                 Tap to reveal answer ↓
               </p>
             </div>
 
             <button
               onClick={() => setAnswerRevealed(true)}
-              className="w-full rounded-xl border border-white/20 bg-white/10 py-3.5 font-dm-sans text-[14px] font-bold text-white active:opacity-70"
+              className="w-full rounded-xl border border-white/20 bg-white/10 py-3.5 text-[16px] font-bold text-white active:opacity-70"
             >
               Show Answer
             </button>
@@ -157,23 +174,23 @@ export default function RecallSessionPage() {
           <>
             {/* Collapsed question */}
             <div className="mb-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center">
-              <p className="font-dm-sans text-[12px] font-semibold leading-snug text-white/70">
+              <p className="text-[14px] font-semibold leading-snug text-white/70">
                 {currentItem.question}
               </p>
             </div>
 
             {/* Model answer card */}
-            <div className="mb-4 rounded-xl bg-white px-4 py-4">
-              <p className="mb-2 font-dm-sans text-[9px] font-bold uppercase tracking-wider text-gray-400">
+            <div className="mb-4 rounded-xl bg-card px-4 py-4">
+              <p className="mb-2 text-[9px] font-bold uppercase tracking-wider text-muted">
                 Model Answer
               </p>
-              <p className="font-dm-sans text-[13px] leading-relaxed text-ink">
+              <p className="text-[15px] leading-relaxed text-ink">
                 {currentItem.model_answer}
               </p>
             </div>
 
             {/* Rating prompt */}
-            <p className="mb-3 text-center font-dm-sans text-[11px] font-semibold text-white/50">
+            <p className="mb-3 text-center text-[13px] font-semibold text-white/50">
               How well did you remember this?
             </p>
 
