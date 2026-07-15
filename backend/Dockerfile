@@ -40,6 +40,9 @@ COPY <<'EOF' /app/entrypoint.sh
 #!/usr/bin/env bash
 set -e
 
+echo "▶ Checking for database migration drifts …"
+python scripts/fix_migration_drift.py
+
 echo "▶ Running Alembic migrations …"
 alembic upgrade head
 

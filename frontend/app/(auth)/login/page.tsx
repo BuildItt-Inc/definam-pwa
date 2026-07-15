@@ -9,7 +9,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
-import { loginUser, ApiError } from '@/lib/api/auth';
+import { loginUser, logout, ApiError } from '@/lib/api/auth';
 import LogoMark from '@/components/landing/LogoMark';
 
 function ResetSuccessBanner() {
@@ -49,6 +49,7 @@ export default function LoginPage() {
       if (role === 'admin') {
         // Admin accounts must use the admin portal
         setBannerError('Use the admin login page for administrator accounts.');
+        await logout();
         return;
       }
       router.push('/student');
