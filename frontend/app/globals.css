@@ -135,9 +135,11 @@
 /* ── Utility: page container ────────────────────────────────────────────────── */
 @layer components {
   /* Full screen page that accounts for bottom nav */
-  /* The BottomNav component renders its own spacer div, so no bottom padding is needed here */
   .page-with-nav {
-    @apply flex min-h-dvh flex-col;
+    @apply flex flex-col;
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
   }
 
   /* Standard card */
