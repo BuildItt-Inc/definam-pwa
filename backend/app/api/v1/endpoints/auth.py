@@ -4,6 +4,7 @@ import hashlib
 import os
 from datetime import UTC, datetime, timedelta
 
+import httpx
 from fastapi import APIRouter, Cookie, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr
 
@@ -256,8 +257,6 @@ async def forgot_password(request: Request, body: ForgotPasswordRequest) -> dict
         )
         # Send email via Resend
         try:
-            import httpx
-
             async with httpx.AsyncClient() as client:
                 await client.post(
                     "https://api.resend.com/emails",

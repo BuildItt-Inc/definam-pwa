@@ -133,8 +133,8 @@ function renderInline(
         .map((line) => escapeHtml(line))
         .join('<br />');
 
-      // Auto-convert standard plain-text fractions (e.g. 1/3, 3/4) to KaTeX
-      escapedLines = escapedLines.replace(/\b(\d+)\/(\d+)\b/g, (match, num, den) => {
+      // Auto-convert standard plain-text fractions (e.g. 1/3, 3/4) to KaTeX, avoiding dates and URLs
+      escapedLines = escapedLines.replace(/(?<!\/)\b(\d+)\/(\d+)\b(?!\/)/g, (match, num, den) => {
         try {
           return `<span class="math-inline">${katex.renderToString(`\\frac{${num}}{${den}}`, { displayMode: false, throwOnError: false })}</span>`;
         } catch {

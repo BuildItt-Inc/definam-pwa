@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
-import { changePassword, getMe, logout, ApiError } from '@/lib/api/auth';
+import { changePassword, getMe, logout, ApiError, getAuthHeaders } from '@/lib/api/auth';
 import { getHomeData } from '@/lib/api/topics';
 import type { UserMe } from '@/types/auth';
 import { BottomNav } from '@/components/student/BottomNav';
@@ -96,7 +96,7 @@ export default function SettingsPage() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            ...(await import('@/lib/api/auth').then((m) => m.getAuthHeaders())),
+            ...(await getAuthHeaders()),
           },
           body: JSON.stringify({ name: trimmed }),
         },

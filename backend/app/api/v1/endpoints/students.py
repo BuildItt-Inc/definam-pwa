@@ -364,7 +364,7 @@ async def get_progress(claims: CurrentUserDep) -> dict:
 
         # due tomorrow
         due_tomorrow_result = await session.execute(
-            select(func.count())
+            select(func.count(DailyRecallQueue.id))
             .where(
                 and_(
                     DailyRecallQueue.user_id == user_id,
@@ -437,18 +437,16 @@ async def get_progress(claims: CurrentUserDep) -> dict:
         start_date = today - timedelta(days=89)
         heatmap_result = await session.execute(
             select(
-                func.date_trunc("day", TopicReview.last_reviewed_at)
-                .cast(Date)
-                .label("day"),
-                func.count().label("cnt"),
+                func.cast(TopicReview.last_reviewed_at, Date).label("day"),
+                func.count(TopicReview.id).label("cnt"),
             )
             .where(
                 and_(
                     TopicReview.user_id == user_id,
-                    TopicReview.last_reviewed_at >= func.cast(start_date, type_=Date),
+                    TopicReview.last_reviewed_at >= start_date,
                 )
             )
-            .group_by(text("day"))
+            .group_by(func.cast(TopicReview.last_reviewed_at, Date))
         )
         heat: dict[date, int] = {r.day: r.cnt for r in heatmap_result}
         heatmap_data = [
