@@ -7,6 +7,8 @@ import type {
   OrgLoginRequest,
   OrgLoginResponse,
   UserMe,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
 } from '@/types/auth';
 
 export class ApiError extends Error {
@@ -119,6 +121,40 @@ export async function orgLogin(
   const json: OrgLoginResponse = await res.json();
   accessToken = json.access_token;
   return json;
+}
+
+// ── Password Reset ────────────────────────────────────────────────────────
+
+export async function forgotPassword(data: ForgotPasswordRequest): Promise<void> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/forgot-password`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: '' }));
+    throw new ApiError(res.status, body.error ?? '');
+  }
+}
+
+export async function resetPassword(data: ResetPasswordRequest): Promise<void> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/reset-password`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: '' }));
+    throw new ApiError(res.status, body.error ?? '');
+  }
 }
 
 // ── Token lifecycle ────────────────────────────────────────────────────────

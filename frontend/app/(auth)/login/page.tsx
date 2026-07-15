@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -17,6 +18,19 @@ import Link from 'next/link';
 
 import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
 import { loginUser, ApiError } from '@/lib/api/auth';
+
+function ResetSuccessBanner() {
+  const searchParams = useSearchParams();
+  if (searchParams.get('reset') !== '1') return null;
+  return (
+    <div
+      role="status"
+      className="mb-6 flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-jade/10 border border-jade/20 text-jade text-[14px] font-medium leading-snug"
+    >
+      Your password has been reset. You can now log in with your new password.
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,6 +98,10 @@ export default function LoginPage() {
           Login with your username and password
         </p>
 
+        <Suspense>
+          <ResetSuccessBanner />
+        </Suspense>
+
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           {/* ── Username ── */}
           <div className="mb-4">
@@ -109,7 +127,7 @@ export default function LoginPage() {
           </div>
 
           {/* ── Password ── */}
-          <div className="mb-6">
+          <div className="mb-4">
             <label
               htmlFor="password"
               className="block mb-2 text-[14px] font-medium text-ink"
@@ -143,6 +161,16 @@ export default function LoginPage() {
                 {errors.password.message}
               </p>
             )}
+          </div>
+
+          {/* ── Forgot password ── */}
+          <div className="mb-7 flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-[13px] text-muted hover:text-ink transition-colors"
+            >
+              Forgot password?
+            </Link>
           </div>
 
           {/* Error Banner */}

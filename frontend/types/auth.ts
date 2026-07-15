@@ -50,6 +50,17 @@ export interface OrgLoginResponse {
   role: string;
 }
 
+// ── Password Reset ────────────────────────────────────────────────────────
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
 // ── GET /api/v1/auth/me ───────────────────────────────────────────────────
 
 export interface UserMe {
