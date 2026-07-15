@@ -1,0 +1,27 @@
+{
+  "Mathematics": {
+    "class_level": "SS2",
+    "chapters": [
+      {
+        "num": 1,
+        "title": "Number and Numeration",
+        "topics": ["Fractions", "Decimals", "Percentages", "Indices"]
+      },
+      {
+        "num": 2,
+        "title": "Algebra",
+        "topics": ["Quadratic Equations", "Simultaneous Equations"]
+      }
+    ]
+  },
+  "English Language": {
+    "class_level": "SS2",
+    "chapters": [
+      {
+        "num": 1,
+        "title": "Comprehension",
+        "topics": ["Main Ideas", "Inference"]
+      }
+    ]
+  }
+}

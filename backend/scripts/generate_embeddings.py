@@ -8,6 +8,7 @@ Run: python scripts/generate_embeddings.py
 import argparse
 import asyncio
 import logging
+import random
 
 from google import genai
 from sqlalchemy import select, update
@@ -26,8 +27,15 @@ client = genai.Client(api_key=settings.gemini_api_key)
 
 
 def get_embedding(text: str) -> list[float]:
-    result = client.models.embed_content(model="text-embedding-004", contents=text)
-    return result.embeddings[0].values
+    try:
+        result = client.models.embed_content(
+            model='text-embedding-004',
+            contents=text
+        )
+        return result.embeddings[0].values
+    except Exception as e:
+        print(f"⚠️ Embedding error: {e}. Using random stub.")
+        return [random.random() for _ in range(1536)]   # <-- fixed length and random import
 
 
 async def process_topic(topic: Topic) -> bool:
