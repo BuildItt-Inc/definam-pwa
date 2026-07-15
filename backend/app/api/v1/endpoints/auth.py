@@ -218,6 +218,8 @@ async def get_me(current_user: CurrentUserDep) -> UserMeResponse:
         username=user["username"],
         role=user["role"],
         org_id=user["org_id"],
+        name=user.get("name"),
+        email=user.get("email"),
     )
 
 

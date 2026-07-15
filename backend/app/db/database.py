@@ -166,6 +166,8 @@ async def get_user_by_id(user_id: str) -> dict[str, Any] | None:
             "role": row.role,
             "org_id": row.org_id,
             "force_password_change": row.force_password_change,
+            "name": row.name,
+            "email": row.email,
         }
 
 
