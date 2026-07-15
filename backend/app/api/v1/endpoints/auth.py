@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Cookie, Request, Response
+from fastapi import APIRouter, Cookie, HTTPException, Request, Response
 
 from app.api.deps import BearerTokenDep, CurrentUserDep
 from app.core.config import get_settings
 from app.core.exceptions import InvalidTokenError
 from app.core.limiter import limiter
-from app.db.database import get_user_by_id
+from app.core.security import create_jwt
+from app.db.database import get_user_by_id, get_user_by_username
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
@@ -48,13 +49,29 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
 def _clear_refresh_cookie(response: Response) -> None:
     response.delete_cookie(key=_COOKIE_NAME, path="/", samesite="none", secure=True)
 
-
 @router.post("/register", status_code=201)
 @limiter.limit("3/minute")
 async def register(request: Request, body: RegisterRequest) -> dict:
     """Register a new individual student using a valid access code."""
-    return await auth_service.register(body)
-
+    # Call the registration service
+    await auth_service.register(body)
+    
+    # Fetch the newly created user by username
+    user = await get_user_by_username(body.username)
+    if not user:
+        raise HTTPException(404, "User not found after registration")
+    
+    # Generate JWT – `create_jwt` expects `subject` (user ID) and optional `extra_claims`
+    token = create_jwt(
+        subject=user["id"],
+        extra_claims={"role": user["role"]}
+    )
+    
+    return {
+        "access_token": token,
+        "role": user["role"],
+        "force_password_change": False
+    }
 
 @router.post(
     "/login",

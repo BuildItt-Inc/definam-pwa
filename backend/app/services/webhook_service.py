@@ -100,7 +100,7 @@ async def _handle_individual(data: dict, metadata: dict) -> None:
     amount_kobo: int = data.get("amount", 170_000)
 
     code = generate_access_code("individual")
-    await insert_individual_code(code)
+    await insert_individual_code(code, email)
 
     await send_individual_code(email, code)
     await send_payment_receipt(
