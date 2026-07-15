@@ -242,7 +242,7 @@ export default function ProgressPage() {
         <h1 className="text-[17px] font-bold text-ink">My Progress</h1>
       </header>
 
-      <main className="flex-1 px-4 py-4">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 pb-8">
 
         {/* â”€â”€ Stat cards 2Ã - 2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="mb-4 grid grid-cols-2 gap-3">

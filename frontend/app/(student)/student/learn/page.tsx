@@ -94,7 +94,7 @@ export default function BrowsePage() {
       </div>
 
       {/* ── Subject list ─────────────────────────────────────────────────── */}
-      <main className="flex-1">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pb-4">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
             <BookOpen
