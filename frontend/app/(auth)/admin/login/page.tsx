@@ -65,6 +65,11 @@ export default function AdminLoginPage() {
     setLoginBannerError(null);
     try {
       const data = await loginUser(values);
+      // Reject non-admin accounts immediately — don't let students land here
+      if (data.role !== 'admin') {
+        setLoginBannerError('This page is for administrators only.');
+        return;
+      }
       if (data.force_password_change) {
         setForcePasswordChange(true);
       } else {
@@ -78,6 +83,7 @@ export default function AdminLoginPage() {
       }
     }
   }
+
 
   // ── Submit: change password ────────────────────────────────────────────
   async function onChangePasswordSubmit(values: ChangePasswordFormValues) {

@@ -39,7 +39,12 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       const { role } = await loginUser(values);
-      router.push(role === 'admin' ? '/admin/login' : '/student');
+      if (role === 'admin') {
+        // Admin accounts must use the admin portal
+        setBannerError('Use the admin login page for administrator accounts.');
+        return;
+      }
+      router.push('/student');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setBannerError('Invalid username or password');
@@ -50,6 +55,7 @@ export default function LoginPage() {
       setIsSubmitting(false);
     }
   }
+
 
   return (
     <div className="min-h-screen bg-card md:bg-bg-0 page-enter flex flex-col">

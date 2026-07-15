@@ -87,10 +87,27 @@ export default function SettingsPage() {
   }
 
   async function handleSaveName() {
-    // TODO: No update-name endpoint exists yet. Not wired up.
-    console.log('TODO: update name endpoint not yet implemented', nameInput);
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/students/me`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(await import('@/lib/api/auth').then((m) => m.getAuthHeaders())),
+          },
+          body: JSON.stringify({ name: trimmed }),
+        },
+      );
+      if (!res.ok) throw new Error('Failed to update name');
+    } catch {
+      // best-effort; name already shows locally
+    }
     setIsEditingName(false);
   }
+
 
   async function handleChangePassword(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();

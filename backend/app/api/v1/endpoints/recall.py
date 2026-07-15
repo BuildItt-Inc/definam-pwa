@@ -216,6 +216,7 @@ async def _refresh_recall_queue(user_id: str) -> list[dict]:
 
 
 @router.get("/recall/queue")
+@router.get("/student/recall/queue")
 async def get_recall_queue(claims: CurrentUserDep) -> list[dict]:
     """Return the student's due recall topics, served from Redis cache when available."""
     user_id: str = claims["sub"]

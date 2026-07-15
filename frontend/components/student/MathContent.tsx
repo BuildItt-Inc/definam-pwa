@@ -66,35 +66,43 @@ function buildHtml(
   katex: KatexRenderer,
   allowBlock: boolean,
 ): string {
-  // Split into paragraphs on double newlines first
-  const paragraphs = text.split(/\n{2,}/);
+  // Normalize newlines
+  let normalizedText = text.replace(/\r\n/g, '\n');
+
+  // Insert double newlines before any step markers to start a new paragraph
+  normalizedText = normalizedText.replace(/\n(?:\*\*|)?Step\s+(\d+)/gi, '\n\nStep $1');
+
+  // Insert double newlines between the step header line and the following explanation text
+  normalizedText = normalizedText.replace(/(^|\n)((?:\*\*|)?Step\s+\d+[:.]?.*?)(\n)(?!\n)/gi, '$2\n\n');
+
+  // Split into paragraphs on double newlines
+  const paragraphs = normalizedText.split(/\n{2,}/);
 
   return paragraphs
     .map((para) => {
       const trimmed = para.trim();
       if (!trimmed) return '';
 
-      // Render inline content (may contain $...$ and $$...$$)
-      const inner = renderInline(trimmed, katex, allowBlock);
-
-      // Each paragraph gets its own block — line breaks inside become <br>
-      // Detect "Step X:" or "**Step X:**"
-      const stepMatch = inner.match(/^(<strong class="font-bold text-ink">)?(Step \d+[:.]?)(<\/strong>)?(.*?)$/);
-      if (stepMatch) {
-        const stepNumber = stepMatch[2]; // e.g. "Step 1:"
-        const restOfLine = stepMatch[4].trim(); // e.g. "Introduction to Data Collection"
+      // Check if this paragraph is a Step header line
+      const stepHeaderMatch = trimmed.match(/^(?:\*\*|)?(Step\s+\d+[:.]?)(?:\*\*|)?\s*(.*)$/i);
+      if (stepHeaderMatch) {
+        const stepNum = stepHeaderMatch[1].trim();
+        const stepTitle = stepHeaderMatch[2].trim();
+        const renderedTitle = renderInline(stepTitle, katex, allowBlock);
         
-        return `<div class="mt-6 mb-3">
-          <h4 class="text-[15px] font-bold text-brand uppercase tracking-wider mb-1">${stepNumber} ${restOfLine}</h4>
+        return `<div class="mt-6 mb-2">
+          <h4 class="text-[15px] font-bold text-brand uppercase tracking-wider mb-1">${stepNum} ${renderedTitle}</h4>
         </div>`;
       }
 
-      // Also detect generic "Phase X:" or similar if needed, but Step is most common
-      return `<p class="math-para mb-3">${inner}</p>`;
+      // Render standard paragraph text/prose/math
+      const inner = renderInline(trimmed, katex, allowBlock);
+      return `<p class="math-para mb-3 text-[15px] leading-relaxed text-ink/90">${inner}</p>`;
     })
     .filter(Boolean)
     .join('');
 }
+
 
 function renderInline(
   text: string,
@@ -120,10 +128,21 @@ function renderInline(
         }
       }
       // Plain text — single newlines become <br>
-      return part.text
+      let escapedLines = part.text
         .split('\n')
         .map((line) => escapeHtml(line))
         .join('<br />');
+
+      // Auto-convert standard plain-text fractions (e.g. 1/3, 3/4) to KaTeX
+      escapedLines = escapedLines.replace(/\b(\d+)\/(\d+)\b/g, (match, num, den) => {
+        try {
+          return `<span class="math-inline">${katex.renderToString(`\\frac{${num}}{${den}}`, { displayMode: false, throwOnError: false })}</span>`;
+        } catch {
+          return match;
+        }
+      });
+
+      return escapedLines;
     })
     .join('');
 }

@@ -64,7 +64,9 @@ class User(Base):
     )
     username: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     email: Mapped[str | None] = mapped_column(String(255), index=True, nullable=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     password_hash: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     role: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # student_individual | student_org | admin
@@ -128,6 +130,33 @@ class ProcessedWebhook(Base):
     processed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
+
+
+# ── Password Reset Tokens ──────────────────────────────────────────────────
+
+
+class PasswordResetToken(Base):
+    """Single-use, 1-hour password reset token for individual students."""
+
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    user_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
+    )
+
+
 
 
 # ── Subjects ────────────────────────────────────────────────────────────────
