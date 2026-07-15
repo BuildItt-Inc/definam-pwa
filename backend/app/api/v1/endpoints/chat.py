@@ -104,13 +104,28 @@ async def chat_stream(
     # 4. Stream Groq response
     async def generate():
         full_response = ""
-        async for chunk in stream_groq_response(question, context, history):
-            full_response += chunk
-            yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+        usage_input_tokens = 0
+        usage_output_tokens = 0
 
+        async for item in stream_groq_response(question, context, history):
+            if item[0] == "chunk":
+                full_response += item[1]
+                yield f"data: {json.dumps({'chunk': item[1]})}\n\n"
+            elif item[0] == "usage":
+                usage_input_tokens = item[1]["input_tokens"]
+                usage_output_tokens = item[1]["output_tokens"]
+
+        # Save assistant message with token counts
         async with db_session() as session:
             session.add(
-                ChatMessage(user_id=user_id, topic_id=topic_id, role="assistant", content=full_response)
+                ChatMessage(
+                    user_id=user_id,
+                    topic_id=topic_id,
+                    role="assistant",
+                    content=full_response,
+                    input_tokens=usage_input_tokens,
+                    output_tokens=usage_output_tokens
+                )
             )
             await session.commit()
 
