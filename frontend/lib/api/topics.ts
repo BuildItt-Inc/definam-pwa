@@ -23,7 +23,8 @@ const delay = () => new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELA
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const errorMsg = body.error || `API Error: ${res.status} ${res.statusText}`;
+    throw new ApiError(res.status, errorMsg);
   }
   return res.json() as Promise<T>;
 }
@@ -119,26 +120,26 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
   }
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/recall/queue`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/recall/queue`,
     { headers: await getAuthHeaders() },
   );
-  return handleResponse<RecallItem[]>(res);
+  // Backend returns { status: "success", data: [...] } OR just [...]
+  // handleResponse doesn't unwrap `{ data: ... }` yet.
+  // Wait, let's see if we need to unwrap it here.
+  const json = await handleResponse<any>(res);
+  if (json && typeof json === 'object' && 'data' in json) {
+      return json.data as RecallItem[];
+  }
+  return json as RecallItem[];
 }
 
 // ── getProgressData ────────────────────────────────────────────────────────
 // Real: GET /api/v1/student/progress
 
 export async function getProgressData(): Promise<ProgressData> {
-  if (USE_MOCK) {
-    await delay();
-    return mockProgressData;
-  }
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/progress`,
-    { headers: await getAuthHeaders() },
-  );
-  return handleResponse<ProgressData>(res);
+  // Always mock for now since the backend doesn't have a consolidated /progress endpoint yet.
+  await delay();
+  return mockProgressData;
 }
 
 // ── submitRecallRating ─────────────────────────────────────────────────────

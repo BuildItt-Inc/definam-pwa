@@ -6,7 +6,7 @@ import { getProgressData } from '@/lib/api/topics';
 import type { ProgressData } from '@/types/topics';
 import { BottomNav } from '@/components/student/BottomNav';
 
-// ── Heatmap config ─────────────────────────────────────────────────────────
+// â”€â”€ Heatmap config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const HEATMAP_COLORS = ['#EEEEEE', '#9FE1CB', '#5DCAA5', '#1B6B4A', '#085041'] as const;
 
@@ -14,7 +14,7 @@ function heatmapColor(level: number): string {
   return HEATMAP_COLORS[Math.min(Math.max(Math.round(level), 0), 4)];
 }
 
-// ── Skeleton ───────────────────────────────────────────────────────────────
+// â”€â”€ Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ProgressSkeleton() {
   return (
@@ -45,7 +45,7 @@ function ProgressSkeleton() {
   );
 }
 
-// ── Stat card ──────────────────────────────────────────────────────────────
+// â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface StatCardProps {
   variant: 'streak' | 'plain';
@@ -76,7 +76,7 @@ function StatCard({ variant, value, label }: StatCardProps) {
   );
 }
 
-// ── Subject mastery section ────────────────────────────────────────────────
+// â”€â”€ Subject mastery section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
   return (
@@ -114,16 +114,16 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
   );
 }
 
-// ── Heatmap section ────────────────────────────────────────────────────────
+// â”€â”€ Heatmap section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function HeatmapSection({ data }: { data: number[] }) {
   return (
     <div className="mb-4 rounded-xl border border-border-2 bg-card px-4 py-3">
       <p className="mb-3 text-[13px] font-bold text-ink">
-        Study Activity — 3 Months
+        Study Activity â€” 3 Months
       </p>
 
-      {/* 63 squares: 9 weeks × 7 days, displayed as 7-column grid (day columns, week rows) */}
+      {/* 63 squares: 9 weeks Ã -  7 days, displayed as 7-column grid (day columns, week rows) */}
       <div
         style={{
           display: 'grid',
@@ -166,7 +166,7 @@ function HeatmapSection({ data }: { data: number[] }) {
   );
 }
 
-// ── Upcoming reviews section ───────────────────────────────────────────────
+// â”€â”€ Upcoming reviews section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
   return (
@@ -210,7 +210,7 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────
+// â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function ProgressPage() {
   const [data, setData] = useState<ProgressData | null>(null);
@@ -244,7 +244,7 @@ export default function ProgressPage() {
 
       <main className="flex-1 px-4 py-4">
 
-        {/* ── Stat cards 2×2 ──────────────────────────────────────────────── */}
+        {/* â”€â”€ Stat cards 2Ã - 2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="mb-4 grid grid-cols-2 gap-3">
           <StatCard
             variant="streak"
@@ -268,13 +268,13 @@ export default function ProgressPage() {
           />
         </div>
 
-        {/* ── Subject mastery ──────────────────────────────────────────────── */}
+        {/* â”€â”€ Subject mastery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <MasterySection data={data.subject_mastery} />
 
-        {/* ── Study heatmap ────────────────────────────────────────────────── */}
+        {/* â”€â”€ Study heatmap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <HeatmapSection data={data.heatmap_data} />
 
-        {/* ── Upcoming reviews ─────────────────────────────────────────────── */}
+        {/* â”€â”€ Upcoming reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <UpcomingSection data={data.upcoming_reviews} />
 
       </main>

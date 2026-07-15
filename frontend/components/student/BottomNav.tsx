@@ -27,40 +27,62 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed -bottom-[100px] left-0 right-0 z-50 flex border-t border-border bg-card pb-[calc(env(safe-area-inset-bottom)+100px)] pt-1 shadow-[0_-4px_16px_rgba(0,0,0,0.02)]">
-      {TABS.map(({ label, icon: Icon, href }) => {
-        // Exact match for /student so /student/learn doesn't also highlight Home.
-        const isActive = pathname
-          ? href === '/student'
-            ? pathname === '/student'
-            : pathname.startsWith(href)
-          : false;
-        const showBadge = label === 'Recall' && recallCount > 0;
+    <>
+      {/* Spacer so content isn't hidden behind the nav */}
+      <div className="h-[calc(56px+env(safe-area-inset-bottom,0px))]" aria-hidden />
 
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`flex flex-1 flex-col items-center justify-center gap-1 pb-3 pt-2 text-[12px] font-semibold transition-all duration-200 ${
-              isActive ? 'text-brand scale-105' : 'text-faint hover:text-muted'
-            }`}
-          >
-            <span className="relative">
-              <Icon
-                size={22}
-                strokeWidth={isActive ? 2 : 1.5}
-                className={`transition-colors ${isActive ? 'text-brand fill-brand/20' : 'text-faint'}`}
-              />
-              {showBadge && (
-                <span className="absolute -right-2 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-danger px-1 text-[12px] font-bold text-white shadow-sm ring-2 ring-card animate-pulse-brand">
-                  {recallCount}
+      <nav
+        style={{
+          /* Force a GPU compositing layer — the most reliable iOS PWA fix */
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
+          /* Ensure it never scrolls with content */
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+        }}
+        className="flex border-t border-border bg-card shadow-[0_-1px_0_rgba(0,0,0,0.06)]"
+      >
+        <div
+          className="flex w-full"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
+          {TABS.map(({ label, icon: Icon, href }) => {
+            const isActive = pathname
+              ? href === '/student'
+                ? pathname === '/student'
+                : pathname.startsWith(href)
+              : false;
+            const showBadge = label === 'Recall' && recallCount > 0;
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors duration-150 ${
+                  isActive ? 'text-brand' : 'text-faint'
+                }`}
+              >
+                <span className="relative">
+                  <Icon
+                    size={22}
+                    strokeWidth={isActive ? 2.2 : 1.5}
+                    className={isActive ? 'text-brand' : 'text-faint'}
+                  />
+                  {showBadge && (
+                    <span className="absolute -right-2 -top-1 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold text-white ring-2 ring-card">
+                      {recallCount}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-            <span>{label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }

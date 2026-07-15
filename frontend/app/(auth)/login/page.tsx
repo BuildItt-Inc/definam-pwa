@@ -5,19 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  Loader2,
-  Lock,
-  LogIn,
-  User,
-} from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
 import { loginUser, ApiError } from '@/lib/api/auth';
+import LogoMark from '@/components/landing/LogoMark';
 
 function ResetSuccessBanner() {
   const searchParams = useSearchParams();
@@ -61,7 +54,7 @@ export default function LoginPage() {
       router.push('/student');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        setBannerError('Invalid username or password');
+        setBannerError('Incorrect username or password.');
       } else {
         setBannerError('Something went wrong. Please try again.');
       }
@@ -72,146 +65,118 @@ export default function LoginPage() {
 
 
   return (
-    <div className="min-h-screen bg-card md:bg-bg-0 page-enter flex flex-col">
-      {/* App bar */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border bg-card md:hidden">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          aria-label="Go back"
-          className="flex items-center justify-center w-10 h-10 -ml-1 rounded-lg text-ink hover:bg-bg-1 active:bg-bg-2 transition-colors"
-        >
-          <ArrowLeft size={20} strokeWidth={2.2} />
-        </button>
-        <span className="text-[17px] font-bold text-ink tracking-tight">
-          Login
-        </span>
-      </header>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB] px-4">
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-2 mb-8">
+        <LogoMark size={28} />
+        <span className="font-bold text-[18px] text-[#111827] tracking-tight">DefinAm</span>
+      </Link>
 
-      <main className="flex-1 flex flex-col justify-center px-5 py-12 md:max-w-md md:mx-auto w-full">
-        <div className="md:bg-card md:border md:border-border md:rounded-2xl md:p-8 md:shadow-sm">
-        {/* Page heading */}
-        <h1 className="text-[28px] font-bold text-ink tracking-tight leading-none mb-2 md:text-center">
-          Welcome back
-        </h1>
-        <p className="text-[15px] text-muted mb-8 md:text-center">
-          Login with your username and password
-        </p>
+      {/* Card */}
+      <div className="w-full max-w-[400px] bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-8">
+        <div className="mb-6">
+          <h1 className="text-[22px] font-bold text-[#111827] tracking-tight mb-1">
+            Sign in
+          </h1>
+          <p className="text-[14px] text-[#6B7280]">
+            Enter your username and password to continue.
+          </p>
+        </div>
 
-        <Suspense>
-          <ResetSuccessBanner />
-        </Suspense>
-
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          {/* ── Username ── */}
-          <div className="mb-4">
-            <label
-              htmlFor="username"
-              className="block mb-2 text-[14px] font-medium text-ink"
-            >
-              <User size={12} strokeWidth={2.5} aria-hidden />
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+          {/* Username */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="username" className="text-[14px] font-medium text-[#111827]">
               Username
             </label>
             <input
               id="username"
               type="text"
+              autoComplete="username"
+              autoCapitalize="none"
               placeholder="e.g. chisom123"
-              className={`input-field ${errors.username ? 'error' : ''}`}
+              className={`w-full rounded-xl border bg-white px-4 py-2.5 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none focus:ring-2 transition-all ${
+                errors.username
+                  ? 'border-[#EF4444] focus:ring-red-100'
+                  : 'border-[#D1D5DB] focus:border-[#16A34A] focus:ring-green-100'
+              }`}
               {...register('username')}
             />
             {errors.username && (
-              <p className="mt-1.5 text-[13px] leading-none text-danger">
-                {errors.username.message}
-              </p>
+              <p className="text-[13px] text-[#EF4444]">{errors.username.message}</p>
             )}
           </div>
 
-          {/* ── Password ── */}
-          <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block mb-2 text-[14px] font-medium text-ink"
-            >
-              <Lock size={12} strokeWidth={2.5} aria-hidden />
+          {/* Password */}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="password" className="text-[14px] font-medium text-[#111827]">
               Password
             </label>
             <div className="relative">
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 placeholder="Enter your password"
-                className={`input-field pr-12 ${errors.password ? 'error' : ''}`}
+                className={`w-full rounded-xl border bg-white px-4 py-2.5 pr-12 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none focus:ring-2 transition-all ${
+                  errors.password
+                    ? 'border-[#EF4444] focus:ring-red-100'
+                    : 'border-[#D1D5DB] focus:border-[#16A34A] focus:ring-green-100'
+                }`}
                 {...register('password')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-ink transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#9CA3AF] hover:text-[#374151] transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? (
-                  <EyeOff size={18} strokeWidth={2} />
-                ) : (
-                  <Eye size={18} strokeWidth={2} />
-                )}
+                {showPassword ? <EyeOff size={17} strokeWidth={2} /> : <Eye size={17} strokeWidth={2} />}
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1.5 text-[13px] leading-none text-danger">
-                {errors.password.message}
-              </p>
+              <p className="text-[13px] text-[#EF4444]">{errors.password.message}</p>
             )}
           </div>
 
-          {/* ── Forgot password ── */}
-          <div className="mb-7 flex justify-end">
-            <Link
-              href="/forgot-password"
-              className="text-[13px] text-muted hover:text-ink transition-colors"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
-          {/* Error Banner */}
+          {/* Error banner */}
           {bannerError && (
             <div
               role="alert"
-              className="mb-4 flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-danger/10 border border-danger/20 text-danger text-[14px] font-medium leading-snug"
+              className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#DC2626]"
             >
               {bannerError}
             </div>
           )}
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="btn-primary w-full shadow-brand-sm disabled:opacity-60 flex items-center justify-center gap-2 py-3.5 mb-8"
+            className="mt-1 w-full rounded-xl bg-[#111827] text-white text-[15px] font-semibold py-3 flex items-center justify-center gap-2 hover:bg-[#1F2937] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isSubmitting ? (
               <Loader2 size={18} className="animate-spin" />
             ) : (
-              <>
-                Login
-                <LogIn size={18} strokeWidth={2} />
-              </>
+              'Sign in'
             )}
           </button>
         </form>
 
-        <div className="space-y-4">
-          <p className="text-center text-[14px] text-muted">
-            Don&apos;t have an account?{' '}
-            <Link
-              href="/register"
-              className="font-bold text-ink underline decoration-ink/30 underline-offset-2 hover:decoration-ink transition-colors"
-            >
-              Sign up here
-            </Link>
-          </p>
-        </div>
-        </div>
-      </main>
+        <p className="mt-6 text-center text-[14px] text-[#6B7280]">
+          No account?{' '}
+          <Link
+            href="/register"
+            className="font-semibold text-[#111827] hover:text-[#16A34A] transition-colors"
+          >
+            Create one
+          </Link>
+        </p>
+      </div>
+
+      <p className="mt-6 text-[13px] text-[#9CA3AF]">
+        &copy; DefinAm 2026
+      </p>
     </div>
   );
 }

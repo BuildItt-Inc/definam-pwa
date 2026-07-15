@@ -35,50 +35,28 @@ function subjectIcon(subject: string): LucideIcon {
 
 function getGreeting(): string {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return 'Morning';
+  if (h < 17) return 'Afternoon';
+  return 'Evening';
 }
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
 
 function HomeSkeleton() {
   return (
-    <div className="min-h-screen bg-card">
-      {/* Header */}
-      <div className="bg-ink px-4 pb-8 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
-        <div className="mb-1.5 h-3 w-20 animate-pulse rounded bg-white/10" />
-        <div className="mb-1.5 h-7 w-44 animate-pulse rounded bg-white/20" />
-        <div className="mb-4 h-3 w-52 animate-pulse rounded bg-white/10" />
-        <div className="h-8 w-32 animate-pulse rounded-full bg-white/10" />
+    <div className="min-h-screen bg-[#F9FAFB]">
+      <div className="bg-[#111827] px-5 pb-10 pt-[calc(env(safe-area-inset-top)+24px)]">
+        <div className="mb-1 h-3 w-20 animate-pulse rounded bg-white/10" />
+        <div className="mb-1 h-8 w-44 animate-pulse rounded bg-white/20" />
+        <div className="mb-5 h-3 w-36 animate-pulse rounded bg-white/10" />
+        <div className="h-9 w-28 animate-pulse rounded-full bg-white/10" />
       </div>
-      {/* Recall card */}
-      <div className="-mt-3 px-3">
-        <div className="h-32 animate-pulse rounded-xl bg-bg-2" />
+      <div className="-mt-4 px-4">
+        <div className="h-28 animate-pulse rounded-2xl bg-white border border-gray-200" />
       </div>
-      {/* Pills + topics */}
-      <div className="mt-5 px-4">
-        <div className="mb-4 flex gap-2">
-          {[80, 56, 64, 52].map((w, i) => (
-            <div
-              key={i}
-              className="h-7 animate-pulse rounded-full bg-bg-2"
-              style={{ width: w }}
-            />
-          ))}
-        </div>
+      <div className="mt-6 px-5 space-y-3">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="flex items-center gap-3 border-b border-border py-3"
-          >
-            <div className="h-8 w-8 flex-shrink-0 animate-pulse rounded-lg bg-bg-3" />
-            <div className="flex-1 space-y-2">
-              <div className="h-3 w-40 animate-pulse rounded bg-bg-3" />
-              <div className="h-2.5 w-24 animate-pulse rounded bg-bg-2" />
-              <div className="h-[3px] w-[70px] animate-pulse rounded-full bg-bg-2" />
-            </div>
-          </div>
+          <div key={i} className="h-14 animate-pulse rounded-xl bg-white border border-gray-100" />
         ))}
       </div>
     </div>
@@ -95,64 +73,46 @@ function TopicRow({
   isEmpty: boolean;
 }) {
   const Icon = subjectIcon(topic.subject);
-  const barFill = topic.mastery_percent >= 50 ? 'bg-ink' : 'bg-gray-400';
 
   return (
     <Link
       href={`/student/learn/${topic.topic_id}`}
-      className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0"
+      className="flex items-center gap-3 rounded-xl bg-white border border-[#E5E7EB] px-4 py-3.5 hover:border-[#16A34A]/30 hover:shadow-sm transition-all"
     >
       {/* Subject icon */}
-      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-brand/20 bg-brand/10">
-        <Icon size={14} strokeWidth={1.5} className="text-brand" />
+      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#F0FDF4] border border-[#BBF7D0]">
+        <Icon size={15} strokeWidth={1.8} className="text-[#16A34A]" />
       </span>
 
       {/* Info */}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-bold text-ink">
+        <span className="block truncate text-[15px] font-semibold text-[#111827]">
           {topic.topic_title}
         </span>
-        <span className="mt-0.5 block text-[13px] text-muted">
+        <span className="mt-0.5 block text-[13px] text-[#9CA3AF]">
           {topic.subject}
-          {isEmpty ? ' · Not started' : ''}
+          {isEmpty ? '' : topic.mastery_percent > 0 ? ` · ${topic.mastery_percent}% done` : ' · Not started'}
         </span>
-        {!isEmpty && (
-          <span className="mt-1.5 block h-[3px] w-[70px] overflow-hidden rounded-full bg-bg-2">
-            <span
-              className={`block h-full rounded-full ${barFill}`}
-              style={{ width: `${topic.mastery_percent}%` }}
-            />
-          </span>
-        )}
       </span>
 
-      {/* Right action */}
+      {/* Right */}
       {isEmpty ? (
-        <span className="flex-shrink-0 rounded-md bg-brand px-3 py-1 text-[12px] font-bold text-white shadow-sm hover:bg-brand-dark transition-colors">
-          Start →
+        <span className="flex-shrink-0 rounded-lg bg-[#111827] px-3 py-1.5 text-[12px] font-semibold text-white">
+          Start
         </span>
       ) : (
-        <ChevronRight
-          size={16}
-          strokeWidth={1.5}
-          className="flex-shrink-0 text-gray-300"
-        />
+        <ChevronRight size={16} strokeWidth={1.5} className="flex-shrink-0 text-[#D1D5DB]" />
       )}
     </Link>
   );
 }
-
-// ── Subject filter pills ───────────────────────────────────────────────────
-
-const PILLS = ['All', 'Maths', 'English', 'Chem'] as const;
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function StudentHomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [activePill, setActivePill] = useState(0);
-  const [greeting, setGreeting] = useState('Good day');
+  const [greeting, setGreeting] = useState('Morning');
   const router = useRouter();
 
   useEffect(() => {
@@ -160,8 +120,6 @@ export default function StudentHomePage() {
     getHomeData()
       .then(setData)
       .catch((err: unknown) => {
-        // getAuthHeaders() already attempts a silent token refresh before
-        // throwing. If we still get an error here, the session is truly gone.
         const is401 =
           err instanceof Error &&
           (err.message === 'Not authenticated' || (err as { status?: number }).status === 401);
@@ -173,115 +131,85 @@ export default function StudentHomePage() {
       });
   }, [router]);
 
-  /* Error state */
   if (fetchError) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-6">
-        <p className="text-center text-sm text-muted">
-          {fetchError}
-        </p>
+      <div className="flex min-h-screen items-center justify-center px-6 bg-[#F9FAFB]">
+        <div className="text-center">
+          <p className="text-[15px] text-[#6B7280] mb-4">{fetchError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-[14px] font-semibold text-[#16A34A] underline"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
 
-  /* Loading skeleton */
   if (!data) return <HomeSkeleton />;
 
   const { student_name, school_name, streak_days, recall_queue, recent_topics } = data;
-  const hasQueue = recall_queue.length > 0;
+  const hasStarted = recent_topics.some((t) => (t.mastery_percent ?? 0) > 0);
 
   return (
-    <div className="page-with-nav bg-bg-0 page-enter">
+    <div className="page-with-nav bg-[#F9FAFB] page-enter">
 
       {/* ── 1. Header ── */}
-      <div className="bg-ink px-4 pb-8 pt-[calc(env(safe-area-inset-top)+1.5rem)]">
-        <p className="mb-0.5 text-[13px] text-white/50">
-          {greeting},
+      <div className="bg-[#111827] px-5 pb-10 pt-[calc(env(safe-area-inset-top)+24px)]">
+        <p className="mb-1 text-[13px] font-medium text-white/40 tracking-wide">
+          {greeting}
         </p>
-        <h1 className="mb-0.5 font-bold text-[22px] leading-tight text-white">
+        <h1 className="mb-0.5 text-[26px] font-bold leading-tight text-white tracking-tight">
           {student_name}
         </h1>
-        <p className="mb-3 text-[13px] text-white/40">{school_name}</p>
+        <p className="mb-5 text-[13px] text-white/40">{school_name}</p>
 
-        {/* Streak pill */}
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
-          <Flame size={16} strokeWidth={2} className="text-brand-light" />
-          <span className="font-bold text-[18px] leading-none text-white">
+        {/* Streak */}
+        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2">
+          <Flame size={15} strokeWidth={2} className="text-[#4ADE80]" />
+          <span className="font-bold text-[15px] leading-none text-white">
             {streak_days}
           </span>
-          <span className="text-[13px] text-white/60">
-            {streak_days === 0 ? 'Start your streak!' : 'day streak'}
+          <span className="text-[13px] text-white/50">
+            {streak_days === 1 ? 'day streak' : streak_days === 0 ? 'Start your streak' : 'day streak'}
           </span>
         </div>
       </div>
 
-      {/* ── Main scroll area ─────────────────────────────────────────────── */}
+      {/* ── Main scroll area ── */}
       <main className="flex-1 px-4">
 
-        {/* Recall card — negative margin pulls it over header bottom edge */}
-        <div className="-mt-3 mb-6">
+        {/* Recall card - floats over header bottom */}
+        <div className="-mt-4 mb-6">
           <RecallCard
             queue={recall_queue}
             onStart={() => router.push('/student/recall')}
           />
         </div>
 
-        {hasQueue ? (
-          /* ── SCR-04a · Browse Topics section ─────────────────────────── */
-          <section className="mb-6">
-            {/* Heading row */}
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-[15px] font-bold text-ink">
-                Browse Topics
-              </span>
-              <Link
-                href="/student/learn"
-                className="text-[14px] font-semibold text-brand hover:text-brand-dark"
-              >
-                See all
-              </Link>
-            </div>
+        {/* Topics section */}
+        <section className="mb-6">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-[15px] font-bold text-[#111827]">
+              {hasStarted ? 'Continue studying' : 'Start here'}
+            </span>
+            <Link
+              href="/student/learn"
+              className="text-[13px] font-semibold text-[#16A34A] hover:text-[#15803D] transition-colors"
+            >
+              Browse all
+            </Link>
+          </div>
 
-            {/* Subject filter pills — visual selection only in V1 */}
-            <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-              {PILLS.map((pill, i) => (
-                <button
-                  key={pill}
-                  onClick={() => setActivePill(i)}
-                  className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-[14px] font-semibold transition-colors ${
-                    activePill === i
-                      ? 'border-brand bg-brand text-white shadow-brand-sm'
-                      : 'border-border-2 bg-bg-1 text-muted hover:bg-bg-2 hover:text-ink'
-                  }`}
-                >
-                  {pill}
-                </button>
-              ))}
-            </div>
-
-            {/* Recent topics */}
-            <div>
-              {recent_topics.map((topic) => (
-                <TopicRow key={topic.topic_id} topic={topic} isEmpty={false} />
-              ))}
-            </div>
-          </section>
-        ) : (
-          /* ── SCR-04b · Start here section ────────────────────────────── */
-          <section className="mt-4">
-            <p className="mb-2 px-4 text-[15px] font-bold text-ink">
-              Start here
-            </p>
-            <div>
-              {recent_topics.map((topic) => (
-                <TopicRow key={topic.topic_id} topic={topic} isEmpty={true} />
-              ))}
-            </div>
-          </section>
-        )}
+          <div className="flex flex-col gap-2">
+            {recent_topics.map((topic) => (
+              <TopicRow key={topic.topic_id} topic={topic} isEmpty={!hasStarted} />
+            ))}
+          </div>
+        </section>
       </main>
 
-      {/* ── Shared bottom navigation ─────────────────────────────────────── */}
       <BottomNav recallCount={recall_queue.length} />
     </div>
   );
