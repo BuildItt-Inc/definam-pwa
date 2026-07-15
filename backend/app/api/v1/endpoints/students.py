@@ -5,12 +5,13 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 from fastapi import APIRouter
+from pydantic import BaseModel, Field
 from sqlalchemy import and_, case, func, select, text
 from sqlalchemy.types import Date
 
 from app.api.deps import CurrentUserDep
-from app.core.exceptions import NotFoundError
-from app.db.database import db_session
+from app.core.exceptions import BadRequestError, NotFoundError
+from app.db.database import db_session, update_user_name
 from app.db.models import (
     Chapter,
     DailyRecallQueue,
@@ -290,3 +291,176 @@ async def get_heatmap(claims: CurrentUserDep) -> list[dict]:
         }
         for i in range(90)
     ]
+
+
+# ── PATCH /students/me ────────────────────────────────────────────────────
+
+
+class UpdateNameRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255, strip_whitespace=True)
+
+
+@router.patch("/me")
+async def update_me(body: UpdateNameRequest, claims: CurrentUserDep) -> dict:
+    """Update the authenticated student's display name."""
+    user_id: str = claims["sub"]
+    trimmed = body.name.strip()
+    if not trimmed:
+        raise BadRequestError("Name cannot be empty.")
+    await update_user_name(user_id, trimmed)
+    return {"name": trimmed}
+
+
+# ── GET /students/progress (also mounted at /student/progress) ──────────────
+
+
+@router.get("/progress")
+async def get_progress(claims: CurrentUserDep) -> dict:
+    """
+    Return progress stats for the student:
+    streak_days, topics_studied, avg_accuracy, due_tomorrow,
+    subject_mastery list, upcoming_reviews list, heatmap_data array.
+    """
+    from datetime import timedelta
+
+    user_id: str = claims["sub"]
+    now = datetime.now(UTC)
+    today = now.date()
+    tomorrow = today + timedelta(days=1)
+
+    async with db_session() as session:
+        # streak (re-use same logic as dashboard)
+        completed_days_result = await session.execute(
+            select(
+                func.date_trunc("day", DailyRecallQueue.due_date)
+                .cast(Date)
+                .label("day")
+            )
+            .where(
+                and_(
+                    DailyRecallQueue.user_id == user_id,
+                    DailyRecallQueue.completed == 1,
+                )
+            )
+            .group_by(text("day"))
+            .order_by(text("day desc"))
+        )
+        completed_days = [r.day for r in completed_days_result]
+        streak = _compute_streak(completed_days, today)
+
+        # topics studied
+        topics_result = await session.execute(
+            select(func.count(TopicReview.topic_id.distinct()))
+            .where(TopicReview.user_id == user_id)
+        )
+        topics_studied = topics_result.scalar() or 0
+
+        # avg accuracy
+        acc_result = await session.execute(
+            select(func.avg(TopicReview.accuracy_score))
+            .where(TopicReview.user_id == user_id)
+        )
+        avg_accuracy = round(float(acc_result.scalar() or 0), 1)
+
+        # due tomorrow
+        due_tomorrow_result = await session.execute(
+            select(func.count(DailyRecallQueue.id))
+            .where(
+                and_(
+                    DailyRecallQueue.user_id == user_id,
+                    DailyRecallQueue.completed == 0,
+                    func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) == tomorrow,
+                )
+            )
+        )
+        due_tomorrow = due_tomorrow_result.scalar() or 0
+
+        # subject mastery
+        mastery_result = await session.execute(
+            select(
+                Subject.name.label("subject"),
+                func.avg(TopicReview.accuracy_score).label("mastery_percent"),
+            )
+            .join(Topic, TopicReview.topic_id == Topic.id)
+            .join(Chapter, Topic.chapter_id == Chapter.id)
+            .join(Subject, Chapter.subject_id == Subject.id)
+            .where(TopicReview.user_id == user_id)
+            .group_by(Subject.name)
+            .order_by(Subject.name)
+        )
+        subject_mastery = [
+            {
+                "subject": r.subject,
+                "mastery_percent": round(float(r.mastery_percent or 0), 1),
+            }
+            for r in mastery_result
+        ]
+
+        # upcoming reviews (next 5 due topics)
+        upcoming_result = await session.execute(
+            select(
+                Topic.title.label("topic_title"),
+                TopicReview.next_review_at,
+            )
+            .join(Topic, TopicReview.topic_id == Topic.id)
+            .where(
+                and_(
+                    TopicReview.user_id == user_id,
+                    TopicReview.next_review_at >= now,
+                )
+            )
+            .order_by(TopicReview.next_review_at.asc())
+            .limit(5)
+        )
+        upcoming_reviews = []
+        for r in upcoming_result:
+            due_date = r.next_review_at.date() if r.next_review_at else None
+            if due_date == today:
+                due_label = "Today"
+                urgency = "high"
+            elif due_date == tomorrow:
+                due_label = "Tomorrow"
+                urgency = "medium"
+            else:
+                days_away = (due_date - today).days if due_date else 99
+                due_label = due_date.strftime("%b %d") if due_date else "-"
+                urgency = "low" if days_away > 2 else "medium"
+            upcoming_reviews.append(
+                {
+                    "topic_title": r.topic_title,
+                    "due": due_label,
+                    "urgency": urgency,
+                }
+            )
+
+        # heatmap (90 days)
+        start_date = today - timedelta(days=89)
+        heatmap_result = await session.execute(
+            select(
+                func.cast(TopicReview.last_reviewed_at, Date).label("day"),
+                func.count(TopicReview.id).label("cnt"),
+            )
+            .where(
+                and_(
+                    TopicReview.user_id == user_id,
+                    TopicReview.last_reviewed_at >= start_date,
+                )
+            )
+            .group_by(func.cast(TopicReview.last_reviewed_at, Date))
+        )
+        heat: dict[date, int] = {r.day: r.cnt for r in heatmap_result}
+        heatmap_data = [
+            min(heat.get(start_date + timedelta(days=i), 0), 4)
+            for i in range(90)
+        ]
+
+    return {
+        "streak_days": streak,
+        "topics_studied": int(topics_studied),
+        "avg_accuracy": avg_accuracy,
+        "due_tomorrow": int(due_tomorrow),
+        "subject_mastery": subject_mastery,
+        "upcoming_reviews": upcoming_reviews,
+        "heatmap_data": heatmap_data,
+    }
+

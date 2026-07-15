@@ -185,6 +185,76 @@ async def set_force_password_change(user_id: str, value: bool) -> None:
         )
 
 
+async def update_user_name(user_id: str, name: str) -> None:
+    """Update a user's display name."""
+    async with db_session() as session:
+        await session.execute(
+            update(User).where(User.id == user_id).values(name=name)
+        )
+
+
+async def get_user_by_email(email: str) -> dict[str, Any] | None:
+    """Return a user row by email, or None."""
+    async with db_session() as session:
+        result = await session.execute(select(User).where(User.email == email))
+        row = result.scalar_one_or_none()
+        if row is None:
+            return None
+        return {
+            "id": row.id,
+            "username": row.username,
+            "email": row.email,
+            "name": row.name,
+            "role": row.role,
+            "org_id": row.org_id,
+            "password_hash": row.password_hash,
+            "force_password_change": row.force_password_change,
+        }
+
+
+async def create_password_reset_token(
+    user_id: str, token_hash: str, expires_at: Any
+) -> None:
+    """Store a hashed password reset token."""
+    from app.db.models import PasswordResetToken
+
+    async with db_session() as session:
+        session.add(
+            PasswordResetToken(
+                user_id=user_id,
+                token_hash=token_hash,
+                expires_at=expires_at,
+            )
+        )
+
+
+async def consume_password_reset_token(
+    token_hash: str,
+) -> dict[str, Any] | None:
+    """Validate and consume a reset token. Returns user_id or None if invalid/expired/used."""
+    from datetime import UTC, datetime
+
+    from sqlalchemy import update as sa_update
+
+    from app.db.models import PasswordResetToken
+
+    async with db_session() as session:
+        result = await session.execute(
+            select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
+        )
+        row = result.scalar_one_or_none()
+        if row is None or row.used or row.expires_at < datetime.now(UTC):
+            return None
+        await session.execute(
+            sa_update(PasswordResetToken)
+            .where(PasswordResetToken.id == row.id)
+            .values(used=True)
+        )
+        return {"user_id": row.user_id}
+
+
+
+
 async def update_user_org_and_role(user_id: str, org_id: str | None, role: str) -> None:
     """Update a user's organization and role."""
     async with db_session() as session:

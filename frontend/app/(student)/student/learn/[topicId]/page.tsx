@@ -498,26 +498,40 @@ function AITutorScaffold({
         </div>
       </header>
 
-      {/* Coming-soon banner */}
-      <div className="border-b border-ink/20 bg-ink/5 px-4 py-2.5">
-        <p className="text-[14px] leading-relaxed text-ink">
-          AI tutor will be available once content is reviewed and approved. You can still browse
-          other topics.
-        </p>
-      </div>
-
       {/* Chat area */}
-      <main className="flex flex-1 flex-col px-4 pb-4 pt-4">
-        {/* AI opening message bubble */}
-        <div className="flex items-start gap-2">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
-            <Bot size={16} strokeWidth={1.5} className="text-ink" />
+      <main className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4 space-y-4">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : ''}`}
+          >
+            {msg.role !== 'user' && (
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
+                <Bot size={16} strokeWidth={1.5} className="text-ink" />
+              </div>
+            )}
+            <div
+              className={`max-w-[80%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
+                msg.role === 'user'
+                  ? 'rounded-tr-sm bg-ink text-white'
+                  : 'rounded-tl-sm bg-bg-2 text-ink'
+              }`}
+            >
+              {msg.content}
+            </div>
           </div>
-          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-bg-2 px-4 py-3 text-[15px] leading-relaxed text-ink">
-            Good work on practice. What part of{' '}
-            <span className="font-bold">{topicTitle}</span> is still confusing you?
+        ))}
+        {isLoading && (
+          <div className="flex items-start gap-2.5">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
+              <Bot size={16} strokeWidth={1.5} className="text-ink" />
+            </div>
+            <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-bg-2 px-4 py-3 text-[15px] leading-relaxed text-ink/60 animate-pulse">
+              Thinking...
+            </div>
           </div>
-        </div>
+        )}
+        <div ref={messagesEndRef} />
       </main>
 
       {/* Bottom control CTAs if inactive */}
@@ -538,18 +552,27 @@ function AITutorScaffold({
         </div>
       )}
 
-      {/* Disabled chat input */}
-      <div className="border-t border-border px-4 py-3">
-        <div className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5">
+      {/* Active chat input */}
+      <form onSubmit={handleSubmit} className="border-t border-border px-4 py-3 bg-bg-0">
+        <div className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5 focus-within:border-brand transition-colors">
           <input
             type="text"
-            disabled
-            placeholder="AI tutor coming soon..."
-            className="flex-1 bg-transparent text-[15px] placeholder:text-gray-300 focus:outline-none"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            disabled={isLoading}
+            placeholder="Type your question about this topic..."
+            className="flex-1 bg-transparent text-[15px] placeholder:text-gray-400 focus:outline-none text-ink disabled:opacity-50"
           />
-          <MessageSquare size={18} strokeWidth={1.5} className="flex-shrink-0 text-gray-200" />
+          <button
+            type="submit"
+            disabled={isLoading || !inputMessage.trim()}
+            className="flex-shrink-0 text-brand disabled:text-gray-300 hover:opacity-80 transition-opacity"
+            aria-label="Send message"
+          >
+            <MessageSquare size={18} strokeWidth={1.5} />
+          </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

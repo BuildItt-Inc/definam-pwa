@@ -103,7 +103,7 @@ async def initiate_org(body: OrgPaymentRequest) -> OrgPaymentResponse:
     """
     settings = get_settings()
     total_kobo = body.student_count * INDIVIDUAL_AMOUNT_KOBO
-    callback_url = f"{settings.frontend_url.rstrip('/')}/pay/callback?type=individual"
+    callback_url = f"{settings.frontend_url.rstrip('/')}/pay/callback?type=organisation"
 
     data = await _initiate_transaction(
         email=str(body.school_email),
