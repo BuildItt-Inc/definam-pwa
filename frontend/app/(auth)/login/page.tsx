@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
+import { loginUser, ApiError } from '@/lib/api/auth';
+
 function ResetSuccessBanner() {
   const searchParams = useSearchParams();
   if (searchParams.get('reset') !== '1') return null;
@@ -28,9 +31,6 @@ function ResetSuccessBanner() {
     </div>
   );
 }
-
-import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
-import { loginUser, ApiError } from '@/lib/api/auth';
 
 export default function LoginPage() {
   const router = useRouter();
