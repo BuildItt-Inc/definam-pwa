@@ -178,7 +178,7 @@ export default function StudentHomePage() {
       </div>
 
       {/* ── Main scroll area ── */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-4">
+      <main className="flex-1 px-4">
 
         {/* Recall card - floats over header bottom */}
         <div className="-mt-4 mb-6">
