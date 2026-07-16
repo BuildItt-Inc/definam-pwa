@@ -11,8 +11,15 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    username: str = Field(..., max_length=150)
+    username_or_email: str = Field(
+        ...,
+        max_length=150,
+        description="Your username or email address",
+        alias="username",
+    )
     password: str = Field(..., max_length=128)
+
+    model_config = {"populate_by_name": True}
 
 
 class LoginResponse(BaseModel):
