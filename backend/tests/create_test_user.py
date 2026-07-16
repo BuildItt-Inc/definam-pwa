@@ -47,7 +47,7 @@ async def create_user():
 
         print('[INFO] Now login to get a token:')
         print('   POST /api/v1/auth/login')
-        print('   {"username": "teststudent", "password": "Test12345"}')
+        print('   {"username_or_email": "testuser", "password": "Test12345"}')
 
 
 if __name__ == "__main__":
