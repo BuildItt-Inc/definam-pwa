@@ -166,6 +166,8 @@ async def get_user_by_id(user_id: str) -> dict[str, Any] | None:
             "role": row.role,
             "org_id": row.org_id,
             "force_password_change": row.force_password_change,
+            "name": row.name,
+            "email": row.email,
         }
 
 
@@ -196,7 +198,10 @@ async def update_user_name(user_id: str, name: str) -> None:
 async def get_user_by_email(email: str) -> dict[str, Any] | None:
     """Return a user row by email, or None."""
     async with db_session() as session:
-        result = await session.execute(select(User).where(User.email == email))
+        from sqlalchemy import func
+        result = await session.execute(
+            select(User).where(func.lower(User.email) == email.lower())
+        )
         row = result.scalar_one_or_none()
         if row is None:
             return None

@@ -25,6 +25,7 @@ from app.db.database import (
     activate_code,
     create_student_user,
     get_access_code,
+    get_user_by_email,
     get_user_by_id,
     get_user_by_username,
     revoke_and_reactivate_code,
@@ -80,10 +81,13 @@ async def register(body: RegisterRequest) -> tuple[str, str]:
 
 async def login(body: LoginRequest) -> dict:
     """
-    Authenticate an individual student or admin via username + password.
+    Authenticate an individual student or admin via username or email + password.
     Returns access_token and refresh_token (caller sets cookie for refresh_token).
     """
     user_row = await get_user_by_username(body.username)
+    if not user_row and "@" in body.username:
+        user_row = await get_user_by_email(body.username.lower())
+
     if not user_row:
         raise InvalidCredentialsError()
 

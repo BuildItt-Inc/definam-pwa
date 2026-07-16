@@ -309,6 +309,8 @@ async def test_get_me_success():
         "username": "student@example.com",
         "role": "student_individual",
         "org_id": None,
+        "name": "Jane Doe",
+        "email": "student@example.com",
     }
     claims = {
         "sub": "test-uuid",
@@ -334,3 +336,79 @@ async def test_get_me_success():
     assert data["id"] == "test-uuid"
     assert data["username"] == "student@example.com"
     assert data["role"] == "student_individual"
+    assert data["name"] == "Jane Doe"
+    assert data["email"] == "student@example.com"
+
+
+@pytest.mark.anyio
+async def test_forgot_password_nonexistent_email():
+    with patch(
+        "app.api.v1.endpoints.auth.get_user_by_email",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/forgot-password",
+                json={"email": "nonexistent@example.com"},
+            )
+    assert resp.status_code == 200
+    assert "reset link has been sent" in resp.json()["message"]
+
+
+@pytest.mark.anyio
+async def test_forgot_password_individual_student_success():
+    user_row = {
+        "id": "student-uuid",
+        "username": "student123",
+        "role": "student_individual",
+        "name": "Jane",
+        "email": "student@example.com",
+    }
+    mock_client = AsyncMock()
+    mock_client.__aenter__.return_value = mock_client
+    mock_client.post = AsyncMock()
+
+    with (
+        patch(
+            "app.api.v1.endpoints.auth.get_user_by_email",
+            new_callable=AsyncMock,
+            return_value=user_row,
+        ),
+        patch(
+            "app.api.v1.endpoints.auth.create_password_reset_token",
+            new_callable=AsyncMock,
+        ) as mock_create_token,
+        patch("app.api.v1.endpoints.auth.httpx.AsyncClient", return_value=mock_client),
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/forgot-password",
+                json={"email": "student@example.com"},
+            )
+    assert resp.status_code == 200
+    assert mock_create_token.called
+    assert mock_client.post.called
+
+
+@pytest.mark.anyio
+async def test_reset_password_invalid_token():
+    with patch(
+        "app.api.v1.endpoints.auth.consume_password_reset_token",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/reset-password",
+                json={"token": "invalidtoken", "new_password": "NewSecurePassword123"},
+            )
+    assert resp.status_code == 400
+    assert "Invalid or expired reset token." in resp.json()["detail"]
+

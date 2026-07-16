@@ -21,7 +21,7 @@ import {
   type AdminLoginFormValues,
   type ChangePasswordFormValues,
 } from '@/lib/validations/auth';
-import { loginUser, changePassword, ApiError } from '@/lib/api/auth';
+import { loginUser, logout, changePassword, ApiError } from '@/lib/api/auth';
 import { InfoCard } from '@/components/ui/InfoCard';
 
 export default function AdminLoginPage() {
@@ -68,6 +68,11 @@ export default function AdminLoginPage() {
       // Reject non-admin accounts immediately — don't let students land here
       if (data.role !== 'admin') {
         setLoginBannerError('This page is for administrators only.');
+        try {
+          await logout();
+        } catch {
+          // Ignore logout failures to preserve the specific banner error
+        }
         return;
       }
       if (data.force_password_change) {

@@ -16,6 +16,8 @@ def get_redis():
         _redis_client = redis.from_url(
             url,
             decode_responses=True,
+            socket_timeout=2.0,
+            socket_connect_timeout=2.0,
             # If SSL errors persist, uncomment:
             # ssl_cert_reqs=None
         )
