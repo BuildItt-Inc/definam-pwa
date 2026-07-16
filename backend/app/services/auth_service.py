@@ -86,7 +86,7 @@ async def login(body: LoginRequest) -> dict:
     """
     user_row = await get_user_by_username(body.username)
     if not user_row and "@" in body.username:
-        user_row = await get_user_by_email(body.username)
+        user_row = await get_user_by_email(body.username.lower())
 
     if not user_row:
         raise InvalidCredentialsError()

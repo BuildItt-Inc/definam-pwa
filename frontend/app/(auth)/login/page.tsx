@@ -49,7 +49,11 @@ export default function LoginPage() {
       if (role === 'admin') {
         // Admin accounts must use the admin portal
         setBannerError('Use the admin login page for administrator accounts.');
-        await logout();
+        try {
+          await logout();
+        } catch {
+          // Ignore logout failures to preserve the specific banner error
+        }
         return;
       }
       router.push('/student');
