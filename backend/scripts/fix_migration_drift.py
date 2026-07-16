@@ -2,7 +2,9 @@
 
 import asyncio
 import logging
+
 from sqlalchemy import text
+
 from app.db.session import _get_engine
 
 logging.basicConfig(level=logging.INFO)
