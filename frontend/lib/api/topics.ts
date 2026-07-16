@@ -123,14 +123,21 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/recall/queue`,
     { headers: await getAuthHeaders() },
   );
-  // Backend returns { status: "success", data: [...] } OR just [...]
-  // handleResponse doesn't unwrap `{ data: ... }` yet.
-  // Wait, let's see if we need to unwrap it here.
-  const json = await handleResponse<any>(res);
-  if (json && typeof json === 'object' && 'data' in json) {
-      return json.data as RecallItem[];
-  }
-  return json as RecallItem[];
+  // Backend sends: { topic_id, title, next_review_at } per item.
+  // Normalise to RecallItem so the rest of the app stays consistent.
+  // subject/question/model_answer are not yet sent by the backend.
+  const raw = await handleResponse<Array<{ topic_id: string; title: string; next_review_at: string | null }>>(res);
+  const items: typeof raw = (raw && typeof raw === 'object' && 'data' in raw)
+    ? (raw as unknown as { data: typeof raw }).data
+    : raw;
+  return items.map((item) => ({
+    id: item.topic_id,
+    topic_id: item.topic_id,
+    topic_title: item.title,
+    subject: '',
+    question: '',
+    model_answer: '',
+  }));
 }
 
 // ── getProgressData ────────────────────────────────────────────────────────
