@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
+from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter
@@ -15,8 +16,24 @@ from app.api.deps import CurrentUserDep
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.db.database import db_session
 from app.db.models import DailyRecallQueue, Topic, TopicReview
-from app.services.redis_client import get_redis
 from app.services.sm2 import sm2_calculate
+
+# Redis is optional — import best-effort so missing REDIS_URL doesn't crash startup
+try:
+    from app.services.redis_client import get_redis as _get_redis
+    _REDIS_ENABLED = True
+except Exception:  # noqa: BLE001
+    _REDIS_ENABLED = False
+
+
+def _try_get_redis():
+    """Return a Redis client or None if Redis is not available."""
+    if not _REDIS_ENABLED:
+        return None
+    try:
+        return _get_redis()
+    except Exception:  # noqa: BLE001
+        return None
 
 router = APIRouter(tags=["recall"])
 
@@ -172,7 +189,7 @@ async def submit_recall(
 
         await session.commit()
 
-    # Refresh Redis recall queue cache after commit
+    # Refresh Redis recall queue cache after commit (best-effort)
     await _refresh_recall_queue(user_id)
 
     return {
@@ -210,8 +227,11 @@ async def _refresh_recall_queue(user_id: str) -> list[dict]:
             for review, title in result
         ]
 
-    r = get_redis()
-    await asyncio.to_thread(r.setex, f"recall_queue:{user_id}", 86400, json.dumps(due_topics))
+    # Cache in Redis if available — not required for correctness
+    r = _try_get_redis()
+    if r is not None:
+        with suppress(Exception):
+            await asyncio.to_thread(r.setex, f"recall_queue:{user_id}", 86400, json.dumps(due_topics))
     return due_topics
 
 
@@ -220,8 +240,10 @@ async def _refresh_recall_queue(user_id: str) -> list[dict]:
 async def get_recall_queue(claims: CurrentUserDep) -> list[dict]:
     """Return the student's due recall topics, served from Redis cache when available."""
     user_id: str = claims["sub"]
-    r = get_redis()
-    cached = await asyncio.to_thread(r.get, f"recall_queue:{user_id}")
-    if cached:
-        return json.loads(cached)
+    r = _try_get_redis()
+    if r is not None:
+        with suppress(Exception):
+            cached = await asyncio.to_thread(r.get, f"recall_queue:{user_id}")
+            if cached:
+                return json.loads(cached)
     return await _refresh_recall_queue(user_id)
