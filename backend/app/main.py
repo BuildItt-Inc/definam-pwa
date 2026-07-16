@@ -21,13 +21,6 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
 )
-@app.get("/test")
-async def test_route():
-    return {"message": "Direct route works"}
-
-@app.get("/hello")
-async def hello():
-    return {"message": "hello world"}
 
 # ── Exception handlers ─────────────────────────────────────────────────────
 register_exception_handlers(app)
@@ -45,17 +38,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/ping")
-async def ping():
-    return {"message": "pong"}
-
-
 # ── Routes ─────────────────────────────────────────────────────────────────
 app.include_router(api_router, prefix="/api/v1")
-
-
-# ── Debug: Print registered routes ────────────────────────────────────────
-print("=== Registered Routes ===")
-for route in app.routes:
-    print(f"  {route}")
-print("=========================")
