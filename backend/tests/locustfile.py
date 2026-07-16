@@ -21,7 +21,7 @@ from locust import HttpUser, between, task
 # Pool of test credentials seeded by tests/create_test_user.py or similar.
 # Adjust these to match the users in your staging database.
 TEST_USERS = [
-    {"username": f"loadtest_user_{i}", "password": "Test12345"}
+    {"username_or_email": f"loadtest_user_{i}", "password": "Test12345"}
     for i in range(1, 101)  # loadtest_user_1 … loadtest_user_100
 ]
 
