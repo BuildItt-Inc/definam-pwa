@@ -18,6 +18,8 @@ class LoginRequest(BaseModel):
     )
     password: str = Field(..., max_length=128)
 
+    model_config = {"populate_by_name": True}
+
 
 class LoginResponse(BaseModel):
     """
