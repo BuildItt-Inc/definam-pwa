@@ -134,9 +134,11 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
   };
 
   const raw = await handleResponse<RawItem[]>(res);
-  const items: RawItem[] = (raw && typeof raw === 'object' && 'data' in raw)
-    ? (raw as unknown as { data: RawItem[] }).data
-    : raw;
+  const items: RawItem[] = Array.isArray(raw)
+  ? raw
+  : raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)
+    ? (raw as { data: RawItem[] }).data
+    : [];
 
   return items
     .filter((item) => item.question && item.model_answer)
