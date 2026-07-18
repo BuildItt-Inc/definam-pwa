@@ -123,21 +123,31 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/recall/queue`,
     { headers: await getAuthHeaders() },
   );
-  // Backend sends: { topic_id, title, next_review_at } per item.
-  // Normalise to RecallItem so the rest of the app stays consistent.
-  // subject/question/model_answer are not yet sent by the backend.
-  const raw = await handleResponse<Array<{ topic_id: string; title: string; next_review_at: string | null }>>(res);
-  const items: typeof raw = (raw && typeof raw === 'object' && 'data' in raw)
-    ? (raw as unknown as { data: typeof raw }).data
+
+  type RawItem = {
+    topic_id: string;
+    title: string;
+    subject: string | null;
+    question: string | null;
+    model_answer: string | null;
+    next_review_at: string | null;
+  };
+
+  const raw = await handleResponse<RawItem[]>(res);
+  const items: RawItem[] = (raw && typeof raw === 'object' && 'data' in raw)
+    ? (raw as unknown as { data: RawItem[] }).data
     : raw;
-  return items.map((item) => ({
-    id: item.topic_id,
-    topic_id: item.topic_id,
-    topic_title: item.title,
-    subject: '',
-    question: '',
-    model_answer: '',
-  }));
+
+  return items
+    .filter((item) => item.question && item.model_answer)
+    .map((item) => ({
+      id: item.topic_id,
+      topic_id: item.topic_id,
+      topic_title: item.title,
+      subject: item.subject ?? '',
+      question: item.question!,
+      model_answer: item.model_answer!,
+    }));
 }
 
 // ── getProgressData ────────────────────────────────────────────────────────
