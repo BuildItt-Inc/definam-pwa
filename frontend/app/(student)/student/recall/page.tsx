@@ -169,7 +169,7 @@ export default function RecallPage() {
         <div className="mb-6 flex flex-col gap-2">
           {queue.map((item) => (
             <div
-              key={item.id}
+              key={item.topic_id}
               className="card flex items-center gap-3 px-3.5 py-3"
             >
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-bg-1 border border-border">

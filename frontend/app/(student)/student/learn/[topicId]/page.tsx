@@ -286,7 +286,7 @@ function LearningTopBar({
               : `Question ${questionIndex + 1} of ${totalQuestions}`}
           </p>
         ) : (
-          <p className="min-w-0 flex-1 truncate font-bold text-[15px] font-black text-white">
+          <p className="min-w-0 flex-1 truncate font-bold text-[15px]  text-white">
             {topicTitle}
           </p>
         )}
@@ -350,12 +350,12 @@ function ScoreSummary({
         className={`mb-6 rounded-xl border-2 px-4 py-8 text-center ${ isGood ? 'border-ink bg-ink/10' : 'border-gold bg-ink-2/10' }`}
       >
         <p
-          className={`font-bold text-[40px] font-black leading-none ${ isGood ? 'text-ink' : 'text-ink-2' }`}
+          className={`font-bold text-[40px]  leading-none ${ isGood ? 'text-ink' : 'text-ink-2' }`}
         >
           {score}/{total}
         </p>
         <p
-          className={`mt-2 font-bold text-[16px] font-bold ${ isGood ? 'text-ink' : 'text-ink-2' }`}
+          className={`mt-2 font-bold text-[16px] ${ isGood ? 'text-ink' : 'text-ink-2' }`}
         >
           {isGood ? 'Great work!' : 'Keep practicing!'}
         </p>
@@ -493,7 +493,7 @@ function AITutorScaffold({
           <Bot size={18} strokeWidth={1.5} className="text-ink" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-[16px] font-bold text-ink">AI Tutor</p>
+          <p className="font-bold text-[16px] text-ink">AI Tutor</p>
           <p className="truncate text-[13px] text-muted">{topicTitle}</p>
         </div>
       </header>
@@ -780,7 +780,7 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
         >
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
-        <h1 className="min-w-0 flex-1 truncate font-bold text-[17px] font-bold text-ink">
+        <h1 className="min-w-0 flex-1 truncate font-bold text-[17px] text-ink">
           {name}
         </h1>
       </header>

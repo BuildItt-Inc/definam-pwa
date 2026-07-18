@@ -70,7 +70,7 @@ function StatCard({ variant, value, label }: StatCardProps) {
 
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200/80 bg-card px-3 py-4">
-      <span className="font-bold text-[28px] font-black leading-none text-ink">{value}</span>
+      <span className="font-bold text-[28px] leading-none text-ink">{value}</span>
       <span className="mt-1 text-[13px] text-muted">{label}</span>
     </div>
   );

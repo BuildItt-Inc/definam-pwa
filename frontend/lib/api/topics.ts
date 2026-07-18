@@ -123,14 +123,33 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/recall/queue`,
     { headers: await getAuthHeaders() },
   );
-  // Backend returns { status: "success", data: [...] } OR just [...]
-  // handleResponse doesn't unwrap `{ data: ... }` yet.
-  // Wait, let's see if we need to unwrap it here.
-  const json = await handleResponse<any>(res);
-  if (json && typeof json === 'object' && 'data' in json) {
-      return json.data as RecallItem[];
-  }
-  return json as RecallItem[];
+
+  type RawItem = {
+    topic_id: string;
+    title: string;
+    subject: string | null;
+    question: string | null;
+    model_answer: string | null;
+    next_review_at: string | null;
+  };
+
+  const raw = await handleResponse<RawItem[]>(res);
+  const items: RawItem[] = Array.isArray(raw)
+  ? raw
+  : raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)
+    ? (raw as { data: RawItem[] }).data
+    : [];
+
+  return items
+    .filter((item) => item.question && item.model_answer)
+    .map((item) => ({
+      id: item.topic_id,
+      topic_id: item.topic_id,
+      topic_title: item.title,
+      subject: item.subject ?? '',
+      question: item.question!,
+      model_answer: item.model_answer!,
+    }));
 }
 
 // ── getProgressData ────────────────────────────────────────────────────────

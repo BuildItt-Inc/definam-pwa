@@ -138,7 +138,7 @@ export default function RecallSessionPage() {
               <ArrowLeft size={18} strokeWidth={1.5} />
             </button>
           )}
-          <p className="flex-1 font-bold text-[15px] font-bold text-white">
+          <p className="flex-1 font-bold text-[15px] text-white">
             Daily Recall
           </p>
           <span className="rounded-full bg-white/10 px-3 py-1 text-[13px] text-white/60">
@@ -154,7 +154,7 @@ export default function RecallSessionPage() {
               <p className="mb-3 text-[12px] font-bold uppercase tracking-wider text-white/40">
                 {currentItem.subject} · {currentItem.topic_title}
               </p>
-              <p className="font-bold text-[15px] font-bold leading-snug text-white">
+              <p className="font-bold text-[15px] leading-snug text-white">
                 {currentItem.question}
               </p>
               <p className="mt-4 text-[13px] text-white/30">
