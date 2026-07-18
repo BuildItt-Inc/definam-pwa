@@ -206,7 +206,9 @@ async def submit_recall(
 
 
 async def _refresh_recall_queue(user_id: str):
-    """Compute due topics and cache the recall queue in Redis."""
+    """Compute due topics and cache the recall queue in Redis.
+    Only includes topics that have valid recall_questions (dict with question & model_answer).
+    """
     async with db_session() as session:
         now = datetime.now(UTC)
         result = await session.execute(
@@ -221,17 +223,21 @@ async def _refresh_recall_queue(user_id: str):
             .join(Subject, Chapter.subject_id == Subject.id)
             .where(
                 TopicReview.user_id == user_id,
-                TopicReview.next_review_at <= now
+                TopicReview.next_review_at <= now,
+                Topic.recall_questions.is_not(None)   # <-- Add this filter
             )
             .order_by(TopicReview.next_review_at.asc())
         )
         due_topics = []
         for review, title, recall_qs, subject_name in result:
-            question = None
-            model_answer = None
-            if recall_qs and isinstance(recall_qs, dict):
-                question = recall_qs.get("question")
-                model_answer = recall_qs.get("model_answer")
+            # Skip if recall_questions is not a dict with both required fields
+            if not isinstance(recall_qs, dict):
+                continue
+            question = recall_qs.get("question")
+            model_answer = recall_qs.get("model_answer")
+            if not question or not model_answer:
+                continue   # skip if either field is missing
+
             due_topics.append({
                 "topic_id": review.topic_id,
                 "title": title,
