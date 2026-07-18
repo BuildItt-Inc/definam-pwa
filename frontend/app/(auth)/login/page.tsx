@@ -45,7 +45,10 @@ export default function LoginPage() {
     setBannerError(null);
     setIsSubmitting(true);
     try {
-      const { role } = await loginUser(values);
+      const { role } = await loginUser({
+        username_or_email: values.username,
+        password: values.password,
+      });
       if (role === 'admin') {
         // Admin accounts must use the admin portal
         setBannerError('Use the admin login page for administrator accounts.');

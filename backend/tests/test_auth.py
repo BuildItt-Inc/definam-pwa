@@ -138,7 +138,7 @@ async def test_login_invalid_username():
         ) as client:
             resp = await client.post(
                 "/api/v1/auth/login",
-                json={"username": "nobody", "password": "x"},
+                json={"username_or_email": "nobody", "password": "x"},
             )
     assert resp.status_code == 401
 
@@ -177,7 +177,7 @@ async def test_login_returns_tokens_as_cookie():
         ) as client:
             resp = await client.post(
                 "/api/v1/auth/login",
-                json={"username": "admin@school.ng", "password": "TempPass1!"},
+                json={"username_or_email": "admin@school.ng", "password": "TempPass1!"},
             )
 
     assert resp.status_code == 200

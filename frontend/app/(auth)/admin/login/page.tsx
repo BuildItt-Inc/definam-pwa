@@ -64,7 +64,10 @@ export default function AdminLoginPage() {
   async function onLoginSubmit(values: AdminLoginFormValues) {
     setLoginBannerError(null);
     try {
-      const data = await loginUser(values);
+      const data = await loginUser({
+        username_or_email: values.username,
+        password: values.password,
+      });
       // Reject non-admin accounts immediately — don't let students land here
       if (data.role !== 'admin') {
         setLoginBannerError('This page is for administrators only.');

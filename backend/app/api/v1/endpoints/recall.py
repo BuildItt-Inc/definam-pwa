@@ -15,7 +15,7 @@ from sqlalchemy import select
 from app.api.deps import CurrentUserDep
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.db.database import db_session
-from app.db.models import DailyRecallQueue, Topic, TopicReview
+from app.db.models import Chapter, DailyRecallQueue, Subject, Topic, TopicReview
 from app.services.sm2 import sm2_calculate
 
 # Redis is optional — import best-effort so missing REDIS_URL doesn't crash startup
@@ -205,33 +205,46 @@ async def submit_recall(
 # ── Recall queue helpers ───────────────────────────────────────────────────
 
 
-async def _refresh_recall_queue(user_id: str) -> list[dict]:
-    """Rebuild and cache the due-topic queue for a student."""
+async def _refresh_recall_queue(user_id: str):
+    """Compute due topics and cache the recall queue in Redis."""
     async with db_session() as session:
         now = datetime.now(UTC)
         result = await session.execute(
-            select(TopicReview, Topic.title)
+            select(
+                TopicReview,
+                Topic.title,
+                Topic.recall_questions,
+                Subject.name.label("subject_name")
+            )
             .join(Topic, TopicReview.topic_id == Topic.id)
+            .join(Chapter, Topic.chapter_id == Chapter.id)
+            .join(Subject, Chapter.subject_id == Subject.id)
             .where(
                 TopicReview.user_id == user_id,
-                TopicReview.next_review_at <= now,
+                TopicReview.next_review_at <= now
             )
             .order_by(TopicReview.next_review_at.asc())
         )
-        due_topics = [
-            {
+        due_topics = []
+        for review, title, recall_qs, subject_name in result:
+            question = None
+            model_answer = None
+            if recall_qs and isinstance(recall_qs, dict):
+                question = recall_qs.get("question")
+                model_answer = recall_qs.get("model_answer")
+            due_topics.append({
                 "topic_id": review.topic_id,
                 "title": title,
-                "next_review_at": review.next_review_at.isoformat() if review.next_review_at else None,
-            }
-            for review, title in result
-        ]
+                "subject": subject_name,
+                "question": question,
+                "model_answer": model_answer,
+                "next_review_at": review.next_review_at.isoformat() if review.next_review_at else None
+            })
 
-    # Cache in Redis if available — not required for correctness
     r = _try_get_redis()
     if r is not None:
         with suppress(Exception):
-            await asyncio.to_thread(r.setex, f"recall_queue:{user_id}", 86400, json.dumps(due_topics))
+            r.setex(f"recall_queue:{user_id}", 86400, json.dumps(due_topics))
     return due_topics
 
 
