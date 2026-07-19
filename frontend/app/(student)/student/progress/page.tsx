@@ -142,7 +142,7 @@ function HeatmapSection({ data }: { data: number[] }) {
         }}
         onMouseEnter={() => setTooltip({ date: dateLabel, count })}
         onMouseLeave={() => setTooltip(null)}
-        onTouchStart={(e) => {
+        onTouchEnd={(e) => {
           e.preventDefault();
           setTooltip((prev) =>
             prev?.date === dateLabel ? null : { date: dateLabel, count },
