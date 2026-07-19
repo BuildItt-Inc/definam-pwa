@@ -109,7 +109,7 @@ function HeatmapSection({ data }: { data: number[] }) {
 
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  todayStart.setHours(12, 0, 0, 0);
   const startMs = todayStart.getTime() - (data.length - 1) * MS_PER_DAY;
   const startDow = new Date(startMs).getDay(); // 0=Sun, 6=Sat
   const numWeeks = Math.ceil((startDow + data.length) / 7);
