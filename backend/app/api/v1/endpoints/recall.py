@@ -93,6 +93,7 @@ async def record_step4_attempt(
                 interval_days=1,
                 repetitions=0,
                 last_reviewed_at=now,
+                next_review_at=now + timedelta(days=1),   # <-- ADD THIS LINE
                 accuracy_score=payload.accuracy_score,
             )
             session.add(review)
@@ -111,7 +112,6 @@ async def record_step4_attempt(
             "interval_days": review.interval_days,
             "accuracy_score": review.accuracy_score,
         }
-
 
 # ── SM-2 recall endpoint ───────────────────────────────────────────────────
 
