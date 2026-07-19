@@ -107,6 +107,17 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
 function HeatmapSection({ data }: { data: number[] }) {
   const [tooltip, setTooltip] = useState<{ date: string; count: number } | null>(null);
 
+  if (!data || data.length === 0) {
+    return (
+      <div className="mb-4 rounded-xl border border-border-2 bg-card px-4 py-3">
+        <p className="mb-3 text-[13px] font-bold text-ink">Study Activity &mdash; 3 Months</p>
+        <div className="flex h-[74px] items-center justify-center text-[11px] text-muted">
+          No activity data available
+        </div>
+      </div>
+    );
+  }
+
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
