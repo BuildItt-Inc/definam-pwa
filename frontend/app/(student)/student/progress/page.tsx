@@ -6,46 +6,32 @@ import { getProgressData } from '@/lib/api/topics';
 import type { ProgressData } from '@/types/topics';
 import { BottomNav } from '@/components/student/BottomNav';
 
-// â”€â”€ Heatmap config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 const HEATMAP_COLORS = ['#EEEEEE', '#9FE1CB', '#5DCAA5', '#1B6B4A', '#085041'] as const;
 
 function heatmapColor(level: number): string {
   return HEATMAP_COLORS[Math.min(Math.max(Math.round(level), 0), 4)];
 }
 
-// â”€â”€ Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 function ProgressSkeleton() {
   return (
     <div className="min-h-screen bg-bg-0">
-      {/* Appbar */}
       <div className="border-b border-gray-200/60 bg-bg-0 px-4 py-3.5">
         <div className="h-5 w-28 animate-pulse rounded bg-gray-300/50" />
       </div>
 
       <div className="px-4 py-4 pb-24">
-        {/* Stat cards */}
         <div className="mb-4 grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-300/40" />
           ))}
         </div>
-
-        {/* Subject mastery */}
         <div className="mb-4 h-36 animate-pulse rounded-xl bg-gray-300/40" />
-
-        {/* Heatmap */}
         <div className="mb-4 h-28 animate-pulse rounded-xl bg-gray-300/40" />
-
-        {/* Upcoming reviews */}
         <div className="h-32 animate-pulse rounded-xl bg-gray-300/40" />
       </div>
     </div>
   );
 }
-
-// â”€â”€ Stat card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface StatCardProps {
   variant: 'streak' | 'plain';
@@ -76,8 +62,6 @@ function StatCard({ variant, value, label }: StatCardProps) {
   );
 }
 
-// â”€â”€ Subject mastery section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
   return (
     <div className="mb-4 overflow-hidden rounded-xl border border-border-2">
@@ -95,7 +79,7 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
                   {item.subject}
                 </span>
                 <span
-                  className={`text-[15px] font-bold ${ isGood ? 'text-ink' : 'text-ink-2' }`}
+                  className={`text-[15px] font-bold ${isGood ? 'text-ink' : 'text-ink-2'}`}
                 >
                   {pctText}
                 </span>
@@ -114,50 +98,88 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
   );
 }
 
-// â”€â”€ Heatmap section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+// HeatmapSection renders a GitHub-style 90-day activity grid.
+// data[0] = oldest day (today - 89 days); data[89] = today (newest).
+// Values are 0-4 (already clamped by the backend).
+// Grid: 7 rows (Sun=row0 ... Sat=row6), columns = weeks (oldest left).
+// startDow leading cells are empty padding to align the first day's weekday row.
+// Cell index mapping: cellIdx = col*7 + row; dataIdx = cellIdx - startDow.
 function HeatmapSection({ data }: { data: number[] }) {
+  const [tooltip, setTooltip] = useState<{ date: string; count: number } | null>(null);
+
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const startMs = todayStart.getTime() - (data.length - 1) * MS_PER_DAY;
+  const startDow = new Date(startMs).getDay(); // 0=Sun, 6=Sat
+  const numWeeks = Math.ceil((startDow + data.length) / 7);
+
+  const cells = Array.from({ length: numWeeks * 7 }, (_, cellIdx) => {
+    const dataIdx = cellIdx - startDow;
+    if (dataIdx < 0 || dataIdx >= data.length) {
+      return (
+        <div
+          key={cellIdx}
+          style={{ width: 10, height: 10, borderRadius: 2 }}
+        />
+      );
+    }
+    const count = data[dataIdx] ?? 0;
+    const cellDate = new Date(startMs + dataIdx * MS_PER_DAY);
+    const dateLabel = cellDate.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+    return (
+      <div
+        key={cellIdx}
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: 2,
+          backgroundColor: heatmapColor(count),
+        }}
+        onMouseEnter={() => setTooltip({ date: dateLabel, count })}
+        onMouseLeave={() => setTooltip(null)}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          setTooltip((prev) =>
+            prev?.date === dateLabel ? null : { date: dateLabel, count },
+          );
+        }}
+      />
+    );
+  });
+
   return (
     <div className="mb-4 rounded-xl border border-border-2 bg-card px-4 py-3">
-      <p className="mb-3 text-[13px] font-bold text-ink">
-        Study Activity â€” 3 Months
-      </p>
+      <p className="mb-3 text-[13px] font-bold text-ink">Study Activity &mdash; 3 Months</p>
 
-      {/* 63 squares: 9 weeks Ã -  7 days, displayed as 7-column grid (day columns, week rows) */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(9, 9px)',
-          gridTemplateRows: 'repeat(7, 9px)',
+          gridTemplateRows: 'repeat(7, 10px)',
           gridAutoFlow: 'column',
+          gridAutoColumns: '10px',
           gap: '2px',
         }}
       >
-        {data.map((level, i) => (
-          <div
-            key={i}
-            style={{
-              width: '9px',
-              height: '9px',
-              borderRadius: '2px',
-              backgroundColor: heatmapColor(level),
-            }}
-          />
-        ))}
+        {cells}
       </div>
 
-      {/* Legend */}
-      <div className="mt-2.5 flex items-center gap-1.5">
+      <div className="mt-2 h-4 text-[11px] text-muted">
+        {tooltip
+          ? `${tooltip.date} - ${tooltip.count} review${tooltip.count !== 1 ? 's' : ''}`
+          : ' '}
+      </div>
+
+      <div className="mt-1 flex items-center gap-1.5">
         <span className="text-[9px] text-muted">Less</span>
         {HEATMAP_COLORS.map((color) => (
           <div
             key={color}
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '2px',
-              backgroundColor: color,
-            }}
+            style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color }}
           />
         ))}
         <span className="text-[9px] text-muted">More</span>
@@ -165,8 +187,6 @@ function HeatmapSection({ data }: { data: number[] }) {
     </div>
   );
 }
-
-// â”€â”€ Upcoming reviews section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
   return (
@@ -189,7 +209,7 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
           return (
             <div
               key={item.topic_title}
-              className={`flex items-center gap-3 px-4 py-3 ${ !isLast ? 'border-b border-border' : '' }`}
+              className={`flex items-center gap-3 px-4 py-3 ${!isLast ? 'border-b border-border' : ''}`}
             >
               <span
                 className={`h-2 w-2 flex-shrink-0 rounded-full ${dotClass}`}
@@ -198,7 +218,7 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
                 {item.topic_title}
               </span>
               <span
-                className={`flex-shrink-0 text-[14px] font-bold ${ isToday ? 'text-ink' : 'text-muted' }`}
+                className={`flex-shrink-0 text-[14px] font-bold ${isToday ? 'text-ink' : 'text-muted'}`}
               >
                 {item.due}
               </span>
@@ -209,8 +229,6 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
     </div>
   );
 }
-
-// â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function ProgressPage() {
   const [data, setData] = useState<ProgressData | null>(null);
@@ -236,15 +254,11 @@ export default function ProgressPage() {
 
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
-
-      {/* Appbar */}
       <header className="border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
         <h1 className="text-[17px] font-bold text-ink">My Progress</h1>
       </header>
 
       <main className="flex-1 px-4 py-4">
-
-        {/* â”€â”€ Stat cards 2Ã - 2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="mb-4 grid grid-cols-2 gap-3">
           <StatCard
             variant="streak"
@@ -268,15 +282,9 @@ export default function ProgressPage() {
           />
         </div>
 
-        {/* â”€â”€ Subject mastery â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <MasterySection data={data.subject_mastery} />
-
-        {/* â”€â”€ Study heatmap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <HeatmapSection data={data.heatmap_data} />
-
-        {/* â”€â”€ Upcoming reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <UpcomingSection data={data.upcoming_reviews} />
-
       </main>
 
       <BottomNav />

@@ -156,9 +156,50 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
 // Real: GET /api/v1/student/progress
 
 export async function getProgressData(): Promise<ProgressData> {
-  // Always mock for now since the backend doesn't have a consolidated /progress endpoint yet.
-  await delay();
-  return mockProgressData;
+  if (USE_MOCK) {
+    await delay();
+    return mockProgressData;
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/progress`,
+    { headers: await getAuthHeaders() },
+  );
+
+  type RawProgress = {
+    streak_days: number;
+    topics_studied: number;
+    avg_accuracy: number;
+    due_tomorrow: number;
+    subject_mastery: { subject: string; mastery_percent: number }[];
+    upcoming_reviews: { topic_title: string; due: string; urgency: string }[];
+    heatmap_data: number[];
+  };
+
+  const raw = await handleResponse<RawProgress>(res);
+  const d: RawProgress =
+    raw && typeof raw === 'object' && 'data' in raw
+      ? (raw as { data: RawProgress }).data
+      : raw;
+
+  return {
+    streak_days: d.streak_days ?? 0,
+    topics_studied: d.topics_studied ?? 0,
+    avg_accuracy: d.avg_accuracy ?? 0,
+    due_tomorrow: d.due_tomorrow ?? 0,
+    subject_mastery: Array.isArray(d.subject_mastery) ? d.subject_mastery : [],
+    upcoming_reviews: Array.isArray(d.upcoming_reviews)
+      ? d.upcoming_reviews.map((r) => ({
+          topic_title: r.topic_title,
+          due: r.due,
+          urgency: (r.urgency === 'high' || r.urgency === 'medium' ? r.urgency : 'low') as
+            | 'high'
+            | 'medium'
+            | 'low',
+        }))
+      : [],
+    heatmap_data: Array.isArray(d.heatmap_data) ? d.heatmap_data : [],
+  };
 }
 
 // ── submitRecallRating ─────────────────────────────────────────────────────
