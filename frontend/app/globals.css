@@ -140,7 +140,6 @@
   .page-with-nav {
     @apply flex flex-col;
     min-height: 100dvh;
-    overflow-x: clip;
   }
 
   /* Reserve space below fixed BottomNav (base height + iOS safe area) */

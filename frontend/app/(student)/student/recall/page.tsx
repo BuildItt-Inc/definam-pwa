@@ -138,7 +138,7 @@ export default function RecallPage() {
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-4 pb-nav">
+      <main className="flex-1 px-4 pt-4 pb-nav">
 
         {/* Info card */}
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3.5 shadow-sm">
