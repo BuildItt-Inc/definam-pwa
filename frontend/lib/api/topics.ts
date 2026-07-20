@@ -176,11 +176,11 @@ export async function getProgressData(): Promise<ProgressData> {
     heatmap_data: number[];
   };
 
-  const raw = await handleResponse<RawProgress>(res);
-  const d: RawProgress =
-    raw && typeof raw === 'object' && 'data' in raw
+  const raw = await handleResponse<RawProgress | null>(res);
+  const d: Partial<RawProgress> =
+    (raw && typeof raw === 'object' && 'data' in raw
       ? (raw as { data: RawProgress }).data
-      : raw;
+      : raw) ?? {};
 
   return {
     streak_days: d.streak_days ?? 0,
@@ -190,9 +190,9 @@ export async function getProgressData(): Promise<ProgressData> {
     subject_mastery: Array.isArray(d.subject_mastery) ? d.subject_mastery : [],
     upcoming_reviews: Array.isArray(d.upcoming_reviews)
       ? d.upcoming_reviews.map((r) => ({
-          topic_title: r.topic_title,
-          due: r.due,
-          urgency: (r.urgency === 'high' || r.urgency === 'medium' ? r.urgency : 'low') as
+          topic_title: r?.topic_title ?? '',
+          due: r?.due ?? '',
+          urgency: (r?.urgency === 'high' || r?.urgency === 'medium' ? r?.urgency : 'low') as
             | 'high'
             | 'medium'
             | 'low',
