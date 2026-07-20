@@ -81,7 +81,6 @@
 
   body {
     overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
-    overflow-x: hidden; /* Prevent page horizontal scroll */
     margin: 0;
     min-height: 100dvh; /* dvh = dynamic viewport height — fixes mobile chrome bar */
     font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
@@ -137,9 +136,8 @@
   /* Full screen page that accounts for bottom nav */
   .page-with-nav {
     @apply flex flex-col;
-    height: 100dvh;
-    overflow-y: auto;
-    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
+    min-height: 100svh;
+    overflow-x: clip;
   }
 
   /* Standard card */
