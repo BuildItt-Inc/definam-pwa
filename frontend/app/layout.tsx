@@ -40,7 +40,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}
       >
-        <div className="overflow-x-hidden">
+        <div className="overflow-x-clip">
           {children}
         </div>
         {/* KaTeX JS — loaded after page content, never blocks render */}
