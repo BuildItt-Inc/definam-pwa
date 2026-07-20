@@ -158,7 +158,7 @@ export default function SettingsPage() {
         <h1 className="text-[17px] font-bold text-ink">Settings</h1>
       </header>
 
-      <main className="flex-1 px-4 py-4">
+      <main className="flex-1 px-4 py-4 pb-nav">
 
         {/* ── Profile card ──────────────────────────────────────────────── */}
         <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">

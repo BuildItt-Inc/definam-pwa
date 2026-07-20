@@ -28,7 +28,7 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
 
   return (
     <>
-      <nav className="sticky bottom-0 z-50 mt-auto flex-shrink-0 w-full border-t border-border bg-card shadow-[0_-1px_0_rgba(0,0,0,0.06)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 w-full border-t border-border bg-card shadow-[0_-1px_0_rgba(0,0,0,0.06)]">
         <div
           className="flex w-full"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}

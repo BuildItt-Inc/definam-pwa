@@ -269,7 +269,7 @@ export default function ProgressPage() {
         <h1 className="text-[17px] font-bold text-ink">My Progress</h1>
       </header>
 
-      <main className="flex-1 px-4 py-4">
+      <main className="flex-1 px-4 py-4 pb-nav">
         <div className="mb-4 grid grid-cols-2 gap-3">
           <StatCard
             variant="streak"
