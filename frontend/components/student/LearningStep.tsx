@@ -50,24 +50,43 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
       {/* ── Step 3 — Visual Breakdown ────────────────────────────────────── */}
       {step === 3 && (
         <div className="rounded-2xl bg-white px-5 py-5 shadow-sm">
-          {/* Line-by-line so tree chars (├──) and math coexist cleanly */}
+          {/* Line-by-line so tree chars (├──/└──) and math coexist cleanly */}
           <div className="space-y-1.5">
-            {content.split('\n').map((line, i) =>
-              line.trim() === '' ? (
-                <div key={i} className="h-2" />
-              ) : (
+            {content.split('\n').map((line, i) => {
+              if (line.trim() === '') return <div key={i} className="h-2" />;
+
+              const treeMatch = line.match(/^((?:│ {3}| {4})*)(├──|└──)\s*(?:•\s*)?(.*)$/);
+              if (treeMatch) {
+                const [, indent, connector, rest] = treeMatch;
+                const depth = indent.length / 4;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-start gap-1.5"
+                    style={{ paddingLeft: `${depth * 20}px` }}
+                  >
+                    <span className="flex-shrink-0 select-none font-mono text-ink/30">
+                      {connector}
+                    </span>
+                    <MathContent
+                      content={rest}
+                      allowBlock={false}
+                      className="font-mono text-[15px] leading-relaxed text-ink"
+                    />
+                  </div>
+                );
+              }
+
+              return (
                 <MathContent
                   key={i}
                   content={line}
                   allowBlock={false}
                   className="block font-mono text-[15px] leading-relaxed text-ink"
                 />
-              ),
-            )}
+              );
+            })}
           </div>
-          <p className="rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-[13px] text-muted">
-            Text diagrams only in V1 — image generation is V2.
-          </p>
         </div>
       )}
     </div>
