@@ -55,10 +55,14 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
             {content.split('\n').map((line, i) => {
               if (line.trim() === '') return <div key={i} className="h-2" />;
 
-              const treeMatch = line.match(/^((?:│ {3}| {4})*)(├──|└──)\s*(?:•\s*)?(.*)$/);
+              // Indent width before a connector varies (AI output isn't a fixed
+              // 4-char grid — seen 3, 4, and 5 spaces after "│" in practice), so
+              // match indent units loosely and count them rather than dividing
+              // a fixed-width prefix length.
+              const treeMatch = line.match(/^((?:│\s*|\s{2,})*)(├──|└──)\s*(?:•\s*)?(.*)$/);
               if (treeMatch) {
                 const [, indent, connector, rest] = treeMatch;
-                const depth = indent.length / 4;
+                const depth = (indent.match(/│\s*|\s{2,}/g) || []).length;
                 return (
                   <div
                     key={i}
