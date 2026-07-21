@@ -130,7 +130,7 @@ function renderInline(
       // Plain text — single newlines become <br>
       let escapedLines = part.text
         .split('\n')
-        .map((line) => escapeHtml(line))
+        .map((line) => renderBoldMarkdown(line))
         .join('<br />');
 
       // Auto-convert standard plain-text fractions (e.g. 1/3, 3/4) to KaTeX, avoiding dates and URLs
@@ -157,8 +157,8 @@ type Segment =
 function splitMath(text: string, allowBlock: boolean): Segment[] {
   const segments: Segment[] = [];
   const pattern = allowBlock
-    ? /(\$\$[\s\S]*?\$\$|\$[^$\n]+?\$)/g
-    : /(\$[^$\n]+?\$)/g;
+    ? /(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/g
+    : /(\$[^$]+?\$)/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -181,6 +181,19 @@ function splitMath(text: string, allowBlock: boolean): Segment[] {
   }
 
   return segments;
+}
+
+// Narrow markdown support: only **bold** is used in generated content today.
+// Escapes everything else so no other markdown/HTML sneaks through.
+function renderBoldMarkdown(str: string): string {
+  return str
+    .split(/(\*\*[^*]+?\*\*)/g)
+    .map((chunk) =>
+      chunk.startsWith('**') && chunk.endsWith('**') && chunk.length > 4
+        ? `<strong>${escapeHtml(chunk.slice(2, -2))}</strong>`
+        : escapeHtml(chunk),
+    )
+    .join('');
 }
 
 function escapeHtml(str: string): string {
