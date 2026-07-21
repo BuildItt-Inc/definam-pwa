@@ -1,7 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Script from 'next/script';
+import { KatexScripts } from '@/components/KatexScripts';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -41,12 +41,8 @@ export default function RootLayout({
         className={`${inter.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}
       >
         {children}
-        {/* KaTeX JS — loaded after page content, never blocks render */}
-        <Script
-          src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+        {/* KaTeX JS + mhchem — loaded after page content, never blocks render */}
+        <KatexScripts />
       </body>
     </html>
   );

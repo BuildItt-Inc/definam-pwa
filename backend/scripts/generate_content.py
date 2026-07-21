@@ -31,16 +31,39 @@ settings = get_settings()
 groq_client = Groq(api_key=settings.groq_api_key)
 
 # ---- Prompt templates ----
+# NOTE: keep the FORMATTING RULES block in sync with the prompts in
+# app/services/content_generator.py — this script and that module both feed
+# MathContent.tsx on the frontend, which only renders math wrapped in $...$.
+# A topic generated here without these rules ships plain, unrendered
+# arithmetic to students (see WEEK10 docs for the "Algebraic Expressions"
+# incident this caused).
 PROMPT_STEP1 = """
 You are a Nigerian tutor. Explain the topic "{title}" in 2–3 plain sentences using simple language. No jargon.
 Make sure to use a real-world Nigerian example (like market, NEPA, Jollof rice, etc.) if applicable.
+
+FORMATTING RULES (CRITICAL):
+- Wrap ALL mathematical expressions and numeric equations in single dollar signs: $expression$
+- Examples: $x^2 + 5x + 6 = 0$, $\\frac{{250x}}{{0.5}}$, $500x$, $\\times$, $\\div$
+- Use proper LaTeX: \\frac{{a}}{{b}} for fractions, x^2 for squares, x_1 for subscripts
+- Never write math operators or equations as plain text outside $ $
+- Keep surrounding prose in plain English, only the math parts in $ $
+
 Return only the explanation text.
 """
 
 PROMPT_STEP2 = """
 You are a Nigerian tutor. Provide a step-by-step worked example of the topic "{title}" using a Nigerian context.
 Show all steps clearly. The example should be realistic and help a student understand the concept.
-Return only the example text.
+
+FORMATTING RULES (CRITICAL):
+- Each numbered step MUST be on its own paragraph separated by a BLANK LINE.
+- Format steps like: Step 1: [label]\\n\\n[working]\\n\\nStep 2: ...
+- Wrap ALL mathematical expressions and numeric equations in single dollar signs: $expression$
+- Examples: $500x - 2000 = 0$, $x = \\frac{{2000}}{{100}} = 20$, $\\therefore$
+- Use proper LaTeX: \\frac{{a}}{{b}} for fractions, \\times for multiplication, \\div for division
+- Prose text stays in plain English, only the math in $ $
+
+Return only the worked example text.
 """
 
 PROMPT_STEP3 = """
@@ -48,6 +71,10 @@ You are a Nigerian tutor. Generate 1 practice question on the topic "{title}" wi
 - 4 options (A, B, C, D)
 - The correct answer (letter)
 - A brief explanation of why it's correct
+
+FORMATTING RULES (CRITICAL):
+- Wrap ALL mathematical expressions in single dollar signs: $expression$
+- In the question AND options AND explanation: use LaTeX for any formula, fraction, symbol
 
 Format your response as a JSON object with keys: question, options (array of 4 strings), correct_answer (letter), explanation.
 Return only the JSON.

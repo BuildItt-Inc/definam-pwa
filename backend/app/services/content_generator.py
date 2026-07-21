@@ -84,6 +84,72 @@ Respond STRICTLY as a raw JSON array (no markdown fences). Each object:
 """
 
 
+# Always safe to leave alone: these can only be genuine JSON escapes here.
+_UNAMBIGUOUS_ESCAPES = set('"\\/u')
+# Ambiguous: valid single-char JSON escapes (form-feed, newline, CR, tab,
+# backspace) that are *also* the first letter of common LaTeX macro names
+# (\frac, \neq/\nabla, \rightarrow, \times/\tan/\text, \boxed/\beta/\bar).
+_AMBIGUOUS_ESCAPES = set("bfnrt")
+
+
+def _sanitize_json_escapes(text: str) -> str:
+    """Repair backslashes the model left un-doubled for LaTeX inside JSON.
+
+    The prompts ask the model to embed LaTeX (\\frac, \\times, \\rightarrow,
+    \\ce, ...) inside JSON string values, which is only valid JSON if the
+    backslash itself is doubled (\\\\frac). Models routinely emit a single
+    backslash instead. Two distinct failure modes follow:
+
+    - Escapes like \\c (\\ce), \\s (\\sqrt), \\l (\\left) aren't valid JSON
+      escapes at all, so json.loads raises "Invalid \\escape" and the whole
+      response is discarded in favour of generic fallback content.
+    - Escapes like \\f, \\n, \\r, \\t, \\b ARE valid single-char JSON
+      escapes (form-feed, newline, CR, tab, backspace), so json.loads
+      doesn't raise — it silently swaps in a control character and drops
+      the rest of the macro name (e.g. "\\frac{500}{n}" quietly becomes a
+      form-feed followed by "rac{500}{n}", rendered as "rac{500}{n}").
+
+    The first case is unambiguous — every such backslash needs doubling.
+    The second is ambiguous: \\n legitimately means "newline" when used to
+    break up an explanation into lines (seen often in real generations).
+    Disambiguate by lookahead: a genuine control-char escape is followed by
+    ordinary prose (rarely a lowercase letter continuing a word — English
+    sentences after a newline/tab conventionally start capitalised, and a
+    real form-feed/backspace/CR is never intentional in this content),
+    while a truncated LaTeX macro is followed by more lowercase letters of
+    the command name. So only double the ambiguous escapes when the next
+    character continues a lowercase word.
+    """
+    result = []
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if ch == "\\" and i + 1 < n:
+            nxt = text[i + 1]
+            if nxt in _UNAMBIGUOUS_ESCAPES:
+                result.append(ch)
+                result.append(nxt)
+                i += 2
+                continue
+            if nxt in _AMBIGUOUS_ESCAPES:
+                looks_like_macro = i + 2 < n and text[i + 2].isalpha() and text[i + 2].islower()
+                if not looks_like_macro:
+                    result.append(ch)
+                    result.append(nxt)
+                    i += 2
+                    continue
+            # Invalid JSON escape, or an ambiguous one that looks like a
+            # truncated LaTeX macro — double the backslash to repair it.
+            result.append("\\\\")
+            result.append(nxt)
+            i += 2
+            continue
+        result.append(ch)
+        i += 1
+    return "".join(result)
+
+
 def get_fallback_content(title: str) -> dict[str, Any]:
     """Fallback curriculum text when both Gemini and Groq API keys are missing or fail."""
     return {
@@ -155,7 +221,7 @@ async def generate_gemini_questions(prompt: str) -> list[dict[str, Any]]:
                 lines = lines[:-1]
             text = "\n".join(lines).strip()
 
-        parsed = json.loads(text)
+        parsed = json.loads(_sanitize_json_escapes(text))
         if isinstance(parsed, list):
             return parsed
         return []
@@ -192,7 +258,11 @@ async def generate_groq_questions(prompt: str) -> list[dict[str, Any]]:
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=1000,
+            # 2 Nigerian-context MCQs with full explanations routinely need
+            # more than 1000 tokens; a tight cap truncates mid-JSON-string
+            # ("Unterminated string"), which silently falls back to generic
+            # content just like the escape-corruption bug above.
+            max_tokens=2000,
         )
         text = completion.choices[0].message.content.strip()
 
@@ -205,7 +275,7 @@ async def generate_groq_questions(prompt: str) -> list[dict[str, Any]]:
                 lines = lines[:-1]
             text = "\n".join(lines).strip()
 
-        parsed = json.loads(text)
+        parsed = json.loads(_sanitize_json_escapes(text))
         if isinstance(parsed, list):
             return parsed
         return []
