@@ -139,12 +139,9 @@
   /* Full screen page that accounts for bottom nav */
   .page-with-nav {
     @apply flex flex-col;
-    min-height: 100dvh;
-  }
-
-  /* Reserve space below fixed BottomNav (base height + iOS safe area) */
-  .pb-nav {
-    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
   }
 
   /* Standard card */
