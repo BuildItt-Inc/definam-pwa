@@ -785,7 +785,7 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
         </h1>
       </header>
 
-      <main className="flex flex-1 flex-col pb-20">
+      <main className="flex flex-1 flex-col pb-nav">
         {isChaptersView && (
           <ChaptersView subjectId={topicId} subjectName={subjectName} />
         )}

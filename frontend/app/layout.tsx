@@ -40,9 +40,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}
       >
-        <div className="overflow-x-clip">
-          {children}
-        </div>
+        {children}
         {/* KaTeX JS — loaded after page content, never blocks render */}
         <Script
           src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"

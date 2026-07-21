@@ -98,7 +98,7 @@ export default function RecallPage() {
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center px-6 pb-6 text-center">
+        <main className="flex flex-1 flex-col items-center justify-center px-6 pb-nav text-center">
           <RefreshCw size={40} strokeWidth={2} className="mb-4 text-faint" />
           <h2 className="mb-2 text-[17px] font-bold text-ink">
             You&apos;re all caught up!
@@ -138,7 +138,7 @@ export default function RecallPage() {
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-4">
+      <main className="flex-1 px-4 pt-4 pb-nav">
 
         {/* Info card */}
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3.5 shadow-sm">

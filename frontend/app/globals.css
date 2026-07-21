@@ -61,6 +61,9 @@
     --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
     --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
     --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+
+    /* ── BottomNav ────────────────────────────────────────────────────────── */
+    --nav-h: 56px; /* base nav height, excluding safe-area-inset-bottom */
   }
 
   /* ── Base resets ────────────────────────────────────────────────────────── */
@@ -136,8 +139,9 @@
   /* Full screen page that accounts for bottom nav */
   .page-with-nav {
     @apply flex flex-col;
-    min-height: 100svh;
-    overflow-x: clip;
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
   }
 
   /* Standard card */
