@@ -43,9 +43,11 @@ export function PracticeQuestion({
         <p className="mb-2 text-[12px] font-bold uppercase tracking-wider text-muted">
           Practice Question
         </p>
-        <p className="text-[16px] font-bold leading-relaxed text-ink">
-          {question.question}
-        </p>
+        <MathContent
+          content={question.question}
+          allowBlock={false}
+          className="text-[16px] font-bold leading-relaxed text-ink"
+        />
       </div>
 
       {/* Options */}
