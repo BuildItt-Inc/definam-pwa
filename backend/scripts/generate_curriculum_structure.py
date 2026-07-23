@@ -346,10 +346,14 @@ FALLBACK_CURRICULUM = [
     },
 ]
 
+CLASS_LEVELS = ["SS1", "SS2", "SS3"]
+
 PROMPT_TEMPLATE = """
 You are an expert curriculum designer for the West African Examinations Council (WAEC).
-Generate a comprehensive, complete syllabus/curriculum for SS1-SS3 level "{subject_name}".
-The curriculum must cover the entire WAEC syllabus in detail, divided into 8 to 15 chapters.
+Generate a comprehensive syllabus/curriculum for {class_level} level "{subject_name}" only.
+Cover the portion of the WAEC syllabus typically taught at {class_level} specifically —
+not the full three-year SS1-SS3 span, and not content that properly belongs to an earlier
+or later year. Divide it into 8 to 15 chapters appropriate for that year's depth and difficulty.
 Each chapter must have:
 - a chapter number (starting from 1)
 - a chapter title
@@ -367,14 +371,16 @@ Do not include any introductory text, markdown code blocks, or explanations. Onl
 """
 
 
-def generate_subject_curriculum(subject_name: str) -> list[dict[str, Any]] | None:
-    """Call Gemini or Groq to generate a complete syllabus for a subject."""
-    prompt = PROMPT_TEMPLATE.format(subject_name=subject_name)
+def generate_subject_curriculum(
+    subject_name: str, class_level: str
+) -> list[dict[str, Any]] | None:
+    """Call Gemini or Groq to generate a complete syllabus for a subject at a specific class level."""
+    prompt = PROMPT_TEMPLATE.format(subject_name=subject_name, class_level=class_level)
 
     # 1. Try Gemini
     if gemini_client:
         try:
-            logger.info(f"Generating curriculum for {subject_name} via Gemini...")
+            logger.info(f"Generating curriculum for {subject_name} ({class_level}) via Gemini...")
             response = gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
@@ -387,18 +393,18 @@ def generate_subject_curriculum(subject_name: str) -> list[dict[str, Any]] | Non
                 if lines[-1].startswith("```"):
                     lines = lines[:-1]
                 text = "\n".join(lines).strip()
-            
+
             parsed = json.loads(text)
             if isinstance(parsed, list) and len(parsed) >= 5:
-                logger.info(f"Successfully generated {len(parsed)} chapters for {subject_name} via Gemini.")
+                logger.info(f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Gemini.")
                 return parsed
         except Exception as e:
-            logger.error(f"Failed to generate curriculum via Gemini for {subject_name}: {e}")
+            logger.error(f"Failed to generate curriculum via Gemini for {subject_name} ({class_level}): {e}")
 
     # 2. Try Groq (Fallback)
     if groq_client:
         try:
-            logger.info(f"Generating curriculum for {subject_name} via Groq...")
+            logger.info(f"Generating curriculum for {subject_name} ({class_level}) via Groq...")
             completion = groq_client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
@@ -416,10 +422,10 @@ def generate_subject_curriculum(subject_name: str) -> list[dict[str, Any]] | Non
 
             parsed = json.loads(text)
             if isinstance(parsed, list) and len(parsed) >= 5:
-                logger.info(f"Successfully generated {len(parsed)} chapters for {subject_name} via Groq.")
+                logger.info(f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Groq.")
                 return parsed
         except Exception as e:
-            logger.error(f"Failed to generate curriculum via Groq for {subject_name}: {e}")
+            logger.error(f"Failed to generate curriculum via Groq for {subject_name} ({class_level}): {e}")
 
     return None
 
@@ -436,25 +442,34 @@ async def seed_curriculum() -> None:
     curriculum_data = []
 
     for sub_name in subjects:
-        # Try to generate via AI
-        generated = generate_subject_curriculum(sub_name)
-        if generated:
-            curriculum_data.append(
-                {
-                    "name": sub_name,
-                    "class_level": "SS2",
-                    "chapters": generated,
-                }
-            )
-        else:
-            # Fallback to predefined rich curriculum
-            logger.warning(
-                f"Using fallback predefined curriculum for {sub_name}."
-            )
-            fallback_sub = next(
-                s for s in FALLBACK_CURRICULUM if s["name"] == sub_name
-            )
-            curriculum_data.append(fallback_sub)
+        for class_level in CLASS_LEVELS:
+            generated = generate_subject_curriculum(sub_name, class_level)
+            if generated:
+                curriculum_data.append(
+                    {
+                        "name": sub_name,
+                        "class_level": class_level,
+                        "chapters": generated,
+                    }
+                )
+            elif class_level == "SS2":
+                # Only SS2 has a hand-authored fallback. Using it for
+                # SS1/SS3 would mean mislabeled SS2 content pretending to
+                # be a different year -- worse than not seeding at all.
+                logger.warning(
+                    f"AI generation failed for {sub_name} (SS2); using fallback predefined curriculum."
+                )
+                fallback_sub = next(
+                    s for s in FALLBACK_CURRICULUM if s["name"] == sub_name
+                )
+                curriculum_data.append(fallback_sub)
+            else:
+                logger.warning(
+                    f"AI generation failed for {sub_name} ({class_level}) and no "
+                    f"hand-authored fallback exists for this level -- skipping "
+                    f"{sub_name} ({class_level}) this run rather than seeding "
+                    f"mislabeled or missing content."
+                )
 
     # Database insertion
     total_subjects = total_chapters = total_topics = 0
@@ -464,7 +479,10 @@ async def seed_curriculum() -> None:
             # ── Subject ──────────────────────────────────────────────────
             existing_sub = (
                 await session.execute(
-                    select(Subject).where(Subject.name == sub_def["name"])
+                    select(Subject).where(
+                        Subject.name == sub_def["name"],
+                        Subject.class_level == sub_def["class_level"],
+                    )
                 )
             ).scalar_one_or_none()
 

@@ -19,7 +19,7 @@ import {
 import { initializeOrgPayment, PaymentError } from '@/lib/api/payment';
 import { InfoCard } from '@/components/ui/InfoCard';
 
-// â”€â”€ Zod schema â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Zod schema ─────────────────────────────────────────────────────────────
 
 const orgPaymentSchema = z.object({
   school_email: z
@@ -49,15 +49,15 @@ const orgPaymentSchema = z.object({
 type OrgPaymentFormValues = z.input<typeof orgPaymentSchema>;
 type OrgPaymentSubmitValues = z.output<typeof orgPaymentSchema>;
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 const PRICE_PER_STUDENT = 1700;
 
 function formatNaira(amount: number): string {
-  return `â‚¦${amount.toLocaleString('en-NG')}`;
+  return `₦${amount.toLocaleString('en-NG')}`;
 }
 
-// â”€â”€ Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Page ───────────────────────────────────────────────────────────────────
 
 export default function OrgPayPage() {
   const router = useRouter();
@@ -75,7 +75,7 @@ export default function OrgPayPage() {
     reValidateMode: 'onSubmit',
   });
 
-  // Real-time price calculation â€” independent of submit validation
+  // Real-time price calculation — independent of submit validation
   const rawCountStr = watch('student_count') ?? '';
   const parsedCount = parseInt(rawCountStr, 10);
   const displayCount = !isNaN(parsedCount) && parsedCount > 0 ? parsedCount : 0;
@@ -150,7 +150,7 @@ export default function OrgPayPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
-          {/* â”€â”€ School email â”€â”€ */}
+          {/* ── School email ── */}
           <div className="mb-4">
             <div className={fieldBorder(!!errors.school_email)}>
               <label
@@ -178,7 +178,7 @@ export default function OrgPayPage() {
             )}
           </div>
 
-          {/* â”€â”€ School name â”€â”€ */}
+          {/* ── School name ── */}
           <div className="mb-4">
             <div className={fieldBorder(!!errors.school_name)}>
               <label
@@ -205,7 +205,7 @@ export default function OrgPayPage() {
             )}
           </div>
 
-          {/* â”€â”€ Number of students â”€â”€ */}
+          {/* ── Number of students ── */}
           <div className="mb-4">
             <div className={fieldBorder(!!errors.student_count)}>
               <label
@@ -232,13 +232,13 @@ export default function OrgPayPage() {
             )}
           </div>
 
-          {/* â”€â”€ Price summary (client-side preview) â”€â”€ */}
+          {/* ── Price summary (client-side preview) ── */}
           <div className="bg-bg-2 border border-border-2 rounded-xl px-4 py-3.5 mb-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[12px] text-ink/75">
                 {displayCount > 0
-                  ? `${displayCount.toLocaleString('en-NG')} students Ã -  ${formatNaira(PRICE_PER_STUDENT)}/term`
-                  : `â€” students Ã -  ${formatNaira(PRICE_PER_STUDENT)}/term`}
+                  ? `${displayCount.toLocaleString('en-NG')} students × ${formatNaira(PRICE_PER_STUDENT)}/term`
+                  : `— students × ${formatNaira(PRICE_PER_STUDENT)}/term`}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -249,7 +249,7 @@ export default function OrgPayPage() {
             </div>
           </div>
 
-          {/* â”€â”€ Error banner â”€â”€ */}
+          {/* ── Error banner ── */}
           {bannerError && (
             <div
               role="alert"
@@ -265,7 +265,7 @@ export default function OrgPayPage() {
             </div>
           )}
 
-          {/* â”€â”€ CTA button â”€â”€ */}
+          {/* ── CTA button ── */}
           <button
             type="submit"
             disabled={!canSubmit}
@@ -274,7 +274,7 @@ export default function OrgPayPage() {
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin" aria-hidden />
-                Redirectingâ€¦
+                Redirecting…
               </>
             ) : (
               <>

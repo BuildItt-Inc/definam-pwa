@@ -142,7 +142,7 @@ export default function AdminLoginPage() {
               School Admin Login
             </h1>
             <p className="text-[13px] text-ink/50 mb-8">
-              Login to your DefinAm admin dashboard
+              Login to your Recall admin dashboard
             </p>
 
             <form onSubmit={handleLoginSubmit(onLoginSubmit)} noValidate>

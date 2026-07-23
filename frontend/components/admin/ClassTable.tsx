@@ -118,7 +118,7 @@ export function ClassTable({ students, activeSubjects, onViewStudent }: ClassTab
                 Streak
               </th>
               <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted border-b border-border-2 whitespace-nowrap">
-                Recall Status
+                Review Status
               </th>
               <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-muted border-b border-border-2 whitespace-nowrap">
                 Avg Accuracy

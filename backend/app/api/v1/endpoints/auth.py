@@ -266,7 +266,7 @@ async def forgot_password(request: Request, body: ForgotPasswordRequest) -> dict
                     json={
                         "from": settings.from_email,
                         "to": [str(body.email)],
-                        "subject": "Reset your Definam password",
+                        "subject": "Reset your Recall password",
                         "html": (
                             f"<p>Hi {user.get('name') or user.get('username')},</p>"
                             f"<p>Click the link below to reset your password. "

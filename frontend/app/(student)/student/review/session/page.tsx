@@ -24,17 +24,17 @@ export default function RecallSessionPage() {
     try {
       const raw = sessionStorage.getItem('recall_queue');
       if (!raw) {
-        router.replace('/student/recall');
+        router.replace('/student/review');
         return;
       }
       const parsed = JSON.parse(raw) as RecallItem[];
       if (!Array.isArray(parsed) || parsed.length === 0) {
-        router.replace('/student/recall');
+        router.replace('/student/review');
         return;
       }
       setQueue(parsed);
     } catch {
-      router.replace('/student/recall');
+      router.replace('/student/review');
     }
   }, [router]);
 
@@ -136,14 +136,14 @@ export default function RecallSessionPage() {
         <div className="mb-5 flex items-center gap-2">
           {!answerRevealed && (
             <button
-              onClick={() => router.push('/student/recall')}
+              onClick={() => router.push('/student/review')}
               className="text-[15px] font-semibold text-white/40 active:opacity-70"
             >
               <ArrowLeft size={18} strokeWidth={1.5} />
             </button>
           )}
           <p className="flex-1 font-bold text-[15px] text-white">
-            Daily Recall
+            Daily Review
           </p>
           <span className="rounded-full bg-white/10 px-3 py-1 text-[13px] text-white/60">
             {currentIndex + 1} / {total}

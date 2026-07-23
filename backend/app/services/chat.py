@@ -25,7 +25,7 @@ async def stream_groq_response(
         )
     )
     system_prompt = (
-        "You are a Socratic Nigerian tutor for DefinAm. "
+        "You are a Socratic Nigerian tutor for Recall. "
         "Never give the answer directly. Guide the student to discover it themselves. "
         "Use Nigerian examples where relevant. "
         f"{context_instruction}\n\n"

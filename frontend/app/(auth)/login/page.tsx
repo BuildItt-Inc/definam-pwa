@@ -81,7 +81,7 @@ export default function LoginPage() {
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 mb-8">
         <LogoMark size={28} />
-        <span className="font-bold text-[18px] text-[#111827] tracking-tight">DefinAm</span>
+        <span className="font-bold text-[18px] text-[#111827] tracking-tight">Recall</span>
       </Link>
 
       {/* Card */}
@@ -187,7 +187,7 @@ export default function LoginPage() {
       </div>
 
       <p className="mt-6 text-[13px] text-[#9CA3AF]">
-        &copy; DefinAm 2026
+        &copy; Recall 2026
       </p>
     </div>
   );

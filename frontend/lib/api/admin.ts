@@ -90,7 +90,7 @@ export async function downloadCodes(filter: 'all' | 'unused'): Promise<void> {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `definam-codes-${filter}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `recall-codes-${filter}-${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -112,7 +112,7 @@ export async function downloadCodes(filter: 'all' | 'unused'): Promise<void> {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `definam-codes-${filter}.csv`;
+  a.download = `recall-codes-${filter}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

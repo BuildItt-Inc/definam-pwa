@@ -140,7 +140,7 @@ async def send_individual_code(to: str, code: str) -> None:
     settings = get_settings()
     register_url = f"{settings.app_url.rstrip('/')}/register"
     html = _render("individual_code.html", code=code, register_url=register_url)
-    await send_email(to, "Your DefinAm Access Code", html)
+    await send_email(to, "Your Recall Access Code", html)
 
 
 async def send_org_admin_credentials(
@@ -170,10 +170,10 @@ async def send_org_admin_credentials(
         login_url=login_url,
         seat_count=seat_count,
     )
-    attachment = {"filename": "definam_access_codes.csv", "content": codes_csv}
+    attachment = {"filename": "recall_access_codes.csv", "content": codes_csv}
     await send_email(
         to,
-        f"DefinAm Admin Access — {school_name}",
+        f"Recall Admin Access — {school_name}",
         html,
         attachments=[attachment],
     )
@@ -190,4 +190,4 @@ async def send_payment_receipt(to: str, amount_naira: int, description: str) -> 
     """
     formatted = f"₦{amount_naira:,}"
     html = _render("payment_receipt.html", amount=formatted, description=description)
-    await send_email(to, f"DefinAm Payment Receipt — {formatted}", html)
+    await send_email(to, f"Recall Payment Receipt — {formatted}", html)
