@@ -36,7 +36,11 @@ async def initiate_org_payment(body: OrgPaymentRequest) -> OrgPaymentResponse:
 async def verify_payment(
     reference: str = Query(..., description="Paystack transaction reference")
 ):
-    """Verify a Paystack transaction and activate the associated access code."""
+    """Verify a Paystack transaction confirmed and a pending access code exists.
+
+    Does not mutate the access code's status — it stays "pending" until the
+    customer registers with it (see auth_service.register/activate_code).
+    """
     settings = get_settings()
     async with httpx.AsyncClient() as client:
         resp = await client.get(
@@ -52,7 +56,11 @@ async def verify_payment(
     email = transaction["customer"]["email"]
     amount = transaction["amount"] / 100  # kobo to naira
 
-    # Find the pending access code for this email
+    # Confirm the webhook has created a pending access code for this email.
+    # Do NOT change its status here — the code must stay "pending" until the
+    # customer actually registers with it. register()'s activate_code() is
+    # the only place a code is meant to transition out of "pending", tied
+    # to the real user_id that redeemed it.
     async with db_session() as session:
         result = await session.execute(
             select(AccessCode).where(
@@ -63,10 +71,6 @@ async def verify_payment(
         code = result.scalar_one_or_none()
         if not code:
             raise HTTPException(404, detail="No pending access code found for this email")
-
-        # Activate the code
-        code.status = "active"
-        await session.commit()
 
     return {
         "status": "success",
