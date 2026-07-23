@@ -99,8 +99,12 @@ async def login(body: LoginRequest) -> dict:
     user_id: str = user_row["id"]
     role: str = user_row["role"]
 
-    access_token = create_jwt(subject=user_id, extra_claims={"role": role})
-    refresh_token = create_refresh_jwt(subject=user_id, extra_claims={"role": role})
+    extra_claims: dict = {"role": role}
+    if user_row.get("org_id"):
+        extra_claims["org_id"] = user_row["org_id"]
+
+    access_token = create_jwt(subject=user_id, extra_claims=extra_claims)
+    refresh_token = create_refresh_jwt(subject=user_id, extra_claims=extra_claims)
 
     return {
         "access_token": access_token,
@@ -203,18 +207,18 @@ async def refresh(refresh_token: str) -> dict:
         raise InvalidTokenError("Invalid token type")
 
     user_id: str = claims["sub"]
-    role: str = claims.get("role", "")
-    org_id: str | None = claims.get("org_id")
 
-    # Re-fetch role from DB so revoked/changed accounts can't keep refreshing
+    # Re-fetch role AND org_id from DB (not from the old token's claims) so
+    # revoked/changed accounts, or an admin reassigned to a different
+    # school, can't keep refreshing with stale authorization data.
     user_row = await get_user_by_id(user_id)
     if not user_row:
         raise InvalidTokenError("User no longer exists")
     role = user_row["role"]
 
     extra_claims: dict = {"role": role}
-    if org_id:
-        extra_claims["org_id"] = org_id
+    if user_row.get("org_id"):
+        extra_claims["org_id"] = user_row["org_id"]
 
     new_access = create_jwt(subject=user_id, extra_claims=extra_claims)
     new_refresh = create_refresh_jwt(subject=user_id, extra_claims=extra_claims)
