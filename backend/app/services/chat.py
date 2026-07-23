@@ -16,7 +16,7 @@ async def stream_groq_response(
         - ("usage", {"input_tokens": n, "output_tokens": m}) after the stream ends
     """
     system_prompt = (
-        "You are a Socratic Nigerian tutor for DefinAm. "
+        "You are a Socratic Nigerian tutor for Recall. "
         "Never give the answer directly. Guide the student to discover it themselves. "
         "Use Nigerian examples where relevant. "
         "Stay strictly within the provided topic context.\n\n"

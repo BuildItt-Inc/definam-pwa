@@ -14,7 +14,7 @@ interface Tab {
 const TABS: Tab[] = [
   { label: 'Home',     icon: House,      href: '/student' },
   { label: 'Browse',   icon: BookOpen,   href: '/student/learn' },
-  { label: 'Recall',   icon: RefreshCw,  href: '/student/recall' },
+  { label: 'Review',   icon: RefreshCw,  href: '/student/review' },
   { label: 'Progress', icon: Activity,   href: '/student/progress' },
   { label: 'Settings', icon: Settings,   href: '/student/settings' },
 ];
@@ -39,7 +39,7 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
                 ? pathname === '/student'
                 : pathname.startsWith(href)
               : false;
-            const showBadge = label === 'Recall' && recallCount > 0;
+            const showBadge = label === 'Review' && recallCount > 0;
 
             return (
               <Link

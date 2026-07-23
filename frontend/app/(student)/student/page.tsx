@@ -184,7 +184,7 @@ export default function StudentHomePage() {
         <div className="-mt-4 mb-6">
           <RecallCard
             queue={recall_queue}
-            onStart={() => router.push('/student/recall')}
+            onStart={() => router.push('/student/review')}
           />
         </div>
 

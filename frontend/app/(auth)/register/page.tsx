@@ -68,7 +68,7 @@ export default function RegisterPage() {
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 mb-8">
         <LogoMark size={28} />
-        <span className="font-bold text-[18px] text-[#111827] tracking-tight">DefinAm</span>
+        <span className="font-bold text-[18px] text-[#111827] tracking-tight">Recall</span>
       </Link>
 
       {/* Card */}
@@ -78,7 +78,7 @@ export default function RegisterPage() {
             Create an account
           </h1>
           <p className="text-[14px] text-[#6B7280]">
-            You need an access code from your school or a DefinAm subscription.
+            You need an access code from your school or a Recall subscription.
           </p>
         </div>
 
@@ -212,7 +212,7 @@ export default function RegisterPage() {
       </div>
 
       <p className="mt-6 text-[13px] text-[#9CA3AF]">
-        &copy; DefinAm 2026
+        &copy; Recall 2026
       </p>
     </div>
   );

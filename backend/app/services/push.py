@@ -22,7 +22,7 @@ async def send_daily_recall_push(
         "app_id": settings.onesignal_app_id,
         "include_external_user_ids": [user_id],
         "contents": {"en": message},
-        "headings": {"en": "📚 Daily Recall Reminder"},
+        "headings": {"en": "📚 Daily Review Reminder"},
         "data": {"type": "recall"},
     }
     headers = {"Authorization": f"Basic {settings.onesignal_api_key}"}

@@ -14,8 +14,8 @@ from app.core.limiter import limiter
 settings = get_settings()
 
 app = FastAPI(
-    title="DefinAm API",
-    description="Backend API for the DefinAm learning platform",
+    title="Recall API",
+    description="Backend API for the Recall learning platform",
     version="0.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",

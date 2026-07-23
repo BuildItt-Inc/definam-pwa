@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'DefinAm PWA',
+  title: 'Recall PWA',
   description: "Nigeria's AI learning brain for secondary school students",
 };
 

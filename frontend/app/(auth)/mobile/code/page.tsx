@@ -156,7 +156,7 @@ export default function OrgCodePage() {
             ) : (
               <>
                 <DoorOpen size={18} strokeWidth={2.2} aria-hidden />
-                Enter DefinAm
+                Enter Recall
               </>
             )}
           </button>
@@ -175,7 +175,7 @@ export default function OrgCodePage() {
           {([
             'Your school paid ₦1,700 per student per term',
             'The system generated a unique code for each student',
-            'Enter your code once — this device is now your DefinAm login forever',
+            'Enter your code once — this device is now your Recall login forever',
           ] as const).map((text, i) => (
             <li key={i} className="flex items-start gap-3">
               <span className="w-5 h-5 bg-bg-2 border border-border-2 rounded-[5px] flex items-center justify-center text-[9px] font-black text-ink flex-shrink-0 mt-0.5">
