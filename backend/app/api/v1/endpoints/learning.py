@@ -1,10 +1,12 @@
 import re
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter
 
 from app.api.deps import CurrentUserDep
+from app.api.v1.endpoints.students import _compute_streak, _get_streak_active_days
 from app.core.exceptions import NotFoundError
 from app.db import database
 from app.db.database import db_session
@@ -105,15 +107,28 @@ async def get_topic(
 async def ping_topic_activity(
     topic_id: UUID,
     claims: CurrentUserDep,
-) -> dict[str, bool]:
+) -> dict[str, Any]:
     """
     Lightweight engagement ping — call when a student opens or progresses
     through a topic's learning steps. Not gated on completion; powers the
     streak so "showed up today" counts even without finishing a topic.
     Idempotent per (user, day), so it's cheap to call once per step viewed.
+
+    ``streak_incremented_today`` is True only on the call that actually
+    recorded today's first activity — the frontend's cue to fire the streak
+    celebration, rather than polling the dashboard and guessing whether
+    today already counted.
     """
     user_id: str = claims["sub"]
     async with db_session() as session:
-        await touch_daily_activity(session, user_id)
+        newly_recorded = await touch_daily_activity(session, user_id)
         await session.commit()
-    return {"ok": True}
+        active_days = await _get_streak_active_days(session, user_id)
+
+    streak_days = _compute_streak(active_days, datetime.now(UTC).date())
+
+    return {
+        "ok": True,
+        "streak_incremented_today": newly_recorded,
+        "streak_days": streak_days,
+    }

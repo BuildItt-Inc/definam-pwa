@@ -59,6 +59,10 @@ export default function LoginPage() {
         }
         return;
       }
+      // The student home page already fetches the display name via
+      // getHomeData() — read this flag there rather than duplicating that
+      // fetch here just for a greeting.
+      sessionStorage.setItem('celebrate_login', '1');
       router.push('/student');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {

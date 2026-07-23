@@ -25,10 +25,11 @@ _DAILY_CHAT_LIMIT = 50
 
 @router.get("/chat/history")
 async def chat_history(
-    topic_id: str,
     claims: CurrentUserDep,
+    topic_id: str | None = None,
 ) -> list[dict]:
-    """Retrieve chat message history for a given topic."""
+    """Retrieve chat message history for a topic, or the general (no-topic)
+    floating-chat history when topic_id is omitted."""
     user_id: str = claims["sub"]
     async with db_session() as session:
         result = await session.execute(
@@ -46,11 +47,18 @@ async def chat_history(
 
 @router.get("/chat/stream")
 async def chat_stream(
-    topic_id: str,
     question: str,
     claims: CurrentUserDep,
+    topic_id: str | None = None,
 ) -> StreamingResponse:
-    """Stream an AI Socratic tutor response for a given topic and question."""
+    """Stream an AI Socratic tutor response.
+
+    With topic_id: contextual chat scoped to that topic (per-topic Step 5
+    chat). Without it: the general floating chat, no topic context. Both
+    share the same daily rate limit and history table (topic_id IS NULL
+    for general chat) — this is one feature with two entry points, not two
+    separate chat systems.
+    """
     user_id: str = claims["sub"]
 
     # 1. Rate limit check (Redis first, fallback to DB)
@@ -67,18 +75,20 @@ async def chat_stream(
     if count >= _DAILY_CHAT_LIMIT:
         raise RateLimitExceededError(f"Daily message limit reached ({_DAILY_CHAT_LIMIT}/day).")
 
-    # 2. Retrieve topic context + chat history in a single session
+    # 2. Retrieve topic context (if any) + chat history in a single session
     async with db_session() as session:
-        result = await session.execute(select(Topic).where(Topic.id == topic_id))
-        topic = result.scalar_one_or_none()
-        if not topic:
-            raise NotFoundError("Topic not found.")
-        context = " ".join([
-            topic.title or "",
-            topic.content_step1 or "",
-            topic.content_step2 or "",
-            topic.content_step3 or "",
-        ])
+        context = ""
+        if topic_id:
+            result = await session.execute(select(Topic).where(Topic.id == topic_id))
+            topic = result.scalar_one_or_none()
+            if not topic:
+                raise NotFoundError("Topic not found.")
+            context = " ".join([
+                topic.title or "",
+                topic.content_step1 or "",
+                topic.content_step2 or "",
+                topic.content_step3 or "",
+            ])
 
         result = await session.execute(
             select(ChatMessage)

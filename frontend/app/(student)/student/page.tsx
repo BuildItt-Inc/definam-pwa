@@ -18,6 +18,7 @@ import { getHomeData } from '@/lib/api/topics';
 import type { HomeData, RecentTopic } from '@/types/topics';
 import { RecallCard } from '@/components/student/RecallCard';
 import { BottomNav } from '@/components/student/BottomNav';
+import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -114,11 +115,20 @@ export default function StudentHomePage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [greeting, setGreeting] = useState('Morning');
   const router = useRouter();
+  const { celebrate } = useCelebration();
 
   useEffect(() => {
     setGreeting(getGreeting());
     getHomeData()
-      .then(setData)
+      .then((homeData) => {
+        setData(homeData);
+        // Set by the login page right before redirecting here — every
+        // session, no manual dismiss needed (auto-dismisses on its own).
+        if (sessionStorage.getItem('celebrate_login') === '1') {
+          sessionStorage.removeItem('celebrate_login');
+          celebrate({ type: 'login', name: homeData.student_name });
+        }
+      })
       .catch((err: unknown) => {
         const is401 =
           err instanceof Error &&
@@ -129,7 +139,7 @@ export default function StudentHomePage() {
           setFetchError(err instanceof Error ? err.message : 'Failed to load');
         }
       });
-  }, [router]);
+  }, [router, celebrate]);
 
   if (fetchError) {
     return (

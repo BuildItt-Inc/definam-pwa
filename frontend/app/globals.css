@@ -197,6 +197,50 @@
   .skeleton {
     @apply animate-pulse rounded-lg bg-bg-2;
   }
+
+  /* ── Celebration overlay ─────────────────────────────────────────────── */
+  .celebration-backdrop {
+    animation: celebrationBackdropIn 200ms ease-out both;
+  }
+  @keyframes celebrationBackdropIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .celebration-card {
+    animation: celebrationCardIn 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes celebrationCardIn {
+    from { opacity: 0; transform: scale(0.85) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .celebration-icon-wiggle {
+    animation: celebrationWiggle 900ms ease-in-out infinite;
+  }
+  @keyframes celebrationWiggle {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    25%      { transform: rotate(-10deg) scale(1.05); }
+    75%      { transform: rotate(10deg) scale(1.05); }
+  }
+
+  .celebration-icon-pop {
+    animation: celebrationPop 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes celebrationPop {
+    0%   { transform: scale(0.4); opacity: 0; }
+    60%  { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .celebration-particle {
+    animation: celebrationParticleFloat 1600ms ease-out infinite both;
+  }
+  @keyframes celebrationParticleFloat {
+    0%   { transform: translateY(0) scale(0.5); opacity: 0; }
+    20%  { opacity: 1; }
+    100% { transform: translateY(-64px) scale(1); opacity: 0; }
+  }
 }
 
 /* ── Math / KaTeX typography ─────────────────────────────────────────────────── */
