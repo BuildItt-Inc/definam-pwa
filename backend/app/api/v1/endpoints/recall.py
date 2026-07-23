@@ -16,6 +16,7 @@ from app.api.deps import CurrentUserDep
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.db.database import db_session
 from app.db.models import Chapter, DailyRecallQueue, Subject, Topic, TopicReview
+from app.services.activity import touch_daily_activity
 from app.services.sm2 import sm2_calculate
 
 # Redis is optional — import best-effort so missing REDIS_URL doesn't crash startup
@@ -102,6 +103,7 @@ async def record_step4_attempt(
             if payload.accuracy_score is not None:
                 review.accuracy_score = payload.accuracy_score
 
+        await touch_daily_activity(session, user_id)
         await session.commit()
 
         return {
@@ -187,6 +189,7 @@ async def submit_recall(
             queue_item.rating = rating
             queue_item.rated_at = now
 
+        await touch_daily_activity(session, user_id)
         await session.commit()
 
     # Refresh Redis recall queue cache after commit (best-effort)

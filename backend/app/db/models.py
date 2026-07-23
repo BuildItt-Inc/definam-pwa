@@ -18,6 +18,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -394,6 +395,40 @@ class ChatMessage(Base):
 
     topic: Mapped[Topic | None] = relationship("Topic", back_populates="chat_messages")
     user: Mapped[User] = relationship("User")
+
+
+# ── Daily Activity (streak signal) ────────────────────────────────────────
+
+
+class DailyActivity(Base):
+    """One row per (user, calendar day) the student meaningfully engaged
+    with a topic — opened it, progressed through a step, completed
+    practice, or did a recall review. Powers the streak, independent of
+    whether a full topic/recall completion happened that day.
+    """
+
+    __tablename__ = "daily_activity"
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "activity_date", name="uq_daily_activity_user_date"),
+    )
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    user_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    activity_date: Mapped[date_type] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
+    )
+
+    user: Mapped[User] = relationship("User")
+
 
 # ── Chat Daily Usage (Rate Limiting) ──────────────────────────────────────
 

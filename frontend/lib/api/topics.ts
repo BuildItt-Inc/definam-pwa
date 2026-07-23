@@ -202,6 +202,50 @@ export async function getProgressData(): Promise<ProgressData> {
   };
 }
 
+// ── pingTopicActivity ──────────────────────────────────────────────────────
+// Real: POST /api/v1/topics/:id/activity
+// Fire when a student opens or progresses through a topic's learning steps.
+// Not gated on completion — powers the streak's "showed up today" signal.
+// Idempotent server-side, so callers don't need to debounce beyond
+// "roughly once per step viewed".
+
+export async function pingTopicActivity(topicId: string): Promise<void> {
+  if (USE_MOCK) return;
+
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}/activity`, {
+      method: 'POST',
+      headers: await getAuthHeaders(),
+    });
+  } catch {
+    // Best-effort — never block the learning flow on this.
+  }
+}
+
+// ── submitTopicCompletion ──────────────────────────────────────────────────
+// Real: POST /api/v1/topics/:id/review
+// Call when the student finishes Step 4 (practice questions) for a topic.
+// Creates the topic's first TopicReview row if one doesn't exist yet, which
+// is what makes it eligible for the recall queue.
+
+export async function submitTopicCompletion(
+  topicId: string,
+  accuracyScore: number,
+): Promise<void> {
+  if (USE_MOCK) return;
+
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}/review`, {
+      method: 'POST',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ accuracy_score: accuracyScore }),
+    });
+  } catch {
+    // Best-effort — a failed completion ping shouldn't block the UI; the
+    // student still sees their score summary either way.
+  }
+}
+
 // ── submitRecallRating ─────────────────────────────────────────────────────
 // Real: POST /api/v1/topics/:id/recall
 

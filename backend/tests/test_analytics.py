@@ -63,13 +63,14 @@ async def test_heatmap_returns_90_days():
     """Heatmap must always return exactly 90 entries."""
     from datetime import UTC, datetime
 
-    # Mock reviews and queue items returned by execute().all()
+    # Mock reviews, queue, and daily-activity items returned by execute().all()
     fake_reviews = [
         (datetime.now(UTC), "topic-1")
     ]
     fake_queue = [
         (datetime.now(UTC), "topic-2")
     ]
+    fake_activity: list = []
 
     with patch(
         "app.api.v1.endpoints.students.db_session",
@@ -79,6 +80,7 @@ async def test_heatmap_returns_90_days():
             side_effect=[
                 MagicMock(all=MagicMock(return_value=fake_reviews)),
                 MagicMock(all=MagicMock(return_value=fake_queue)),
+                MagicMock(all=MagicMock(return_value=fake_activity)),
             ]
         )
         mock_ctx.return_value.__aenter__ = AsyncMock(return_value=mock_session)

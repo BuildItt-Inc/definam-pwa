@@ -3,7 +3,13 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send } from 'lucide-react';
-import { getChapters, getTopics, getTopicDetail } from '@/lib/api/topics';
+import {
+  getChapters,
+  getTopics,
+  getTopicDetail,
+  pingTopicActivity,
+  submitTopicCompletion,
+} from '@/lib/api/topics';
 import type { Chapter, Topic, TopicDetail } from '@/types/topics';
 import { TopicListItem } from '@/components/student/TopicListItem';
 import { BottomNav } from '@/components/student/BottomNav';
@@ -598,7 +604,12 @@ function LearningFlow({
 
   useEffect(() => {
     getTopicDetail(topicId)
-      .then(setDetail)
+      .then((data) => {
+        setDetail(data);
+        // Engagement signal for the streak — fires once per topic open,
+        // independent of whether the student finishes it.
+        void pingTopicActivity(topicId);
+      })
       .catch((err: unknown) => {
         setFetchError(err instanceof Error ? err.message : 'Failed to load topic');
       });
@@ -646,6 +657,9 @@ function LearningFlow({
     if (questionIndex < total - 1) {
       setQuestionIndex((i) => i + 1);
     } else {
+      // Finished practice — this is what makes the topic eligible for the
+      // recall queue (creates its first TopicReview row server-side).
+      void submitTopicCompletion(topicId, Math.round((nextScore / total) * 100));
       setShowScoreSummary(true);
     }
   };
