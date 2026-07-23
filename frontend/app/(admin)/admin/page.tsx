@@ -50,7 +50,7 @@ function SkeletonTable() {
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-bg-0 border-b border-border-2">
-            {['Student', 'Streak', 'Recall Status', 'Avg Accuracy', 'Weakest Topic', 'Last Active', ''].map(
+            {['Student', 'Streak', 'Review Status', 'Avg Accuracy', 'Weakest Topic', 'Last Active', ''].map(
               (h) => (
                 <th
                   key={h}
@@ -203,7 +203,7 @@ export default function AdminHomePage() {
           />
           <StatCard
             number={data.recall_overdue}
-            label="Recall Overdue"
+            label="Review Overdue"
             delta="Students skipping"
             deltaClass="text-muted"
             topBorderColor="#E85D3A"

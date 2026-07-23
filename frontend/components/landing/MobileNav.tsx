@@ -34,7 +34,7 @@ export default function MobileNav() {
           className="flex items-center gap-2"
         >
           <LogoMark size={28} />
-          <span className="font-bold font-bold text-[17px] text-ink">DefinAm</span>
+          <span className="font-bold font-bold text-[17px] text-ink">Recall</span>
         </Link>
         <button
           onClick={() => setOpen(false)}

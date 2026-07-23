@@ -104,7 +104,7 @@ async def _handle_individual(data: dict, metadata: dict) -> None:
 
     await send_individual_code(email, code)
     await send_payment_receipt(
-        email, amount_kobo // 100, "DefinAm Individual Term Access"
+        email, amount_kobo // 100, "Recall Individual Term Access"
     )
     logger.info("Individual code %s issued to %s", code, email)
 
@@ -180,7 +180,7 @@ async def _handle_org(data: dict, metadata: dict) -> None:
     await send_payment_receipt(
         school_email,
         amount_kobo // 100,
-        f"DefinAm Organisation — {student_count} seats for {school_name}",
+        f"Recall Organisation — {student_count} seats for {school_name}",
     )
     logger.info(
         "Org %s created with %d codes, admin=%s",

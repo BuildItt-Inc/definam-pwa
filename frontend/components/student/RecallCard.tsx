@@ -19,7 +19,7 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
             <span className="text-[12px] font-semibold uppercase tracking-widest text-[#6B7280]">
-              Daily Recall
+              Daily Review
             </span>
           </div>
           <span className="rounded-full bg-[#111827] px-2.5 py-0.5 text-[12px] font-semibold text-white">

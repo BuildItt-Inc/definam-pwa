@@ -3,11 +3,11 @@ import Link from 'next/link';
 import { KeyRound, LogIn } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'DefinAm',
+  title: 'Recall',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'DefinAm',
+    title: 'Recall',
   },
 };
 
@@ -38,7 +38,7 @@ export default function MobileSplashPage() {
 
         {/* ── Wordmark ── */}
         <h1 className="font-bold text-[30px] md:text-[36px] font-black text-white tracking-[-1px] leading-none mb-2">
-          DefinAm
+          Recall
         </h1>
 
         {/* ── Tagline ── */}

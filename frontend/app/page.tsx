@@ -4,20 +4,20 @@ import { ArrowRight, BookOpen, Repeat, BarChart3 } from 'lucide-react';
 import LogoMark from '@/components/landing/LogoMark';
 
 export const metadata: Metadata = {
-  title: 'DefinAm — Study smarter for WAEC, NECO and JAMB',
+  title: 'Recall — Study smarter for WAEC, NECO and JAMB',
   description:
-    'DefinAm helps Nigerian secondary school students study smarter using spaced repetition, Nigerian examples, and AI-powered practice.',
+    'Recall helps Nigerian secondary school students study smarter using spaced repetition, Nigerian examples, and AI-powered practice.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'DefinAm',
+    title: 'Recall',
   },
   openGraph: {
-    title: 'DefinAm',
+    title: 'Recall',
     description: 'Study smarter for WAEC, NECO and JAMB.',
     url: 'https://definam.ng',
-    siteName: 'DefinAm',
+    siteName: 'Recall',
     locale: 'en_NG',
     type: 'website',
   },
@@ -56,7 +56,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <LogoMark size={26} />
-            <span className="font-bold text-[16px] text-[#111827] tracking-tight">DefinAm</span>
+            <span className="font-bold text-[16px] text-[#111827] tracking-tight">Recall</span>
           </Link>
 
           <div className="flex items-center gap-3">
@@ -85,7 +85,7 @@ export default function LandingPage() {
           Study less.<br />Remember more.
         </h1>
         <p className="text-[17px] text-[#6B7280] leading-relaxed max-w-[480px] mb-8">
-          DefinAm turns your WAEC and JAMB syllabus into short lessons, Nigerian examples, and a daily review system that keeps everything in your head.
+          Recall turns your WAEC and JAMB syllabus into short lessons, Nigerian examples, and a daily review system that keeps everything in your head.
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -185,7 +185,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-5 sm:px-8 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <LogoMark size={20} />
-            <span className="font-semibold text-[14px] text-[#111827]">DefinAm</span>
+            <span className="font-semibold text-[14px] text-[#111827]">Recall</span>
           </div>
 
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
@@ -195,7 +195,7 @@ export default function LandingPage() {
           </nav>
 
           <p className="text-[12px] text-[#9CA3AF]">
-            &copy; DefinAm 2026. Made in Nigeria.
+            &copy; Recall 2026. Made in Nigeria.
           </p>
         </div>
       </footer>

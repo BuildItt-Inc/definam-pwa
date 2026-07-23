@@ -77,7 +77,7 @@ export default function RecallPage() {
 
   function handleStartAll() {
     sessionStorage.setItem('recall_queue', JSON.stringify(queue));
-    router.push('/student/recall/session');
+    router.push('/student/review/session');
   }
 
   // ── Empty state ────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ export default function RecallPage() {
             <ArrowLeft size={20} strokeWidth={2} />
           </button>
           <div>
-            <h1 className="text-[17px] font-bold text-ink">Daily Recall</h1>
+            <h1 className="text-[17px] font-bold text-ink">Daily Review</h1>
             <p className="text-[13px] text-muted">{dateLabel}</p>
           </div>
         </header>
@@ -133,7 +133,7 @@ export default function RecallPage() {
           <ArrowLeft size={20} strokeWidth={2} />
         </button>
         <div>
-          <h1 className="text-[17px] font-bold text-ink">Daily Recall</h1>
+          <h1 className="text-[17px] font-bold text-ink">Daily Review</h1>
           <p className="text-[13px] text-muted">{dateLabel}</p>
         </div>
       </header>
