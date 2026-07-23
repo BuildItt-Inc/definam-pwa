@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import csv
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from io import StringIO
 
 from fastapi import APIRouter
 from fastapi.responses import Response
 from pydantic import BaseModel
-from sqlalchemy import and_, case, func, select, text, update
-from sqlalchemy.types import Date
+from sqlalchemy import and_, case, func, select, update
 
 from app.api.deps import AdminDep
+from app.api.v1.endpoints.students import _compute_streak, _get_streak_active_days
 from app.core.exceptions import NotFoundError
 from app.db.database import db_session
 from app.db.models import (
@@ -287,24 +287,10 @@ async def get_student_detail(student_id: str, claims: AdminDep) -> dict:
         ).all()
         recall_status = "overdue" if overdue_rows else "on_track"
 
-        # Streak: consecutive calendar days with at least one completed recall
-        completed_days_result = await session.execute(
-            select(
-                func.date_trunc("day", DailyRecallQueue.due_date)
-                .cast(Date)
-                .label("day")
-            )
-            .where(
-                and_(
-                    DailyRecallQueue.user_id == student_id,
-                    DailyRecallQueue.completed == 1,
-                )
-            )
-            .group_by(text("day"))
-            .order_by(text("day desc"))
-        )
-        completed_days = [row.day for row in completed_days_result]
-        streak = _compute_streak(completed_days, now.date())
+        # Streak: same signal as the student's own dashboard (completed
+        # recall sessions + recorded topic engagement)
+        active_days = await _get_streak_active_days(session, student_id)
+        streak = _compute_streak(active_days, now.date())
 
         # Chat sessions: group ChatMessage rows by (topic_id, calendar-day)
         # Limit to the most recent 200 messages to avoid loading unbounded history
@@ -355,26 +341,4 @@ async def get_student_detail(student_id: str, claims: AdminDep) -> dict:
     }
 
 
-def _compute_streak(days_desc: list, today: date) -> int:
-    """Count consecutive calendar days (desc-ordered) ending today or yesterday."""
-    from datetime import timedelta
-
-    if not days_desc:
-        return 0
-
-    streak = 0
-    expected = today
-
-    for d in days_desc:
-        if d == expected:
-            streak += 1
-            expected = d - timedelta(days=1)
-        elif streak == 0 and d == today - timedelta(days=1):
-            # Streak may start from yesterday if student hasn't done today yet
-            streak += 1
-            expected = d - timedelta(days=1)
-        else:
-            break
-
-    return streak
 
