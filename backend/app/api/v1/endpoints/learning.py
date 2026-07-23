@@ -7,6 +7,8 @@ from fastapi import APIRouter
 from app.api.deps import CurrentUserDep
 from app.core.exceptions import NotFoundError
 from app.db import database
+from app.db.database import db_session
+from app.services.activity import touch_daily_activity
 from app.services.content_generator import generate_all_topic_content
 
 router = APIRouter()
@@ -97,3 +99,21 @@ async def get_topic(
         },
         "practice_questions": topic.get("practice_questions") or [],
     }
+
+
+@router.post("/topics/{topic_id}/activity")
+async def ping_topic_activity(
+    topic_id: UUID,
+    claims: CurrentUserDep,
+) -> dict[str, bool]:
+    """
+    Lightweight engagement ping — call when a student opens or progresses
+    through a topic's learning steps. Not gated on completion; powers the
+    streak so "showed up today" counts even without finishing a topic.
+    Idempotent per (user, day), so it's cheap to call once per step viewed.
+    """
+    user_id: str = claims["sub"]
+    async with db_session() as session:
+        await touch_daily_activity(session, user_id)
+        await session.commit()
+    return {"ok": True}

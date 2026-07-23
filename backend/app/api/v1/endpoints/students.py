@@ -14,6 +14,7 @@ from app.core.exceptions import BadRequestError, NotFoundError
 from app.db.database import db_session, update_user_name
 from app.db.models import (
     Chapter,
+    DailyActivity,
     DailyRecallQueue,
     School,
     Subject,
@@ -49,25 +50,11 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
             raise NotFoundError("User not found.")
         user, school_name = row
 
-        # Streak: consecutive calendar days (desc) with at least one
-        # completed recall session, counting from today or yesterday
-        completed_days_result = await session.execute(
-            select(
-                func.date_trunc("day", DailyRecallQueue.due_date)
-                .cast(Date)
-                .label("day")
-            )
-            .where(
-                and_(
-                    DailyRecallQueue.user_id == user_id,
-                    DailyRecallQueue.completed == 1,
-                )
-            )
-            .group_by(text("day"))
-            .order_by(text("day desc"))
-        )
-        completed_days = [r.day for r in completed_days_result]
-        streak = _compute_streak(completed_days, today)
+        # Streak: consecutive calendar days (desc) with either a completed
+        # recall session or any recorded topic engagement, counting from
+        # today or yesterday
+        active_days = await _get_streak_active_days(session, user_id)
+        streak = _compute_streak(active_days, today)
 
         # Recall summary: run a single query to get all counts
         recall_summary_query = select(
@@ -202,6 +189,36 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
     }
 
 
+async def _get_streak_active_days(session, user_id: str) -> list[date]:
+    """Distinct calendar days (desc) that count toward the streak: a
+    completed recall session, OR any recorded topic engagement that day
+    (DailyActivity — opening/progressing a topic, not gated on finishing
+    one). Both signals are additive.
+    """
+    activity_result = await session.execute(
+        select(DailyActivity.activity_date.distinct()).where(
+            DailyActivity.user_id == user_id
+        )
+    )
+    days = {r[0] for r in activity_result}
+
+    completed_days_result = await session.execute(
+        select(
+            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date).label("day")
+        )
+        .where(
+            and_(
+                DailyRecallQueue.user_id == user_id,
+                DailyRecallQueue.completed == 1,
+            )
+        )
+        .group_by(text("day"))
+    )
+    days.update(r.day for r in completed_days_result)
+
+    return sorted(days, reverse=True)
+
+
 def _compute_streak(days_desc: list, today: date) -> int:
     """Count consecutive calendar days (desc-ordered) ending today or yesterday."""
     from datetime import timedelta
@@ -283,6 +300,23 @@ async def get_heatmap(claims: CurrentUserDep) -> list[dict]:
         for row in queue_result:
             counts[row.day] = counts.get(row.day, 0) + row.cnt
 
+        # DailyActivity engagement pings: add to counts too
+        activity_result = await session.execute(
+            select(
+                DailyActivity.activity_date.label("day"),
+                func.count().label("cnt"),
+            )
+            .where(
+                and_(
+                    DailyActivity.user_id == user_id,
+                    DailyActivity.activity_date >= start,
+                )
+            )
+            .group_by(DailyActivity.activity_date)
+        )
+        for row in activity_result:
+            counts[row.day] = counts.get(row.day, 0) + row.cnt
+
     # Build the full 90-day spine, filling zeros where there was no activity
     return [
         {
@@ -330,23 +364,8 @@ async def get_progress(claims: CurrentUserDep) -> dict:
 
     async with db_session() as session:
         # streak (re-use same logic as dashboard)
-        completed_days_result = await session.execute(
-            select(
-                func.date_trunc("day", DailyRecallQueue.due_date)
-                .cast(Date)
-                .label("day")
-            )
-            .where(
-                and_(
-                    DailyRecallQueue.user_id == user_id,
-                    DailyRecallQueue.completed == 1,
-                )
-            )
-            .group_by(text("day"))
-            .order_by(text("day desc"))
-        )
-        completed_days = [r.day for r in completed_days_result]
-        streak = _compute_streak(completed_days, today)
+        active_days = await _get_streak_active_days(session, user_id)
+        streak = _compute_streak(active_days, today)
 
         # topics studied
         topics_result = await session.execute(
@@ -449,6 +468,23 @@ async def get_progress(claims: CurrentUserDep) -> dict:
             .group_by(func.cast(TopicReview.last_reviewed_at, Date))
         )
         heat: dict[date, int] = {r.day: r.cnt for r in heatmap_result}
+
+        activity_heatmap_result = await session.execute(
+            select(
+                DailyActivity.activity_date.label("day"),
+                func.count().label("cnt"),
+            )
+            .where(
+                and_(
+                    DailyActivity.user_id == user_id,
+                    DailyActivity.activity_date >= start_date,
+                )
+            )
+            .group_by(DailyActivity.activity_date)
+        )
+        for row in activity_heatmap_result:
+            heat[row.day] = heat.get(row.day, 0) + row.cnt
+
         heatmap_data = [
             min(heat.get(start_date + timedelta(days=i), 0), 4)
             for i in range(90)
