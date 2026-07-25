@@ -12,35 +12,30 @@ import type {
 
 export const mockSubjects: Subject[] = [
   {
-    id: 'sub-001',
     name: 'Mathematics',
     chapter_count: 18,
     topic_count: 94,
     mastery_percent: 78,
   },
   {
-    id: 'sub-002',
     name: 'English Language',
     chapter_count: 12,
     topic_count: 60,
     mastery_percent: 65,
   },
   {
-    id: 'sub-003',
     name: 'Chemistry',
     chapter_count: 16,
     topic_count: 80,
     mastery_percent: 41,
   },
   {
-    id: 'sub-004',
     name: 'Physics',
     chapter_count: 14,
     topic_count: 70,
     mastery_percent: null,
   },
   {
-    id: 'sub-005',
     name: 'Economics',
     chapter_count: 10,
     topic_count: 48,
@@ -54,6 +49,7 @@ export const mockChapters: Chapter[] = [
   {
     id: 'ch-001',
     subject_id: 'sub-001',
+    class_level: 'SS1',
     title: 'Ch.1 â€” Number & Numeration',
     topic_count: 5,
     mastery_percent: 82,
@@ -61,6 +57,7 @@ export const mockChapters: Chapter[] = [
   {
     id: 'ch-002',
     subject_id: 'sub-001',
+    class_level: 'SS1',
     title: 'Ch.2 â€” Algebraic Processes',
     topic_count: 6,
     mastery_percent: 71,
@@ -68,6 +65,7 @@ export const mockChapters: Chapter[] = [
   {
     id: 'ch-003',
     subject_id: 'sub-001',
+    class_level: 'SS1',
     title: 'Ch.3 â€” Equations & Inequalities',
     topic_count: 8,
     mastery_percent: 65,
@@ -75,6 +73,7 @@ export const mockChapters: Chapter[] = [
   {
     id: 'ch-004',
     subject_id: 'sub-001',
+    class_level: 'SS1',
     title: 'Ch.4 â€” Geometry',
     topic_count: 7,
     mastery_percent: null,
@@ -82,6 +81,7 @@ export const mockChapters: Chapter[] = [
   {
     id: 'ch-005',
     subject_id: 'sub-001',
+    class_level: 'SS1',
     title: 'Ch.5 â€” Statistics',
     topic_count: 6,
     mastery_percent: null,

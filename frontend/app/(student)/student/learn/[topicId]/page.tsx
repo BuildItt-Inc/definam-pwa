@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send } from 'lucide-react';
 import {
-  getChapters,
+  getChaptersBySubjectName,
   getTopics,
   getTopicDetail,
   pingTopicActivity,
@@ -84,13 +84,13 @@ function PageSkeleton() {
 
 // ── SCR-05b · Chapters view ────────────────────────────────────────────────
 
-function ChaptersView({
-  subjectId,
-  subjectName,
-}: {
-  subjectId: string;
-  subjectName: string;
-}) {
+// Fixed display order — chapters come back grouped by class_level from the
+// backend already, but we render explicit section headers per level rather
+// than flattening, so e.g. each level's own "Chapter 1" reads clearly as
+// belonging to that level, not as a duplicate of another level's chapter.
+const CLASS_LEVEL_ORDER = ['SS1', 'SS2', 'SS3'];
+
+function ChaptersView({ subjectName }: { subjectName: string }) {
   const [chapters, setChapters] = useState<Chapter[] | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const router = useRouter();
@@ -98,12 +98,12 @@ function ChaptersView({
   useEffect(() => {
     setChapters(null);
     setFetchError(null);
-    getChapters(subjectId)
+    getChaptersBySubjectName(subjectName)
       .then(setChapters)
       .catch((err: unknown) => {
         setFetchError(err instanceof Error ? err.message : 'Failed to load');
       });
-  }, [subjectId]);
+  }, [subjectName]);
 
   if (fetchError) {
     return (
@@ -116,40 +116,53 @@ function ChaptersView({
   if (!chapters) return <ListSkeleton />;
   if (chapters.length === 0) return <EmptyState message="No chapters found for this subject." />;
 
+  const totalTopics = chapters.reduce((sum, ch) => sum + ch.topic_count, 0);
+  const levels = CLASS_LEVEL_ORDER.filter((level) =>
+    chapters.some((ch) => ch.class_level === level),
+  );
+
   return (
     <>
       <p className="px-4 py-1.5 text-[13px] text-muted">
-        SS2 Syllabus · {chapters.length} chapters
+        {chapters.length} chapters · {totalTopics} topics
       </p>
-      <div>
-        {chapters.map((chapter) => {
-          const inProgress = chapter.mastery_percent !== null;
-          return (
-            <button
-              key={chapter.id}
-              onClick={() =>
-                router.push(
-                  `/student/learn/${chapter.id}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(
-                    chapter.title,
-                  )}&subject=${encodeURIComponent(subjectName)}`,
-                )
-              }
-              className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 active:bg-bg-0 ${ inProgress ? 'bg-bg-0' : 'bg-card' }`}
-            >
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-bold text-ink">
-                  {chapter.title}
-                </span>
-                <span className="mt-0.5 block text-[13px] text-muted">
-                  {chapter.topic_count} topics{inProgress ? ' · In Progress' : ''}
-                </span>
-              </span>
-              <MasteryBadge mastery={chapter.mastery_percent} />
-              <ChevronRight size={18} strokeWidth={1.5} className="text-gray-300" />
-            </button>
-          );
-        })}
-      </div>
+      {levels.map((level) => {
+        const levelChapters = chapters.filter((ch) => ch.class_level === level);
+        return (
+          <div key={level}>
+            <p className="bg-bg-0 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">
+              {level} · {levelChapters.length} chapters
+            </p>
+            {levelChapters.map((chapter) => {
+              const inProgress = chapter.mastery_percent !== null;
+              return (
+                <button
+                  key={chapter.id}
+                  onClick={() =>
+                    router.push(
+                      `/student/learn/${chapter.id}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(
+                        chapter.title,
+                      )}&subject=${encodeURIComponent(subjectName)}`,
+                    )
+                  }
+                  className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 active:bg-bg-0 ${ inProgress ? 'bg-bg-0' : 'bg-card' }`}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-bold text-ink">
+                      {chapter.title}
+                    </span>
+                    <span className="mt-0.5 block text-[13px] text-muted">
+                      {chapter.topic_count} topics{inProgress ? ' · In Progress' : ''}
+                    </span>
+                  </span>
+                  <MasteryBadge mastery={chapter.mastery_percent} />
+                  <ChevronRight size={18} strokeWidth={1.5} className="text-gray-300" />
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
     </>
   );
 }
@@ -817,7 +830,7 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
 
       <main className="flex flex-1 flex-col pb-nav">
         {isChaptersView && (
-          <ChaptersView subjectId={topicId} subjectName={subjectName} />
+          <ChaptersView subjectName={subjectName} />
         )}
         {isTopicsView && (
           <TopicsView chapterId={chapterId!} />

@@ -63,6 +63,9 @@ export default function LandingPage() {
             <a href="#how-it-works" className="hidden sm:block text-[14px] text-[#6B7280] hover:text-[#111827] transition-colors">
               How it works
             </a>
+            <Link href="/admin/login" className="hidden sm:block text-[14px] text-[#6B7280] hover:text-[#111827] transition-colors">
+              School admin login
+            </Link>
             <Link href="/login" className="text-[14px] font-medium text-[#111827] hover:text-[#16A34A] transition-colors px-3 py-1.5">
               Sign in
             </Link>
@@ -191,6 +194,7 @@ export default function LandingPage() {
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             <a href="#how-it-works" className="text-[13px] text-[#6B7280] hover:text-[#111827] transition-colors">How it works</a>
             <Link href="/pay/organisation" className="text-[13px] text-[#6B7280] hover:text-[#111827] transition-colors">For schools</Link>
+            <Link href="/admin/login" className="text-[13px] text-[#6B7280] hover:text-[#111827] transition-colors">School admin login</Link>
             <Link href="/login" className="text-[13px] text-[#6B7280] hover:text-[#111827] transition-colors">Sign in</Link>
           </nav>
 
