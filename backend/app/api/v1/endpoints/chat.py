@@ -6,9 +6,10 @@ import asyncio
 import json
 from datetime import UTC, datetime
 
+import anyio
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.api.deps import CurrentUserDep
 from app.core.exceptions import NotFoundError, RateLimitExceededError
@@ -43,6 +44,24 @@ async def chat_history(
             for msg in result.scalars().all()
         ]
 
+
+@router.delete("/chat/history")
+async def clear_chat_history(
+    claims: CurrentUserDep,
+    topic_id: str | None = None,
+) -> dict:
+    """Delete a student's chat history for a topic, or the general (no-topic)
+    floating-chat history when topic_id is omitted. Scoped the same way as
+    GET /chat/history — clears only the conversation currently in view."""
+    user_id: str = claims["sub"]
+    async with db_session() as session:
+        await session.execute(
+            delete(ChatMessage).where(
+                ChatMessage.user_id == user_id, ChatMessage.topic_id == topic_id
+            )
+        )
+        await session.commit()
+    return {"ok": True}
 
 
 @router.get("/chat/stream")
@@ -117,27 +136,35 @@ async def chat_stream(
         usage_input_tokens = 0
         usage_output_tokens = 0
 
-        async for item in stream_groq_response(question, context, history):
-            if item[0] == "chunk":
-                full_response += item[1]
-                yield f"data: {json.dumps({'chunk': item[1]})}\n\n"
-            elif item[0] == "usage":
-                usage_input_tokens = item[1]["input_tokens"]
-                usage_output_tokens = item[1]["output_tokens"]
-
-        # Save assistant message with token counts
-        async with db_session() as session:
-            session.add(
-                ChatMessage(
-                    user_id=user_id,
-                    topic_id=topic_id,
-                    role="assistant",
-                    content=full_response,
-                    input_tokens=usage_input_tokens,
-                    output_tokens=usage_output_tokens
-                )
-            )
-            await session.commit()
+        try:
+            async for item in stream_groq_response(question, context, history):
+                if item[0] == "chunk":
+                    full_response += item[1]
+                    yield f"data: {json.dumps({'chunk': item[1]})}\n\n"
+                elif item[0] == "usage":
+                    usage_input_tokens = item[1]["input_tokens"]
+                    usage_output_tokens = item[1]["output_tokens"]
+        finally:
+            # Runs even if the client disconnects mid-stream (e.g. a page
+            # refresh) — Starlette cancels this generator on disconnect, which
+            # would otherwise silently drop whatever the model had generated
+            # so far, leaving the student's question saved with no reply.
+            # Shielded because the enclosing scope is already cancelled at
+            # that point; an unshielded await here would be cancelled too.
+            if full_response:
+                with anyio.CancelScope(shield=True):
+                    async with db_session() as session:
+                        session.add(
+                            ChatMessage(
+                                user_id=user_id,
+                                topic_id=topic_id,
+                                role="assistant",
+                                content=full_response,
+                                input_tokens=usage_input_tokens,
+                                output_tokens=usage_output_tokens,
+                            )
+                        )
+                        await session.commit()
 
         yield "data: [DONE]\n\n"
 

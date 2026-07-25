@@ -32,6 +32,24 @@ export async function getChatHistory(topicId?: string): Promise<ChatMessage[]> {
   return res.json();
 }
 
+// Clears the same conversation getChatHistory(topicId) would return —
+// the general floating-chat history when topicId is omitted, or that
+// specific topic's history when provided.
+export async function clearChatHistory(topicId?: string): Promise<void> {
+  const headers = await getAuthHeaders();
+  const query = topicId ? `?topic_id=${topicId}` : '';
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/history${query}`,
+    {
+      method: 'DELETE',
+      headers,
+    }
+  );
+  if (!res.ok) {
+    throw new Error('Failed to clear chat history');
+  }
+}
+
 export async function sendChatMessageStream(
   topicId: string | undefined,
   question: string,
