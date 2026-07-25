@@ -328,7 +328,13 @@ async def is_webhook_processed(reference: str) -> bool:
 
 
 async def get_all_subjects() -> list[dict[str, Any]]:
-    """Return all subjects with chapter and topic counts."""
+    """Return one entry per unique subject NAME, with chapter/topic counts
+    summed across every class-level row (SS1/SS2/SS3) sharing that name.
+
+    A subject name has no single underlying `Subject.id` once grouped this
+    way, so callers must look chapters up by name via
+    ``get_chapters_by_subject_name`` rather than by id.
+    """
     from sqlalchemy import func
 
     from app.db.models import Chapter, Subject, Topic
@@ -336,57 +342,60 @@ async def get_all_subjects() -> list[dict[str, Any]]:
     async with db_session() as session:
         stmt = (
             select(
-                Subject,
+                Subject.name,
                 func.count(func.distinct(Chapter.id)).label("chapter_count"),
                 func.count(func.distinct(Topic.id)).label("topic_count"),
+                func.min(Subject.created_at).label("first_created_at"),
             )
             .outerjoin(Chapter, Subject.id == Chapter.subject_id)
             .outerjoin(Topic, Chapter.id == Topic.chapter_id)
-            .group_by(Subject.id)
-            .order_by(Subject.created_at)
+            .group_by(Subject.name)
+            .order_by(func.min(Subject.created_at))
         )
         result = await session.execute(stmt)
-        
-        subjects = []
-        for row in result.all():
-            subject_obj = row[0]
-            subjects.append({
-                "id": subject_obj.id,
-                "name": subject_obj.name,
-                "class_level": subject_obj.class_level,
+
+        return [
+            {
+                "name": row.name,
                 "chapter_count": row.chapter_count,
                 "topic_count": row.topic_count,
                 "mastery_percent": None,
-            })
-        return subjects
+            }
+            for row in result.all()
+        ]
 
 
-async def get_chapters_by_subject(subject_id: str) -> list[dict[str, Any]]:
-    """Return all chapters for a given subject with topic counts."""
+async def get_chapters_by_subject_name(name: str) -> list[dict[str, Any]]:
+    """Return all chapters for a subject name across every class-level row
+    that shares it, annotated with each chapter's class_level so the caller
+    can group them (e.g. under SS1/SS2/SS3 section headers).
+    """
     from sqlalchemy import func
 
-    from app.db.models import Chapter, Topic
+    from app.db.models import Chapter, Subject, Topic
 
     async with db_session() as session:
         stmt = (
             select(
                 Chapter,
-                func.count(Topic.id).label("topic_count")
+                Subject.class_level,
+                func.count(Topic.id).label("topic_count"),
             )
+            .join(Subject, Chapter.subject_id == Subject.id)
             .outerjoin(Topic, Chapter.id == Topic.chapter_id)
-            .where(Chapter.subject_id == subject_id)
-            .group_by(Chapter.id)
-            .order_by(Chapter.chapter_num)
+            .where(Subject.name == name)
+            .group_by(Chapter.id, Subject.class_level)
+            .order_by(Subject.class_level, Chapter.chapter_num)
         )
         result = await session.execute(stmt)
-        
+
         chapters = []
         for row in result.all():
             ch_obj = row[0]
             chapters.append({
                 "id": ch_obj.id,
                 "subject_id": ch_obj.subject_id,
-                "chapter_num": ch_obj.chapter_num,
+                "class_level": row.class_level,
                 "title": ch_obj.title,
                 "topic_count": row.topic_count,
                 "mastery_percent": None,

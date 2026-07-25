@@ -110,11 +110,11 @@ export default function BrowsePage() {
           <div>
             {filtered.map((subject) => (
               <SubjectCard
-                key={subject.id}
+                key={subject.name}
                 subject={subject}
                 onClick={() =>
                   router.push(
-                    `/student/learn/${subject.id}?view=chapters&name=${encodeURIComponent(subject.name)}`,
+                    `/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`,
                   )
                 }
               />

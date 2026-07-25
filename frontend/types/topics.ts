@@ -1,5 +1,7 @@
 export interface Subject {
-  id: string;
+  // One entry per unique subject NAME — deduplicated across the SS1/SS2/SS3
+  // class-level rows behind it, which have no single shared id. `name` is
+  // the key: use it for both the React list key and the chapters lookup.
   name: string;
   chapter_count: number;
   topic_count: number;
@@ -9,6 +11,10 @@ export interface Subject {
 export interface Chapter {
   id: string;
   subject_id: string;
+  // Which class-level row (SS1/SS2/SS3) this chapter belongs to — a
+  // subject name spans multiple rows, so this is how the UI groups
+  // chapters under level section headers.
+  class_level: string;
   title: string;
   topic_count: number;
   mastery_percent: number | null;

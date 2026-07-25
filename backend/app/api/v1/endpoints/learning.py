@@ -20,17 +20,19 @@ router = APIRouter()
 async def get_subjects(
     _: CurrentUserDep,
 ) -> list[dict[str, Any]]:
-    """List all subjects."""
+    """List all subjects — one entry per unique subject name, deduplicated
+    across the SS1/SS2/SS3 class-level rows behind it."""
     return await database.get_all_subjects()
 
 
-@router.get("/subjects/{subject_id}/chapters")
-async def get_subject_chapters(
-    subject_id: UUID,
+@router.get("/subjects/by-name/{subject_name}/chapters")
+async def get_subject_chapters_by_name(
+    subject_name: str,
     _: CurrentUserDep,
 ) -> list[dict[str, Any]]:
-    """List all chapters for a given subject."""
-    return await database.get_chapters_by_subject(str(subject_id))
+    """List all chapters for a subject name, across every class-level row
+    that shares it. Each chapter is annotated with its class_level."""
+    return await database.get_chapters_by_subject_name(subject_name)
 
 
 @router.get("/chapters/{chapter_id}/topics")

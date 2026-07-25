@@ -44,17 +44,23 @@ export async function getSubjects(): Promise<Subject[]> {
   return handleResponse<Subject[]>(res);
 }
 
-// ── getChapters ────────────────────────────────────────────────────────────
-// Real: GET /api/v1/subjects/:id/chapters
+// ── getChaptersBySubjectName ─────────────────────────────────────────────────
+// Real: GET /api/v1/subjects/by-name/:name/chapters
+// Returns chapters across every SS1/SS2/SS3 row sharing that subject name,
+// each annotated with class_level so the caller can group them.
 
-export async function getChapters(subjectId: string): Promise<Chapter[]> {
+export async function getChaptersBySubjectName(subjectName: string): Promise<Chapter[]> {
   if (USE_MOCK) {
     await delay();
-    return mockChapters.filter((ch) => ch.subject_id === subjectId);
+    // Mock data only models one subject's chapters — grouping by name isn't
+    // meaningfully mockable, so just return them regardless of which
+    // subject was requested.
+    void subjectName;
+    return mockChapters;
   }
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects/${subjectId}/chapters`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects/by-name/${encodeURIComponent(subjectName)}/chapters`,
     { headers: await getAuthHeaders() },
   );
   return handleResponse<Chapter[]>(res);
