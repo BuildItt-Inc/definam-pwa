@@ -11,6 +11,7 @@ import {
   ChatError,
   type ChatMessage,
 } from '@/lib/api/chat';
+import { MathContent } from '@/components/student/MathContent';
 import { toast } from '@/lib/toast';
 
 /**
@@ -58,6 +59,21 @@ export function FloatingChatWidget() {
         />
       )}
     </>
+  );
+}
+
+// Classic three-dot "typing" indicator. Rendered *inside* the same bubble
+// that will hold the streamed response (see the empty-content check in the
+// message loop below) — never a separate element — so there's exactly one
+// bubble per turn at all times, and it visually morphs from dots to text
+// as chunks arrive instead of two elements swapping.
+function ThinkingDots() {
+  return (
+    <div className="flex items-center gap-1 py-1">
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink/40" style={{ animationDelay: '0ms' }} />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink/40" style={{ animationDelay: '150ms' }} />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink/40" style={{ animationDelay: '300ms' }} />
+    </div>
   );
 }
 
@@ -175,15 +191,18 @@ function FloatingChatPanel({
     // portal to document.body would otherwise render on top of this panel's
     // bottom edge (input box, send button) at equal z-index.
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 sm:items-end sm:justify-end sm:bg-transparent sm:p-6">
-      <div className="page-enter flex h-[min(85vh,640px)] w-full max-w-md flex-col rounded-t-2xl border border-border-2 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
+      <div className="page-enter flex h-[min(85vh,640px)] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-border-2 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
         {/* Header */}
-        <header className="flex items-center gap-3 rounded-t-2xl border-b border-border bg-card px-4 py-3.5">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
-            <Bot size={18} strokeWidth={1.5} className="text-ink" />
+        <header
+          className="flex items-center gap-3 px-4 py-3.5"
+          style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 160%)' }}
+        >
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
+            <Bot size={18} strokeWidth={1.5} className="text-white" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-[15px] text-ink">AI Tutor</p>
-            <p className="truncate text-[12px] text-muted">
+            <p className="font-bold text-[15px] text-white">AI Tutor</p>
+            <p className="truncate text-[12px] text-white/50">
               {topicId ? 'Chatting about this topic' : 'General study help'}
             </p>
           </div>
@@ -193,7 +212,7 @@ function FloatingChatPanel({
                 type="button"
                 onClick={handleClearClick}
                 disabled={isClearing}
-                className="flex-shrink-0 whitespace-nowrap rounded-md bg-danger/10 px-2 py-1 text-[11px] font-bold text-danger transition-colors hover:bg-danger/20 disabled:opacity-50"
+                className="flex-shrink-0 whitespace-nowrap rounded-md bg-white/15 px-2 py-1 text-[11px] font-bold text-red-200 transition-colors hover:bg-white/25 disabled:opacity-50"
               >
                 Clear chat?
               </button>
@@ -203,7 +222,7 @@ function FloatingChatPanel({
                 onClick={handleClearClick}
                 aria-label="Clear conversation"
                 title="Clear conversation"
-                className="flex-shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-bg-1 hover:text-danger"
+                className="flex-shrink-0 rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <Trash2 size={16} strokeWidth={1.5} />
               </button>
@@ -212,7 +231,7 @@ function FloatingChatPanel({
             type="button"
             onClick={onClose}
             aria-label="Close chat"
-            className="flex-shrink-0 rounded-full p-1.5 text-muted hover:bg-bg-1 hover:text-ink transition-colors"
+            className="flex-shrink-0 rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
           >
             <X size={18} strokeWidth={2} />
           </button>
@@ -232,59 +251,76 @@ function FloatingChatPanel({
               </p>
             </div>
           ) : (
-            messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : ''}`}
-              >
-                {msg.role !== 'user' && (
-                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
-                    <Bot size={14} strokeWidth={1.5} className="text-ink" />
-                  </div>
-                )}
+            messages.map((msg, index) => {
+              const isLastBubble = index === messages.length - 1;
+              // The assistant's placeholder bubble is inserted empty the
+              // moment a question is sent, then filled in as chunks stream
+              // in. While it's still empty and a request is in flight, show
+              // the dots inside this exact bubble instead of a separate
+              // "Thinking…" element — that separate element used to stay
+              // mounted for the entire stream (isLoading only cleared on
+              // completion), so the dots and the growing response text were
+              // both visible at once. Tying the dots to "this bubble has no
+              // content yet" instead of "a request is in flight" means
+              // there's only ever one bubble in this position, and it can
+              // never show both states at the same time.
+              const showThinking =
+                msg.role === 'assistant' && isLastBubble && isLoading && msg.content === '';
+
+              return (
                 <div
-                  className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[14px] leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'rounded-tr-sm bg-ink text-white'
-                      : 'rounded-tl-sm bg-bg-2 text-ink'
-                  }`}
+                  key={index}
+                  className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}
                 >
-                  {msg.content}
+                  {msg.role !== 'user' && (
+                    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
+                      <Bot size={14} strokeWidth={1.5} className="text-ink" />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 ${
+                      msg.role === 'user'
+                        ? 'rounded-br-sm bg-ink text-white'
+                        : 'rounded-bl-sm border border-border-2 bg-card text-ink'
+                    }`}
+                  >
+                    {showThinking ? (
+                      <ThinkingDots />
+                    ) : (
+                      <MathContent
+                        content={msg.content}
+                        allowBlock={false}
+                        className={`text-[14px] leading-relaxed [&_.math-para]:mb-0 [&_.math-para]:text-[14px] ${
+                          msg.role === 'user' ? 'text-white [&_.math-para]:text-white' : 'text-ink'
+                        }`}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-          {isLoading && (
-            <div className="flex items-start gap-2.5">
-              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
-                <Bot size={14} strokeWidth={1.5} className="text-ink" />
-              </div>
-              <div className="max-w-[80%] animate-pulse rounded-2xl rounded-tl-sm bg-bg-2 px-3.5 py-2.5 text-[14px] text-ink/60">
-                Thinking…
-              </div>
-            </div>
+              );
+            })
           )}
           <div ref={messagesEndRef} />
         </main>
 
         {/* Input */}
         <form onSubmit={handleSubmit} className="border-t border-border px-4 py-3">
-          <div className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5 focus-within:border-brand transition-colors">
+          <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-4 py-2.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-green-600/20 transition-all">
             <input
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               disabled={isLoading}
               placeholder="Type your question..."
-              className="flex-1 bg-transparent text-[14px] placeholder:text-gray-400 focus:outline-none text-ink disabled:opacity-50"
+              className="flex-1 bg-transparent text-[14px] placeholder:text-faint focus:outline-none text-ink disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
-              className="flex-shrink-0 text-brand disabled:text-gray-300 hover:opacity-80 transition-opacity"
               aria-label="Send message"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-dark disabled:bg-bg-2 disabled:text-faint"
             >
-              <Send size={18} strokeWidth={1.5} />
+              <Send size={15} strokeWidth={2} />
             </button>
           </div>
         </form>
