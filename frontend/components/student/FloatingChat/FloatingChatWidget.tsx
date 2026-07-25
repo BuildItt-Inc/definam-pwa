@@ -2,9 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Bot, MessageCircle, Send, X } from 'lucide-react';
+import { Bot, MessageCircle, Send, Trash2, X } from 'lucide-react';
 import { useFloatingChat } from './FloatingChatContext';
-import { getChatHistory, sendChatMessageStream, ChatError, type ChatMessage } from '@/lib/api/chat';
+import {
+  getChatHistory,
+  sendChatMessageStream,
+  clearChatHistory,
+  ChatError,
+  type ChatMessage,
+} from '@/lib/api/chat';
 import { toast } from '@/lib/toast';
 
 /**
@@ -62,8 +68,32 @@ function FloatingChatPanel({
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const [confirmingClear, setConfirmingClear] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const seedSentRef = useRef(false);
+  const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
+    };
+  }, []);
+
+  const handleClearClick = () => {
+    if (!confirmingClear) {
+      setConfirmingClear(true);
+      confirmTimeoutRef.current = setTimeout(() => setConfirmingClear(false), 5000);
+      return;
+    }
+    if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
+    setConfirmingClear(false);
+    setIsClearing(true);
+    clearChatHistory(topicId)
+      .then(() => setMessages([]))
+      .catch(() => toast.error('Could not clear chat', 'Please try again.'))
+      .finally(() => setIsClearing(false));
+  };
 
   useEffect(() => {
     setIsHistoryLoading(true);
@@ -146,6 +176,27 @@ function FloatingChatPanel({
               {topicId ? 'Chatting about this topic' : 'General study help'}
             </p>
           </div>
+          {messages.length > 0 &&
+            (confirmingClear ? (
+              <button
+                type="button"
+                onClick={handleClearClick}
+                disabled={isClearing}
+                className="flex-shrink-0 whitespace-nowrap rounded-md bg-danger/10 px-2 py-1 text-[11px] font-bold text-danger transition-colors hover:bg-danger/20 disabled:opacity-50"
+              >
+                Clear chat?
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleClearClick}
+                aria-label="Clear conversation"
+                title="Clear conversation"
+                className="flex-shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-bg-1 hover:text-danger"
+              >
+                <Trash2 size={16} strokeWidth={1.5} />
+              </button>
+            ))}
           <button
             type="button"
             onClick={onClose}
