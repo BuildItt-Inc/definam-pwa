@@ -269,3 +269,99 @@
 /* Fix for extremely long inline math causing page overflows */
 .math-inline { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; }
 .math-inline::-webkit-scrollbar { display: none; }
+
+/* ── Landing page: cursor-tracked spotlight hover ─────────────────────────────
+   Shared by every bordered/filled nav button and every card on the landing
+   page. A ref + mousemove handler (see hooks/useSpotlight.ts) sets --x/--y to
+   the cursor's position within the element; the ::before pseudo-element
+   tracks a radial gradient to that point and fades in on hover. */
+.spotlight { position: relative; overflow: hidden; }
+.spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120px circle at var(--x, 50%) var(--y, 50%), rgba(74, 222, 128, 0.35), transparent 70%);
+  opacity: 0;
+  transition: opacity 250ms ease;
+  pointer-events: none;
+}
+.spotlight:hover::before { opacity: 1; }
+
+/* Filled/primary variant — white glow instead of green, since the button's
+   own background is already brand green. */
+.spotlight-filled::before {
+  background: radial-gradient(120px circle at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.5), transparent 70%);
+}
+
+/* Card variant — larger, softer radius; paired with a hover lift. */
+.spotlight-card::before {
+  background: radial-gradient(160px circle at var(--x, 50%) var(--y, 50%), rgba(74, 222, 128, 0.14), transparent 70%);
+}
+.spotlight-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(15, 31, 23, 0.08);
+  border-color: #C8F0D9;
+}
+
+/* ── Landing page: floating background notation ───────────────────────────────
+   Diagonal drift + rotation + scale pulse, not a simple up-down bob, so a
+   cluster of symbols doesn't read as one mechanical repeating motion. Two
+   variants (A/B) so alternating symbols drift in different directions. */
+@keyframes landingDriftA {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+  25%  { transform: translate(14px, -20px) rotate(6deg) scale(1.05); }
+  50%  { transform: translate(-6px, -34px) rotate(-4deg) scale(0.96); }
+  75%  { transform: translate(-18px, -10px) rotate(5deg) scale(1.03); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+@keyframes landingDriftB {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+  25%  { transform: translate(-16px, 18px) rotate(-7deg) scale(0.95); }
+  50%  { transform: translate(8px, 30px) rotate(5deg) scale(1.04); }
+  75%  { transform: translate(18px, 8px) rotate(-6deg) scale(0.97); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+/* ── Landing page: running character (toggleable, see RunningCharacter.tsx) ── */
+@keyframes landingRunAcross {
+  0%   { left: -8%; transform: scaleX(1); }
+  48%  { transform: scaleX(1); }
+  50%  { left: 96%; transform: scaleX(-1); }
+  98%  { transform: scaleX(-1); }
+  100% { left: -8%; transform: scaleX(1); }
+}
+@keyframes landingRunBounce {
+  0%, 100% { margin-top: 0; }
+  50%      { margin-top: -6px; }
+}
+@keyframes landingLegSwing {
+  0%, 100% { transform: rotate(18deg); }
+  50%      { transform: rotate(-18deg); }
+}
+.landing-runner {
+  animation: landingRunAcross 9s linear infinite, landingRunBounce 0.4s ease-in-out infinite;
+}
+.landing-runner .leg {
+  transform-origin: top center;
+  animation: landingLegSwing 0.4s ease-in-out infinite;
+}
+.landing-runner .leg-back { animation-delay: 0.2s; }
+
+.landing-float-item {
+  position: absolute;
+  opacity: 0.55;
+  font-family: var(--font-space-mono), monospace;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: #4ADE80;
+  text-shadow: 0 0 16px rgba(74, 222, 128, 0.35);
+  pointer-events: none;
+}
+
+/* Fewer, smaller, dimmer on narrow screens so the symbols frame the hero
+   copy instead of crowding it. */
+@media (max-width: 640px) {
+  .landing-float-item:nth-child(n + 6) { display: none; }
+  .landing-float-item { font-size: 13px !important; opacity: 0.35; }
+}
