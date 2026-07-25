@@ -35,7 +35,15 @@ export function FloatingChatWidget() {
           type="button"
           onClick={() => openChat(currentPageTopicId ? { topicId: currentPageTopicId } : undefined)}
           aria-label="Open AI tutor chat"
-          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6"
+          // z-[60], not z-50: BottomNav portals directly to document.body,
+          // which places it later in DOM order than this button's normal
+          // (non-portaled) position. Equal z-index falls back to DOM order
+          // for stacking, so at z-50 the nav — despite being visually
+          // "lower" on the page — would render on top of and hide this
+          // button. An explicit higher z-index makes the stacking
+          // unambiguous regardless of DOM order or future rendering changes
+          // to either element.
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6"
         >
           <MessageCircle size={24} strokeWidth={2} />
         </button>
@@ -163,7 +171,10 @@ function FloatingChatPanel({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/30 sm:items-end sm:justify-end sm:bg-transparent sm:p-6">
+    // z-[60], same reasoning as the launcher button above: BottomNav's
+    // portal to document.body would otherwise render on top of this panel's
+    // bottom edge (input box, send button) at equal z-index.
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 sm:items-end sm:justify-end sm:bg-transparent sm:p-6">
       <div className="page-enter flex h-[min(85vh,640px)] w-full max-w-md flex-col rounded-t-2xl border border-border-2 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
         {/* Header */}
         <header className="flex items-center gap-3 rounded-t-2xl border-b border-border bg-card px-4 py-3.5">
