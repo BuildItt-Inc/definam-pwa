@@ -4,7 +4,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   AlertCircle,
@@ -17,6 +17,8 @@ import {
 import { verifyPayment } from '@/lib/api/payment';
 import type { VerifyOrgPaymentResponse } from '@/types/payment';
 import { InfoCard } from '@/components/ui/InfoCard';
+import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
+import { toast } from '@/lib/toast';
 
 // ── State type ─────────────────────────────────────────────────────────────
 
@@ -36,6 +38,8 @@ type VerifyState =
 
 function CallbackContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { celebrate } = useCelebration();
   const [state, setState] = useState<VerifyState>({ status: 'loading' });
 
   useEffect(() => {
@@ -56,8 +60,15 @@ function CallbackContent() {
       .then((data) => {
         if (cancelled) return;
 
-        if (!data.verified) {
+        // Backend returns {"status": "success", ...} on success and raises
+        // an HTTP error (caught below) otherwise — there is no `verified`
+        // field. (Was previously checked as `!data.verified`, which is
+        // always true since that field never existed, so every successful
+        // payment landed on the error screen — fixed as part of wiring the
+        // celebration through this same path.)
+        if (data.status !== 'success') {
           setState({ status: 'error' });
+          toast.error('Payment could not be verified');
           return;
         }
 
@@ -76,25 +87,35 @@ function CallbackContent() {
             totalAmountNaira,
           });
         } else {
-          if (data.email) {
+          if (data.email && data.access_code) {
             setState({
               status: 'success',
               paymentType: 'individual',
               email: data.email,
             });
+            celebrate({
+              type: 'payment',
+              email: data.email,
+              accessCode: data.access_code,
+              onRedirect: () =>
+                router.push(`/register?code=${encodeURIComponent(data.access_code!)}`),
+            });
           } else {
             setState({ status: 'error' });
+            toast.error('Payment verified, but no access code was found', 'Contact support.');
           }
         }
       })
       .catch(() => {
         if (cancelled) return;
         setState({ status: 'error' });
+        toast.error('Payment could not be verified');
       });
 
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // ── Loading ──────────────────────────────────────────────────────────────

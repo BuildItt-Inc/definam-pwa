@@ -2,6 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { KatexScripts } from '@/components/KatexScripts';
+import { AppToaster } from '@/components/ui/AppToaster';
+import { CelebrationProvider } from '@/components/ui/celebration/CelebrationContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,7 +42,10 @@ export default function RootLayout({
       <body
         className={`${inter.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}
       >
-        {children}
+        <CelebrationProvider>
+          {children}
+          <AppToaster />
+        </CelebrationProvider>
         {/* KaTeX JS + mhchem — loaded after page content, never blocks render */}
         <KatexScripts />
       </body>

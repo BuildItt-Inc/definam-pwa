@@ -7,6 +7,7 @@ import type { RecallItem } from '@/types/topics';
 import { QualityRating } from '@/components/student/QualityRating';
 import { submitRecallRating } from '@/lib/api/topics';
 import { getHomeData } from '@/lib/api/topics';
+import { toast } from '@/lib/toast';
 
 // ── Session page ──────────────────────────────────────────────────────────
 
@@ -55,7 +56,9 @@ export default function RecallSessionPage() {
     try {
       await submitRecallRating(currentItem.topic_id, rating);
     } catch {
-      // Non-fatal — still advance the UI
+      // Still advance the UI, but the student should know this rating
+      // didn't actually get recorded server-side.
+      toast.error('Rating failed to save', 'Your progress on this item may not be up to date.');
     }
 
     if (currentIndex < total - 1) {
@@ -71,6 +74,7 @@ export default function RecallSessionPage() {
         setStreakDays(null);
       }
       setCompleted(true);
+      toast.success('Recall session complete', `${total} ${total === 1 ? 'topic' : 'topics'} reviewed`);
     }
   }
 

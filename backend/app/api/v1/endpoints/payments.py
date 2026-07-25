@@ -71,10 +71,12 @@ async def verify_payment(
         code = result.scalar_one_or_none()
         if not code:
             raise HTTPException(404, detail="No pending access code found for this email")
+        access_code = code.code
 
     return {
         "status": "success",
         "reference": reference,
         "email": email,
         "amount": amount,
+        "access_code": access_code,
     }

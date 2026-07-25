@@ -4,8 +4,10 @@ export interface InitializePaymentResponse {
 }
 
 export interface VerifyPaymentResponse {
-  verified: boolean;
+  status: string;
   email?: string;
+  amount?: number;
+  access_code?: string;
   error?: string;
 }
 

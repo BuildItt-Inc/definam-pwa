@@ -17,6 +17,8 @@ import { LearningStep } from '@/components/student/LearningStep';
 import { PracticeQuestion } from '@/components/student/PracticeQuestion';
 import { MathContent } from '@/components/student/MathContent';
 import { getChatHistory, sendChatMessageStream, type ChatMessage } from '@/lib/api/chat';
+import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
+import { toast } from '@/lib/toast';
 
 // ── Shared helpers ─────────────────────────────────────────────────────────
 
@@ -595,6 +597,7 @@ function LearningFlow({
   onExit: () => void;
 }) {
   const router = useRouter();
+  const { celebrate } = useCelebration();
   const [detail, setDetail] = useState<TopicDetail | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
@@ -607,12 +610,20 @@ function LearningFlow({
       .then((data) => {
         setDetail(data);
         // Engagement signal for the streak — fires once per topic open,
-        // independent of whether the student finishes it.
-        void pingTopicActivity(topicId);
+        // independent of whether the student finishes it. The response
+        // itself is the trigger for the streak celebration — this is the
+        // one call that can actually know "today just became a new streak
+        // day," rather than the frontend polling the dashboard and guessing.
+        pingTopicActivity(topicId).then((result) => {
+          if (result?.streak_incremented_today) {
+            celebrate({ type: 'streak', days: result.streak_days });
+          }
+        });
       })
       .catch((err: unknown) => {
         setFetchError(err instanceof Error ? err.message : 'Failed to load topic');
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
 
   const advanceStep = (nextStep: 1 | 2 | 3 | 4 | 5) => {
@@ -659,7 +670,11 @@ function LearningFlow({
     } else {
       // Finished practice — this is what makes the topic eligible for the
       // recall queue (creates its first TopicReview row server-side).
-      void submitTopicCompletion(topicId, Math.round((nextScore / total) * 100));
+      submitTopicCompletion(topicId, Math.round((nextScore / total) * 100)).then((ok) => {
+        if (ok) {
+          toast.success('Topic completed', `${nextScore}/${total} correct`);
+        }
+      });
       setShowScoreSummary(true);
     }
   };
@@ -735,6 +750,7 @@ function LearningFlow({
               question={questions[questionIndex]}
               onComplete={handleQuestionComplete}
               isLast={questionIndex === totalQuestions - 1}
+              topicId={topicId}
             />
           ) : (
             <div className="text-center py-8 text-sm text-muted">

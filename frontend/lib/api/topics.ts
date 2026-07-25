@@ -209,16 +209,25 @@ export async function getProgressData(): Promise<ProgressData> {
 // Idempotent server-side, so callers don't need to debounce beyond
 // "roughly once per step viewed".
 
-export async function pingTopicActivity(topicId: string): Promise<void> {
-  if (USE_MOCK) return;
+export interface ActivityPingResult {
+  ok: boolean;
+  streak_incremented_today: boolean;
+  streak_days: number;
+}
+
+export async function pingTopicActivity(topicId: string): Promise<ActivityPingResult | null> {
+  if (USE_MOCK) return null;
 
   try {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}/activity`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}/activity`, {
       method: 'POST',
       headers: await getAuthHeaders(),
     });
+    if (!res.ok) return null;
+    return (await res.json()) as ActivityPingResult;
   } catch {
     // Best-effort — never block the learning flow on this.
+    return null;
   }
 }
 
@@ -231,18 +240,20 @@ export async function pingTopicActivity(topicId: string): Promise<void> {
 export async function submitTopicCompletion(
   topicId: string,
   accuracyScore: number,
-): Promise<void> {
-  if (USE_MOCK) return;
+): Promise<boolean> {
+  if (USE_MOCK) return true;
 
   try {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}/review`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}/review`, {
       method: 'POST',
       headers: await getAuthHeaders(),
       body: JSON.stringify({ accuracy_score: accuracyScore }),
     });
+    return res.ok;
   } catch {
     // Best-effort — a failed completion ping shouldn't block the UI; the
     // student still sees their score summary either way.
+    return false;
   }
 }
 

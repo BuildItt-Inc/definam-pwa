@@ -5,10 +5,23 @@ export interface ChatMessage {
   content: string;
 }
 
-export async function getChatHistory(topicId: string): Promise<ChatMessage[]> {
+export class ChatError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ChatError';
+  }
+}
+
+// topicId omitted (or undefined) -> the general floating-chat history
+// (topic_id IS NULL server-side), separate from any topic's own history.
+export async function getChatHistory(topicId?: string): Promise<ChatMessage[]> {
   const headers = await getAuthHeaders();
+  const query = topicId ? `?topic_id=${topicId}` : '';
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/history?topic_id=${topicId}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/history${query}`,
     {
       headers,
     }
@@ -20,7 +33,7 @@ export async function getChatHistory(topicId: string): Promise<ChatMessage[]> {
 }
 
 export async function sendChatMessageStream(
-  topicId: string,
+  topicId: string | undefined,
   question: string,
   onChunk: (chunk: string) => void,
   onDone: () => void,
@@ -28,14 +41,20 @@ export async function sendChatMessageStream(
 ): Promise<void> {
   try {
     const headers = await getAuthHeaders();
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/stream?topic_id=${topicId}&question=${encodeURIComponent(question)}`;
-    
+    const params = new URLSearchParams({ question });
+    if (topicId) params.set('topic_id', topicId);
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/stream?${params.toString()}`;
+
     const res = await fetch(url, {
       headers,
     });
 
     if (!res.ok) {
-      throw new Error(`Chat stream error: ${res.statusText}`);
+      const body = await res.json().catch(() => ({ detail: '' }));
+      throw new ChatError(
+        res.status,
+        body.detail || `Chat stream error: ${res.statusText}`,
+      );
     }
 
     if (!res.body) {

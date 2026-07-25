@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,8 +11,12 @@ import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth'
 import { registerUser, ApiError } from '@/lib/api/auth';
 import LogoMark from '@/components/landing/LogoMark';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Pre-filled from the payment celebration's handoff (?code=...) so the
+  // customer doesn't have to dig the code back out of their email.
+  const prefilledCode = searchParams.get('code') ?? '';
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -27,6 +31,7 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
+    defaultValues: { access_code: prefilledCode },
   });
 
   async function onSubmit(values: RegisterFormValues) {
@@ -215,5 +220,13 @@ export default function RegisterPage() {
         &copy; Recall 2026
       </p>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   );
 }

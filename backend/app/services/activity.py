@@ -16,11 +16,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import DailyActivity
 
 
-async def touch_daily_activity(session: AsyncSession, user_id: str) -> None:
+async def touch_daily_activity(session: AsyncSession, user_id: str) -> bool:
+    """Returns True if this call recorded the first activity of the day for
+    this user (i.e. today wasn't already counted), False if it was already
+    recorded — the signal callers use to decide whether to celebrate.
+    """
     today = datetime.now(UTC).date()
     stmt = (
         pg_insert(DailyActivity)
         .values(user_id=user_id, activity_date=today)
         .on_conflict_do_nothing(constraint="uq_daily_activity_user_date")
+        .returning(DailyActivity.id)
     )
-    await session.execute(stmt)
+    result = await session.execute(stmt)
+    return result.first() is not None

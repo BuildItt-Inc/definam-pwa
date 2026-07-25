@@ -15,16 +15,24 @@ async def stream_groq_response(
         - ("chunk", text) for each content chunk
         - ("usage", {"input_tokens": n, "output_tokens": m}) after the stream ends
     """
+    context_instruction = (
+        f"Stay strictly within the provided topic context.\n\nTopic context:\n{topic_context}"
+        if topic_context
+        else (
+            "The student opened this chat generally, not from a specific topic — "
+            "there is no topic context. Answer broadly based on the WAEC/Nigerian "
+            "secondary school curriculum and general study help."
+        )
+    )
     system_prompt = (
         "You are a Socratic Nigerian tutor for Recall. "
         "Never give the answer directly. Guide the student to discover it themselves. "
         "Use Nigerian examples where relevant. "
-        "Stay strictly within the provided topic context.\n\n"
+        f"{context_instruction}\n\n"
         "Vary your greetings. Use warm, encouraging openings like: "
         "'Let's explore this together,' 'That's a great question,' "
         "'I like your curiosity,' or 'Let's break this down.' "
-        "Avoid starting every response with 'My inquisitive student.'\n\n"
-        f"Topic context:\n{topic_context}"
+        "Avoid starting every response with 'My inquisitive student.'"
     )
 
     messages = [

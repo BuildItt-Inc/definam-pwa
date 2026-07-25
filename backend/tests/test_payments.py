@@ -51,6 +51,7 @@ async def test_verify_payment_does_not_mutate_access_code_status():
     """The exact regression: a successful verify must leave status=pending."""
     fake_code = MagicMock()
     fake_code.status = "pending"
+    fake_code.code = "IND-TEST-1234"
 
     paystack_payload = {
         "status": True,
@@ -80,6 +81,7 @@ async def test_verify_payment_does_not_mutate_access_code_status():
 
     assert resp.status_code == 200
     assert resp.json()["email"] == "payer@example.com"
+    assert resp.json()["access_code"] == "IND-TEST-1234"
 
     # The core regression guard: verify_payment must never flip the code's
     # status. If this fails, register() will reject the code as already

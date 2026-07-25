@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, ChevronRight } from 'lucide-react';
+import { Check, X, ChevronRight, MessageCircleQuestion } from 'lucide-react';
 import type { PracticeQuestion as PracticeQuestionData } from '@/types/topics';
 import { MathContent } from '@/components/student/MathContent';
+import { useFloatingChat } from '@/components/student/FloatingChat/FloatingChatContext';
 
 type Option = 'A' | 'B' | 'C' | 'D';
 const OPTIONS: Option[] = ['A', 'B', 'C', 'D'];
@@ -12,13 +13,18 @@ interface PracticeQuestionProps {
   question: PracticeQuestionData;
   onComplete: (correct: boolean) => void;
   isLast?: boolean;
+  /** Passed along so "why is this wrong?" opens the chat with this topic's
+   * context instead of a topic-less general chat. */
+  topicId?: string;
 }
 
 export function PracticeQuestion({
   question,
   onComplete,
   isLast = false,
+  topicId,
 }: PracticeQuestionProps) {
+  const { openChat } = useFloatingChat();
   const [selected, setSelected] = useState<Option | null>(null);
   const [revealed, setRevealed] = useState(false);
 
@@ -100,6 +106,25 @@ export function PracticeQuestion({
             className="inline text-inherit"
           />
         </div>
+      )}
+
+      {/* "Why is this wrong?" — opens the floating chat pre-seeded with
+          this specific question's context, instead of only the static
+          explanation text above. */}
+      {revealed && !gotItRight && selected && (
+        <button
+          type="button"
+          onClick={() =>
+            openChat({
+              topicId,
+              seedMessage: `I got this practice question wrong. The question was: "${question.question}". I answered "${question.options[selected]}" but the correct answer is "${question.options[question.answer]}". Can you explain why my answer was wrong and help me understand the correct one?`,
+            })
+          }
+          className="mb-6 -mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border-2 bg-card py-3 text-[14px] font-semibold text-ink transition-colors hover:bg-bg-0 active:bg-bg-1"
+        >
+          <MessageCircleQuestion size={16} strokeWidth={2} />
+          Ask AI why this is wrong
+        </button>
       )}
 
       {/* CTA — shown after reveal */}
