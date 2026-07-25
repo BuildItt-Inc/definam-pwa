@@ -41,15 +41,19 @@ _COOKIE_NAME = "refresh_token"
 def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
     """Attach the refresh token as a Secure, HttpOnly, SameSite=None cookie.
 
-    SameSite=None is required because the frontend (Vercel) and backend
-    (Coolify) are on different origins. SameSite=Strict silently blocks the
-    cookie from being sent on cross-origin requests, breaking token refresh.
-    SameSite=None + Secure=True is the correct pairing for cross-origin cookies.
+    SameSite=None is required whenever the frontend (Vercel) and backend
+    (Coolify) are on different origins — SameSite=Strict/Lax silently
+    blocks the cookie from being sent on cross-origin requests, breaking
+    token refresh (every page refresh logs the user out with no visible
+    error). SameSite=None + Secure=True is the correct pairing for
+    cross-origin cookies; browsers reject SameSite=None cookies outright
+    if Secure isn't also set. Controlled by the explicit COOKIE_SECURE
+    setting rather than guessed from FRONTEND_URL — see config.py.
     """
     settings = get_settings()
     max_age = settings.jwt_refresh_expire_days * 24 * 60 * 60  # seconds
-    
-    is_secure = settings.frontend_url.startswith("https://")
+
+    is_secure = settings.cookie_secure
     samesite_val = "none" if is_secure else "lax"
 
     response.set_cookie(
@@ -65,7 +69,7 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
 
 def _clear_refresh_cookie(response: Response) -> None:
     settings = get_settings()
-    is_secure = settings.frontend_url.startswith("https://")
+    is_secure = settings.cookie_secure
     samesite_val = "none" if is_secure else "lax"
     response.delete_cookie(
         key=_COOKIE_NAME,
