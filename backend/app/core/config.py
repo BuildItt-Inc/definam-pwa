@@ -13,6 +13,15 @@ class Settings(BaseSettings):
     # Stored as str so pydantic-settings won't JSON-parse it before our
     # validator runs; the validator normalises it to list[str] at runtime.
     allowed_origins: str | list[str] = "http://localhost:3000"
+    # Controls the refresh-token cookie's Secure/SameSite attributes (see
+    # _set_refresh_cookie in auth.py). Must be explicitly set to true in any
+    # real deployment where the frontend and backend are on different
+    # origins (e.g. Vercel + Coolify) — SameSite=None cookies are silently
+    # rejected by browsers unless Secure is also set, and without
+    # SameSite=None a cross-origin refresh call never receives the cookie,
+    # so every page refresh logs the user out with no visible error.
+    # Defaults to false so plain-HTTP local dev keeps working out of the box.
+    cookie_secure: bool = False
 
     # ── Redis ──────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379"

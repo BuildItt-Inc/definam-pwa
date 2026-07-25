@@ -299,6 +299,101 @@ async def test_refresh_with_no_cookie_returns_401():
     assert resp.status_code == 401
 
 
+# ── Refresh-cookie Secure/SameSite attributes ────────────────────────────────
+#
+# Regression coverage for the "logged out on every refresh" bug class: the
+# cookie must be SameSite=None + Secure whenever COOKIE_SECURE=true (any real
+# deployment with the frontend and backend on different origins), and must
+# fall back to SameSite=Lax without Secure only when COOKIE_SECURE=false
+# (plain-HTTP local dev). Getting this wrong in either direction either
+# breaks local dev or silently drops every user's session on refresh.
+
+
+def _fake_settings(cookie_secure: bool):
+    return type(
+        "S",
+        (),
+        {
+            "jwt_refresh_expire_days": 30,
+            "cookie_secure": cookie_secure,
+        },
+    )()
+
+
+@pytest.mark.anyio
+async def test_login_cookie_is_secure_and_samesite_none_when_cookie_secure_true():
+    user_row = {
+        "id": "admin-id",
+        "role": "admin",
+        "force_password_change": True,
+        "username": "admin@school.ng",
+        "password_hash": "hashed_pass",
+    }
+
+    with (
+        patch(
+            "app.services.auth_service.get_user_by_username",
+            new_callable=AsyncMock,
+            return_value=user_row,
+        ),
+        patch("app.services.auth_service.verify_password", return_value=True),
+        patch("app.services.auth_service.create_jwt", return_value="tok"),
+        patch("app.services.auth_service.create_refresh_jwt", return_value="ref"),
+        patch(
+            "app.api.v1.endpoints.auth.get_settings",
+            return_value=_fake_settings(cookie_secure=True),
+        ),
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/login",
+                json={"username_or_email": "admin@school.ng", "password": "TempPass1!"},
+            )
+
+    set_cookie = resp.headers.get("set-cookie", "")
+    assert "samesite=none" in set_cookie.lower()
+    assert "secure" in set_cookie.lower()
+
+
+@pytest.mark.anyio
+async def test_login_cookie_is_lax_and_insecure_when_cookie_secure_false():
+    user_row = {
+        "id": "admin-id",
+        "role": "admin",
+        "force_password_change": True,
+        "username": "admin@school.ng",
+        "password_hash": "hashed_pass",
+    }
+
+    with (
+        patch(
+            "app.services.auth_service.get_user_by_username",
+            new_callable=AsyncMock,
+            return_value=user_row,
+        ),
+        patch("app.services.auth_service.verify_password", return_value=True),
+        patch("app.services.auth_service.create_jwt", return_value="tok"),
+        patch("app.services.auth_service.create_refresh_jwt", return_value="ref"),
+        patch(
+            "app.api.v1.endpoints.auth.get_settings",
+            return_value=_fake_settings(cookie_secure=False),
+        ),
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/login",
+                json={"username_or_email": "admin@school.ng", "password": "TempPass1!"},
+            )
+
+    set_cookie = resp.headers.get("set-cookie", "")
+    assert "samesite=lax" in set_cookie.lower()
+    assert "secure" not in set_cookie.lower()
+
+
 # ── /auth/me ───────────────────────────────────────────────────────────────
 
 
