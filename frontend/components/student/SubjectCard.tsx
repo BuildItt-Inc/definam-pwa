@@ -1,24 +1,8 @@
 'use client';
 
-import {
-  Calculator,
-  FlaskConical,
-  FileText,
-  Zap,
-  TrendingUp,
-  BookOpen,
-  ChevronRight,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type { Subject } from '@/types/topics';
-
-const SUBJECT_ICONS: Record<string, LucideIcon> = {
-  Mathematics: Calculator,
-  Chemistry: FlaskConical,
-  'English Language': FileText,
-  Physics: Zap,
-  Economics: TrendingUp,
-};
+import { subjectIcon } from '@/lib/utils/subjects';
 
 interface SubjectCardProps {
   subject: Subject;
@@ -26,7 +10,7 @@ interface SubjectCardProps {
 }
 
 export function SubjectCard({ subject, onClick }: SubjectCardProps) {
-  const Icon = SUBJECT_ICONS[subject.name] ?? BookOpen;
+  const Icon = subjectIcon(subject.name);
   const mastery = subject.mastery_percent;
 
   return (

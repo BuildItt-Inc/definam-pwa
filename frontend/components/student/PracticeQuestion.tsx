@@ -5,6 +5,7 @@ import { Check, X, ChevronRight, MessageCircleQuestion } from 'lucide-react';
 import type { PracticeQuestion as PracticeQuestionData } from '@/types/topics';
 import { MathContent } from '@/components/student/MathContent';
 import { useFloatingChat } from '@/components/student/FloatingChat/FloatingChatContext';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 type Option = 'A' | 'B' | 'C' | 'D';
 const OPTIONS: Option[] = ['A', 'B', 'C', 'D'];
@@ -27,6 +28,7 @@ export function PracticeQuestion({
   const { openChat } = useFloatingChat();
   const [selected, setSelected] = useState<Option | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const { ref, onMouseMove } = useSpotlight<HTMLDivElement>();
 
   const handleSelect = (opt: Option) => {
     if (revealed) return;
@@ -44,15 +46,21 @@ export function PracticeQuestion({
 
   return (
     <div>
-      {/* Question card */}
-      <div className="mb-4 rounded-2xl border-[1.5px] border-border bg-card px-5 py-5 shadow-sm">
-        <p className="mb-2 text-[12px] font-bold uppercase tracking-wider text-muted">
+      {/* Question card — same spotlight-hover card treatment as the other
+          learning steps, per the redesign; selection/reveal logic below is
+          unchanged. */}
+      <div
+        ref={ref}
+        onMouseMove={onMouseMove}
+        className="spotlight spotlight-card relative mb-4 overflow-hidden rounded-2xl border border-[#F3F4F6] bg-white px-5 py-5 shadow-sm"
+      >
+        <p className="relative z-10 mb-2 text-[12px] font-bold uppercase tracking-wider text-muted">
           Practice Question
         </p>
         <MathContent
           content={question.question}
           allowBlock={false}
-          className="text-[16px] font-bold leading-relaxed text-ink"
+          className="relative z-10 text-[16px] font-bold leading-relaxed text-ink"
         />
       </div>
 

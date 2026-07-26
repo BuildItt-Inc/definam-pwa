@@ -365,3 +365,10 @@
   .landing-float-item:nth-child(n + 6) { display: none; }
   .landing-float-item { font-size: 13px !important; opacity: 0.35; }
 }
+
+/* ── Dashboard: streak flame pulse ────────────────────────────────────────── */
+@keyframes flamePulseScale {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.12); }
+}
+.flame-pulse { animation: flamePulseScale 1s ease-in-out infinite; }
