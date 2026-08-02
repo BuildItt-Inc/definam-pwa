@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import UTC, datetime
 
 from app.core.exceptions import (
     AccessCodeAlreadyUsedError,
+    AccessCodeExpiredError,
     AccessCodeNotFoundError,
     AccessCodeRevokedError,
     AccessCodeWrongTypeError,
@@ -57,6 +59,14 @@ async def register(body: RegisterRequest) -> tuple[str, str]:
         raise AccessCodeWrongTypeError(expected="individual")
     if code_row["status"] != "pending":
         raise AccessCodeAlreadyUsedError()
+
+    # Check lifespan / expiration
+    if code_row.get("expires_at"):
+        exp = code_row["expires_at"]
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=UTC)
+        if exp < datetime.now(UTC):
+            raise AccessCodeExpiredError()
 
     if await get_user_by_username(body.username):
         raise UserAlreadyRegisteredError()
@@ -125,6 +135,14 @@ async def org_login(body: OrgLoginRequest) -> dict:
         raise AccessCodeNotFoundError()
     if code_row["type"] != "org":
         raise AccessCodeWrongTypeError(expected="org")
+
+    # Check lifespan / expiration
+    if code_row.get("expires_at"):
+        exp = code_row["expires_at"]
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=UTC)
+        if exp < datetime.now(UTC):
+            raise AccessCodeExpiredError()
 
     fingerprint = fingerprint_device(body.user_agent, body.ip)
 

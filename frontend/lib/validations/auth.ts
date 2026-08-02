@@ -80,7 +80,7 @@ export const registerSchema = z
       .string()
       .min(1, 'Access code is required')
       .transform((val) => val.trim().toUpperCase())
-      .refine((val) => /^[A-Z]{3}-\d{4}-[A-Z]{2}$/.test(val), {
+      .refine((val) => /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/.test(val), {
         message: 'Invalid access code format',
       }),
   })
@@ -98,7 +98,7 @@ export const orgLoginSchema = z.object({
     .string()
     .min(1, 'Access code is required')
     .transform((val) => val.trim().toUpperCase())
-    .refine((val) => /^[A-Z]{2,3}-\d{4}-[A-Z]{2}$/.test(val), {
+    .refine((val) => /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/.test(val), {
       message: 'Invalid access code format',
     }),
 });

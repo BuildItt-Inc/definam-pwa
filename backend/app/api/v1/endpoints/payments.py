@@ -80,3 +80,11 @@ async def verify_payment(
         "amount": amount,
         "access_code": access_code,
     }
+
+
+@router.post("/check-expirations")
+async def trigger_check_expirations() -> dict:
+    """Check for access codes expiring in <= 7 days and dispatch renewal reminder emails."""
+    from app.services.expiration_service import check_and_send_expiration_reminders
+    reminders_sent = await check_and_send_expiration_reminders()
+    return {"status": "success", "reminders_sent": reminders_sent}
