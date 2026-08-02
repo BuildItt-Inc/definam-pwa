@@ -193,6 +193,16 @@ class AccessCodeRevokedError(CustomDomainException):
         )
 
 
+class AccessCodeExpiredError(CustomDomainException):
+    """Raised when an access code has expired (lifespan of 4 months)."""
+
+    def __init__(self, message: str = "") -> None:
+        super().__init__(
+            message=message or "This access code has expired. Please renew your subscription.",
+            code="BAD_REQUEST",
+        )
+
+
 # ── Payments & Webhooks ────────────────────────────────────────────────────
 
 

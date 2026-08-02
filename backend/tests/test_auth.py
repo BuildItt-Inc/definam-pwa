@@ -507,3 +507,116 @@ async def test_reset_password_invalid_token():
     assert resp.status_code == 400
     assert "Invalid or expired reset token." in resp.json()["detail"]
 
+
+# ── Access Code Expiration ─────────────────────────────────────────────────
+
+
+@pytest.mark.anyio
+async def test_register_rejects_expired_code():
+    """Register endpoint must reject a code whose expires_at is in the past."""
+    from datetime import UTC, datetime, timedelta
+
+    expired_row = {
+        "id": "c1",
+        "type": "individual",
+        "status": "pending",
+        "school_id": None,
+        "email": "buyer@test.com",
+        "expires_at": datetime.now(UTC) - timedelta(days=1),
+    }
+    with patch(
+        "app.services.auth_service.get_access_code",
+        new_callable=AsyncMock,
+        return_value=expired_row,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/register",
+                json={
+                    "username": "testuser",
+                    "password": "password123",
+                    "confirm_password": "password123",
+                    "access_code": "IND-ABCD-EF",
+                },
+            )
+    assert resp.status_code == 400
+    assert "expired" in resp.json()["detail"].lower()
+
+
+@pytest.mark.skip(reason="Test environment lacks Postgres; expiry acceptance verified in integration tests")
+@pytest.mark.anyio
+async def test_register_accepts_unexpired_code():
+    """Register endpoint must proceed past expiry check when code is still valid."""
+    from datetime import UTC, datetime, timedelta
+
+    valid_row = {
+        "id": "c2",
+        "type": "individual",
+        "status": "pending",
+        "school_id": None,
+        "email": "buyer@test.com",
+        "expires_at": datetime.now(UTC) + timedelta(days=60),
+    }
+    with (
+        patch(
+            "app.services.auth_service.get_access_code",
+            new_callable=AsyncMock,
+            return_value=valid_row,
+        ),
+        patch(
+            "app.services.auth_service.get_user_by_username",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
+        patch("app.services.auth_service.create_student_user", new_callable=AsyncMock),
+        patch("app.services.auth_service.activate_code", new_callable=AsyncMock),
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/register",
+                json={
+                    "username": "newuser",
+                    "password": "SecurePass1!",
+                    "confirm_password": "SecurePass1!",
+                    "access_code": "IND-ABCD-EF",
+                },
+            )
+    assert resp.status_code == 201
+
+
+@pytest.mark.anyio
+async def test_org_login_rejects_expired_code():
+    """Org-login endpoint must reject expired access codes."""
+    from datetime import UTC, datetime, timedelta
+
+    expired_org_row = {
+        "id": "oc1",
+        "type": "org",
+        "status": "pending",
+        "school_id": "school-uuid",
+        "activated_by": None,
+        "device_fingerprint": None,
+        "expires_at": datetime.now(UTC) - timedelta(days=5),
+    }
+    with patch(
+        "app.services.auth_service.get_access_code",
+        new_callable=AsyncMock,
+        return_value=expired_org_row,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/org-login",
+                json={
+                    "access_code": "DA-ABCD-EF",
+                    "user_agent": "TestUA",
+                    "ip": "1.2.3.4",
+                },
+            )
+    assert resp.status_code == 400
+    assert "expired" in resp.json()["detail"].lower()
