@@ -105,10 +105,23 @@ async def bulk_insert_codes(org_id: str, codes: list[str]) -> None:
 
 
 async def insert_individual_code(code: str, email: str) -> None:
-    """Insert a single individual access code with 4-month initial expiration."""
+    """Insert a single individual access code with 4-month initial expiration.
+
+    Revokes any previously issued but still-"pending" codes for this email
+    first, so at most one pending code ever exists per email. Old codes are
+    marked "revoked" rather than deleted, preserving the record.
+    """
     now = datetime.now(tz=UTC)
     expires = now + timedelta(days=120)
     async with db_session() as session:
+        await session.execute(
+            update(AccessCode)
+            .where(
+                AccessCode.email == email,
+                AccessCode.status == "pending",
+            )
+            .values(status="revoked")
+        )
         session.add(
             AccessCode(
                 id=str(uuid.uuid4()),
@@ -120,6 +133,7 @@ async def insert_individual_code(code: str, email: str) -> None:
                 expires_at=expires,
             )
         )
+
 
 
 # ── users ──────────────────────────────────────────────────────────────────
