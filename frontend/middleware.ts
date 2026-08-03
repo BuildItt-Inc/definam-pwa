@@ -33,7 +33,13 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+// Prefer the private server-side API_URL (not inlined at build time, always
+// available in Edge Middleware). Fall back to the public variant so local dev
+// still works out of the box without a separate variable.
+const API_BASE =
+  process.env.API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  '';
 const REFRESH_COOKIE = 'refresh_token';
 
 // ── JWT payload decoder (no signature verify — see comment above) ──────────
@@ -62,6 +68,9 @@ interface RefreshResult {
 }
 
 async function tryRefresh(refreshCookie: string): Promise<RefreshResult> {
+  // No API base configured — pass through and let the page's own fetch handle auth.
+  if (!API_BASE) return { role: null, error: true };
+
   try {
     const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
       method: 'POST',
@@ -112,11 +121,10 @@ export async function middleware(request: NextRequest) {
     const { role, error } = await tryRefresh(refreshCookie);
 
     if (error) {
-      // Backend unreachable — redirect to login with an error hint
-      const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('next', pathname);
-      loginUrl.searchParams.set('hint', 'session_error');
-      return NextResponse.redirect(loginUrl);
+      // Backend unreachable / cold-start — fail open; the page's authenticated
+      // API calls will 401 if the session is truly invalid. Redirecting here
+      // caused loop-bouncing when the edge couldn't reach the backend.
+      return NextResponse.next();
     }
 
     if (role !== 'admin') {
