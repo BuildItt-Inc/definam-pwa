@@ -624,6 +624,7 @@ export const mockHomeData: HomeData = {
   student_name: 'Ada Okonkwo',
   school_name: 'Kings Secondary School',
   streak_days: 7,
+  completion_percent: 24,
   recall_queue: [
     {
       topic_id: 'top-004',

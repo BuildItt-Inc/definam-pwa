@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send, Check } from 'lucide-react';
 import {
   getChaptersBySubjectName,
   getTopics,
@@ -18,7 +19,31 @@ import { PracticeQuestion } from '@/components/student/PracticeQuestion';
 import { MathContent } from '@/components/student/MathContent';
 import { getChatHistory, sendChatMessageStream, type ChatMessage } from '@/lib/api/chat';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
+import { useSpotlight } from '@/hooks/useSpotlight';
+import { stepSlide } from '@/lib/motion';
 import { toast } from '@/lib/toast';
+
+// Dark, spotlight-hover CTA matching the redesigned learning interface's
+// .cta-btn — same underlying pattern as the landing page's buttons/cards.
+function StepCta({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const { ref, onMouseMove } = useSpotlight<HTMLButtonElement>();
+  return (
+    <button
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onClick={onClick}
+      className="spotlight relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[13px] bg-ink py-[15px] text-[14.5px] font-bold text-white shadow-sm"
+    >
+      <span className="relative z-10 flex items-center gap-2">{children}</span>
+    </button>
+  );
+}
 
 // ── Shared helpers ─────────────────────────────────────────────────────────
 
@@ -289,15 +314,18 @@ function LearningTopBar({
   const isPracticeStep = step === 4;
 
   return (
-    <div className="bg-ink px-4 pb-2.5 pt-[calc(env(safe-area-inset-top)+12px)]">
+    <div
+      className="px-4 pb-2.5 pt-[calc(env(safe-area-inset-top)+12px)]"
+      style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 160%)' }}
+    >
       {/* Navigation row */}
       <div className="mb-2.5 flex items-center gap-2">
         <button
           onClick={onBack}
           aria-label="Go back"
-          className="flex-shrink-0 text-white/50 active:text-white/80"
+          className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-[9px] bg-white/[0.08] text-white active:bg-white/[0.16]"
         >
-          <ArrowLeft size={18} strokeWidth={1.5} />
+          <ArrowLeft size={16} strokeWidth={2} />
         </button>
 
         {isPracticeStep ? (
@@ -314,7 +342,7 @@ function LearningTopBar({
 
         <button
           onClick={onExit}
-          className="flex-shrink-0 text-[13px] text-white/30 active:text-white/60"
+          className="flex-shrink-0 text-[12.5px] text-white/40 active:text-white/70"
         >
           Exit
         </button>
@@ -325,7 +353,7 @@ function LearningTopBar({
         {STEP_LABELS.map((_, i) => (
           <div
             key={i}
-            className={`h-[3px] flex-1 rounded-full transition-colors ${ i < step ? 'bg-card' : 'bg-white/20' }`}
+            className={`h-[4px] flex-1 rounded-full transition-colors ${ i < step ? 'bg-[#4ADE80]' : 'bg-white/15' }`}
           />
         ))}
       </div>
@@ -339,9 +367,10 @@ function LearningTopBar({
             return (
               <span
                 key={i}
-                className={`flex-1 text-center text-[9px] ${ isDone ? 'text-white/50' : isCurrent ? 'font-bold text-white' : 'text-white/30' }`}
+                className={`flex flex-1 items-center justify-center gap-[3px] text-center text-[9.5px] ${ isDone ? 'text-white/55' : isCurrent ? 'font-bold text-white' : 'text-white/30' }`}
               >
-                {isDone ? `${label} ✓` : label}
+                {isDone && <Check size={9} strokeWidth={3} />}
+                {label}
               </span>
             );
           })}
@@ -505,17 +534,21 @@ function AITutorScaffold({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-0">
-      {/* Appbar */}
-      <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3.5">
-        <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-ink">
+      {/* Appbar — restyled to match the redesign's gradient header
+          treatment for visual consistency; chat logic below is untouched. */}
+      <header
+        className="flex items-center gap-3 px-4 py-3.5"
+        style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 160%)' }}
+      >
+        <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-white/70 hover:text-white">
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
-          <Bot size={18} strokeWidth={1.5} className="text-ink" />
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
+          <Bot size={18} strokeWidth={1.5} className="text-white" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-[16px] text-ink">AI Tutor</p>
-          <p className="truncate text-[13px] text-muted">{topicTitle}</p>
+          <p className="font-bold text-[16px] text-white">AI Tutor</p>
+          <p className="truncate text-[13px] text-white/50">{topicTitle}</p>
         </div>
       </header>
 
@@ -617,6 +650,9 @@ function LearningFlow({
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showScoreSummary, setShowScoreSummary] = useState(false);
+  // +1 advancing (Continue/Next), -1 going back — drives which direction the
+  // slide+fade transition animates in (see stepSlide in lib/motion.ts).
+  const [direction, setDirection] = useState(1);
 
   useEffect(() => {
     getTopicDetail(topicId)
@@ -640,6 +676,7 @@ function LearningFlow({
   }, [topicId]);
 
   const advanceStep = (nextStep: 1 | 2 | 3 | 4 | 5) => {
+    setDirection(1);
     if (nextStep === 4) {
       setQuestionIndex(0);
       setScore(0);
@@ -649,6 +686,7 @@ function LearningFlow({
   };
 
   const handleBack = () => {
+    setDirection(-1);
     if (step === 5) {
       setStep(4);
       setShowScoreSummary(true);
@@ -675,6 +713,7 @@ function LearningFlow({
   };
 
   const handleQuestionComplete = (correct: boolean) => {
+    setDirection(1);
     const nextScore = correct ? score + 1 : score;
     setScore(nextScore);
     const total = detail?.practice_questions.length ?? 0;
@@ -735,51 +774,61 @@ function LearningFlow({
       />
 
       <main className="flex-1 overflow-y-auto bg-bg-0 px-4 py-5">
-        {/* Steps 1–3 — content card + CTA */}
-        {(step === 1 || step === 2 || step === 3) && (
-          <>
-            <LearningStep
-              step={step}
-              title={getStepContent(detail!, step).title}
-              content={getStepContent(detail!, step).content}
-            />
-            <div className="mt-5 pb-safe">
-              <button
-                onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4 | 5)}
-                className="btn-primary w-full shadow-brand-sm"
-              >
-                {STEP_CTA[step]}
-                <ChevronRight size={18} strokeWidth={2.5} />
-              </button>
-            </div>
-          </>
-        )}
+        {/* Slide + fade between steps/sub-states (~320ms) — direction is set
+            right before each setStep call above, so Continue/Next always
+            slides from the right and Back always slides from the left. */}
+        <AnimatePresence mode="wait" custom={direction} initial={false}>
+          <motion.div
+            key={`${step}-${questionIndex}-${showScoreSummary}`}
+            custom={direction}
+            variants={stepSlide}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            {/* Steps 1–3 — content card + CTA */}
+            {(step === 1 || step === 2 || step === 3) && (
+              <>
+                <LearningStep
+                  step={step}
+                  title={getStepContent(detail!, step).title}
+                  content={getStepContent(detail!, step).content}
+                />
+                <div className="mt-5 pb-safe">
+                  <StepCta onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4 | 5)}>
+                    {STEP_CTA[step]}
+                    <ChevronRight size={18} strokeWidth={2.5} />
+                  </StepCta>
+                </div>
+              </>
+            )}
 
-        {/* Step 4 — practice questions */}
-        {step === 4 && !showScoreSummary && (
-          totalQuestions > 0 ? (
-            <PracticeQuestion
-              key={questionIndex}
-              question={questions[questionIndex]}
-              onComplete={handleQuestionComplete}
-              isLast={questionIndex === totalQuestions - 1}
-              topicId={topicId}
-            />
-          ) : (
-            <div className="text-center py-8 text-sm text-muted">
-              No practice questions available for this topic.
-            </div>
-          )
-        )}
+            {/* Step 4 — practice questions */}
+            {step === 4 && !showScoreSummary && (
+              totalQuestions > 0 ? (
+                <PracticeQuestion
+                  question={questions[questionIndex]}
+                  onComplete={handleQuestionComplete}
+                  isLast={questionIndex === totalQuestions - 1}
+                  topicId={topicId}
+                />
+              ) : (
+                <div className="text-center py-8 text-sm text-muted">
+                  No practice questions available for this topic.
+                </div>
+              )
+            )}
 
-        {/* Step 4 — score summary before AI tutor */}
-        {step === 4 && showScoreSummary && (
-          <ScoreSummary
-            score={score}
-            total={totalQuestions}
-            onContinue={() => advanceStep(5)}
-          />
-        )}
+            {/* Step 4 — score summary before AI tutor */}
+            {step === 4 && showScoreSummary && (
+              <ScoreSummary
+                score={score}
+                total={totalQuestions}
+                onContinue={() => advanceStep(5)}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

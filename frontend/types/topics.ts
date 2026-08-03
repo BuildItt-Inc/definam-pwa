@@ -71,6 +71,9 @@ export interface HomeData {
   student_name: string;
   school_name: string;
   streak_days: number;
+  // Overall completion across every subject/topic in the curriculum (not
+  // per-topic mastery) — powers the dashboard header's completion ring.
+  completion_percent: number;
   recall_queue: RecallQueueItem[];
   recent_topics: RecentTopic[];
 }

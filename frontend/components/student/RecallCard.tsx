@@ -2,6 +2,7 @@
 
 import { BookOpen, ArrowRight } from 'lucide-react';
 import type { RecallQueueItem } from '@/types/topics';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 interface RecallCardProps {
   queue: RecallQueueItem[];
@@ -9,13 +10,19 @@ interface RecallCardProps {
 }
 
 export function RecallCard({ queue, onStart }: RecallCardProps) {
+  const { ref, onMouseMove } = useSpotlight<HTMLDivElement>();
+
   if (queue.length > 0) {
     const topicNames = queue.map((item) => item.topic_title).join(', ');
 
     return (
-      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <div
+        ref={ref}
+        onMouseMove={onMouseMove}
+        className="spotlight spotlight-card relative overflow-hidden rounded-2xl border border-[#ECFDF3] bg-white p-4 shadow-sm"
+      >
         {/* Header row */}
-        <div className="mb-3 flex items-center justify-between">
+        <div className="relative z-10 mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
             <span className="text-[12px] font-semibold uppercase tracking-widest text-[#6B7280]">
@@ -28,17 +35,17 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
         </div>
 
         {/* Topics */}
-        <p className="mb-1 text-[15px] font-bold text-[#111827] leading-snug">
+        <p className="relative z-10 mb-1 text-[15px] font-bold text-[#111827] leading-snug">
           Time to review
         </p>
-        <p className="mb-4 line-clamp-2 text-[13px] text-[#9CA3AF] leading-relaxed">
+        <p className="relative z-10 mb-4 line-clamp-2 text-[13px] text-[#9CA3AF] leading-relaxed">
           {topicNames}
         </p>
 
         {/* CTA */}
         <button
           onClick={onStart}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-3 text-[15px] font-semibold text-white hover:bg-[#15803D] active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(22,163,74,0.2)]"
+          className="relative z-10 flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-3 text-[15px] font-semibold text-white hover:bg-[#15803D] active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(22,163,74,0.2)]"
         >
           Start review
           <ArrowRight size={16} strokeWidth={2.5} />

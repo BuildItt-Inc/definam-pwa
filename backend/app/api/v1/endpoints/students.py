@@ -56,6 +56,25 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
         active_days = await _get_streak_active_days(session, user_id)
         streak = _compute_streak(active_days, today)
 
+        # Overall completion: distinct topics this student has a TopicReview
+        # for (i.e. has completed Step 4 at least once), divided by every
+        # published topic in the curriculum. Not previously computed anywhere
+        # (checked here and in get_progress below) — this is a new aggregate
+        # metric for the dashboard's completion ring, not per-topic mastery.
+        topics_studied_result = await session.execute(
+            select(func.count(TopicReview.topic_id.distinct())).where(
+                TopicReview.user_id == user_id
+            )
+        )
+        topics_studied_count = topics_studied_result.scalar() or 0
+
+        total_topics_result = await session.execute(
+            select(func.count(Topic.id)).where(Topic.status == "published")
+        )
+        total_topics_count = total_topics_result.scalar() or 0
+
+        completion_percent = _compute_completion_percent(topics_studied_count, total_topics_count)
+
         # Recall summary: run a single query to get all counts
         recall_summary_query = select(
             func.sum(
@@ -179,6 +198,7 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
         "student_name": user.username,  # Frontend expects student_name
         "school_name": school_name or "Independent Learner",
         "streak_days": streak,
+        "completion_percent": completion_percent,
         "recall_summary": {
             "due_today": int(due_today_count),
             "completed_today": int(completed_today_count),
@@ -241,6 +261,16 @@ def _compute_streak(days_desc: list, today: date) -> int:
             break
 
     return streak
+
+
+def _compute_completion_percent(topics_studied: int, total_topics: int) -> int:
+    """Overall completion for the dashboard's ring: distinct topics the
+    student has at least one TopicReview for, divided by every published
+    topic in the curriculum. Guards against division by zero (an empty
+    curriculum) rather than assuming total_topics is always positive."""
+    if total_topics <= 0:
+        return 0
+    return round((topics_studied / total_topics) * 100)
 
 
 # ── GET /students/me/heatmap ─────────────────────────────────────────────────
