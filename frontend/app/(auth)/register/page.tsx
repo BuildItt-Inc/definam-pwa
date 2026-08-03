@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -17,6 +17,12 @@ function RegisterForm() {
   // Pre-filled from the payment celebration's handoff (?code=...) so the
   // customer doesn't have to dig the code back out of their email.
   const prefilledCode = searchParams.get('code') ?? '';
+  useEffect(() => {
+    if (prefilledCode) {
+      window.history.replaceState({}, '', '/register');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -46,10 +52,10 @@ function RegisterForm() {
       router.push('/student');
     } catch (err) {
       if (err instanceof ApiError) {
-        if (err.status === 409 || (err.status === 400 && err.message === 'Username already taken')) {
-          setError('username', { type: 'server', message: 'Username already taken' });
-        } else if (err.status === 400 && err.message === 'Invalid access code') {
-          setError('access_code', { type: 'server', message: 'That access code is not valid' });
+        if (err.status === 409 || (err.status === 400 && err.message.toLowerCase().includes('username'))) {
+          setError('username', { type: 'server', message: err.message || 'Username already taken' });
+        } else if (err.status === 400 && (err.message.toLowerCase().includes('access code') || err.message.toLowerCase().includes('code'))) {
+          setError('access_code', { type: 'server', message: err.message });
         } else if (err.status === 400) {
           setBannerError(err.message || 'Check your details and try again.');
         } else {

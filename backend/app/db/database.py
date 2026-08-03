@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select, update
@@ -45,7 +46,11 @@ async def get_access_code(code: str) -> dict[str, Any] | None:
             "school_id": row.school_id,
             "activated_by": row.activated_by,
             "device_fingerprint": row.device_fingerprint,
-            "email": row.email, 
+            "email": row.email,
+            "created_at": row.created_at,
+            "activated_at": row.activated_at,
+            "expires_at": row.expires_at,
+            "reminder_sent": row.reminder_sent,
         }
 
 
@@ -54,9 +59,15 @@ async def activate_code(
     user_id: str,
     fingerprint: str | None = None,
 ) -> None:
-    """Mark an access code as active, linking it to the activating user."""
+    """Mark an access code as active, linking it to the activating user and setting 4-month lifespan."""
     async with db_session() as session:
-        payload: dict[str, Any] = {"status": "active", "activated_by": user_id}
+        now = datetime.now(tz=UTC)
+        payload: dict[str, Any] = {
+            "status": "active",
+            "activated_by": user_id,
+            "activated_at": now,
+            "expires_at": now + timedelta(days=120),  # 4 months lifespan
+        }
         if fingerprint:
             payload["device_fingerprint"] = fingerprint
         await session.execute(
@@ -75,7 +86,9 @@ async def revoke_and_reactivate_code(code_id: str, new_fingerprint: str) -> None
 
 
 async def bulk_insert_codes(org_id: str, codes: list[str]) -> None:
-    """Batch-insert org access codes (pending status)."""
+    """Batch-insert org access codes (pending status, 4-month lifespan from issuance)."""
+    now = datetime.now(tz=UTC)
+    expires = now + timedelta(days=120)
     async with db_session() as session:
         rows = [
             AccessCode(
@@ -84,6 +97,7 @@ async def bulk_insert_codes(org_id: str, codes: list[str]) -> None:
                 school_id=org_id,
                 type="org",
                 status="pending",
+                expires_at=expires,
             )
             for c in codes
         ]
@@ -91,8 +105,23 @@ async def bulk_insert_codes(org_id: str, codes: list[str]) -> None:
 
 
 async def insert_individual_code(code: str, email: str) -> None:
-    """Insert a single individual access code with the email it was issued to."""
+    """Insert a single individual access code with 4-month initial expiration.
+
+    Revokes any previously issued but still-"pending" codes for this email
+    first, so at most one pending code ever exists per email. Old codes are
+    marked "revoked" rather than deleted, preserving the record.
+    """
+    now = datetime.now(tz=UTC)
+    expires = now + timedelta(days=120)
     async with db_session() as session:
+        await session.execute(
+            update(AccessCode)
+            .where(
+                AccessCode.email == email,
+                AccessCode.status == "pending",
+            )
+            .values(status="revoked")
+        )
         session.add(
             AccessCode(
                 id=str(uuid.uuid4()),
@@ -101,8 +130,10 @@ async def insert_individual_code(code: str, email: str) -> None:
                 type="individual",
                 status="pending",
                 email=email,
+                expires_at=expires,
             )
         )
+
 
 
 # ── users ──────────────────────────────────────────────────────────────────

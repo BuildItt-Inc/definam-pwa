@@ -28,8 +28,8 @@ export async function initializeIndividualPayment(
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new PaymentError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new PaymentError(res.status, body.detail ?? '');
   }
 
   return res.json() as Promise<InitializePaymentResponse>;
@@ -45,8 +45,8 @@ export async function verifyPayment(
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new PaymentError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new PaymentError(res.status, body.detail ?? '');
   }
 
   return res.json() as Promise<VerifyPaymentResponse>;
@@ -58,7 +58,7 @@ export async function initializeOrgPayment(
   data: InitializeOrgPaymentRequest,
 ): Promise<InitializeOrgPaymentResponse> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/payments/organisation`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/payments/org`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -67,8 +67,8 @@ export async function initializeOrgPayment(
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new PaymentError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new PaymentError(res.status, body.detail ?? '');
   }
 
   return res.json() as Promise<InitializeOrgPaymentResponse>;

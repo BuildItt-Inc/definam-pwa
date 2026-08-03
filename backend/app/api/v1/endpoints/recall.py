@@ -19,7 +19,7 @@ from app.db.models import Chapter, DailyRecallQueue, Subject, Topic, TopicReview
 from app.services.activity import touch_daily_activity
 from app.services.sm2 import sm2_calculate
 
-# Redis is optional — import best-effort so missing REDIS_URL doesn't crash startup
+# Redis is optional import best-effort so missing REDIS_URL doesn't crash startup
 try:
     from app.services.redis_client import get_redis as _get_redis
     _REDIS_ENABLED = True
@@ -41,9 +41,6 @@ router = APIRouter(tags=["recall"])
 
 class RecallRating(BaseModel):
     rating: int
-
-
-# ── Step 4 write endpoint ──────────────────────────────────────────────────
 
 
 class Step4ReviewPayload(BaseModel):
@@ -94,7 +91,7 @@ async def record_step4_attempt(
                 interval_days=1,
                 repetitions=0,
                 last_reviewed_at=now,
-                next_review_at=now + timedelta(days=1),   # <-- ADD THIS LINE
+                next_review_at=now + timedelta(days=1),
                 accuracy_score=payload.accuracy_score,
             )
             session.add(review)

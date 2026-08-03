@@ -23,7 +23,7 @@ const delay = () => new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELA
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: '' }));
-    const errorMsg = body.error || `API Error: ${res.status} ${res.statusText}`;
+    const errorMsg = body.detail || `API Error: ${res.status} ${res.statusText}`;
     throw new ApiError(res.status, errorMsg);
   }
   return res.json() as Promise<T>;

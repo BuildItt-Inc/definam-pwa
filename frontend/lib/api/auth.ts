@@ -28,6 +28,24 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
+const authChannel: BroadcastChannel | null =
+  typeof window !== 'undefined' && 'BroadcastChannel' in window
+    ? new BroadcastChannel('auth')
+    : null;
+
+function broadcastAuthChange(type: 'login' | 'logout') {
+  authChannel?.postMessage({ type });
+}
+
+export function onAuthChange(callback: (type: 'login' | 'logout') => void): () => void {
+  if (!authChannel) return () => {};
+  const handler = (event: MessageEvent<{ type: 'login' | 'logout' }>) => {
+    callback(event.data.type);
+  };
+  authChannel.addEventListener('message', handler);
+  return () => authChannel.removeEventListener('message', handler);
+}
+
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
@@ -40,12 +58,13 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? '');
   }
 
   const json: LoginResponse = await res.json();
   accessToken = json.access_token;
+  broadcastAuthChange('login');
   return json;
 }
 
@@ -66,8 +85,8 @@ export async function changePassword(
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? '');
   }
 
   return res.json() as Promise<{ ok: true }>;
@@ -89,12 +108,13 @@ export async function registerUser(
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? '');
   }
 
   const json: RegisterResponse = await res.json();
   accessToken = json.access_token;
+  broadcastAuthChange('login');
   return json;
 }
 
@@ -114,12 +134,13 @@ export async function orgLogin(
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? '');
   }
 
   const json: OrgLoginResponse = await res.json();
   accessToken = json.access_token;
+  broadcastAuthChange('login');
   return json;
 }
 
@@ -136,8 +157,8 @@ export async function forgotPassword(data: ForgotPasswordRequest): Promise<void>
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? '');
   }
 }
 
@@ -152,8 +173,8 @@ export async function resetPassword(data: ResetPasswordRequest): Promise<void> {
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? '');
   }
 }
 
@@ -170,8 +191,8 @@ export async function refreshToken(): Promise<void> {
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? '');
   }
 
   const json = (await res.json()) as { access_token: string };
@@ -185,6 +206,7 @@ export async function logout(): Promise<void> {
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
   });
   accessToken = null;
+  broadcastAuthChange('logout');
 }
 
 export async function getMe(): Promise<UserMe> {
@@ -192,8 +214,8 @@ export async function getMe(): Promise<UserMe> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me`, { headers });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? '');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? '');
   }
 
   return res.json() as Promise<UserMe>;

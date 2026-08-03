@@ -35,6 +35,7 @@ def mock_settings(monkeypatch):
     class FakeSettings:
         paystack_webhook_secret = WEBHOOK_SECRET
         app_url = "http://localhost:8000"
+        frontend_url = "http://localhost:3000"
         resend_api_key = ""
         from_email = "test@definam.ng"
         smtp_host = "localhost"
