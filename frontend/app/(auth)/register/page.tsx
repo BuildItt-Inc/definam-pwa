@@ -17,6 +17,12 @@ function RegisterForm() {
   // Pre-filled from the payment celebration's handoff (?code=...) so the
   // customer doesn't have to dig the code back out of their email.
   const prefilledCode = searchParams.get('code') ?? '';
+  useEffect(() => {
+    if (prefilledCode) {
+      window.history.replaceState({}, '', '/register');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
