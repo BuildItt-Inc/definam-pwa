@@ -60,15 +60,19 @@ async def get_syllabus_context(subject_name: str, topic_title: str) -> str:
     if query_embedding is None:
         return ""
 
-    async with db_session() as session:
-        result = await session.execute(
-            select(SyllabusChunk)
-            .where(SyllabusChunk.subject_name == subject_name)
-            .where(SyllabusChunk.embedding.is_not(None))
-            .order_by(SyllabusChunk.embedding.cosine_distance(query_embedding))
-            .limit(_SYLLABUS_TOP_K)
-        )
-        chunks = result.scalars().all()
+    try:
+        async with db_session() as session:
+            result = await session.execute(
+                select(SyllabusChunk)
+                .where(SyllabusChunk.subject_name == subject_name)
+                .where(SyllabusChunk.embedding.is_not(None))
+                .order_by(SyllabusChunk.embedding.cosine_distance(query_embedding))
+                .limit(_SYLLABUS_TOP_K)
+            )
+            chunks = result.scalars().all()
+    except Exception:
+        # Fallback gracefully if pgvector is not configured/supported on the database server
+        return ""
 
     if not chunks:
         return ""
