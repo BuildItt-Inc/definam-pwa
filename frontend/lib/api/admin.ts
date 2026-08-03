@@ -15,8 +15,8 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new Error(body.error ?? 'Failed to fetch admin dashboard');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to fetch admin dashboard');
   }
 
   return res.json() as Promise<AdminDashboardData>;
@@ -37,8 +37,8 @@ export async function getStudentDetail(studentId: string): Promise<StudentDetail
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? 'Failed to fetch student detail');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? 'Failed to fetch student detail');
   }
 
   return res.json() as Promise<StudentDetail>;
@@ -59,8 +59,8 @@ export async function getAccessCodes(): Promise<AccessCodesData> {
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? 'Failed to fetch access codes');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? 'Failed to fetch access codes');
   }
 
   return res.json() as Promise<AccessCodesData>;
@@ -104,8 +104,8 @@ export async function downloadCodes(filter: 'all' | 'unused'): Promise<void> {
   );
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
-    throw new ApiError(res.status, body.error ?? 'Failed to download codes');
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? 'Failed to download codes');
   }
 
   const blob = await res.blob();
