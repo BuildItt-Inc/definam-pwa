@@ -28,6 +28,24 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
+const authChannel: BroadcastChannel | null =
+  typeof window !== 'undefined' && 'BroadcastChannel' in window
+    ? new BroadcastChannel('auth')
+    : null;
+
+function broadcastAuthChange(type: 'login' | 'logout') {
+  authChannel?.postMessage({ type });
+}
+
+export function onAuthChange(callback: (type: 'login' | 'logout') => void): () => void {
+  if (!authChannel) return () => {};
+  const handler = (event: MessageEvent<{ type: 'login' | 'logout' }>) => {
+    callback(event.data.type);
+  };
+  authChannel.addEventListener('message', handler);
+  return () => authChannel.removeEventListener('message', handler);
+}
+
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
@@ -46,6 +64,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
 
   const json: LoginResponse = await res.json();
   accessToken = json.access_token;
+  broadcastAuthChange('login');
   return json;
 }
 
@@ -95,6 +114,7 @@ export async function registerUser(
 
   const json: RegisterResponse = await res.json();
   accessToken = json.access_token;
+  broadcastAuthChange('login');
   return json;
 }
 
@@ -120,6 +140,7 @@ export async function orgLogin(
 
   const json: OrgLoginResponse = await res.json();
   accessToken = json.access_token;
+  broadcastAuthChange('login');
   return json;
 }
 
@@ -185,6 +206,7 @@ export async function logout(): Promise<void> {
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
   });
   accessToken = null;
+  broadcastAuthChange('logout');
 }
 
 export async function getMe(): Promise<UserMe> {
