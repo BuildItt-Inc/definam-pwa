@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { KatexScripts } from '@/components/KatexScripts';
 import { AppToaster } from '@/components/ui/AppToaster';
 import { CelebrationProvider } from '@/components/ui/celebration/CelebrationContext';
+import AuthSyncListener from '@/components/AuthSyncListener';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -46,6 +47,7 @@ export default function RootLayout({
           {children}
           <AppToaster />
         </CelebrationProvider>
+        <AuthSyncListener />
         {/* KaTeX JS + mhchem — loaded after page content, never blocks render */}
         <KatexScripts />
       </body>
