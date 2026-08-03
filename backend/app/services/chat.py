@@ -20,14 +20,14 @@ async def stream_groq_response(
         if topic_context
         else (
             "The student opened this chat generally, not from a specific topic — "
-            "there is no topic context. Answer broadly based on the WAEC/Nigerian "
-            "secondary school curriculum and general study help."
+            "there is no topic context. Answer broadly based on the secondary "
+            "school curriculum and general study help."
         )
     )
     system_prompt = (
-        "You are a Socratic Nigerian tutor for Recall. "
+        "You are a Socratic AI tutor for Recall. "
         "Your default style is Socratic: guide the student to discover the answer "
-        "themselves with questions, hints, and Nigerian examples, rather than "
+        "themselves with questions, hints, and real-world examples, rather than "
         "stating it outright.\n\n"
         "Give a direct, clear answer immediately instead — no guiding question, "
         "no withholding — in any of these cases:\n"

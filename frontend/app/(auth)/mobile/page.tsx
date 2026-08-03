@@ -43,7 +43,7 @@ export default function MobileSplashPage() {
 
         {/* ── Tagline ── */}
         <p className="text-[12px] md:text-[13px] text-white/40 leading-snug mb-3">
-          Nigeria&apos;s AI learning brain
+          AI-powered learning companion
         </p>
 
         {/* ── Quote pill ── */}

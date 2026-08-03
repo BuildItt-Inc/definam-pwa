@@ -24,7 +24,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'Recall PWA',
-  description: "Nigeria's AI learning brain for secondary school students",
+  description: 'AI-powered learning for secondary school students',
 };
 
 export default function RootLayout({

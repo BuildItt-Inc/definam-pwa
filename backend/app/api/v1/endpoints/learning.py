@@ -73,17 +73,19 @@ async def get_topic(
     content_missing = (
         not topic.get("content_step1")
         or topic.get("content_step1") == "Content is being prepared."
+        or not topic.get("recall_questions")
         or has_plain_math
         or regenerate
     )
     if content_missing:
-        generated = await generate_all_topic_content(topic["title"])
+        generated = await generate_all_topic_content(topic["title"], topic.get("subject_name"))
         await database.update_topic_content(
             str(topic_id),
             generated["content_step1"],
             generated["content_step2"],
             generated["content_step3"],
             generated["practice_questions"],
+            generated.get("recall_questions"),
         )
         topic.update(generated)
 
@@ -94,7 +96,7 @@ async def get_topic(
             "content": topic.get("content_step1"),
         },
         "step2": {
-            "title": "Nigerian Example",
+            "title": "Real-World Example",
             "content": topic.get("content_step2"),
         },
         "step3": {

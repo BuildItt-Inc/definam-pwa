@@ -8,7 +8,6 @@ Run: python scripts/generate_embeddings.py
 import argparse
 import asyncio
 import logging
-import random
 
 from google import genai
 from sqlalchemy import select, update
@@ -26,7 +25,7 @@ settings = get_settings()
 client = genai.Client(api_key=settings.gemini_api_key)
 
 
-def get_embedding(text: str) -> list[float]:
+def get_embedding(text: str) -> list[float] | None:
     try:
         result = client.models.embed_content(
             model='text-embedding-004',
@@ -34,8 +33,8 @@ def get_embedding(text: str) -> list[float]:
         )
         return result.embeddings[0].values
     except Exception as e:
-        print(f"⚠️ Embedding error: {e}. Using random stub.")
-        return [random.random() for _ in range(1536)]   # <-- fixed length and random import
+        print(f"⚠️ Embedding error: {e}. Skipping — leaving embedding unset rather than storing a random vector.")
+        return None
 
 
 async def process_topic(topic: Topic) -> bool:
@@ -56,6 +55,9 @@ async def process_topic(topic: Topic) -> bool:
         embedding = get_embedding(full_text)
     except Exception as e:
         logger.error(f"Failed to embed topic {topic.id}: {e}")
+        return False
+
+    if embedding is None:
         return False
 
     # Short, focused write session — no long-held connection

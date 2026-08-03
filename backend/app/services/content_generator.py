@@ -20,10 +20,10 @@ client_gemini = genai.Client(api_key=settings.gemini_api_key) if settings.gemini
 client_groq = AsyncGroq(api_key=settings.groq_api_key) if settings.groq_api_key else None
 
 PROMPT_STEP1 = """
-You are a friendly Nigerian tutor writing for secondary school students.
+You are a friendly tutor writing for secondary school students.
 Explain the topic "{title}" in 2–3 short paragraphs (not one long block).
-Use a relatable Nigerian example (market, NEPA, jollof rice, naira, etc.) where natural.
-
+Use a relatable real-world example where natural.
+{context}
 FORMATTING RULES (CRITICAL):
 - Separate each paragraph with a BLANK LINE (two newlines).
 - Wrap ALL mathematical expressions in single dollar signs: $expression$
@@ -36,9 +36,9 @@ Return only the explanation text. No greeting or intro.
 """
 
 PROMPT_STEP2 = """
-You are a friendly Nigerian tutor writing for secondary school students.
-Provide a clear, numbered step-by-step worked example of "{title}" set in a Nigerian context (market, naira, etc.).
-
+You are a friendly tutor writing for secondary school students.
+Provide a clear, numbered step-by-step worked example of "{title}" set in a practical real-world context.
+{context}
 FORMATTING RULES (CRITICAL):
 - Each numbered step MUST be on its own paragraph separated by a BLANK LINE.
 - Format steps like: Step 1: [label]\n\n[working]\n\nStep 2: ...
@@ -51,12 +51,12 @@ Return only the worked example text. No greeting or intro.
 """
 
 PROMPT_STEP3 = """
-You are a friendly Nigerian tutor writing for secondary school students.
+You are a friendly tutor writing for secondary school students.
 Create a clean visual summary / cheat-sheet of "{title}" using:
 - Bullet points with •
 - Tree-style indentation with ├── and └──
 - Clearly labelled sections
-
+{context}
 FORMATTING RULES (CRITICAL):
 - Wrap ALL mathematical expressions in single dollar signs: $expression$
 - Examples: $ax^2 + bx + c = 0$, $x = \\frac{{-b \\pm \\sqrt{{b^2 - 4ac}}}}{{2a}}$
@@ -67,9 +67,9 @@ Return only the breakdown text. No intro.
 """
 
 PROMPT_QUESTIONS = """
-You are a Nigerian tutor. Generate 2 distinct multiple choice practice questions on "{title}".
-Use a realistic Nigerian context (Alaba market, naira, jollof rice, etc.).
-
+You are an expert tutor. Generate 2 distinct multiple choice practice questions on "{title}".
+Use a realistic real-world context.
+{context}
 FORMATTING RULES (CRITICAL):
 - Wrap ALL mathematical expressions in single dollar signs: $expression$
 - In questions AND options AND explanations: use LaTeX for any formula, fraction, symbol
@@ -81,6 +81,18 @@ Respond STRICTLY as a raw JSON array (no markdown fences). Each object:
 - "options": {{"A": ..., "B": ..., "C": ..., "D": ...}} (with $math$ where needed)
 - "answer": correct letter
 - "explanation": detailed explanation (with $math$ where needed)
+"""
+
+PROMPT_RECALL = """
+You are an expert tutor. Write ONE spaced-repetition recall question for the topic "{title}".
+This is for a student reviewing material they've already learned — it should test recall of a
+core fact or concept, answerable in one or two sentences.
+{context}
+FORMATTING RULES (CRITICAL):
+- Wrap ALL mathematical expressions in single dollar signs: $expression$
+
+Respond STRICTLY as a raw JSON object (no markdown fences, no array):
+{{"question": "...", "model_answer": "..."}}
 """
 
 
@@ -154,12 +166,12 @@ def get_fallback_content(title: str) -> dict[str, Any]:
     """Fallback curriculum text when both Gemini and Groq API keys are missing or fail."""
     return {
         "content_step1": (
-            f"{title} is a core topic in the WAEC syllabus. This lesson covers the fundamental concepts, "
+            f"{title} is a core topic in the curriculum. This lesson covers the fundamental concepts, "
             f"definitions, and formulas required to master {title} for your examinations."
         ),
         "content_step2": (
-            f"In a practical Nigerian setting, think of how {title} relates to everyday activities "
-            f"like trading in the market, building houses, managing energy/power supplies, or studying local environments."
+            f"In a practical setting, think of how {title} relates to everyday activities "
+            f"like commerce, construction, resource management, or science."
         ),
         "content_step3": (
             f"Key breakdown of {title}:\n"
@@ -181,6 +193,13 @@ def get_fallback_content(title: str) -> dict[str, Any]:
                 "explanation": f"Understanding the core definitions and terms is the starting block of mastering {title}.",
             }
         ],
+        "recall_questions": {
+            "question": f"In your own words, what is {title}?",
+            "model_answer": (
+                f"{title} covers the core definitions, concepts, and applications required by the "
+                f"curriculum — review your notes for the specific details."
+            ),
+        },
     }
 
 
@@ -258,7 +277,7 @@ async def generate_groq_questions(prompt: str) -> list[dict[str, Any]]:
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            # 2 Nigerian-context MCQs with full explanations routinely need
+            # 2 MCQs with full explanations routinely need
             # more than 1000 tokens; a tight cap truncates mid-JSON-string
             # ("Unterminated string"), which silently falls back to generic
             # content just like the escape-corruption bug above.
@@ -284,26 +303,102 @@ async def generate_groq_questions(prompt: str) -> list[dict[str, Any]]:
         return []
 
 
+async def generate_gemini_recall(prompt: str) -> dict[str, Any] | None:
+    """Generate a single recall question + model_answer pair via Gemini."""
+    if not client_gemini:
+        return None
+    try:
+        response = await client_gemini.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+        text = response.text.strip()
+        if text.startswith("```"):
+            lines = text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines[-1].startswith("```"):
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
+        parsed = json.loads(_sanitize_json_escapes(text))
+        if isinstance(parsed, dict) and "question" in parsed and "model_answer" in parsed:
+            return parsed
+        return None
+    except Exception as e:
+        logger.error(f"Gemini recall generation error: {e}")
+        return None
+
+
+async def generate_groq_recall(prompt: str) -> dict[str, Any] | None:
+    """Generate a single recall question + model_answer pair via Groq."""
+    if not client_groq:
+        return None
+    try:
+        completion = await client_groq.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=500,
+        )
+        text = completion.choices[0].message.content.strip()
+        if text.startswith("```"):
+            lines = text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines[-1].startswith("```"):
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
+        parsed = json.loads(_sanitize_json_escapes(text))
+        if isinstance(parsed, dict) and "question" in parsed and "model_answer" in parsed:
+            return parsed
+        return None
+    except Exception as e:
+        logger.error(f"Groq recall generation error: {e}")
+        return None
+
+
 # ── Core Router ────────────────────────────────────────────────────────────
 
-async def generate_all_topic_content(title: str) -> dict[str, Any]:
-    """Concurrently generate steps 1-3 and practice questions for a topic.
+async def generate_all_topic_content(title: str, subject_name: str | None = None) -> dict[str, Any]:
+    """Concurrently generate steps 1-3, practice questions, and a recall
+    question for a topic.
+
+    If `subject_name` is given, pulls the most relevant WAEC syllabus text
+    for grounding via RAG (see app.services.rag.get_syllabus_context) so
+    generation is scoped to the real examinable content rather than the
+    model's general knowledge. Falls back to ungrounded generation if no
+    syllabus material has been ingested yet for that subject.
 
     Tries Gemini first, then falls back to Groq, then falls back to static template.
     """
-    step1_p = PROMPT_STEP1.format(title=title)
-    step2_p = PROMPT_STEP2.format(title=title)
-    step3_p = PROMPT_STEP3.format(title=title)
-    questions_p = PROMPT_QUESTIONS.format(title=title)
+    syllabus_context = ""
+    if subject_name:
+        try:
+            from app.services.rag import get_syllabus_context
+            syllabus_context = await get_syllabus_context(subject_name, title)
+        except Exception:
+            logger.exception("Syllabus context retrieval failed for '%s' / '%s'", subject_name, title)
 
+    context_block = (
+        f"\nGround your answer in this official WAEC syllabus excerpt — stay within its scope:\n"
+        f"---\n{syllabus_context}\n---\n"
+        if syllabus_context else ""
+    )
+
+    step1_p = PROMPT_STEP1.format(title=title, context=context_block)
+    step2_p = PROMPT_STEP2.format(title=title, context=context_block)
+    step3_p = PROMPT_STEP3.format(title=title, context=context_block)
+    questions_p = PROMPT_QUESTIONS.format(title=title, context=context_block)
+    recall_p = PROMPT_RECALL.format(title=title, context=context_block)
     # 1. Try Gemini
     if client_gemini:
         logger.info(f"Generating content for '{title}' via Gemini...")
-        step1, step2, step3, questions = await asyncio.gather(
+        step1, step2, step3, questions, recall = await asyncio.gather(
             generate_gemini_step(step1_p),
             generate_gemini_step(step2_p),
             generate_gemini_step(step3_p),
             generate_gemini_questions(questions_p),
+            generate_gemini_recall(recall_p),
         )
         if step1 and step2 and step3:
             return {
@@ -311,16 +406,18 @@ async def generate_all_topic_content(title: str) -> dict[str, Any]:
                 "content_step2": step2,
                 "content_step3": step3,
                 "practice_questions": questions or get_fallback_content(title)["practice_questions"],
+                "recall_questions": recall or get_fallback_content(title)["recall_questions"],
             }
 
     # 2. Try Groq (Fallback)
     if client_groq:
         logger.info(f"Generating content for '{title}' via Groq...")
-        step1, step2, step3, questions = await asyncio.gather(
+        step1, step2, step3, questions, recall = await asyncio.gather(
             generate_groq_step(step1_p),
             generate_groq_step(step2_p),
             generate_groq_step(step3_p),
             generate_groq_questions(questions_p),
+            generate_groq_recall(recall_p),
         )
         if step1 and step2 and step3:
             return {
@@ -328,6 +425,7 @@ async def generate_all_topic_content(title: str) -> dict[str, Any]:
                 "content_step2": step2,
                 "content_step3": step3,
                 "practice_questions": questions or get_fallback_content(title)["practice_questions"],
+                "recall_questions": recall or get_fallback_content(title)["recall_questions"],
             }
 
     # 3. Static fallback

@@ -316,9 +316,9 @@ export const mockTopicDetail: Record<string, TopicDetail> = {
         'A quadratic equation is any equation where the highest power of the unknown is 2. It always takes the form axÂ² + bx + c = 0, where a â‰  0, and b and c are any real numbers. The variable x is what you solve for. Every quadratic has at most two solutions â€” called the roots.',
     },
     step2: {
-      title: 'Nigerian Example',
+      title: 'Real-World Example',
       content:
-        'A trader at Alaba Market, Lagos sells generators. Her monthly profit P (in thousands of naira) is modelled by P = âˆ’2xÂ² + 20x âˆ’ 30, where x is the number of generators sold. To find her break-even points she sets P = 0 and solves the quadratic. This exact type of problem appears regularly in WAEC Mathematics and Economics papers.',
+        'A small business owner sells portable power stations. The monthly profit P (in thousands of dollars) is modelled by P = -2x² + 20x - 30, where x is the number of power stations sold. To find the break-even points, they set P = 0 and solve the quadratic equation. This type of problem is a common application of quadratic functions in economics.',
     },
     step3: {
       title: 'Visual Breakdown',
@@ -377,9 +377,9 @@ export const mockTopicDetail: Record<string, TopicDetail> = {
         'A linear equation is an equation in which the highest power of the unknown variable is 1. It takes the general form ax + b = 0, where a â‰  0. The solution is a single value of the variable that makes both sides equal. Linear equations may involve fractions, brackets, or variables on both sides â€” but once simplified they always reduce to this basic form.',
     },
     step2: {
-      title: 'Nigerian Example',
+      title: 'Real-World Example',
       content:
-        'A danfo bus driver in Lagos charges â‚¦500 per passenger. His daily expenses â€” fuel, conductor\'s share, and park levy â€” total â‚¦8,500. His daily profit is modelled by P = 500x âˆ’ 8,500, where x is the number of passengers. Setting P = 0 to find his break-even point gives 500x = 8,500, so x = 17. He must carry at least 17 passengers just to cover his costs before making any profit. WAEC sets this exact type of word problem every year.',
+        'A rideshare driver charges $15 per trip. Their daily expenses—fuel, vehicle depreciation, and platform fees—total $120. The daily profit is modelled by P = 15x - 120, where x is the number of trips completed. Setting P = 0 to find the break-even point gives 15x = 120, so x = 8. The driver must complete at least 8 trips to cover their costs before making any profit.',
     },
     step3: {
       title: 'Visual Breakdown',
@@ -438,9 +438,9 @@ export const mockTopicDetail: Record<string, TopicDetail> = {
         'Simultaneous equations are two or more equations that contain the same unknowns and must all be satisfied at the same time. For two equations in two unknowns (x and y), the solution is the unique pair of values (x, y) that satisfies both equations together. They are solved by elimination (adding or subtracting equations to remove one variable) or substitution (expressing one variable in terms of the other).',
     },
     step2: {
-      title: 'Nigerian Example',
+      title: 'Real-World Example',
       content:
-        'A Mama Put seller at a Abuja market sells rice and beans. One day a customer pays â‚¦10,500 for 2 plates of rice and 3 plates of beans. The next customer pays â‚¦6,500 for 1 plate of rice and 2 plates of beans. To find the price of each plate, set up two equations: 2r + 3b = 10,500 and r + 2b = 6,500. Solving simultaneously gives rice = â‚¦1,500 and beans = â‚¦2,500. This two-equation word problem is a standard WAEC question type.',
+        'A cafe sells sandwich combos and salad combos. One group pays $42 for 2 sandwich combos and 3 salad combos. Another group pays $26 for 1 sandwich combo and 2 salad combos. To find the price of each combo, we set up two linear equations: 2x + 3y = 42 and x + 2y = 26. Solving this system simultaneously yields x = 6 (sandwiches) and y = 10 (salads).',
     },
     step3: {
       title: 'Visual Breakdown',
@@ -499,9 +499,9 @@ export const mockTopicDetail: Record<string, TopicDetail> = {
         'An acid is a substance that releases hydrogen ions (Hâº) when dissolved in water, giving a pH less than 7. A base is a substance that releases hydroxide ions (OHâ») in water, giving a pH greater than 7. When an acid reacts with a base, they neutralise each other to produce a salt and water. The strength of an acid or base is measured on the pH scale, which runs from 0 (strongly acidic) to 14 (strongly alkaline), with 7 being neutral.',
     },
     step2: {
-      title: 'Nigerian Example',
+      title: 'Real-World Example',
       content:
-        'Acids and bases are present all around Nigerian daily life. Palm wine turns sour as it ferments because lactic acid builds up â€” that sourness is the taste of an acid. Car batteries used for NEPA-alternative power in Nigerian homes contain sulphuric acid (Hâ‚‚SOâ‚„). When a white school uniform gets stained, washing it with OMO detergent (which is slightly alkaline) neutralises acidic stains. Baking soda used by mama to make puff-puff rise is sodium bicarbonate â€” a base. WAEC Chemistry routinely tests which household substances are acidic or alkaline.',
+        'Acids and bases are present all around our daily life. Milk turns sour as it ferments because lactic acid builds up—that sourness is the characteristic taste of an acid. Car batteries contain sulphuric acid (H₂SO₄) to help store electrical energy. When clothing gets stained, using laundry detergent (which is slightly alkaline/basic) helps neutralise and lift acidic stains. Baking soda used in baking to make dough rise is sodium bicarbonate—a weak base. Household chemistry tests routinely check whether common cleaning agents are acidic or basic.',
     },
     step3: {
       title: 'Visual Breakdown',
@@ -561,9 +561,9 @@ export const mockTopicDetail: Record<string, TopicDetail> = {
         'Comprehension is the skill of reading a passage, understanding its meaning, and answering questions about it accurately and in good English. In WAEC English Language Paper 2, the comprehension section presents a passage of about 400â€“600 words followed by questions that test your understanding of the main idea, specific details, the meaning of words as used in context, implied meaning (inference), and the author\'s attitude or purpose. All answers must be written in complete sentences.',
     },
     step2: {
-      title: 'Nigerian Example',
+      title: 'Real-World Example',
       content:
-        'Imagine a passage about the Lagos-Ibadan Expressway rehabilitation project. The text explains the project\'s importance to interstate commerce, describes the challenges (flooding near Sagamu, community resistance around Ibadan), and quotes the Honourable Minister of Works on the expected completion date. A WAEC question might ask: "What two challenges are mentioned in the passage?", "What does the word \'rehabilitation\' mean as used in paragraph two?", or "What can you infer about the government\'s priorities from this passage?". Nigerian students who read newspapers such as Punch and Vanguard regularly perform better on these passages.',
+        'Imagine reading a passage about a major highway rehabilitation project. The text explains the project\'s importance to interstate commerce, describes the engineering challenges (soil erosion and detours), and quotes the department of transportation director on the expected completion date. A comprehension question might ask: "What two challenges are mentioned in the passage?", "What does the word \'rehabilitation\' mean as used in paragraph two?", or "What can you infer about the project\'s priorities from this passage?". Analyzing high-quality journalism is a great way to prepare for these types of reading comprehension tests.',
     },
     step3: {
       title: 'Visual Breakdown',
@@ -673,9 +673,9 @@ export const mockRecallQueue: RecallItem[] = [
     topic_title: 'Acids & Bases',
     subject: 'Chemistry',
     question:
-      'What is the pH range of a strong acid, and give a Nigerian everyday example of one?',
+      'What is the pH range of a strong acid, and give a common everyday example of one?',
     model_answer:
-      'Strong acids have a pH of 0â€“2. Battery acid (Hâ‚‚SOâ‚„) found in car batteries â€” those powering generators during NEPA outages â€” is a common Nigerian example. It turns litmus paper red and reacts violently with metals to produce hydrogen gas.',
+      'Strong acids have a pH of 0–2. Battery acid (H₂SO₄) found in car batteries is a common everyday example. It turns litmus paper red and reacts strongly with metals to produce hydrogen gas.',
   },
   {
     id: 'rq-002',

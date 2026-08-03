@@ -68,10 +68,9 @@ function RegisterForm() {
   }
 
   const fieldClass = (hasError: boolean) =>
-    `w-full rounded-xl border bg-white px-4 py-2.5 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none focus:ring-2 transition-all ${
-      hasError
-        ? 'border-[#EF4444] focus:ring-red-100'
-        : 'border-[#D1D5DB] focus:border-[#16A34A] focus:ring-green-100'
+    `w-full rounded-xl border bg-white px-4 py-2.5 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none focus:ring-2 transition-all ${hasError
+      ? 'border-[#EF4444] focus:ring-red-100'
+      : 'border-[#D1D5DB] focus:border-[#16A34A] focus:ring-green-100'
     }`;
 
   return (
@@ -103,7 +102,7 @@ function RegisterForm() {
               id="access_code"
               type="text"
               autoCapitalize="characters"
-              placeholder="e.g. SCH-12345"
+              placeholder="e.g. IND-A1B2-C3"
               className={fieldClass(!!errors.access_code)}
               {...register('access_code')}
             />
