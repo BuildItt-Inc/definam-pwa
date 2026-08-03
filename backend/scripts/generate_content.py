@@ -38,8 +38,8 @@ groq_client = Groq(api_key=settings.groq_api_key)
 # arithmetic to students (see WEEK10 docs for the "Algebraic Expressions"
 # incident this caused).
 PROMPT_STEP1 = """
-You are a Nigerian tutor. Explain the topic "{title}" in 2–3 plain sentences using simple language. No jargon.
-Make sure to use a real-world Nigerian example (like market, NEPA, Jollof rice, etc.) if applicable.
+You are an expert tutor. Explain the topic "{title}" in 2–3 plain sentences using simple language. No jargon.
+Make sure to use a real-world example if applicable.
 
 FORMATTING RULES (CRITICAL):
 - Wrap ALL mathematical expressions and numeric equations in single dollar signs: $expression$
@@ -52,7 +52,7 @@ Return only the explanation text.
 """
 
 PROMPT_STEP2 = """
-You are a Nigerian tutor. Provide a step-by-step worked example of the topic "{title}" using a Nigerian context.
+You are an expert tutor. Provide a step-by-step worked example of the topic "{title}" using a real-world context.
 Show all steps clearly. The example should be realistic and help a student understand the concept.
 
 FORMATTING RULES (CRITICAL):
@@ -67,7 +67,7 @@ Return only the worked example text.
 """
 
 PROMPT_STEP3 = """
-You are a Nigerian tutor. Generate 1 practice question on the topic "{title}" with:
+You are an expert tutor. Generate 1 practice question on the topic "{title}" with:
 - 4 options (A, B, C, D)
 - The correct answer (letter)
 - A brief explanation of why it's correct

@@ -1,10 +1,10 @@
 import type { AdminDashboardData, StudentDetail, AccessCodesData } from '@/types/admin';
 
 export const mockAdminData: AdminDashboardData = {
-  school_name: 'Kings Secondary School',
-  class_name: 'SS2A',
-  teacher_name: 'Mr. A. Ojo',
-  location: 'Lagos',
+  school_name: 'Pinewood Academy',
+  class_name: 'Grade 11-A',
+  teacher_name: 'Mr. A. Miller',
+  location: 'Main Campus',
   total_students: 38,
   active_this_week: 34,
   class_avg_accuracy: 67,
@@ -19,8 +19,8 @@ export const mockAdminData: AdminDashboardData = {
   },
   students: [
     {
-      id: 'ada-okonkwo',
-      name: 'Ada Okonkwo',
+      id: 'alice-smith',
+      name: 'Alice Smith',
       streak_days: 7,
       recall_status: 'on_track',
       overdue_days: 0,
@@ -31,8 +31,8 @@ export const mockAdminData: AdminDashboardData = {
       last_active: 'Today',
     },
     {
-      id: 'emeka-nwosu',
-      name: 'Emeka Nwosu',
+      id: 'ethan-miller',
+      name: 'Ethan Miller',
       streak_days: 3,
       recall_status: 'on_track',
       overdue_days: 0,
@@ -43,8 +43,8 @@ export const mockAdminData: AdminDashboardData = {
       last_active: 'Yesterday',
     },
     {
-      id: 'fatima-musa',
-      name: 'Fatima Musa',
+      id: 'fiona-jones',
+      name: 'Fiona Jones',
       streak_days: 0,
       recall_status: 'overdue',
       overdue_days: 2,
@@ -55,8 +55,8 @@ export const mockAdminData: AdminDashboardData = {
       last_active: '3 days ago',
     },
     {
-      id: 'chidi-obi',
-      name: 'Chidi Obi',
+      id: 'charlotte-brown',
+      name: 'Charlotte Brown',
       streak_days: 12,
       recall_status: 'on_track',
       overdue_days: 0,
@@ -67,8 +67,8 @@ export const mockAdminData: AdminDashboardData = {
       last_active: 'Today',
     },
     {
-      id: 'ngozi-eze',
-      name: 'Ngozi Eze',
+      id: 'natalie-evans',
+      name: 'Natalie Evans',
       streak_days: 0,
       recall_status: 'not_started',
       overdue_days: 0,
@@ -79,8 +79,8 @@ export const mockAdminData: AdminDashboardData = {
       last_active: '5 days ago',
     },
     {
-      id: 'tunde-adeyemi',
-      name: 'Tunde Adeyemi',
+      id: 'tyler-adams',
+      name: 'Tyler Adams',
       streak_days: 5,
       recall_status: 'on_track',
       overdue_days: 0,
@@ -91,8 +91,8 @@ export const mockAdminData: AdminDashboardData = {
       last_active: 'Today',
     },
     {
-      id: 'amina-bello',
-      name: 'Amina Bello',
+      id: 'abigail-taylor',
+      name: 'Abigail Taylor',
       streak_days: 0,
       recall_status: 'overdue',
       overdue_days: 4,
@@ -103,8 +103,8 @@ export const mockAdminData: AdminDashboardData = {
       last_active: '4 days ago',
     },
     {
-      id: 'kelechi-okafor',
-      name: 'Kelechi Okafor',
+      id: 'kevin-owens',
+      name: 'Kevin Owens',
       streak_days: 9,
       recall_status: 'on_track',
       overdue_days: 0,
@@ -118,9 +118,9 @@ export const mockAdminData: AdminDashboardData = {
 };
 
 export const mockStudentDetail: Record<string, StudentDetail> = {
-  'ada-okonkwo': {
-    id: 'ada-okonkwo',
-    name: 'Ada Okonkwo',
+  'alice-smith': {
+    id: 'alice-smith',
+    name: 'Alice Smith',
     streak_days: 7,
     recall_status: 'on_track',
     topic_history: [
@@ -212,9 +212,9 @@ export const mockStudentDetail: Record<string, StudentDetail> = {
     ],
   },
 
-  'emeka-nwosu': {
-    id: 'emeka-nwosu',
-    name: 'Emeka Nwosu',
+  'ethan-miller': {
+    id: 'ethan-miller',
+    name: 'Ethan Miller',
     streak_days: 3,
     recall_status: 'on_track',
     topic_history: [
@@ -306,9 +306,9 @@ export const mockStudentDetail: Record<string, StudentDetail> = {
     ],
   },
 
-  'fatima-musa': {
-    id: 'fatima-musa',
-    name: 'Fatima Musa',
+  'fiona-jones': {
+    id: 'fiona-jones',
+    name: 'Fiona Jones',
     streak_days: 0,
     recall_status: 'overdue',
     topic_history: [
@@ -419,21 +419,21 @@ export const mockAccessCodes: AccessCodesData = {
     {
       id: 'code-001',
       code: 'DA-8472-KX',
-      student_name: 'Ada Okonkwo',
+      student_name: 'Alice Smith',
       status: 'active',
       activated_at: '2026-01-10T09:00:00Z',
     },
     {
       id: 'code-002',
       code: 'DA-8473-PQ',
-      student_name: 'Emeka Nwosu',
+      student_name: 'Ethan Miller',
       status: 'active',
       activated_at: '2026-01-11T10:30:00Z',
     },
     {
       id: 'code-003',
       code: 'DA-8474-RS',
-      student_name: 'Fatima Musa',
+      student_name: 'Fiona Jones',
       status: 'active',
       activated_at: '2026-01-12T08:15:00Z',
     },
@@ -454,14 +454,14 @@ export const mockAccessCodes: AccessCodesData = {
     {
       id: 'code-006',
       code: 'DA-8477-WX',
-      student_name: 'Chidi Obi',
+      student_name: 'Charlotte Brown',
       status: 'active',
       activated_at: '2026-01-15T14:00:00Z',
     },
     {
       id: 'code-007',
       code: 'DA-8478-YZ',
-      student_name: 'Ngozi Eze',
+      student_name: 'Natalie Evans',
       status: 'active',
       activated_at: '2026-01-18T11:45:00Z',
     },

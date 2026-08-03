@@ -7,7 +7,7 @@ import LandingPage from '@/components/landing/LandingPage';
 export const metadata: Metadata = {
   title: 'Recall: Study smarter. Remember longer.',
   description:
-    'A modern study platform for Nigerian secondary school students. Clear explanations, real world examples, and an AI tutor built to help you actually retain what you learn.',
+    'A modern study platform for secondary school students. Clear explanations, real world examples, and an AI tutor built to help you actually retain what you learn.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -16,10 +16,10 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Recall',
-    description: 'A modern study platform for Nigerian secondary school students.',
-    url: 'https://definam.ng',
+    description: 'A modern study platform for secondary school students.',
+    url: 'https://recall.app',
     siteName: 'Recall',
-    locale: 'en_NG',
+    locale: 'en_US',
     type: 'website',
   },
 };

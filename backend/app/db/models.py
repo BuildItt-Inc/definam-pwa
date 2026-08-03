@@ -229,6 +229,29 @@ class Chapter(Base):
 # ── Topics ──────────────────────────────────────────────────────────────────
 
 
+# ── Syllabus Source Material (RAG) ─────────────────────────────────────────
+
+
+class SyllabusChunk(Base):
+    """A chunk of official WAEC syllabus text for a subject, with its
+    embedding, used to ground AI-generated topic content and recall
+    questions in the actual examinable scope instead of the model's
+    general knowledge."""
+
+    __tablename__ = "syllabus_chunks"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    subject_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    heading: Mapped[str] = mapped_column(String(300), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(1536), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
+    )
+
+
 class Topic(Base):
     """Individual topic with 5-step learning content."""
 
@@ -254,7 +277,7 @@ class Topic(Base):
     )  # Simple Definition
     content_step2: Mapped[str | None] = mapped_column(
         Text, nullable=True
-    )  # Nigerian Example
+    )  # Real-World Example
     content_step3: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # Visual Breakdown

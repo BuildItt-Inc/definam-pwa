@@ -22,7 +22,7 @@ const delay = () => new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELA
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: '' }));
+    const body = await res.json().catch(() => ({ detail: '' }));
     const errorMsg = body.detail || `API Error: ${res.status} ${res.statusText}`;
     throw new ApiError(res.status, errorMsg);
   }
@@ -141,10 +141,10 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
 
   const raw = await handleResponse<RawItem[]>(res);
   const items: RawItem[] = Array.isArray(raw)
-  ? raw
-  : raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)
-    ? (raw as { data: RawItem[] }).data
-    : [];
+    ? raw
+    : raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)
+      ? (raw as { data: RawItem[] }).data
+      : [];
 
   return items
     .filter((item) => item.question && item.model_answer)
@@ -196,13 +196,13 @@ export async function getProgressData(): Promise<ProgressData> {
     subject_mastery: Array.isArray(d.subject_mastery) ? d.subject_mastery : [],
     upcoming_reviews: Array.isArray(d.upcoming_reviews)
       ? d.upcoming_reviews.map((r) => ({
-          topic_title: r?.topic_title ?? '',
-          due: r?.due ?? '',
-          urgency: (r?.urgency === 'high' || r?.urgency === 'medium' ? r?.urgency : 'low') as
-            | 'high'
-            | 'medium'
-            | 'low',
-        }))
+        topic_title: r?.topic_title ?? '',
+        due: r?.due ?? '',
+        urgency: (r?.urgency === 'high' || r?.urgency === 'medium' ? r?.urgency : 'low') as
+          | 'high'
+          | 'medium'
+          | 'low',
+      }))
       : [],
     heatmap_data: Array.isArray(d.heatmap_data) ? d.heatmap_data : [],
   };

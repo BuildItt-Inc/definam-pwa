@@ -15,7 +15,7 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
 
   return (
     <div>
-      {/* Step number badge + category label (e.g. "Nigerian Example") —
+      {/* Step number badge + category label (e.g. "Real-World Example") —
           matches the redesigned learning-interface preview's eyebrow row. */}
       <div className="mb-3 flex items-center gap-2">
         <span className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-lg bg-[#ECFDF5] text-[13px] font-extrabold text-[#16A34A]">
@@ -38,7 +38,7 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
         {step === 2 && (
           <span className="relative z-10 mb-2.5 inline-flex items-center gap-1.5 rounded-lg bg-[#FDF4E7] px-2.5 py-1 text-[11px] font-bold text-[#D97706]">
             <Flag size={12} strokeWidth={2} />
-            Nigerian Context
+            Real-World Context
           </span>
         )}
 
@@ -52,7 +52,7 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
           </div>
         )}
 
-        {/* ── Step 2 — Nigerian Example ────────────────────────────────────── */}
+        {/* ── Step 2 — Real-World Example ───────────────────────────────────── */}
         {step === 2 && (
           <div className="relative z-10">
             <MathContent

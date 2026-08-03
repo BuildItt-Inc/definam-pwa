@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -24,8 +24,20 @@ import {
 import { loginUser, logout, changePassword, ApiError } from '@/lib/api/auth';
 import { InfoCard } from '@/components/ui/InfoCard';
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const hint = searchParams.get('hint');
+  const nextParam = searchParams.get('next');
+  const nextPath = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/admin';
+
+  const middlewareBanner =
+    hint === 'not_admin'
+      ? 'Access denied. This page is for administrators only.'
+      : hint === 'session_error'
+        ? 'Your session could not be verified. Please log in again.'
+        : null;
 
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
 
@@ -81,7 +93,7 @@ export default function AdminLoginPage() {
       if (data.force_password_change) {
         setForcePasswordChange(true);
       } else {
-        router.push('/admin');
+        router.push(nextPath);
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -101,7 +113,7 @@ export default function AdminLoginPage() {
         new_password: values.new_password,
         confirm_password: values.confirm_password,
       });
-      router.push('/admin');
+      router.push(nextPath);
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setChangeBannerError(err.message || 'Something went wrong. Please try again.');
@@ -145,6 +157,16 @@ export default function AdminLoginPage() {
               Login to your Recall admin dashboard
             </p>
 
+            {/* Middleware redirect banner */}
+            {middlewareBanner && (
+              <div
+                role="alert"
+                className="mb-6 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug"
+              >
+                {middlewareBanner}
+              </div>
+            )}
+
             <form onSubmit={handleLoginSubmit(onLoginSubmit)} noValidate>
 
               {/* Username / email */}
@@ -163,7 +185,7 @@ export default function AdminLoginPage() {
                     autoComplete="email"
                     spellCheck={false}
                     autoCapitalize="none"
-                    placeholder="admin@kingsschool.edu.ng"
+                    placeholder="admin@yourschool.edu"
                     className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
                     {...registerLogin('username')}
                   />
@@ -384,5 +406,13 @@ export default function AdminLoginPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminLoginForm />
+    </Suspense>
   );
 }

@@ -462,25 +462,33 @@ async def get_topics_by_chapter(
 async def get_topic_by_id(
     topic_id: str, published_only: bool = True
 ) -> dict[str, Any] | None:
-    """Return a single topic by ID."""
-    from app.db.models import Topic
+    """Return a single topic by ID, including its subject name (via chapter)."""
+    from app.db.models import Chapter, Subject, Topic
 
     async with db_session() as session:
-        stmt = select(Topic).where(Topic.id == topic_id)
+        stmt = (
+            select(Topic, Subject.name.label("subject_name"))
+            .join(Chapter, Topic.chapter_id == Chapter.id)
+            .join(Subject, Chapter.subject_id == Subject.id)
+            .where(Topic.id == topic_id)
+        )
         if published_only:
             stmt = stmt.where(Topic.status == "published")
         result = await session.execute(stmt)
-        row = result.scalar_one_or_none()
-        if row is None:
+        row_result = result.first()
+        if row_result is None:
             return None
+        row, subject_name = row_result
         return {
             "id": row.id,
             "chapter_id": row.chapter_id,
+            "subject_name": subject_name,
             "title": row.title,
             "content_step1": row.content_step1,
             "content_step2": row.content_step2,
             "content_step3": row.content_step3,
             "practice_questions": row.practice_questions,
+            "recall_questions": row.recall_questions,
             "status": row.status,
         }
 
@@ -508,20 +516,26 @@ async def update_topic_content(
     content_step2: str,
     content_step3: str,
     practice_questions: list[dict],
+    recall_questions: dict | None = None,
 ) -> None:
-    """Update educational content and practice questions for a topic."""
+    """Update educational content, practice questions, and the recall
+    (question + model_answer) pair for a topic."""
     from sqlalchemy import update
 
     from app.db.models import Topic
+
+    values: dict[str, Any] = {
+        "content_step1": content_step1,
+        "content_step2": content_step2,
+        "content_step3": content_step3,
+        "practice_questions": practice_questions,
+    }
+    if recall_questions is not None:
+        values["recall_questions"] = recall_questions
 
     async with db_session() as session:
         await session.execute(
             update(Topic)
             .where(Topic.id == topic_id)
-            .values(
-                content_step1=content_step1,
-                content_step2=content_step2,
-                content_step3=content_step3,
-                practice_questions=practice_questions,
-            )
+            .values(**values)
         )

@@ -354,6 +354,7 @@ Generate a comprehensive syllabus/curriculum for {class_level} level "{subject_n
 Cover the portion of the WAEC syllabus typically taught at {class_level} specifically —
 not the full three-year SS1-SS3 span, and not content that properly belongs to an earlier
 or later year. Divide it into 8 to 15 chapters appropriate for that year's depth and difficulty.
+{context}
 Each chapter must have:
 - a chapter number (starting from 1)
 - a chapter title
@@ -372,10 +373,24 @@ Do not include any introductory text, markdown code blocks, or explanations. Onl
 
 
 def generate_subject_curriculum(
-    subject_name: str, class_level: str
+    subject_name: str, class_level: str, syllabus_context: str = ""
 ) -> list[dict[str, Any]] | None:
-    """Call Gemini or Groq to generate a complete syllabus for a subject at a specific class level."""
-    prompt = PROMPT_TEMPLATE.format(subject_name=subject_name, class_level=class_level)
+    """Call Gemini or Groq to generate a complete syllabus for a subject at a specific class level.
+
+    If `syllabus_context` is provided (real WAEC syllabus text ingested via
+    scripts/ingest_syllabus.py), the model is grounded in it so chapters and
+    topics reflect the actual examinable scope rather than the model's
+    general sense of what a subject "usually" covers.
+    """
+    context_block = (
+        f"\nBase this on the following official WAEC syllabus excerpt — reflect its actual "
+        f"structure and scope rather than your general knowledge of the subject:\n"
+        f"---\n{syllabus_context}\n---\n"
+        if syllabus_context else ""
+    )
+    prompt = PROMPT_TEMPLATE.format(
+        subject_name=subject_name, class_level=class_level, context=context_block
+    )
 
     # 1. Try Gemini
     if gemini_client:
@@ -437,13 +452,21 @@ async def seed_curriculum() -> None:
         "Chemistry",
         "Physics",
         "Economics",
+        "Biology",
+        # Add each remaining WAEC subject here once its syllabus PDF has
+        # been ingested via scripts/ingest_syllabus.py — ungrounded
+        # generation still works via Gemini/Groq fallback, but accuracy is
+        # meaningfully better once real syllabus text is available.
     ]
 
     curriculum_data = []
 
     for sub_name in subjects:
+        from app.services.rag import get_full_subject_syllabus
+        syllabus_context = await get_full_subject_syllabus(sub_name)
+
         for class_level in CLASS_LEVELS:
-            generated = generate_subject_curriculum(sub_name, class_level)
+            generated = generate_subject_curriculum(sub_name, class_level, syllabus_context)
             if generated:
                 curriculum_data.append(
                     {

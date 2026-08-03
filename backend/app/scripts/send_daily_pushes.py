@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Send daily recall push notifications to all students with due topics.
 Run this script daily (e.g., at 8 AM) via a scheduler.

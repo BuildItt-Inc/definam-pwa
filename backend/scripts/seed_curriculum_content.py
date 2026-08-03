@@ -24,9 +24,9 @@ SPECIAL_CONTENTS = {
             "The variable $x$ is what you solve for. Every quadratic has at most two solutions — called the roots."
         ),
         "content_step2": (
-            "A trader at Alaba Market, Lagos sells generators. Her monthly profit $P$ (in thousands of naira) "
-            "is modelled by $P = -2x^2 + 20x - 30$, where $x$ is the number of generators sold. To find her break-even points "
-            "she sets $P = 0$ and solves the quadratic. This exact type of problem appears regularly in WAEC Mathematics."
+            "A small business owner sells portable power stations. The monthly profit $P$ (in thousands of dollars) "
+            "is modelled by $P = -2x^2 + 20x - 30$, where $x$ is the number of power stations sold. To find the break-even points "
+            "she sets $P = 0$ and solves the quadratic. This type of problem is a common application of quadratic functions."
         ),
         "content_step3": (
             "$ax^2 + bx + c = 0$\n"
@@ -76,9 +76,9 @@ SPECIAL_CONTENTS = {
             "that makes both sides equal."
         ),
         "content_step2": (
-            "A danfo bus driver in Lagos charges ₦500 per passenger. His daily expenses (fuel, conductor's share, "
-            "and park levy) total ₦8,500. His daily profit is $P = 500x - 8500$. Setting $P = 0$ to break even gives "
-            "$500x = 8500$, so $x = 17$ passengers."
+            "A rideshare driver charges $15 per trip. Their daily expenses (fuel, vehicle depreciation, "
+            "and platform fees) total $120. The daily profit is $P = 15x - 120$. Setting $P = 0$ to break even gives "
+            "$15x = 120$, so $x = 8$ trips."
         ),
         "content_step3": (
             "Standard form: $ax + b = 0$\n"
@@ -111,8 +111,8 @@ SPECIAL_CONTENTS = {
             "be satisfied at the same time. The solution is the coordinate pair $(x, y)$ where they intersect."
         ),
         "content_step2": (
-            "A Mama Put seller in Abuja sells rice and beans. One customer pays ₦10,500 for $2$ plates of rice and $3$ of beans. "
-            "The next pays ₦6,500 for $1$ rice and $2$ beans. System: $2r + 3b = 10500$ and $r + 2b = 6500$. Solving gives rice $r = 1500$."
+            "A cafe sells sandwich combos and salad combos. One group pays $42 for $2$ sandwich combos and $3$ salad combos. "
+            "Another pays $26 for $1$ sandwich combo and $2$ salad combos. System: $2x + 3y = 42$ and $x + 2y = 26$. Solving gives sandwich price $x = 6$."
         ),
         "content_step3": (
             "Two equations, two unknowns:\n"
@@ -142,7 +142,7 @@ SPECIAL_CONTENTS = {
             "Bases are substances that react with acids to form salt and water only, producing hydroxide ions ($OH^-$) in solution."
         ),
         "content_step2": (
-            "When making West African soap (black soap) in Nigeria, palm bunch ash (which contains potassium hydroxide, a base) "
+            "When making traditional soap, an alkaline solution (like lye, containing sodium hydroxide) "
             "is mixed with oils. If the soap is too acidic or too basic, it can irritate the skin. Neutralising it is key."
         ),
         "content_step3": (
@@ -177,8 +177,8 @@ SPECIAL_CONTENTS = {
             "In WAEC exams, it requires extracting direct facts, inferring secondary meanings, and identifying grammatical functions."
         ),
         "content_step2": (
-            "Imagine reading a news article about traffic on the Third Mainland Bridge in Lagos. A comprehension question might ask: "
-            "'Why did the author take a ferry instead?' You must locate the passage sentence describing the gridlock to answer accurately."
+            "Imagine reading a news article about public transit options in a major city. A comprehension question might ask: "
+            "'Why did the author choose to take a train instead?' You must locate the passage sentence describing the traffic congestion to answer accurately."
         ),
         "content_step3": (
             "How to approach Comprehension passages:\n"
@@ -209,12 +209,12 @@ def make_fallback_content(title: str) -> dict:
     """Generate default neat educational content for topics without predefined text."""
     return {
         "content_step1": (
-            f"{title} is a core topic in the WAEC syllabus. This lesson covers the fundamental concepts, "
-            f"definitions, and formulas required to master {title} for your examinations."
+            f"{title} is a core topic in the curriculum. This lesson covers the fundamental concepts, "
+            f"definitions, and formulas required to master {title}."
         ),
         "content_step2": (
-            f"In a practical Nigerian setting, think of how {title} relates to everyday activities "
-            f"like trading in the market, building houses, managing energy/power supplies, or studying local environments."
+            f"In a practical setting, think of how {title} relates to everyday activities "
+            f"like commerce, construction, resource management, or science."
         ),
         "content_step3": (
             f"Key breakdown of {title}:\n"

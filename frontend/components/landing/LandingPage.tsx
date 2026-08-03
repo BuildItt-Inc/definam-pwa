@@ -132,7 +132,7 @@ export default function LandingPage() {
           {/* Hero body */}
           <div className="flex flex-1 flex-col items-center justify-center px-6 py-8 text-center sm:py-10">
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#4ADE80] sm:mb-[18px] sm:text-[12px]">
-              A modern study platform for Nigerian secondary school students
+              A modern study platform for secondary school students
             </p>
             <h1 className="mb-4 max-w-[640px] text-[32px] font-extrabold leading-[1.1] tracking-[-0.02em] text-white sm:mb-5 sm:text-[50px]">
               Study smarter.
@@ -294,9 +294,9 @@ export default function LandingPage() {
       <footer className="border-t border-[#E5E7EB] bg-white px-6 py-8 text-center">
         <p className="mb-1 text-[14px] font-bold text-[#111827]">Recall</p>
         <p className="mb-3 text-[13px] text-[#6B7280]">
-          A modern study platform for Nigerian secondary school students.
+          A modern study platform for secondary school students.
         </p>
-        <p className="text-[12px] text-[#9CA3AF]">&copy; Recall 2026. Made in Nigeria.</p>
+        <p className="text-[12px] text-[#9CA3AF]">&copy; Recall 2026.</p>
       </footer>
     </div>
   );

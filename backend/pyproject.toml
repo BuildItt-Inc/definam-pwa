@@ -26,6 +26,7 @@ dependencies = [
     "google-genai>=2.9.0",
     "pyjwt>=2.13.0",
     "anthropic>=0.115.1",
+    "pdfplumber>=0.11.0",
 ]
 
 [project.optional-dependencies]
