@@ -20,20 +20,17 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    connection = op.get_bind()
-    result = connection.execute(
-        sa.text("SELECT name FROM pg_available_extensions WHERE name = 'vector'")
-    )
-    has_vector = result.fetchone() is not None
     try:
         from pgvector.sqlalchemy import Vector
         has_pgvector_pkg = True
     except ImportError:
         has_pgvector_pkg = False
 
-    embedding_col = (
-        Vector(1536) if (has_vector and has_pgvector_pkg) else postgresql.JSONB()
-    )
+    if has_pgvector_pkg:
+        op.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        embedding_col = Vector(1536)
+    else:
+        embedding_col = postgresql.JSONB()
 
     op.create_table(
         'syllabus_chunks',

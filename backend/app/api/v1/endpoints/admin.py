@@ -50,7 +50,7 @@ def format_next_review(dt: datetime | None, now: datetime) -> str:
         days = (dt_date - now_date).days
         return f"In {days} days"
     else:
-        return "Today" if dt_date == now_date else "Overdue"
+        return "Overdue"
 
 
 @router.get("/dashboard")
@@ -171,85 +171,153 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
         students_list = (await session.execute(students_query)).scalars().all()
 
         students_data = []
-        for student in students_list:
-            # Streak
-            active_days = await _get_streak_active_days(session, student.id)
-            streak = _compute_streak(active_days, now.date())
+        if students_list:
+            student_ids = [student.id for student in students_list]
 
-            # Overdue recall items and days
-            overdue_items_q = select(DailyRecallQueue.due_date).where(
-                and_(
-                    DailyRecallQueue.user_id == student.id,
-                    DailyRecallQueue.completed == 0,
-                    DailyRecallQueue.due_date < now,
+            # 1. Bulk active days
+            active_days_result = await session.execute(
+                select(DailyActivity.user_id, DailyActivity.activity_date)
+                .where(DailyActivity.user_id.in_(student_ids))
+            )
+            user_active_days = {}
+            for user_id, act_date in active_days_result:
+                user_active_days.setdefault(user_id, []).append(act_date)
+
+            # 2. Bulk overdue recall items
+            overdue_result = await session.execute(
+                select(DailyRecallQueue.user_id, DailyRecallQueue.due_date)
+                .where(
+                    and_(
+                        DailyRecallQueue.user_id.in_(student_ids),
+                        DailyRecallQueue.completed == 0,
+                        DailyRecallQueue.due_date < now,
+                    )
                 )
-            ).order_by(DailyRecallQueue.due_date.asc())
-            overdue_items = (await session.execute(overdue_items_q)).scalars().all()
+                .order_by(DailyRecallQueue.due_date.asc())
+            )
+            user_overdue_items = {}
+            for user_id, due_date in overdue_result:
+                user_overdue_items.setdefault(user_id, []).append(due_date)
 
-            recall_status = "on_track"
-            overdue_days = 0
-            if overdue_items:
-                recall_status = "overdue"
-                oldest_due = overdue_items[0]
-                delta = now - oldest_due
-                overdue_days = max(0, delta.days)
-            else:
-                has_reviews_q = select(func.count(TopicReview.id)).where(TopicReview.user_id == student.id)
-                has_reviews = (await session.execute(has_reviews_q)).scalar() or 0
-                if has_reviews == 0:
-                    recall_status = "not_started"
+            # 3. Bulk stats for topic reviews
+            reviews_stats_result = await session.execute(
+                select(TopicReview.user_id, func.count(TopicReview.id), func.avg(TopicReview.accuracy_score))
+                .where(TopicReview.user_id.in_(student_ids))
+                .group_by(TopicReview.user_id)
+            )
+            user_review_stats = {
+                row[0]: {"count": row[1], "avg": row[2]}
+                for row in reviews_stats_result
+            }
 
-            # Avg accuracy
-            student_avg_q = select(func.avg(TopicReview.accuracy_score)).where(TopicReview.user_id == student.id)
-            student_avg = (await session.execute(student_avg_q)).scalar()
-            student_avg_accuracy = round(float(student_avg), 1) if student_avg is not None else 0.0
+            # 4. Weakest topic using window functions
+            rn_col = func.row_number().over(
+                partition_by=TopicReview.user_id,
+                order_by=TopicReview.accuracy_score.asc()
+            ).label("rn")
 
-            # Weakest topic and subject
-            weakest_topic_q = (
-                select(Topic.title, TopicReview.accuracy_score, Subject.name)
+            weakest_subquery = (
+                select(
+                    TopicReview.user_id,
+                    Topic.title.label("topic_title"),
+                    TopicReview.accuracy_score.label("accuracy_score"),
+                    Subject.name.label("subject_name"),
+                    rn_col
+                )
                 .join(Topic, TopicReview.topic_id == Topic.id)
                 .join(Chapter, Topic.chapter_id == Chapter.id)
                 .join(Subject, Chapter.subject_id == Subject.id)
-                .where(TopicReview.user_id == student.id)
-                .order_by(TopicReview.accuracy_score.asc())
-                .limit(1)
+                .where(TopicReview.user_id.in_(student_ids))
+                .subquery()
             )
-            weakest_row = (await session.execute(weakest_topic_q)).first()
-            if weakest_row:
-                weakest_topic = weakest_row[0]
-                weakest_topic_accuracy = round(float(weakest_row[1] or 0.0), 1)
-                weakest_subject = weakest_row[2]
-            else:
-                weakest_topic = "None"
-                weakest_topic_accuracy = 0.0
-                weakest_subject = "None"
 
-            # Last active
-            last_act_q = select(DailyActivity.activity_date).where(DailyActivity.user_id == student.id).order_by(DailyActivity.activity_date.desc()).limit(1)
-            last_act_date = (await session.execute(last_act_q)).scalar()
-            if last_act_date:
-                days_ago = (now.date() - last_act_date).days
-                if days_ago == 0:
-                    last_active = "Today"
-                elif days_ago == 1:
-                    last_active = "Yesterday"
+            weakest_result = await session.execute(
+                select(
+                    weakest_subquery.c.user_id,
+                    weakest_subquery.c.topic_title,
+                    weakest_subquery.c.accuracy_score,
+                    weakest_subquery.c.subject_name
+                ).where(weakest_subquery.c.rn == 1)
+            )
+            user_weakest = {
+                row[0]: {
+                    "topic_title": row[1],
+                    "accuracy_score": row[2],
+                    "subject_name": row[3]
+                }
+                for row in weakest_result
+            }
+
+            # 5. Bulk last active
+            last_act_result = await session.execute(
+                select(DailyActivity.user_id, func.max(DailyActivity.activity_date))
+                .where(DailyActivity.user_id.in_(student_ids))
+                .group_by(DailyActivity.user_id)
+            )
+            user_last_active = {
+                row[0]: row[1]
+                for row in last_act_result
+            }
+
+            for student in students_list:
+                # Streak
+                active_days = user_active_days.get(student.id, [])
+                streak = _compute_streak(active_days, now.date())
+
+                # Overdue recall items and days
+                overdue_items = user_overdue_items.get(student.id, [])
+                recall_status = "on_track"
+                overdue_days = 0
+                if overdue_items:
+                    recall_status = "overdue"
+                    oldest_due = overdue_items[0]
+                    delta = now - oldest_due
+                    overdue_days = max(0, delta.days)
                 else:
-                    last_active = f"{days_ago} days ago"
-            else:
-                last_active = "Never"
+                    has_reviews = user_review_stats.get(student.id, {}).get("count", 0)
+                    if has_reviews == 0:
+                        recall_status = "not_started"
 
-            students_data.append({
-                "id": student.id,
-                "name": student.username,
-                "streak_days": streak,
-                "recall_status": recall_status,
-                "overdue_days": overdue_days,
-                "avg_accuracy": student_avg_accuracy,
-                "weakest_topic": weakest_topic,
-                "weakest_topic_accuracy": weakest_topic_accuracy,
-                "weakest_subject": weakest_subject,
-                "last_active": last_active,
-            })
+                # Avg accuracy
+                student_avg = user_review_stats.get(student.id, {}).get("avg")
+                student_avg_accuracy = round(float(student_avg), 1) if student_avg is not None else 0.0
+
+                # Weakest topic and subject
+                weakest_row = user_weakest.get(student.id)
+                if weakest_row:
+                    weakest_topic = weakest_row["topic_title"]
+                    weakest_topic_accuracy = round(float(weakest_row["accuracy_score"] or 0.0), 1)
+                    weakest_subject = weakest_row["subject_name"]
+                else:
+                    weakest_topic = "None"
+                    weakest_topic_accuracy = 0.0
+                    weakest_subject = "None"
+
+                # Last active
+                last_act_date = user_last_active.get(student.id)
+                if last_act_date:
+                    days_ago = (now.date() - last_act_date).days
+                    if days_ago == 0:
+                        last_active = "Today"
+                    elif days_ago == 1:
+                        last_active = "Yesterday"
+                    else:
+                        last_active = f"{days_ago} days ago"
+                else:
+                    last_active = "Never"
+
+                students_data.append({
+                    "id": student.id,
+                    "name": student.username,
+                    "streak_days": streak,
+                    "recall_status": recall_status,
+                    "overdue_days": overdue_days,
+                    "avg_accuracy": student_avg_accuracy,
+                    "weakest_topic": weakest_topic,
+                    "weakest_topic_accuracy": weakest_topic_accuracy,
+                    "weakest_subject": weakest_subject,
+                    "last_active": last_active,
+                })
 
     return {
         "school_name": school_name,

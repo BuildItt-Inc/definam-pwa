@@ -28,9 +28,9 @@ function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Middleware redirects here with ?hint=not_admin or ?hint=session_error
   const hint = searchParams.get('hint');
-  const nextPath = searchParams.get('next') ?? '/admin';
+  const nextParam = searchParams.get('next');
+  const nextPath = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/admin';
 
   const middlewareBanner =
     hint === 'not_admin'

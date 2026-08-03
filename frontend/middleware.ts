@@ -40,10 +40,14 @@ const REFRESH_COOKIE = 'refresh_token';
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
-    const [, payloadB64] = token.split('.');
-    if (!payloadB64) return null;
-    // atob is available in the Edge Runtime
-    const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
+    const [, payloadB64Url] = token.split('.');
+    if (!payloadB64Url) return null;
+    const base64 = payloadB64Url
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+      .padEnd(Math.ceil(payloadB64Url.length / 4) * 4, '=');
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const json = new TextDecoder().decode(bytes);
     return JSON.parse(json) as Record<string, unknown>;
   } catch {
     return null;
