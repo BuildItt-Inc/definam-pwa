@@ -134,7 +134,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // ✅ Authenticated admin — let the request through
+    // Authenticated admin — let the request through
     return NextResponse.next();
   }
 
