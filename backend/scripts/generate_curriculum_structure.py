@@ -16,6 +16,7 @@ from typing import Any
 
 from google import genai
 from groq import Groq
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
 
 from app.core.config import get_settings
@@ -529,6 +530,18 @@ async def seed_curriculum() -> None:
 
             if existing_sub:
                 subject = existing_sub
+                # Clean up existing topics & chapters for this subject so re-generating
+                # replaces old chapters/topics instead of accumulating duplicates
+                sub_chapter_ids = select(Chapter.id).where(
+                    Chapter.subject_id == subject.id
+                )
+                await session.execute(
+                    sa_delete(Topic).where(Topic.chapter_id.in_(sub_chapter_ids))
+                )
+                await session.execute(
+                    sa_delete(Chapter).where(Chapter.subject_id == subject.id)
+                )
+                await session.flush()
             else:
                 subject = Subject(
                     id=str(uuid.uuid4()),
