@@ -30,6 +30,7 @@ async def embed_text(text: str) -> list[float] | None:
 
     try:
         from google import genai
+        from google.genai import types as genai_types
 
         client = genai.Client(api_key=settings.gemini_api_key)
 
