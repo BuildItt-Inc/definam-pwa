@@ -30,25 +30,32 @@ async def embed_text(text: str) -> list[float] | None:
 
     try:
         from google import genai
-        from google.genai import types as genai_types
 
-        # text-embedding-004 lives in API version v1, not v1beta (the SDK
-        # default). Forcing v1 here prevents the 404 NOT_FOUND error.
-        client = genai.Client(
-            api_key=settings.gemini_api_key,
-            http_options=genai_types.HttpOptions(api_version="v1"),
-        )
-        result = await client.aio.models.embed_content(
-            model=_EMBEDDING_MODEL,
-            contents=text,
-        )
-        values: list[float] = list(result.embeddings[0].values)
-        # Pad or truncate to the declared column dimension
-        if len(values) < _EMBEDDING_DIM:
-            values = values + [0.0] * (_EMBEDDING_DIM - len(values))
-        elif len(values) > _EMBEDDING_DIM:
-            values = values[:_EMBEDDING_DIM]
-        return values
+        client = genai.Client(api_key=settings.gemini_api_key)
+
+        # Try text-embedding-004 first, fall back to embedding-001 if unsupported
+        for model_name in ["text-embedding-004", "embedding-001"]:
+            try:
+                result = await client.aio.models.embed_content(
+                    model=model_name,
+                    contents=text,
+                )
+                values: list[float] = list(result.embeddings[0].values)
+                # Pad or truncate to the declared column dimension
+                if len(values) < _EMBEDDING_DIM:
+                    values = values + [0.0] * (_EMBEDDING_DIM - len(values))
+                elif len(values) > _EMBEDDING_DIM:
+                    values = values[:_EMBEDDING_DIM]
+                return values
+            except Exception as model_err:
+                logger.warning(
+                    "Embedding model '%s' unavailable (%s); trying fallback...",
+                    model_name,
+                    model_err,
+                )
+                continue
+
+        return None
     except Exception:
         logger.exception("Embedding generation failed for text: %.80s", text)
         return None

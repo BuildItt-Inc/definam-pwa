@@ -23,25 +23,25 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
-from google.genai import types as genai_types  # noqa: E402
 
-# text-embedding-004 lives in the v1 API; the SDK defaults to v1beta and
-# returns a 404 for embedding models without this override.
-client = genai.Client(
-    api_key=settings.gemini_api_key,
-    http_options=genai_types.HttpOptions(api_version="v1"),
-)
+client = genai.Client(api_key=settings.gemini_api_key)
 
 
 def get_embedding(text: str) -> list[float] | None:
-    try:
-        result = client.models.embed_content(model="text-embedding-004", contents=text)
-        return list(result.embeddings[0].values)
-    except Exception as e:
-        print(
-            f"⚠️ Embedding error: {e}. Skipping — leaving embedding unset rather than storing a random vector."
-        )
-        return None
+    for model_name in ["text-embedding-004", "embedding-001"]:
+        try:
+            result = client.models.embed_content(model=model_name, contents=text)
+            return list(result.embeddings[0].values)
+        except Exception as e:
+            logger.warning(
+                f"Embedding model '{model_name}' failed: {e}. Trying fallback..."
+            )
+            continue
+
+    print(
+        "⚠️ All embedding models failed. Skipping — leaving embedding unset rather than storing a random vector."
+    )
+    return None
 
 
 async def process_topic(topic: Topic) -> bool:
