@@ -788,3 +788,20 @@ async def ingest_syllabus_pdf(
             "check GEMINI_API_KEY. Re-ingest after fixing the key."
         )
     return result
+
+
+@router.post(
+    "/curriculum/generate",
+    summary="Generate curriculum structure from ingested syllabus",
+    description=(
+        "Parses ingested syllabus chunks to generate Subjects, Chapters, and Topics "
+        "in the database for SS1, SS2, and SS3. Once complete, students will see "
+        "the subjects and chapters when logging into the application."
+    ),
+)
+async def generate_curriculum_endpoint(_admin: AdminDep) -> dict:
+    """Trigger the curriculum generation process."""
+    from scripts.generate_curriculum_structure import seed_curriculum
+
+    await seed_curriculum()
+    return {"message": "Curriculum structure successfully generated and seeded."}

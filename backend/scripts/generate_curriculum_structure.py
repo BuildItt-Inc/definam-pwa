@@ -402,7 +402,7 @@ def generate_subject_curriculum(
                 f"Generating curriculum for {subject_name} ({class_level}) via Gemini..."
             )
             response = gemini_client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.0-flash",
                 contents=prompt,
             )
             text = response.text.strip()
