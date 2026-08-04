@@ -208,7 +208,7 @@ export default function StudentHomePage() {
       >
         {/* Fixed corner glow (not spotlight-following — a static accent, per
             the preview's .header-glow, distinct from the cursor-tracked
-            spotlight used on cards/buttons elsewhere). */}
+            spotlight used on cards/buttons elsewhere).*/}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full"
