@@ -22,7 +22,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
-client = genai.Client(api_key=settings.gemini_api_key)
+
+from google.genai import types as genai_types  # noqa: E402
+
+# text-embedding-004 lives in the v1 API; the SDK defaults to v1beta and
+# returns a 404 for embedding models without this override.
+client = genai.Client(
+    api_key=settings.gemini_api_key,
+    http_options=genai_types.HttpOptions(api_version="v1"),
+)
 
 
 def get_embedding(text: str) -> list[float] | None:
@@ -31,7 +39,7 @@ def get_embedding(text: str) -> list[float] | None:
             model='text-embedding-004',
             contents=text
         )
-        return result.embeddings[0].values
+        return list(result.embeddings[0].values)
     except Exception as e:
         print(f"⚠️ Embedding error: {e}. Skipping — leaving embedding unset rather than storing a random vector.")
         return None

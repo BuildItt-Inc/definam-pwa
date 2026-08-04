@@ -352,7 +352,7 @@ function CallbackContent() {
         <motion.div variants={staggerItem} className="w-full">
           <motion.div {...scaleTap}>
             <Link
-              href="/login"
+              href="/admin/login"
               className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 transition-colors shadow-sm"
             >
               Sign In as Admin
