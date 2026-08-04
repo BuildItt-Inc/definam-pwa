@@ -46,16 +46,16 @@ async def get_full_subject_syllabus(subject_name: str, max_chars: int = 12000) -
     """
     async with db_session() as session:
         result = await session.execute(
-            select(SyllabusChunk)
+            select(SyllabusChunk.heading, SyllabusChunk.content)
             .where(SyllabusChunk.subject_name == subject_name)
             .order_by(SyllabusChunk.created_at)
         )
-        chunks = result.scalars().all()
+        chunks = result.all()
 
     if not chunks:
         return ""
 
-    text = "\n\n".join(f"[{c.heading}]\n{c.content}" for c in chunks)
+    text = "\n\n".join(f"[{heading}]\n{content}" for heading, content in chunks)
     return text[:max_chars]
 
 
@@ -68,13 +68,13 @@ async def get_syllabus_context(subject_name: str, topic_title: str) -> str:
     try:
         async with db_session() as session:
             result = await session.execute(
-                select(SyllabusChunk)
+                select(SyllabusChunk.heading, SyllabusChunk.content)
                 .where(SyllabusChunk.subject_name == subject_name)
                 .where(SyllabusChunk.embedding.is_not(None))
                 .order_by(SyllabusChunk.embedding.cosine_distance(query_embedding))
                 .limit(_SYLLABUS_TOP_K)
             )
-            chunks = result.scalars().all()
+            chunks = result.all()
     except Exception:
         # Fallback gracefully if pgvector is not configured/supported on the database server
         return ""
@@ -82,5 +82,5 @@ async def get_syllabus_context(subject_name: str, topic_title: str) -> str:
     if not chunks:
         return ""
 
-    context = "\n\n".join(f"[{c.heading}]\n{c.content}" for c in chunks)
+    context = "\n\n".join(f"[{heading}]\n{content}" for heading, content in chunks)
     return context[:_SYLLABUS_MAX_CONTEXT_CHARS]
