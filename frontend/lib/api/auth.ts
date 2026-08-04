@@ -47,15 +47,13 @@ export function onAuthChange(callback: (type: 'login' | 'logout') => void): () =
 }
 
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    },
-  );
+  // Route through the Next.js proxy so the refresh_token cookie is set on
+  // the frontend domain and the Edge Middleware can read it.
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
@@ -97,15 +95,11 @@ export async function changePassword(
 export async function registerUser(
   data: RegisterRequest,
 ): Promise<RegisterResponse> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/register`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    },
-  );
+  const res = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
@@ -123,15 +117,11 @@ export async function registerUser(
 export async function orgLogin(
   data: OrgLoginRequest,
 ): Promise<OrgLoginResponse> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/org-login`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    },
-  );
+  const res = await fetch('/api/auth/org-login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
@@ -182,13 +172,9 @@ export async function resetPassword(data: ResetPasswordRequest): Promise<void> {
 
 // Uses the httpOnly refresh cookie the backend sets on login.
 export async function refreshToken(): Promise<void> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
-    {
-      method: 'POST',
-      credentials: 'include',
-    },
-  );
+  // Calls the Next.js proxy which reads the frontend-domain cookie and
+  // forwards it to the backend, returning a new access_token.
+  const res = await fetch('/api/auth/refresh', { method: 'POST' });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
@@ -200,11 +186,7 @@ export async function refreshToken(): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
-  await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/logout`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-  });
+  await fetch('/api/auth/logout', { method: 'POST' });
   accessToken = null;
   broadcastAuthChange('logout');
 }

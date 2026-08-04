@@ -33,13 +33,6 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 
-// Prefer the private server-side API_URL (not inlined at build time, always
-// available in Edge Middleware). Fall back to the public variant so local dev
-// still works out of the box without a separate variable.
-const API_BASE =
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  '';
 const REFRESH_COOKIE = 'refresh_token';
 
 // ── JWT payload decoder (no signature verify — see comment above) ──────────
@@ -67,17 +60,24 @@ interface RefreshResult {
   error: boolean;
 }
 
-async function tryRefresh(refreshCookie: string): Promise<RefreshResult> {
-  // No API base configured — pass through and let the page's own fetch handle auth.
-  if (!API_BASE) return { role: null, error: true };
+async function tryRefresh(request: NextRequest): Promise<RefreshResult> {
+  const refreshCookie = request.cookies.get(REFRESH_COOKIE)?.value;
+  if (!refreshCookie) {
+    // No cookie on the frontend domain — session definitely not established
+    return { role: null, error: false };
+  }
 
   try {
-    const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+    // Call the same-domain Next.js proxy rather than the backend directly.
+    // The proxy reads the frontend-domain refresh_token cookie and forwards
+    // it to the backend — this is what makes cross-domain deployments work.
+    const proxyUrl = new URL('/api/auth/refresh', request.url);
+    const res = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
+        // Forward the cookie so the proxy route can read it server-side
         Cookie: `${REFRESH_COOKIE}=${refreshCookie}`,
       },
-      // No body needed — backend reads the cookie
     });
 
     if (!res.ok) return { role: null, error: true };
@@ -95,8 +95,7 @@ async function tryRefresh(refreshCookie: string): Promise<RefreshResult> {
 
     return { role: null, error: true };
   } catch {
-    // Network error or backend down — fail open to avoid locking out users
-    // during outages; the backend API calls on the page will still 401 them.
+    // Network error — fail open; the page's own API calls will 401 them.
     return { role: null, error: true };
   }
 }
@@ -108,22 +107,17 @@ export async function middleware(request: NextRequest) {
 
   // ── Guard: /admin/* (except the login page itself) ─────────────────────
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    const refreshCookie = request.cookies.get(REFRESH_COOKIE)?.value;
+    const { role, error } = await tryRefresh(request);
 
-    // No cookie at all → redirect straight to login
-    if (!refreshCookie) {
+    if (!role && !error) {
+      // No frontend-domain cookie at all → send to login
       const loginUrl = new URL('/admin/login', request.url);
-      // Preserve intended destination so the login page can redirect back
       loginUrl.searchParams.set('next', pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    const { role, error } = await tryRefresh(refreshCookie);
-
     if (error) {
-      // Backend unreachable / cold-start — fail open; the page's authenticated
-      // API calls will 401 if the session is truly invalid. Redirecting here
-      // caused loop-bouncing when the edge couldn't reach the backend.
+      // Backend unreachable — fail open; the page's API calls will 401 if invalid.
       return NextResponse.next();
     }
 
@@ -140,13 +134,11 @@ export async function middleware(request: NextRequest) {
 
   // ── Guard: /student/* ───────────────────────────────────────────────────
   if (pathname.startsWith('/student')) {
-    const refreshCookie = request.cookies.get(REFRESH_COOKIE)?.value;
+    const { role, error } = await tryRefresh(request);
 
-    if (!refreshCookie) {
+    if (!role && !error) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-
-    const { role, error } = await tryRefresh(refreshCookie);
 
     if (error) {
       // Backend down — pass through; the page's own fetch will 401
