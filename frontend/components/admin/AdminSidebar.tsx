@@ -110,7 +110,7 @@ function SidebarBody({
     <div className="flex flex-col h-full bg-bg-0">
       {/* Logo row */}
       <div className="flex items-center justify-between px-4 py-[14px] border-b border-border-2">
-        <span className="font-bold text-[15px] font-extrabold text-ink tracking-tight">
+        <span className="font-bold text-[15px] text-ink tracking-tight">
           Recall
         </span>
         {onClose && (

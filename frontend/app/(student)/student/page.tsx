@@ -203,7 +203,7 @@ export default function StudentHomePage() {
       <div
         ref={glowRef}
         onMouseMove={onGlowMouseMove}
-        className="relative overflow-hidden px-5 pb-11 pt-[calc(env(safe-area-inset-top)+24px)]"
+        className="relative shrink-0 overflow-hidden px-5 pb-11 pt-[calc(env(safe-area-inset-top)+24px)]"
         style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 130%)' }}
       >
         {/* Fixed corner glow (not spotlight-following — a static accent, per
