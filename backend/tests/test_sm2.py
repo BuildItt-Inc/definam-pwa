@@ -9,11 +9,13 @@ def test_rating_0_resets():
     assert interval == 1
     assert reps == 0
 
+
 def test_rating_3_first_review():
     ef, interval, reps = sm2_calculate(3, 2.5, 0, 0)
     assert ef == pytest.approx(2.36, 0.01)
     assert interval == 1
     assert reps == 1
+
 
 def test_rating_5_first_review():
     ef, interval, reps = sm2_calculate(5, 2.5, 0, 0)
@@ -21,16 +23,19 @@ def test_rating_5_first_review():
     assert interval == 1
     assert reps == 1
 
+
 def test_rating_5_second_review():
     ef, interval, reps = sm2_calculate(5, 2.6, 1, 1)
     assert interval == 6
     assert reps == 2
+
 
 def test_rating_5_third_review():
     ef, interval, reps = sm2_calculate(5, 2.6, 6, 2)
     assert interval == round(6 * 2.6)  # 16 days
     assert reps == 3
 
+
 def test_ef_floor_guard():
     ef, interval, reps = sm2_calculate(3, 1.2, 10, 5)
-    assert ef == 1.3   # should not go below 1.3
+    assert ef == 1.3  # should not go below 1.3

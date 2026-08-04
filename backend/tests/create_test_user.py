@@ -9,6 +9,7 @@ import asyncio
 import os
 import sys
 import uuid
+
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from app.core.security import hash_password
@@ -21,32 +22,36 @@ async def create_user():
 
     async with db_session() as session:
         existing = (
-            await session.execute(select(User).where(User.username == 'teststudent'))
+            await session.execute(select(User).where(User.username == "teststudent"))
         ).scalar_one_or_none()
 
         if existing:
-            existing.password_hash = await hash_password('Test12345')
-            existing.email = 'student@definam.ng'
-            existing.role = 'student_individual'
+            existing.password_hash = await hash_password("Test12345")
+            existing.email = "student@definam.ng"
+            existing.role = "student_individual"
             await session.commit()
-            print(f'[SUCCESS] Updated existing user: {existing.username} (ID: {existing.id}, Email: {existing.email})')
+            print(
+                f"[SUCCESS] Updated existing user: {existing.username} (ID: {existing.id}, Email: {existing.email})"
+            )
         else:
             user = User(
                 id=str(uuid.uuid4()),
-                username='teststudent',
-                password_hash=await hash_password('Test12345'),
-                role='student_individual',
+                username="teststudent",
+                password_hash=await hash_password("Test12345"),
+                role="student_individual",
                 org_id=None,
                 device_fingerprint=None,
                 force_password_change=False,
-                email='student@definam.ng'
+                email="student@definam.ng",
             )
             session.add(user)
             await session.commit()
-            print(f'[SUCCESS] Created user: {user.username} (ID: {user.id}, Email: {user.email})')
+            print(
+                f"[SUCCESS] Created user: {user.username} (ID: {user.id}, Email: {user.email})"
+            )
 
-        print('[INFO] Now login to get a token:')
-        print('   POST /api/v1/auth/login')
+        print("[INFO] Now login to get a token:")
+        print("   POST /api/v1/auth/login")
         print('   {"username_or_email": "testuser", "password": "Test12345"}')
 
 

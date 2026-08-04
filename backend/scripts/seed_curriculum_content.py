@@ -50,10 +50,10 @@ SPECIAL_CONTENTS = {
                     "A": "3x + 7 = 0",
                     "B": "$x^2 + 5x - 6 = 0$",
                     "C": "$x^3 - 2x = 0$",
-                    "D": "2/x + 1 = 0"
+                    "D": "2/x + 1 = 0",
                 },
                 "answer": "B",
-                "explanation": "A quadratic equation has the highest power of the variable equal to $2$. Only option B satisfies this condition."
+                "explanation": "A quadratic equation has the highest power of the variable equal to $2$. Only option B satisfies this condition.",
             },
             {
                 "type": "mcq",
@@ -62,12 +62,12 @@ SPECIAL_CONTENTS = {
                     "A": "$x = -2$ and $x = -3$",
                     "B": "$x = 2$ and $x = 3$",
                     "C": "$x = 1$ and $x = 6$",
-                    "D": "$x = -1$ and $x = -6$"
+                    "D": "$x = -1$ and $x = -6$",
                 },
                 "answer": "B",
-                "explanation": "Factorising gives $(x - 2)(x - 3) = 0$. Setting each bracket to zero gives $x = 2$ or $x = 3$."
-            }
-        ]
+                "explanation": "Factorising gives $(x - 2)(x - 3) = 0$. Setting each bracket to zero gives $x = 2$ or $x = 3$.",
+            },
+        ],
     },
     "Linear Equations": {
         "content_step1": (
@@ -98,12 +98,12 @@ SPECIAL_CONTENTS = {
                     "A": "$x = 2$",
                     "B": "$x = 3$",
                     "C": "$x = 4$",
-                    "D": "$x = 6$"
+                    "D": "$x = 6$",
                 },
                 "answer": "C",
-                "explanation": "Collect terms: $3x = 12$, which gives $x = 4$."
+                "explanation": "Collect terms: $3x = 12$, which gives $x = 4$.",
             }
-        ]
+        ],
     },
     "Simultaneous Equations": {
         "content_step1": (
@@ -129,12 +129,12 @@ SPECIAL_CONTENTS = {
                     "A": "$x = 7, y = 3$",
                     "B": "$x = 6, y = 4$",
                     "C": "$x = 8, y = 2$",
-                    "D": "$x = 5, y = 5$"
+                    "D": "$x = 5, y = 5$",
                 },
                 "answer": "A",
-                "explanation": "Adding the two equations yields $2x = 14 \\implies x = 7$. Thus $y = 3$."
+                "explanation": "Adding the two equations yields $2x = 14 \\implies x = 7$. Thus $y = 3$.",
             }
-        ]
+        ],
     },
     "Acids & Bases": {
         "content_step1": (
@@ -164,12 +164,12 @@ SPECIAL_CONTENTS = {
                     "A": "Lemon juice",
                     "B": "Vinegar",
                     "C": "Sodium hydroxide solution",
-                    "D": "Hydrochloric acid"
+                    "D": "Hydrochloric acid",
                 },
                 "answer": "C",
-                "explanation": "Sodium hydroxide is a strong base, and bases turn red litmus paper blue. The other options are acidic."
+                "explanation": "Sodium hydroxide is a strong base, and bases turn red litmus paper blue. The other options are acidic.",
             }
-        ]
+        ],
     },
     "Comprehension": {
         "content_step1": (
@@ -195,13 +195,13 @@ SPECIAL_CONTENTS = {
                     "A": "Base answers strictly on the facts in the passage",
                     "B": "Guess based on general knowledge",
                     "C": "Copy the entire paragraph word-for-word",
-                    "D": "Write the longest answer possible"
+                    "D": "Write the longest answer possible",
                 },
                 "answer": "A",
-                "explanation": "Answers must be grounded solely in the provided text, not external knowledge or assumptions."
+                "explanation": "Answers must be grounded solely in the provided text, not external knowledge or assumptions.",
             }
-        ]
-    }
+        ],
+    },
 }
 
 
@@ -230,12 +230,12 @@ def make_fallback_content(title: str) -> dict:
                     "A": "Basic terminology and core variables",
                     "B": "Unrelated historical stories",
                     "C": "Advanced unrelated theories",
-                    "D": "None of the above"
+                    "D": "None of the above",
                 },
                 "answer": "A",
-                "explanation": f"Understanding the core definitions and terms is the starting block of mastering {title}."
+                "explanation": f"Understanding the core definitions and terms is the starting block of mastering {title}.",
             }
-        ]
+        ],
     }
 
 
@@ -243,19 +243,31 @@ async def seed_content() -> None:
     async with db_session() as session:
         result = await session.execute(select(Topic))
         topics = result.scalars().all()
-        
+
         updated_count = 0
         for topic in topics:
             # Overwrite if content is missing, or is preparing, or has plain text math without LaTeX $ signs
             has_no_latex = False
-            is_mathy = any(x in topic.title.lower() for x in ["equation", "fraction", "math", "decimal", "algebra", "indices", "surds"])
+            is_mathy = any(
+                x in topic.title.lower()
+                for x in [
+                    "equation",
+                    "fraction",
+                    "math",
+                    "decimal",
+                    "algebra",
+                    "indices",
+                    "surds",
+                ]
+            )
             if (
                 topic.content_step1
                 and "$" not in topic.content_step1
-                and (is_mathy or "/" in topic.content_step1 or "=" in topic.content_step1)
+                and (
+                    is_mathy or "/" in topic.content_step1 or "=" in topic.content_step1
+                )
             ):
                 has_no_latex = True
-
 
             should_update = (
                 not topic.content_step1
@@ -264,22 +276,23 @@ async def seed_content() -> None:
             )
             if not should_update:
                 continue
-            
+
             # Retrieve special content or fallback
             content = SPECIAL_CONTENTS.get(topic.title)
             if not content:
                 content = make_fallback_content(topic.title)
-            
+
             topic.content_step1 = content["content_step1"]
             topic.content_step2 = content["content_step2"]
             topic.content_step3 = content["content_step3"]
             topic.practice_questions = content["practice_questions"]
-            
-            updated_count += 1
-            
-        await session.commit()
-        print(f"[OK] Seeded educational content for {updated_count} topics in the database.")
 
+            updated_count += 1
+
+        await session.commit()
+        print(
+            f"[OK] Seeded educational content for {updated_count} topics in the database."
+        )
 
 
 if __name__ == "__main__":

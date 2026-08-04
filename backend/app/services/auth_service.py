@@ -72,7 +72,7 @@ async def register(body: RegisterRequest) -> tuple[str, str]:
         raise UserAlreadyRegisteredError()
 
     user_id = str(uuid.uuid4())
-    
+
     # Retrieve email from the access code (will be None for old codes)
     email = code_row.get("email")
 
@@ -82,7 +82,7 @@ async def register(body: RegisterRequest) -> tuple[str, str]:
         role="student_individual",
         username=body.username,
         password_hash=await hash_password(body.password),
-        email=email,   # <-- pass email
+        email=email,  # <-- pass email
     )
     await activate_code(code_row["id"], user_id)
 

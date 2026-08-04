@@ -18,7 +18,9 @@ def sm2_calculate(rating: int, ease_factor: float, interval: int, repetitions: i
         new_ease_factor = ease_factor  # unchanged
     else:
         # Calculate new EF
-        new_ease_factor = ease_factor + (0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02))
+        new_ease_factor = ease_factor + (
+            0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02)
+        )
         # Floor guard
         new_ease_factor = max(1.3, new_ease_factor)
 

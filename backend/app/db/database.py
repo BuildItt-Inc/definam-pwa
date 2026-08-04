@@ -135,7 +135,6 @@ async def insert_individual_code(code: str, email: str) -> None:
         )
 
 
-
 # ── users ──────────────────────────────────────────────────────────────────
 
 
@@ -148,7 +147,7 @@ async def create_student_user(
     password_hash: str | None = None,
     device_fingerprint: str | None = None,
     force_password_change: bool = False,
-    email: str | None = None,   # <-- add this
+    email: str | None = None,  # <-- add this
 ) -> None:
     """Create a user record in PostgreSQL, optionally with email."""
     async with db_session() as session:
@@ -161,7 +160,7 @@ async def create_student_user(
                 org_id=org_id,
                 device_fingerprint=device_fingerprint,
                 force_password_change=force_password_change,
-                email=email,   # <-- store email
+                email=email,  # <-- store email
             )
         )
 
@@ -221,15 +220,14 @@ async def set_force_password_change(user_id: str, value: bool) -> None:
 async def update_user_name(user_id: str, name: str) -> None:
     """Update a user's display name."""
     async with db_session() as session:
-        await session.execute(
-            update(User).where(User.id == user_id).values(name=name)
-        )
+        await session.execute(update(User).where(User.id == user_id).values(name=name))
 
 
 async def get_user_by_email(email: str) -> dict[str, Any] | None:
     """Return a user row by email, or None."""
     async with db_session() as session:
         from sqlalchemy import func
+
         result = await session.execute(
             select(User).where(func.lower(User.email) == email.lower())
         )
@@ -276,7 +274,9 @@ async def consume_password_reset_token(
 
     async with db_session() as session:
         result = await session.execute(
-            select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
+            select(PasswordResetToken).where(
+                PasswordResetToken.token_hash == token_hash
+            )
         )
         row = result.scalar_one_or_none()
         if row is None or row.used or row.expires_at < datetime.now(UTC):
@@ -287,8 +287,6 @@ async def consume_password_reset_token(
             .values(used=True)
         )
         return {"user_id": row.user_id}
-
-
 
 
 async def update_user_org_and_role(user_id: str, org_id: str | None, role: str) -> None:
@@ -423,14 +421,16 @@ async def get_chapters_by_subject_name(name: str) -> list[dict[str, Any]]:
         chapters = []
         for row in result.all():
             ch_obj = row[0]
-            chapters.append({
-                "id": ch_obj.id,
-                "subject_id": ch_obj.subject_id,
-                "class_level": row.class_level,
-                "title": ch_obj.title,
-                "topic_count": row.topic_count,
-                "mastery_percent": None,
-            })
+            chapters.append(
+                {
+                    "id": ch_obj.id,
+                    "subject_id": ch_obj.subject_id,
+                    "class_level": row.class_level,
+                    "title": ch_obj.title,
+                    "topic_count": row.topic_count,
+                    "mastery_percent": None,
+                }
+            )
         return chapters
 
 
@@ -535,7 +535,5 @@ async def update_topic_content(
 
     async with db_session() as session:
         await session.execute(
-            update(Topic)
-            .where(Topic.id == topic_id)
-            .values(**values)
+            update(Topic).where(Topic.id == topic_id).values(**values)
         )

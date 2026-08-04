@@ -18,13 +18,15 @@ async def generate(school_id: str, count: int):
         codes = []
         for _ in range(count):
             code = f"DA-{uuid.uuid4().hex[:8].upper()}"
-            codes.append(AccessCode(
-                id=str(uuid.uuid4()),
-                code=code,
-                type="org",
-                status="pending",
-                school_id=school_id
-            ))
+            codes.append(
+                AccessCode(
+                    id=str(uuid.uuid4()),
+                    code=code,
+                    type="org",
+                    status="pending",
+                    school_id=school_id,
+                )
+            )
         session.add_all(codes)
         await session.commit()
         print(f"✅ Generated {count} codes for school {school_id}")
@@ -36,9 +38,12 @@ async def generate(school_id: str, count: int):
                 writer.writerow([c.code, c.status, c.school_id])
         print("📄 Exported to access_codes.csv")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--school-id", required=True, help="UUID of the school")
-    parser.add_argument("--count", type=int, required=True, help="Number of codes to generate")
+    parser.add_argument(
+        "--count", type=int, required=True, help="Number of codes to generate"
+    )
     args = parser.parse_args()
     asyncio.run(generate(args.school_id, args.count))

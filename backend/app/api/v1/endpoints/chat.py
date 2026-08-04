@@ -40,8 +40,7 @@ async def chat_history(
             .limit(20)
         )
         return [
-            {"role": msg.role, "content": msg.content}
-            for msg in result.scalars().all()
+            {"role": msg.role, "content": msg.content} for msg in result.scalars().all()
         ]
 
 
@@ -92,7 +91,9 @@ async def chat_stream(
         count = int(count)
 
     if count >= _DAILY_CHAT_LIMIT:
-        raise RateLimitExceededError(f"Daily message limit reached ({_DAILY_CHAT_LIMIT}/day).")
+        raise RateLimitExceededError(
+            f"Daily message limit reached ({_DAILY_CHAT_LIMIT}/day)."
+        )
 
     # 2. Retrieve topic context (if any) + chat history in a single session
     async with db_session() as session:
@@ -102,12 +103,14 @@ async def chat_stream(
             topic = result.scalar_one_or_none()
             if not topic:
                 raise NotFoundError("Topic not found.")
-            context = " ".join([
-                topic.title or "",
-                topic.content_step1 or "",
-                topic.content_step2 or "",
-                topic.content_step3 or "",
-            ])
+            context = " ".join(
+                [
+                    topic.title or "",
+                    topic.content_step1 or "",
+                    topic.content_step2 or "",
+                    topic.content_step3 or "",
+                ]
+            )
 
         result = await session.execute(
             select(ChatMessage)
@@ -127,7 +130,11 @@ async def chat_stream(
     await increment_daily_usage(user_id)
 
     async with db_session() as session:
-        session.add(ChatMessage(user_id=user_id, topic_id=topic_id, role="user", content=question))
+        session.add(
+            ChatMessage(
+                user_id=user_id, topic_id=topic_id, role="user", content=question
+            )
+        )
         await session.commit()
 
     # 4. Stream Groq response

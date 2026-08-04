@@ -7,6 +7,7 @@ must confirm the transaction and confirm a pending code exists, but must
 NOT mutate the code's status -- only register()'s activate_code() may do
 that, tied to the real user_id that redeemed it.
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -61,10 +62,13 @@ async def test_verify_payment_does_not_mutate_access_code_status():
         },
     }
 
-    with patch(
-        "app.api.v1.endpoints.payments.httpx.AsyncClient",
-        return_value=_FakePaystackClient(paystack_payload),
-    ), patch("app.api.v1.endpoints.payments.db_session") as mock_ctx:
+    with (
+        patch(
+            "app.api.v1.endpoints.payments.httpx.AsyncClient",
+            return_value=_FakePaystackClient(paystack_payload),
+        ),
+        patch("app.api.v1.endpoints.payments.db_session") as mock_ctx,
+    ):
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock(
             return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=fake_code))
@@ -75,9 +79,7 @@ async def test_verify_payment_does_not_mutate_access_code_status():
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            resp = await client.get(
-                "/api/v1/payment/verify?reference=test-ref-123"
-            )
+            resp = await client.get("/api/v1/payment/verify?reference=test-ref-123")
 
     assert resp.status_code == 200
     assert resp.json()["email"] == "payer@example.com"
@@ -102,10 +104,13 @@ async def test_verify_payment_404s_when_no_pending_code_exists():
         },
     }
 
-    with patch(
-        "app.api.v1.endpoints.payments.httpx.AsyncClient",
-        return_value=_FakePaystackClient(paystack_payload),
-    ), patch("app.api.v1.endpoints.payments.db_session") as mock_ctx:
+    with (
+        patch(
+            "app.api.v1.endpoints.payments.httpx.AsyncClient",
+            return_value=_FakePaystackClient(paystack_payload),
+        ),
+        patch("app.api.v1.endpoints.payments.db_session") as mock_ctx,
+    ):
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock(
             return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None))
@@ -116,8 +121,6 @@ async def test_verify_payment_404s_when_no_pending_code_exists():
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            resp = await client.get(
-                "/api/v1/payment/verify?reference=test-ref-456"
-            )
+            resp = await client.get("/api/v1/payment/verify?reference=test-ref-456")
 
     assert resp.status_code == 404

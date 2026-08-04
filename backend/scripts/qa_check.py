@@ -14,6 +14,7 @@ JIT generation path in app/api/v1/endpoints/learning.py writes content
 directly to the DB and never touches Redis, so a Redis-only check (the
 previous version of this script) misses everything generated that way.
 """
+
 import asyncio
 import re
 
@@ -62,10 +63,16 @@ async def qa():
         _check_field("step3", t.content_step3, findings)
 
         for i, q in enumerate(t.practice_questions or []):
-            _check_field(f"practice_questions[{i}].question", q.get("question"), findings)
+            _check_field(
+                f"practice_questions[{i}].question", q.get("question"), findings
+            )
             for opt_key, opt_val in (q.get("options") or {}).items():
-                _check_field(f"practice_questions[{i}].options.{opt_key}", opt_val, findings)
-            _check_field(f"practice_questions[{i}].explanation", q.get("explanation"), findings)
+                _check_field(
+                    f"practice_questions[{i}].options.{opt_key}", opt_val, findings
+                )
+            _check_field(
+                f"practice_questions[{i}].explanation", q.get("explanation"), findings
+            )
 
         if findings:
             flagged_count += 1

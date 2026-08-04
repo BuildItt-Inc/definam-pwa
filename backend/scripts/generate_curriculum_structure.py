@@ -31,7 +31,9 @@ settings = get_settings()
 
 # Initialize API clients
 groq_client = Groq(api_key=settings.groq_api_key) if settings.groq_api_key else None
-gemini_client = genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
+gemini_client = (
+    genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
+)
 
 # ── Fallback Curriculum Definition ────────────────────────────────────────
 
@@ -386,7 +388,8 @@ def generate_subject_curriculum(
         f"\nBase this on the following official WAEC syllabus excerpt — reflect its actual "
         f"structure and scope rather than your general knowledge of the subject:\n"
         f"---\n{syllabus_context}\n---\n"
-        if syllabus_context else ""
+        if syllabus_context
+        else ""
     )
     prompt = PROMPT_TEMPLATE.format(
         subject_name=subject_name, class_level=class_level, context=context_block
@@ -395,7 +398,9 @@ def generate_subject_curriculum(
     # 1. Try Gemini
     if gemini_client:
         try:
-            logger.info(f"Generating curriculum for {subject_name} ({class_level}) via Gemini...")
+            logger.info(
+                f"Generating curriculum for {subject_name} ({class_level}) via Gemini..."
+            )
             response = gemini_client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
@@ -411,15 +416,21 @@ def generate_subject_curriculum(
 
             parsed = json.loads(text)
             if isinstance(parsed, list) and len(parsed) >= 5:
-                logger.info(f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Gemini.")
+                logger.info(
+                    f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Gemini."
+                )
                 return parsed
         except Exception as e:
-            logger.error(f"Failed to generate curriculum via Gemini for {subject_name} ({class_level}): {e}")
+            logger.error(
+                f"Failed to generate curriculum via Gemini for {subject_name} ({class_level}): {e}"
+            )
 
     # 2. Try Groq (Fallback)
     if groq_client:
         try:
-            logger.info(f"Generating curriculum for {subject_name} ({class_level}) via Groq...")
+            logger.info(
+                f"Generating curriculum for {subject_name} ({class_level}) via Groq..."
+            )
             completion = groq_client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
@@ -437,10 +448,14 @@ def generate_subject_curriculum(
 
             parsed = json.loads(text)
             if isinstance(parsed, list) and len(parsed) >= 5:
-                logger.info(f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Groq.")
+                logger.info(
+                    f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Groq."
+                )
                 return parsed
         except Exception as e:
-            logger.error(f"Failed to generate curriculum via Groq for {subject_name} ({class_level}): {e}")
+            logger.error(
+                f"Failed to generate curriculum via Groq for {subject_name} ({class_level}): {e}"
+            )
 
     return None
 
@@ -463,10 +478,13 @@ async def seed_curriculum() -> None:
 
     for sub_name in subjects:
         from app.services.rag import get_full_subject_syllabus
+
         syllabus_context = await get_full_subject_syllabus(sub_name)
 
         for class_level in CLASS_LEVELS:
-            generated = generate_subject_curriculum(sub_name, class_level, syllabus_context)
+            generated = generate_subject_curriculum(
+                sub_name, class_level, syllabus_context
+            )
             if generated:
                 curriculum_data.append(
                     {

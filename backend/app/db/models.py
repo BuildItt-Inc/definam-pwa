@@ -122,9 +122,7 @@ class AccessCode(Base):
     expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    reminder_sent: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False
-    )
+    reminder_sent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     school: Mapped[School | None] = relationship(
         "School", back_populates="access_codes"
@@ -163,13 +161,13 @@ class PasswordResetToken(Base):
         index=True,
     )
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
-
-
 
 
 # ── Subjects ────────────────────────────────────────────────────────────────
@@ -445,7 +443,9 @@ class DailyActivity(Base):
     __tablename__ = "daily_activity"
 
     __table_args__ = (
-        UniqueConstraint("user_id", "activity_date", name="uq_daily_activity_user_date"),
+        UniqueConstraint(
+            "user_id", "activity_date", name="uq_daily_activity_user_date"
+        ),
     )
 
     id: Mapped[str] = mapped_column(

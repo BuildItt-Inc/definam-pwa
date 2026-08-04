@@ -140,7 +140,12 @@ async def send_individual_code(to: str, code: str) -> None:
     settings = get_settings()
     register_url = f"{settings.frontend_url.rstrip('/')}/register?code={code}"
     login_url = f"{settings.frontend_url.rstrip('/')}/login"
-    html = _render("individual_code.html", code=code, register_url=register_url, login_url=login_url)
+    html = _render(
+        "individual_code.html",
+        code=code,
+        register_url=register_url,
+        login_url=login_url,
+    )
     await send_email(to, "Your Recall Access Code", html)
 
 
@@ -159,7 +164,9 @@ async def send_expiration_reminder(
         expires_at_str=expires_at_str,
         renew_url=renew_url,
     )
-    await send_email(to, "Your Recall Access Code Expires Soon (7 Days Remaining)", html)
+    await send_email(
+        to, "Your Recall Access Code Expires Soon (7 Days Remaining)", html
+    )
 
 
 async def send_org_admin_credentials(

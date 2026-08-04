@@ -18,6 +18,9 @@ async def create_code():
         )
         session.add(code)
         await session.commit()
-        print("✅ Test access code created: TEST-1234-XY with email testuser@example.com")
+        print(
+            "✅ Test access code created: TEST-1234-XY with email testuser@example.com"
+        )
+
 
 asyncio.run(create_code())

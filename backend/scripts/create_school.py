@@ -17,7 +17,7 @@ async def create_school():
             id=str(uuid.uuid4()),
             email="pilot@school.edu.ng",
             name="Pilot School",
-            active_seats=100  # adjust as needed
+            active_seats=100,  # adjust as needed
         )
         session.add(school)
         await session.commit()
@@ -25,6 +25,7 @@ async def create_school():
         print(f"   Name: {school.name}")
         print(f"   Email: {school.email}")
         print(f"   Active seats: {school.active_seats}")
+
 
 if __name__ == "__main__":
     asyncio.run(create_school())

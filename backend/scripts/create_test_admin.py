@@ -71,9 +71,7 @@ async def seed():
 
         # ── Admin user ─────────────────────────────────────────────────────
         existing_admin = (
-            await session.execute(
-                select(User).where(User.username == ADMIN_USERNAME)
-            )
+            await session.execute(select(User).where(User.username == ADMIN_USERNAME))
         ).scalar_one_or_none()
 
         if existing_admin:
@@ -99,7 +97,9 @@ async def seed():
     print('           {"username": "teststudent", "password": "Test12345"}')
     print()
     print("Admin    →  POST /api/v1/auth/login")
-    print(f'           {{"username": "{ADMIN_USERNAME}", "password": "{ADMIN_PASSWORD}"}}')
+    print(
+        f'           {{"username": "{ADMIN_USERNAME}", "password": "{ADMIN_PASSWORD}"}}'
+    )
     print()
     print("── Key Endpoints to Test ──────────────────────────────────────")
     print("GET  /api/v1/students/dashboard          (student token)")

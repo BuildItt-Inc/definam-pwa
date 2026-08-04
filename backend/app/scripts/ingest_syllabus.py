@@ -30,7 +30,9 @@ from app.db.database import db_session
 from app.db.models import SyllabusChunk
 from app.services.embeddings import embed_text
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 PDF_DIR = Path(__file__).parent / "syllabus_pdfs"
@@ -38,7 +40,7 @@ PDF_DIR = Path(__file__).parent / "syllabus_pdfs"
 # Matches WAEC syllabus heading patterns seen across subjects, e.g.:
 #   "1.0 INTRODUCTION TO CHEMISTRY"   "1\. Classification"   "A. Concept of Living"
 _HEADING_PATTERN = re.compile(
-    r'^(?:\d+\.\d*\s|\d+\\?\.\s|[A-Z]\.\s)[A-Z][A-Za-z0-9 ,/&()\'-]{3,80}$',
+    r"^(?:\d+\.\d*\s|\d+\\?\.\s|[A-Z]\.\s)[A-Z][A-Za-z0-9 ,/&()\'-]{3,80}$",
     re.MULTILINE,
 )
 
@@ -65,7 +67,7 @@ def chunk_syllabus_text(raw_text: str) -> list[tuple[str, str]]:
         # usable rather than one giant unsearchable blob.
         size = 1500
         return [
-            (f"Section {i + 1}", raw_text[i:i + size])
+            (f"Section {i + 1}", raw_text[i : i + size])
             for i in range(0, len(raw_text), size)
         ]
 
@@ -119,7 +121,9 @@ async def ingest_subject(pdf_path: Path) -> None:
 
 async def main(subject: str | None = None) -> None:
     if not PDF_DIR.exists():
-        logger.error(f"No {PDF_DIR} directory found. Create it and add subject PDFs first.")
+        logger.error(
+            f"No {PDF_DIR} directory found. Create it and add subject PDFs first."
+        )
         return
 
     pdf_files = sorted(PDF_DIR.glob("*.pdf"))
@@ -139,6 +143,8 @@ async def main(subject: str | None = None) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Ingest WAEC syllabus PDFs for RAG.")
-    parser.add_argument("--subject", type=str, help="Only ingest a single subject by PDF filename stem.")
+    parser.add_argument(
+        "--subject", type=str, help="Only ingest a single subject by PDF filename stem."
+    )
     args = parser.parse_args()
     asyncio.run(main(subject=args.subject))

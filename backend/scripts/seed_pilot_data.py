@@ -22,13 +22,15 @@ async def seed_from_json(file_path: str):
     async with db_session() as session:
         for subject_name, subject_data in data.items():
             # Create subject
-            result = await session.execute(select(Subject).where(Subject.name == subject_name))
+            result = await session.execute(
+                select(Subject).where(Subject.name == subject_name)
+            )
             subject = result.first()
             if not subject:
                 subject = Subject(
                     id=str(uuid.uuid4()),
                     name=subject_name,
-                    class_level=subject_data.get("class_level", "SS2")
+                    class_level=subject_data.get("class_level", "SS2"),
                 )
                 session.add(subject)
                 await session.flush()
@@ -39,7 +41,7 @@ async def seed_from_json(file_path: str):
                 result = await session.execute(
                     select(Chapter).where(
                         Chapter.subject_id == subject.id,
-                        Chapter.chapter_num == chapter_data["num"]
+                        Chapter.chapter_num == chapter_data["num"],
                     )
                 )
                 chapter = result.first()
@@ -48,7 +50,7 @@ async def seed_from_json(file_path: str):
                         id=str(uuid.uuid4()),
                         subject_id=subject.id,
                         chapter_num=chapter_data["num"],
-                        title=chapter_data["title"]
+                        title=chapter_data["title"],
                     )
                     session.add(chapter)
                     await session.flush()
@@ -57,8 +59,7 @@ async def seed_from_json(file_path: str):
                 for topic_title in chapter_data.get("topics", []):
                     result = await session.execute(
                         select(Topic).where(
-                            Topic.chapter_id == chapter.id,
-                            Topic.title == topic_title
+                            Topic.chapter_id == chapter.id, Topic.title == topic_title
                         )
                     )
                     topic = result.first()
@@ -67,7 +68,7 @@ async def seed_from_json(file_path: str):
                             id=str(uuid.uuid4()),
                             chapter_id=chapter.id,
                             title=topic_title,
-                            status="published"
+                            status="published",
                         )
                         session.add(topic)
                         print(f"    ✅ Created topic: {topic_title}")
@@ -75,8 +76,11 @@ async def seed_from_json(file_path: str):
         await session.commit()
         print("\n🎉 Pilot data seeded successfully!")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", required=True, help="Path to JSON file with subject data")
+    parser.add_argument(
+        "--file", required=True, help="Path to JSON file with subject data"
+    )
     args = parser.parse_args()
     asyncio.run(seed_from_json(args.file))

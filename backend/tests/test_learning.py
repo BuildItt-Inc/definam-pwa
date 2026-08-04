@@ -2,6 +2,7 @@
 entry per unique subject name (deduplicated across SS1/SS2/SS3 rows), and
 /subjects/by-name/{name}/chapters returns each level's chapters annotated
 with class_level so the frontend can group them under section headers."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -99,7 +100,9 @@ async def test_get_subjects_groups_by_name_with_summed_counts():
 # ── GET /subjects/by-name/{name}/chapters ───────────────────────────────────
 
 
-def _chapter_row(chapter_id: str, subject_id: str, title: str, class_level: str, topic_count: int):
+def _chapter_row(
+    chapter_id: str, subject_id: str, title: str, class_level: str, topic_count: int
+):
     """Mimics a SQLAlchemy Row from `select(Chapter, Subject.class_level,
     func.count(...))`: index [0] is the Chapter object, class_level and
     topic_count are separate named attributes on the row itself."""
@@ -164,7 +167,8 @@ async def test_get_chapters_by_name_url_encodes_subject_name():
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             resp = await client.get(
-                "/api/v1/subjects/by-name/English%20Language/chapters", headers=_auth_headers()
+                "/api/v1/subjects/by-name/English%20Language/chapters",
+                headers=_auth_headers(),
             )
 
     assert resp.status_code == 200

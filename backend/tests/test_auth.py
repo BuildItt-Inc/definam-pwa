@@ -80,6 +80,7 @@ async def test_register_rejects_already_used_code():
     assert resp.status_code == 400
     assert "already been used" in resp.text
 
+
 @pytest.mark.skip(reason="Test environment lacks Postgres; endpoint verified manually")
 @pytest.mark.anyio
 async def test_register_success():
@@ -545,7 +546,9 @@ async def test_register_rejects_expired_code():
     assert "expired" in resp.json()["detail"].lower()
 
 
-@pytest.mark.skip(reason="Test environment lacks Postgres; expiry acceptance verified in integration tests")
+@pytest.mark.skip(
+    reason="Test environment lacks Postgres; expiry acceptance verified in integration tests"
+)
 @pytest.mark.anyio
 async def test_register_accepts_unexpired_code():
     """Register endpoint must proceed past expiry check when code is still valid."""

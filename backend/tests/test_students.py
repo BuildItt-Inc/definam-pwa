@@ -1,5 +1,6 @@
 """Unit tests for the dashboard's new overall-completion calculation
 (Part 1 of the dashboard/learning-interface redesign)."""
+
 from __future__ import annotations
 
 from app.api.v1.endpoints.students import _compute_completion_percent

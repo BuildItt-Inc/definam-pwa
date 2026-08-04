@@ -16,8 +16,12 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # Initialize API clients based on available keys
-client_gemini = genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
-client_groq = AsyncGroq(api_key=settings.groq_api_key) if settings.groq_api_key else None
+client_gemini = (
+    genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
+)
+client_groq = (
+    AsyncGroq(api_key=settings.groq_api_key) if settings.groq_api_key else None
+)
 
 PROMPT_STEP1 = """
 You are a friendly tutor writing for secondary school students.
@@ -145,7 +149,9 @@ def _sanitize_json_escapes(text: str) -> str:
                 i += 2
                 continue
             if nxt in _AMBIGUOUS_ESCAPES:
-                looks_like_macro = i + 2 < n and text[i + 2].isalpha() and text[i + 2].islower()
+                looks_like_macro = (
+                    i + 2 < n and text[i + 2].isalpha() and text[i + 2].islower()
+                )
                 if not looks_like_macro:
                     result.append(ch)
                     result.append(nxt)
@@ -205,6 +211,7 @@ def get_fallback_content(title: str) -> dict[str, Any]:
 
 # ── Gemini Async Generators ────────────────────────────────────────────────
 
+
 async def generate_gemini_step(prompt: str) -> str:
     """Generate a step content via Gemini."""
     if not client_gemini:
@@ -250,6 +257,7 @@ async def generate_gemini_questions(prompt: str) -> list[dict[str, Any]]:
 
 
 # ── Groq Async Generators ──────────────────────────────────────────────────
+
 
 async def generate_groq_step(prompt: str) -> str:
     """Generate a step content via Groq."""
@@ -321,7 +329,11 @@ async def generate_gemini_recall(prompt: str) -> dict[str, Any] | None:
                 lines = lines[:-1]
             text = "\n".join(lines).strip()
         parsed = json.loads(_sanitize_json_escapes(text))
-        if isinstance(parsed, dict) and "question" in parsed and "model_answer" in parsed:
+        if (
+            isinstance(parsed, dict)
+            and "question" in parsed
+            and "model_answer" in parsed
+        ):
             return parsed
         return None
     except Exception as e:
@@ -349,7 +361,11 @@ async def generate_groq_recall(prompt: str) -> dict[str, Any] | None:
                 lines = lines[:-1]
             text = "\n".join(lines).strip()
         parsed = json.loads(_sanitize_json_escapes(text))
-        if isinstance(parsed, dict) and "question" in parsed and "model_answer" in parsed:
+        if (
+            isinstance(parsed, dict)
+            and "question" in parsed
+            and "model_answer" in parsed
+        ):
             return parsed
         return None
     except Exception as e:
@@ -359,7 +375,10 @@ async def generate_groq_recall(prompt: str) -> dict[str, Any] | None:
 
 # ── Core Router ────────────────────────────────────────────────────────────
 
-async def generate_all_topic_content(title: str, subject_name: str | None = None) -> dict[str, Any]:
+
+async def generate_all_topic_content(
+    title: str, subject_name: str | None = None
+) -> dict[str, Any]:
     """Concurrently generate steps 1-3, practice questions, and a recall
     question for a topic.
 
@@ -375,14 +394,18 @@ async def generate_all_topic_content(title: str, subject_name: str | None = None
     if subject_name:
         try:
             from app.services.rag import get_syllabus_context
+
             syllabus_context = await get_syllabus_context(subject_name, title)
         except Exception:
-            logger.exception("Syllabus context retrieval failed for '%s' / '%s'", subject_name, title)
+            logger.exception(
+                "Syllabus context retrieval failed for '%s' / '%s'", subject_name, title
+            )
 
     context_block = (
         f"\nGround your answer in this official WAEC syllabus excerpt — stay within its scope:\n"
         f"---\n{syllabus_context}\n---\n"
-        if syllabus_context else ""
+        if syllabus_context
+        else ""
     )
 
     step1_p = PROMPT_STEP1.format(title=title, context=context_block)
@@ -405,8 +428,10 @@ async def generate_all_topic_content(title: str, subject_name: str | None = None
                 "content_step1": step1,
                 "content_step2": step2,
                 "content_step3": step3,
-                "practice_questions": questions or get_fallback_content(title)["practice_questions"],
-                "recall_questions": recall or get_fallback_content(title)["recall_questions"],
+                "practice_questions": questions
+                or get_fallback_content(title)["practice_questions"],
+                "recall_questions": recall
+                or get_fallback_content(title)["recall_questions"],
             }
 
     # 2. Try Groq (Fallback)
@@ -424,10 +449,14 @@ async def generate_all_topic_content(title: str, subject_name: str | None = None
                 "content_step1": step1,
                 "content_step2": step2,
                 "content_step3": step3,
-                "practice_questions": questions or get_fallback_content(title)["practice_questions"],
-                "recall_questions": recall or get_fallback_content(title)["recall_questions"],
+                "practice_questions": questions
+                or get_fallback_content(title)["practice_questions"],
+                "recall_questions": recall
+                or get_fallback_content(title)["recall_questions"],
             }
 
     # 3. Static fallback
-    logger.warning(f"No API key available or API calls failed. Using fallback template for '{title}'.")
+    logger.warning(
+        f"No API key available or API calls failed. Using fallback template for '{title}'."
+    )
     return get_fallback_content(title)

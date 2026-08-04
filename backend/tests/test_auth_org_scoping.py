@@ -6,6 +6,7 @@ activate instead of silently no-op'ing. Root cause: login() never included
 org_id at all; refresh() trusted the (possibly stale/missing) claim from
 the old token instead of re-fetching from the DB.
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch

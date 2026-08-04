@@ -73,7 +73,9 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
         )
         total_topics_count = total_topics_result.scalar() or 0
 
-        completion_percent = _compute_completion_percent(topics_studied_count, total_topics_count)
+        completion_percent = _compute_completion_percent(
+            topics_studied_count, total_topics_count
+        )
 
         # Recall summary: run a single query to get all counts
         recall_summary_query = select(
@@ -82,7 +84,8 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
                     (
                         and_(
                             DailyRecallQueue.completed == 0,
-                            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) == today,
+                            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date)
+                            == today,
                         ),
                         1,
                     ),
@@ -94,7 +97,8 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
                     (
                         and_(
                             DailyRecallQueue.completed == 1,
-                            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) == today,
+                            func.date_trunc("day", DailyRecallQueue.due_date).cast(Date)
+                            == today,
                         ),
                         1,
                     ),
@@ -128,7 +132,8 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
                 and_(
                     DailyRecallQueue.user_id == user_id,
                     DailyRecallQueue.completed == 0,
-                    func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) <= today,
+                    func.date_trunc("day", DailyRecallQueue.due_date).cast(Date)
+                    <= today,
                 )
             )
             .limit(10)
@@ -399,26 +404,28 @@ async def get_progress(claims: CurrentUserDep) -> dict:
 
         # topics studied
         topics_result = await session.execute(
-            select(func.count(TopicReview.topic_id.distinct()))
-            .where(TopicReview.user_id == user_id)
+            select(func.count(TopicReview.topic_id.distinct())).where(
+                TopicReview.user_id == user_id
+            )
         )
         topics_studied = topics_result.scalar() or 0
 
         # avg accuracy
         acc_result = await session.execute(
-            select(func.avg(TopicReview.accuracy_score))
-            .where(TopicReview.user_id == user_id)
+            select(func.avg(TopicReview.accuracy_score)).where(
+                TopicReview.user_id == user_id
+            )
         )
         avg_accuracy = round(float(acc_result.scalar() or 0), 1)
 
         # due tomorrow
         due_tomorrow_result = await session.execute(
-            select(func.count(DailyRecallQueue.id))
-            .where(
+            select(func.count(DailyRecallQueue.id)).where(
                 and_(
                     DailyRecallQueue.user_id == user_id,
                     DailyRecallQueue.completed == 0,
-                    func.date_trunc("day", DailyRecallQueue.due_date).cast(Date) == tomorrow,
+                    func.date_trunc("day", DailyRecallQueue.due_date).cast(Date)
+                    == tomorrow,
                 )
             )
         )
@@ -516,8 +523,7 @@ async def get_progress(claims: CurrentUserDep) -> dict:
             heat[row.day] = heat.get(row.day, 0) + row.cnt
 
         heatmap_data = [
-            min(heat.get(start_date + timedelta(days=i), 0), 4)
-            for i in range(90)
+            min(heat.get(start_date + timedelta(days=i), 0), 4) for i in range(90)
         ]
 
     return {
@@ -529,4 +535,3 @@ async def get_progress(claims: CurrentUserDep) -> dict:
         "upcoming_reviews": upcoming_reviews,
         "heatmap_data": heatmap_data,
     }
-
