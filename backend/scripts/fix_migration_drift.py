@@ -20,8 +20,10 @@ async def fix_drift():
             row = result.fetchone()
             if row:
                 current_version = row[0]
-                logger.info(f"Database alembic_version table holds: '{current_version}'")
-                
+                logger.info(
+                    f"Database alembic_version table holds: '{current_version}'"
+                )
+
                 # These are old migration versions consolidated into 8374cdf6b920
                 obsolete_versions = {
                     "45dbd516e93a",
@@ -29,7 +31,7 @@ async def fix_drift():
                     "64d7c8192b15",
                     "6c4293f9ef1d",
                 }
-                
+
                 if current_version in obsolete_versions:
                     logger.warning(
                         f"Detected deleted/obsolete migration version '{current_version}'. "

@@ -4,6 +4,7 @@ Revision ID: ed0e166f16b6
 Revises: 05af09e7cc09
 Create Date: 2026-07-23 18:19:47.441994
 """
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -13,8 +14,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'ed0e166f16b6'
-down_revision: str | None = '05af09e7cc09'
+revision: str = "ed0e166f16b6"
+down_revision: str | None = "05af09e7cc09"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

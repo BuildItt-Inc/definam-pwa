@@ -35,13 +35,12 @@ client = genai.Client(
 
 def get_embedding(text: str) -> list[float] | None:
     try:
-        result = client.models.embed_content(
-            model='text-embedding-004',
-            contents=text
-        )
+        result = client.models.embed_content(model="text-embedding-004", contents=text)
         return list(result.embeddings[0].values)
     except Exception as e:
-        print(f"⚠️ Embedding error: {e}. Skipping — leaving embedding unset rather than storing a random vector.")
+        print(
+            f"⚠️ Embedding error: {e}. Skipping — leaving embedding unset rather than storing a random vector."
+        )
         return None
 
 

@@ -85,28 +85,20 @@ async def register(request: Request, body: RegisterRequest, response: Response) 
     """Register a new individual student using a valid access code."""
     # Call the registration service
     await auth_service.register(body)
-    
+
     # Fetch the newly created user by username
     user = await get_user_by_username(body.username)
     if not user:
         raise HTTPException(404, "User not found after registration")
-    
+
     # Generate JWTs
-    token = create_jwt(
-        subject=user["id"],
-        extra_claims={"role": user["role"]}
-    )
+    token = create_jwt(subject=user["id"], extra_claims={"role": user["role"]})
     refresh_token = create_refresh_jwt(
-        subject=user["id"],
-        extra_claims={"role": user["role"]}
+        subject=user["id"], extra_claims={"role": user["role"]}
     )
     _set_refresh_cookie(response, refresh_token)
-    
-    return {
-        "access_token": token,
-        "role": user["role"],
-        "force_password_change": False
-    }
+
+    return {"access_token": token, "role": user["role"], "force_password_change": False}
 
 
 @router.post(
@@ -284,7 +276,9 @@ async def forgot_password(request: Request, body: ForgotPasswordRequest) -> dict
         except Exception:  # noqa: BLE001 — best-effort email
             pass
 
-    return {"message": "If an account exists for that email, a reset link has been sent."}
+    return {
+        "message": "If an account exists for that email, a reset link has been sent."
+    }
 
 
 @router.post("/reset-password")
@@ -302,4 +296,3 @@ async def reset_password(request: Request, body: ResetPasswordRequest) -> dict:
     new_hash = await hash_password(body.new_password)
     await update_user_password(record["user_id"], new_hash)
     return {"message": "Password updated successfully."}
-

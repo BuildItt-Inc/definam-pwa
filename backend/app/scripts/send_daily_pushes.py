@@ -40,5 +40,6 @@ async def send_pushes():
                 except Exception as e:
                     print(f"[ERROR] Failed for {user_id}: {e}")
 
+
 if __name__ == "__main__":
     asyncio.run(send_pushes())

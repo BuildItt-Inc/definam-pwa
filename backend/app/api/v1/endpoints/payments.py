@@ -34,7 +34,7 @@ async def initiate_org_payment(body: OrgPaymentRequest) -> OrgPaymentResponse:
 
 @router.get("/verify")
 async def verify_payment(
-    reference: str = Query(..., description="Paystack transaction reference")
+    reference: str = Query(..., description="Paystack transaction reference"),
 ):
     """Verify a Paystack transaction confirmed and a pending access code exists.
 
@@ -45,7 +45,7 @@ async def verify_payment(
     async with httpx.AsyncClient() as client:
         resp = await client.get(
             f"https://api.paystack.co/transaction/verify/{reference}",
-            headers={"Authorization": f"Bearer {settings.paystack_secret_key}"}
+            headers={"Authorization": f"Bearer {settings.paystack_secret_key}"},
         )
         data = resp.json()
 
@@ -64,13 +64,14 @@ async def verify_payment(
     async with db_session() as session:
         result = await session.execute(
             select(AccessCode).where(
-                AccessCode.email == email,
-                AccessCode.status == "pending"
+                AccessCode.email == email, AccessCode.status == "pending"
             )
         )
         code = result.scalar_one_or_none()
         if not code:
-            raise HTTPException(404, detail="No pending access code found for this email")
+            raise HTTPException(
+                404, detail="No pending access code found for this email"
+            )
         access_code = code.code
 
     return {
@@ -86,5 +87,6 @@ async def verify_payment(
 async def trigger_check_expirations() -> dict:
     """Check for access codes expiring in <= 7 days and dispatch renewal reminder emails."""
     from app.services.expiration_service import check_and_send_expiration_reminders
+
     reminders_sent = await check_and_send_expiration_reminders()
     return {"status": "success", "reminders_sent": reminders_sent}

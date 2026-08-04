@@ -14,10 +14,7 @@ async def increment_daily_usage(user_id: str) -> int:
             # Lock row to prevent concurrent updates
             result = await session.execute(
                 select(ChatDailyUsage)
-                .where(
-                    ChatDailyUsage.user_id == user_id,
-                    ChatDailyUsage.date == today
-                )
+                .where(ChatDailyUsage.user_id == user_id, ChatDailyUsage.date == today)
                 .with_for_update()
             )
             usage = result.scalar_one_or_none()
@@ -27,11 +24,7 @@ async def increment_daily_usage(user_id: str) -> int:
                 return usage.count
 
             # Insert new record
-            usage = ChatDailyUsage(
-                user_id=user_id,
-                date=today,
-                count=1
-            )
+            usage = ChatDailyUsage(user_id=user_id, date=today, count=1)
             session.add(usage)
             await session.commit()
             return usage.count
@@ -41,10 +34,7 @@ async def increment_daily_usage(user_id: str) -> int:
             await session.rollback()
             result = await session.execute(
                 select(ChatDailyUsage)
-                .where(
-                    ChatDailyUsage.user_id == user_id,
-                    ChatDailyUsage.date == today
-                )
+                .where(ChatDailyUsage.user_id == user_id, ChatDailyUsage.date == today)
                 .with_for_update()
             )
             usage = result.scalar_one_or_none()
@@ -54,6 +44,7 @@ async def increment_daily_usage(user_id: str) -> int:
                 return usage.count
             raise
 
+
 async def get_daily_usage(user_id: str) -> int:
     """
     Get the current daily usage count from the database.
@@ -62,8 +53,7 @@ async def get_daily_usage(user_id: str) -> int:
     async with db_session() as session:
         result = await session.execute(
             select(ChatDailyUsage).where(
-                ChatDailyUsage.user_id == user_id,
-                ChatDailyUsage.date == today
+                ChatDailyUsage.user_id == user_id, ChatDailyUsage.date == today
             )
         )
         usage = result.scalar_one_or_none()

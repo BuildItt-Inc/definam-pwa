@@ -23,6 +23,7 @@ async def check():
 
         # If topics table exists, show its columns
         if "topics" in tables:
+
             def get_columns(sync_conn):
                 inspector = inspect(sync_conn)
                 return [c["name"] for c in inspector.get_columns("topics")]

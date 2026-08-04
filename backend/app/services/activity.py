@@ -6,6 +6,7 @@ so the streak reflects "showed up today", not just "finished something
 today". Idempotent per (user, day) via ON CONFLICT DO NOTHING, so it's
 safe to call multiple times in the same session.
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime

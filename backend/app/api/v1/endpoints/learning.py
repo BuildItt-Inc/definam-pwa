@@ -62,12 +62,11 @@ async def get_topic(
         step1_text
         and "$" not in step1_text
         and (
-            re.search(r'\b\d+/\d+\b', step1_text)
-            or re.search(r'\b[a-zA-Z\d\s\+\-\*\/]+=[a-zA-Z\d\s\+\-\*\/]+', step1_text)
+            re.search(r"\b\d+/\d+\b", step1_text)
+            or re.search(r"\b[a-zA-Z\d\s\+\-\*\/]+=[a-zA-Z\d\s\+\-\*\/]+", step1_text)
         )
     ):
         has_plain_math = True
-
 
     # Lazy JIT generation: generate and cache content if missing or contains unformatted plain math
     content_missing = (
@@ -78,7 +77,9 @@ async def get_topic(
         or regenerate
     )
     if content_missing:
-        generated = await generate_all_topic_content(topic["title"], topic.get("subject_name"))
+        generated = await generate_all_topic_content(
+            topic["title"], topic.get("subject_name")
+        )
         await database.update_topic_content(
             str(topic_id),
             generated["content_step1"],
@@ -88,7 +89,6 @@ async def get_topic(
             generated.get("recall_questions"),
         )
         topic.update(generated)
-
 
     return {
         "step1": {

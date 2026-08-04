@@ -74,7 +74,9 @@ def decode_jwt(token: str) -> dict[str, Any]:
 def decode_token(token: str):
     settings = get_settings()
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
         return payload
     except JWTError:
         return None

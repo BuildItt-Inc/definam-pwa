@@ -22,6 +22,7 @@ from app.services.sm2 import sm2_calculate
 # Redis is optional — import best-effort so missing REDIS_URL doesn't crash startup
 try:
     from app.services.redis_client import get_redis as _get_redis
+
     _REDIS_ENABLED = True
 except Exception:  # noqa: BLE001
     _REDIS_ENABLED = False
@@ -35,6 +36,7 @@ def _try_get_redis():
         return _get_redis()
     except Exception:  # noqa: BLE001
         return None
+
 
 router = APIRouter(tags=["recall"])
 
@@ -115,6 +117,7 @@ async def record_step4_attempt(
             "accuracy_score": review.accuracy_score,
         }
 
+
 # ── SM-2 recall endpoint ───────────────────────────────────────────────────
 
 
@@ -179,7 +182,7 @@ async def submit_recall(
             .where(
                 DailyRecallQueue.user_id == user_id,
                 DailyRecallQueue.topic_id == str(topic_id),
-                DailyRecallQueue.completed == 0
+                DailyRecallQueue.completed == 0,
             )
             .order_by(DailyRecallQueue.due_date.asc())
         )
@@ -201,7 +204,9 @@ async def submit_recall(
         "ease_factor": new_ef,
         "interval_days": new_interval,
         "repetitions": new_reps,
-        "next_review_at": review.next_review_at.isoformat() if review.next_review_at else now.isoformat(),
+        "next_review_at": review.next_review_at.isoformat()
+        if review.next_review_at
+        else now.isoformat(),
     }
 
 
@@ -219,7 +224,7 @@ async def _refresh_recall_queue(user_id: str):
                 TopicReview,
                 Topic.title,
                 Topic.recall_questions,
-                Subject.name.label("subject_name")
+                Subject.name.label("subject_name"),
             )
             .join(Topic, TopicReview.topic_id == Topic.id)
             .join(Chapter, Topic.chapter_id == Chapter.id)
@@ -227,7 +232,7 @@ async def _refresh_recall_queue(user_id: str):
             .where(
                 TopicReview.user_id == user_id,
                 TopicReview.next_review_at <= now,
-                Topic.recall_questions.is_not(None)
+                Topic.recall_questions.is_not(None),
             )
             .order_by(TopicReview.next_review_at.asc())
         )
@@ -239,16 +244,20 @@ async def _refresh_recall_queue(user_id: str):
             question = recall_qs.get("question")
             model_answer = recall_qs.get("model_answer")
             if not question or not model_answer:
-                continue   # skip if either field is missing
+                continue  # skip if either field is missing
 
-            due_topics.append({
-                "topic_id": review.topic_id,
-                "title": title,
-                "subject": subject_name,
-                "question": question,
-                "model_answer": model_answer,
-                "next_review_at": review.next_review_at.isoformat() if review.next_review_at else None
-            })
+            due_topics.append(
+                {
+                    "topic_id": review.topic_id,
+                    "title": title,
+                    "subject": subject_name,
+                    "question": question,
+                    "model_answer": model_answer,
+                    "next_review_at": review.next_review_at.isoformat()
+                    if review.next_review_at
+                    else None,
+                }
+            )
 
     r = _try_get_redis()
     if r is not None:

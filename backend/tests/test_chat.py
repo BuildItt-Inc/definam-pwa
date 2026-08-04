@@ -1,5 +1,6 @@
 """Unit tests for the AI chat endpoints: history clearing and
 disconnect-safe persistence of streamed responses."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -114,7 +115,9 @@ async def test_stream_saves_partial_response_when_client_disconnects_midway():
         patch("app.api.v1.endpoints.chat.get_redis", return_value=fake_redis),
         patch("app.api.v1.endpoints.chat.get_daily_usage", AsyncMock(return_value=0)),
         patch("app.api.v1.endpoints.chat.increment_daily_usage", AsyncMock()),
-        patch("app.api.v1.endpoints.chat.stream_groq_response", _fake_stream_groq_response),
+        patch(
+            "app.api.v1.endpoints.chat.stream_groq_response", _fake_stream_groq_response
+        ),
         patch("app.api.v1.endpoints.chat.db_session") as mock_ctx,
     ):
         mock_ctx.return_value.__aenter__ = AsyncMock(return_value=mock_session)

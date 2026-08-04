@@ -5,10 +5,9 @@ from app.core.config import get_settings
 settings = get_settings()
 client = AsyncGroq(api_key=settings.groq_api_key)
 
+
 async def stream_groq_response(
-    user_question: str,
-    topic_context: str,
-    history: list[dict]
+    user_question: str, topic_context: str, history: list[dict]
 ):
     """
     Stream Groq's response. Yields:
@@ -50,7 +49,7 @@ async def stream_groq_response(
     messages = [
         {"role": "system", "content": system_prompt},
         *history,
-        {"role": "user", "content": user_question}
+        {"role": "user", "content": user_question},
     ]
 
     stream = await client.chat.completions.create(
@@ -65,14 +64,17 @@ async def stream_groq_response(
     async for chunk in stream:
         if chunk.choices[0].delta.content:
             yield ("chunk", chunk.choices[0].delta.content)
-        if hasattr(chunk, 'usage') and chunk.usage:
+        if hasattr(chunk, "usage") and chunk.usage:
             usage = chunk.usage
 
     if usage:
-        yield ("usage", {
-            "input_tokens": usage.prompt_tokens,
-            "output_tokens": usage.completion_tokens
-        })
+        yield (
+            "usage",
+            {
+                "input_tokens": usage.prompt_tokens,
+                "output_tokens": usage.completion_tokens,
+            },
+        )
     else:
         # Fallback (should not happen with Groq)
         yield ("usage", {"input_tokens": 0, "output_tokens": 0})

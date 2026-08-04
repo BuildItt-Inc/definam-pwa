@@ -17,7 +17,12 @@ async def get_relevant_context(topic_id: str, question: str, limit: int = 3):
         if not topic:
             return ""
         # Combine steps 1-3 into a single context string
-        parts = [topic.title, topic.content_step1 or "", topic.content_step2 or "", topic.content_step3 or ""]
+        parts = [
+            topic.title,
+            topic.content_step1 or "",
+            topic.content_step2 or "",
+            topic.content_step3 or "",
+        ]
         return " ".join(parts)
 
 

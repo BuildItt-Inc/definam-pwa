@@ -10,6 +10,7 @@ Minimum pass targets:
     - Avg response time < 500ms for all endpoints
     - Topic content must be served from Redis cache under load
 """
+
 from __future__ import annotations
 
 import random

@@ -14,7 +14,9 @@ async def send_daily_recall_push(
     if not topic_titles:
         return {"status": "skipped", "reason": "no topics"}
 
-    message = f"You have {len(topic_titles)} topics to review today: " + ", ".join(topic_titles[:3])
+    message = f"You have {len(topic_titles)} topics to review today: " + ", ".join(
+        topic_titles[:3]
+    )
     if len(topic_titles) > 3:
         message += f" and {len(topic_titles) - 3} more."
 

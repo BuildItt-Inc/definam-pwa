@@ -37,5 +37,6 @@ async def audit_cache():
                 if not redis.get(key):
                     print(f"  - {topic.id} ({topic.title})")
 
+
 if __name__ == "__main__":
     asyncio.run(audit_cache())

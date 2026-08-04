@@ -1,4 +1,5 @@
 """Unit tests for analytics endpoints: heatmap and admin stats."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -64,12 +65,8 @@ async def test_heatmap_returns_90_days():
     from datetime import UTC, datetime
 
     # Mock reviews, queue, and daily-activity items returned by execute().all()
-    fake_reviews = [
-        (datetime.now(UTC), "topic-1")
-    ]
-    fake_queue = [
-        (datetime.now(UTC), "topic-2")
-    ]
+    fake_reviews = [(datetime.now(UTC), "topic-1")]
+    fake_queue = [(datetime.now(UTC), "topic-2")]
     fake_activity: list = []
 
     with patch(
@@ -133,8 +130,12 @@ async def test_admin_stats_returns_correct_shape():
             side_effect=[
                 MagicMock(scalar=MagicMock(return_value=fake_stats["total_students"])),
                 MagicMock(scalar=MagicMock(return_value=fake_stats["avg_accuracy"])),
-                MagicMock(scalar=MagicMock(return_value=fake_stats["overdue_recall_count"])),
-                MagicMock(scalar=MagicMock(return_value=fake_stats["active_subjects_count"])),
+                MagicMock(
+                    scalar=MagicMock(return_value=fake_stats["overdue_recall_count"])
+                ),
+                MagicMock(
+                    scalar=MagicMock(return_value=fake_stats["active_subjects_count"])
+                ),
             ]
         )
         mock_ctx.return_value.__aenter__ = AsyncMock(return_value=mock_session)
@@ -184,9 +185,7 @@ async def test_step4_review_accepts_accuracy_score_field():
 
     topic_id = str(uuid.uuid4())
 
-    with patch(
-        "app.api.v1.endpoints.recall.db_session"
-    ) as mock_ctx:
+    with patch("app.api.v1.endpoints.recall.db_session") as mock_ctx:
         mock_session = AsyncMock()
         # topic does NOT exist
         mock_session.execute = AsyncMock(
@@ -218,9 +217,7 @@ async def test_step4_review_accepts_empty_body():
 
     topic_id = str(uuid.uuid4())
 
-    with patch(
-        "app.api.v1.endpoints.recall.db_session"
-    ) as mock_ctx:
+    with patch("app.api.v1.endpoints.recall.db_session") as mock_ctx:
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock(
             return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None))
@@ -265,5 +262,3 @@ async def test_step4_review_invalid_accuracy_score():
             headers={"Authorization": f"Bearer {_student_token()}"},
         )
         assert resp2.status_code == 422
-
-

@@ -21,17 +21,27 @@ async def create_pilot(school_name: str, email: str, seats: int):
     # check if school exists
     existing_school = await get_school_by_email(email)
     if existing_school:
-        org_id = existing_school["id"] if isinstance(existing_school, dict) else existing_school.id
-        print(f"[INFO] School with email {email} already exists: {school_name} (ID: {org_id})")
+        org_id = (
+            existing_school["id"]
+            if isinstance(existing_school, dict)
+            else existing_school.id
+        )
+        print(
+            f"[INFO] School with email {email} already exists: {school_name} (ID: {org_id})"
+        )
     else:
         org_id = await create_org(email=email, name=school_name, seat_count=seats)
-        print(f"[SUCCESS] Created school organization: {school_name} (ID: {org_id}) with {seats} seats")
+        print(
+            f"[SUCCESS] Created school organization: {school_name} (ID: {org_id}) with {seats} seats"
+        )
 
     # check if user exists
     existing_user = await get_user_by_username(email)
     password = "PilotAdmin123!"
     if existing_user:
-        print(f"[INFO] Admin user with email {email} already exists. Skipping user creation.")
+        print(
+            f"[INFO] Admin user with email {email} already exists. Skipping user creation."
+        )
     else:
         user_id = str(uuid.uuid4())
         await create_student_user(
@@ -51,9 +61,21 @@ async def create_pilot(school_name: str, email: str, seats: int):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create pilot school admin accounts.")
-    parser.add_argument("--school-name", type=str, default="DefinAm Pilot School", help="Name of the school")
-    parser.add_argument("--email", type=str, default="pilot-admin@definam.ng", help="Admin email/username")
-    parser.add_argument("--seats", type=str, default="100", help="Number of student seats")
+    parser.add_argument(
+        "--school-name",
+        type=str,
+        default="DefinAm Pilot School",
+        help="Name of the school",
+    )
+    parser.add_argument(
+        "--email",
+        type=str,
+        default="pilot-admin@definam.ng",
+        help="Admin email/username",
+    )
+    parser.add_argument(
+        "--seats", type=str, default="100", help="Number of student seats"
+    )
 
     args = parser.parse_args()
     asyncio.run(create_pilot(args.school_name, args.email, int(args.seats)))
