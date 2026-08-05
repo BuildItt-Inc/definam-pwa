@@ -255,12 +255,12 @@ export default function SettingsPage() {
       {/* ── Logout confirmation sheet ────────────────────────────────────── */}
       {showLogoutConfirm && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40"
           onClick={() => setShowLogoutConfirm(false)}
         >
-          <div
-            className="w-full max-w-md rounded-t-2xl bg-card px-5 pb-8 pt-5 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+          <div 
+            className="w-full max-w-md mx-4 rounded-3xl bg-bg-0 px-6 pb-6 pt-6 
+            shadow-[0_-8px_40px_rgba(10,15,30,0.16)] animate-slide-up"
           >
             <p className="mb-5 text-[16px] font-bold text-ink">
               {isIndividual
