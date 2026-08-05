@@ -66,6 +66,7 @@ export interface ResetPasswordRequest {
 export interface UserMe {
   id: string;
   username: string;
+  name: string | null;
   role: string;
   org_id: string | null;
 }
