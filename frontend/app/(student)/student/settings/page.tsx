@@ -59,7 +59,7 @@ export default function SettingsPage() {
         const homeData = await getHomeData();
         setMe(meData);
         setSchoolName(homeData.school_name);
-        setNameInput(meData.username);
+        setNameInput(meData.name || meData.username);
       } catch (err: unknown) {
         const is401 =
           err instanceof Error &&
@@ -85,7 +85,7 @@ export default function SettingsPage() {
   }
 
   function handleCancelEdit() {
-    setNameInput(me?.username ?? '');
+    setNameInput(me?.name || me?.username || '');
     setIsEditingName(false);
   }
 
