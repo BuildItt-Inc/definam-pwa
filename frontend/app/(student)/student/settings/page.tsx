@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut } from 'lucide-react';
+import { LogOut, Pencil, Check, X } from 'lucide-react';
 import { changePassword, getMe, logout, ApiError, getAuthHeaders } from '@/lib/api/auth';
 import { getHomeData } from '@/lib/api/topics';
 import type { UserMe } from '@/types/auth';
@@ -39,6 +39,9 @@ export default function SettingsPage() {
   // Inline name edit
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+
+  const [nameError, setNameError] = useState(false);
+  const [savingName, setSavingName] = useState(false);
 
   // Password change (individual only)
   const [pwForm, setPwForm] = useState({ new_password: '', confirm_password: '' });
@@ -89,6 +92,8 @@ export default function SettingsPage() {
   async function handleSaveName() {
     const trimmed = nameInput.trim();
     if (!trimmed) return;
+    setSavingName(true);
+    setNameError(false);
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/students/me`,
@@ -102,10 +107,12 @@ export default function SettingsPage() {
         },
       );
       if (!res.ok) throw new Error('Failed to update name');
+      setIsEditingName(false);
     } catch {
-      // best-effort; name already shows locally
+      setNameError(true);   // stay in edit mode, show error — don't pretend it saved
+    } finally {
+      setSavingName(false);
     }
-    setIsEditingName(false);
   }
 
 
@@ -167,10 +174,49 @@ export default function SettingsPage() {
           </div>
           <div className="px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className="flex-1 text-[16px] font-semibold text-ink">
-                {nameInput}
-              </span>
+              {isEditingName ? (
+                <>
+                  <input
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    className="flex-1 rounded-lg border border-border-2 bg-bg-0 px-2 py-1 text-[16px] font-semibold text-ink outline-none focus:border-jade"
+                    autoFocus
+                    maxLength={40}
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    disabled={savingName}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-jade text-white disabled:opacity-50"
+                    aria-label="Save name"
+                  >
+                    <Check size={16} />
+                  </button>
+                  <button
+                    onClick={() => { setIsEditingName(false); setNameError(false); setNameInput(me?.username ?? ''); }}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border-2 text-muted"
+                    aria-label="Cancel"
+                  >
+                    <X size={16} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="flex-1 text-[16px] font-semibold text-ink">
+                    {nameInput}
+                  </span>
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-bg-0"
+                    aria-label="Edit name"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                </>
+              )}
             </div>
+            {nameError && (
+              <p className="mt-1.5 text-[13px] text-danger">Couldn&apos;t save. Check your connection and try again.</p>
+            )}
             <p className="mt-1.5 text-[14px] text-muted">
               {isIndividual ? 'Independent Learner' : schoolName}
             </p>
