@@ -312,7 +312,6 @@ export default function AdminAnalyticsPage() {
           </p>
         </div>
       </div>
-
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-5 bg-bg-0 space-y-5">
         {/* Headline numbers */}
