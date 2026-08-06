@@ -116,7 +116,6 @@ function computeWeakestTopics(students: AdminDashboardData['students']): Weakest
     .slice(0, 5);
 }
 
-<<<<<<< HEAD
 // ── Chart: accuracy distribution (horizontal bars) ─────────────────────────
 
 interface AccuracyBarRowProps {
@@ -242,8 +241,6 @@ function WeakestTopicsChart({ topics }: { topics: WeakestTopicCount[] }) {
   );
 }
 
-=======
->>>>>>> ff704381cb77d53dd3fb8485a67c8ec082f2de02
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function AdminAnalyticsPage() {
@@ -300,21 +297,14 @@ export default function AdminAnalyticsPage() {
   const accuracyBuckets = computeAccuracyBuckets(data.students);
   const recallBreakdown = computeRecallBreakdown(data.students);
   const weakestTopics = computeWeakestTopics(data.students);
-<<<<<<< HEAD
   const totalStudentsWithData = data.students.length;
-=======
->>>>>>> ff704381cb77d53dd3fb8485a67c8ec082f2de02
 
   return (
     <div className="flex flex-col h-full">
       {/* Top bar */}
       <div className="bg-card border-b border-border-2 px-5 py-[10px] flex items-center gap-3 shrink-0">
         <div>
-<<<<<<< HEAD
           <h1 className="text-[14px] font-extrabold text-ink leading-tight tracking-tight">
-=======
-          <h1 className="font-bold text-[14px] font-extrabold text-ink leading-tight tracking-tight">
->>>>>>> ff704381cb77d53dd3fb8485a67c8ec082f2de02
             Analytics
           </h1>
           <p className="text-[10px] text-muted mt-0.5">
@@ -369,7 +359,6 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-<<<<<<< HEAD
         {/* Accuracy distribution — horizontal bar chart */}
         <div className="bg-card border border-border-2 rounded-lg p-4">
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-3">
@@ -392,49 +381,6 @@ export default function AdminAnalyticsPage() {
             Top Weakest Topics
           </h2>
           <WeakestTopicsChart topics={weakestTopics} />
-=======
-        {/* Accuracy distribution — plain text */}
-        <div className="bg-card border border-border-2 rounded-lg p-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
-            Accuracy Distribution ({data.students.length} students)
-          </h2>
-          <div className="text-[12px] text-ink space-y-1">
-            <p>Under 40%: {accuracyBuckets.under40}</p>
-            <p>40% – 59%: {accuracyBuckets.from40to59}</p>
-            <p>60% – 79%: {accuracyBuckets.from60to79}</p>
-            <p>80% – 100%: {accuracyBuckets.from80to100}</p>
-          </div>
-        </div>
-
-        {/* Recall status breakdown — plain text */}
-        <div className="bg-card border border-border-2 rounded-lg p-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
-            Recall Status Breakdown
-          </h2>
-          <div className="text-[12px] text-ink space-y-1">
-            <p>On track: {recallBreakdown.on_track}</p>
-            <p>Overdue: {recallBreakdown.overdue}</p>
-            <p>Not started: {recallBreakdown.not_started}</p>
-          </div>
-        </div>
-
-        {/* Weakest topics ranked — plain text */}
-        <div className="bg-card border border-border-2 rounded-lg p-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
-            Top Weakest Topics
-          </h2>
-          {weakestTopics.length === 0 ? (
-            <p className="text-[12px] text-muted">No weakest-topic data available.</p>
-          ) : (
-            <ol className="text-[12px] text-ink space-y-1 list-decimal list-inside">
-              {weakestTopics.map(({ topic, count }) => (
-                <li key={topic}>
-                  {topic} — {count} student{count === 1 ? '' : 's'}
-                </li>
-              ))}
-            </ol>
-          )}
->>>>>>> ff704381cb77d53dd3fb8485a67c8ec082f2de02
         </div>
       </div>
     </div>
