@@ -116,6 +116,131 @@ function computeWeakestTopics(students: AdminDashboardData['students']): Weakest
     .slice(0, 5);
 }
 
+// ── Chart: accuracy distribution (horizontal bars) ─────────────────────────
+
+interface AccuracyBarRowProps {
+  label: string;
+  count: number;
+  total: number;
+  colorClass: string;
+}
+
+function AccuracyBarRow({ label, count, total, colorClass }: AccuracyBarRowProps) {
+  const pct = total > 0 ? (count / total) * 100 : 0;
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-14 shrink-0 text-[11px] font-semibold text-muted">{label}</span>
+      <div className="flex-1 h-5 rounded-full bg-bg-2 overflow-hidden">
+        {pct > 0 && (
+          <div
+            className={`h-full rounded-full ${colorClass}`}
+            style={{ width: `${pct}%` }}
+          />
+        )}
+      </div>
+      <span className="w-6 shrink-0 text-[11px] font-bold text-ink text-right">{count}</span>
+    </div>
+  );
+}
+
+function AccuracyDistributionChart({
+  buckets,
+  total,
+}: {
+  buckets: AccuracyBuckets;
+  total: number;
+}) {
+  return (
+    <div className="space-y-2.5">
+      <AccuracyBarRow label="< 40%" count={buckets.under40} total={total} colorClass="bg-coral" />
+      <AccuracyBarRow label="40–59%" count={buckets.from40to59} total={total} colorClass="bg-gold" />
+      <AccuracyBarRow label="60–79%" count={buckets.from60to79} total={total} colorClass="bg-jade-light" />
+      <AccuracyBarRow label="80–100%" count={buckets.from80to100} total={total} colorClass="bg-jade" />
+    </div>
+  );
+}
+
+// ── Chart: recall status (stacked bar + legend) ─────────────────────────────
+
+const RECALL_LEGEND: Array<{ key: RecallStatus; label: string; dotClass: string }> = [
+  { key: 'on_track', label: 'On track', dotClass: 'bg-jade' },
+  { key: 'overdue', label: 'Overdue', dotClass: 'bg-gold' },
+  { key: 'not_started', label: 'Not started', dotClass: 'bg-border-2' },
+];
+
+function RecallStackedBar({ breakdown, total }: { breakdown: RecallBreakdown; total: number }) {
+  if (total === 0) {
+    return <div className="h-3 w-full rounded-full bg-bg-2" />;
+  }
+
+  const onTrackPct = (breakdown.on_track / total) * 100;
+  const overduePct = (breakdown.overdue / total) * 100;
+  const notStartedPct = (breakdown.not_started / total) * 100;
+
+  return (
+    <div className="flex h-3 w-full rounded-full overflow-hidden bg-bg-2">
+      {onTrackPct > 0 && <div className="h-full bg-jade" style={{ width: `${onTrackPct}%` }} />}
+      {overduePct > 0 && <div className="h-full bg-gold" style={{ width: `${overduePct}%` }} />}
+      {notStartedPct > 0 && (
+        <div className="h-full bg-border-2" style={{ width: `${notStartedPct}%` }} />
+      )}
+    </div>
+  );
+}
+
+function RecallStatusChart({ breakdown, total }: { breakdown: RecallBreakdown; total: number }) {
+  return (
+    <div className="space-y-3">
+      <RecallStackedBar breakdown={breakdown} total={total} />
+      <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+        {RECALL_LEGEND.map(({ key, label, dotClass }) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full ${dotClass}`} />
+            <span className="text-[11px] font-semibold text-muted">
+              {label}: <span className="text-ink font-bold">{breakdown[key]}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Chart: weakest topics (ranked list with relative bars) ─────────────────
+
+function WeakestTopicsChart({ topics }: { topics: WeakestTopicCount[] }) {
+  if (topics.length === 0) {
+    return <p className="text-[12px] text-muted">No weakest-topic data available.</p>;
+  }
+
+  const maxCount = topics[0].count;
+
+  return (
+    <ol className="space-y-2">
+      {topics.map(({ topic, count }, i) => {
+        const pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
+        return (
+          <li key={topic} className="relative h-9 rounded-md bg-bg-2 overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 bg-coral-tint"
+              style={{ width: `${pct}%` }}
+            />
+            <div className="relative flex items-center justify-between h-full px-3 gap-3">
+              <span className="text-[12px] font-semibold text-ink truncate">
+                <span className="text-muted font-bold mr-1.5">#{i + 1}</span>
+                {topic}
+              </span>
+              <span className="shrink-0 text-[11px] font-bold text-ink">
+                {count} student{count === 1 ? '' : 's'}
+              </span>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function AdminAnalyticsPage() {
@@ -172,13 +297,14 @@ export default function AdminAnalyticsPage() {
   const accuracyBuckets = computeAccuracyBuckets(data.students);
   const recallBreakdown = computeRecallBreakdown(data.students);
   const weakestTopics = computeWeakestTopics(data.students);
+  const totalStudentsWithData = data.students.length;
 
   return (
     <div className="flex flex-col h-full">
       {/* Top bar */}
       <div className="bg-card border-b border-border-2 px-5 py-[10px] flex items-center gap-3 shrink-0">
         <div>
-          <h1 className="font-bold text-[14px] font-extrabold text-ink leading-tight tracking-tight">
+          <h1 className="text-[14px] font-extrabold text-ink leading-tight tracking-tight">
             Analytics
           </h1>
           <p className="text-[10px] text-muted mt-0.5">
@@ -233,47 +359,28 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {/* Accuracy distribution — plain text */}
+        {/* Accuracy distribution — horizontal bar chart */}
         <div className="bg-card border border-border-2 rounded-lg p-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
-            Accuracy Distribution ({data.students.length} students)
+          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-3">
+            Accuracy Distribution ({totalStudentsWithData} students)
           </h2>
-          <div className="text-[12px] text-ink space-y-1">
-            <p>Under 40%: {accuracyBuckets.under40}</p>
-            <p>40% – 59%: {accuracyBuckets.from40to59}</p>
-            <p>60% – 79%: {accuracyBuckets.from60to79}</p>
-            <p>80% – 100%: {accuracyBuckets.from80to100}</p>
-          </div>
+          <AccuracyDistributionChart buckets={accuracyBuckets} total={totalStudentsWithData} />
         </div>
 
-        {/* Recall status breakdown — plain text */}
+        {/* Recall status breakdown — stacked bar + legend */}
         <div className="bg-card border border-border-2 rounded-lg p-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
+          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-3">
             Recall Status Breakdown
           </h2>
-          <div className="text-[12px] text-ink space-y-1">
-            <p>On track: {recallBreakdown.on_track}</p>
-            <p>Overdue: {recallBreakdown.overdue}</p>
-            <p>Not started: {recallBreakdown.not_started}</p>
-          </div>
+          <RecallStatusChart breakdown={recallBreakdown} total={totalStudentsWithData} />
         </div>
 
-        {/* Weakest topics ranked — plain text */}
+        {/* Weakest topics ranked — bars sized by relative student count */}
         <div className="bg-card border border-border-2 rounded-lg p-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2">
+          <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted mb-3">
             Top Weakest Topics
           </h2>
-          {weakestTopics.length === 0 ? (
-            <p className="text-[12px] text-muted">No weakest-topic data available.</p>
-          ) : (
-            <ol className="text-[12px] text-ink space-y-1 list-decimal list-inside">
-              {weakestTopics.map(({ topic, count }) => (
-                <li key={topic}>
-                  {topic} — {count} student{count === 1 ? '' : 's'}
-                </li>
-              ))}
-            </ol>
-          )}
+          <WeakestTopicsChart topics={weakestTopics} />
         </div>
       </div>
     </div>
