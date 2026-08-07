@@ -1,20 +1,9 @@
 'use client';
 
-import { Space_Mono } from 'next/font/google';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import { useSpotlight } from '@/hooks/useSpotlight';
-import LandingBrandMark from '@/components/landing/LandingBrandMark';
-import FloatingSymbols from '@/components/landing/FloatingSymbols';
-import RunningCharacter from '@/components/landing/RunningCharacter';
-import MobileNav from '@/components/landing/MobileNav';
-
-const spaceMono = Space_Mono({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-space-mono',
-});
+import LandingNav from '@/components/landing/LandingNav';
+import LandingHero from '@/components/landing/LandingHero';
+import SpotlightLink from '@/components/landing/SpotlightLink';
 
 // ── Real data, verified against the live database ───────────────────────────
 // Hardcoded (this is a static marketing page, not a live data integration),
@@ -88,79 +77,9 @@ const INCLUDED = [
 
 export default function LandingPage() {
   return (
-    <div className={`${spaceMono.variable} bg-white text-[#111827]`}>
-      {/* ══════════════════════════════ HERO ══════════════════════════════ */}
-      <div
-        className="relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, #0F1F17 0%, #16321F 55%, #0F1F17 100%)' }}
-      >
-        <FloatingSymbols />
-        <RunningCharacter />
-
-        <div className="relative z-10 flex min-h-screen flex-col">
-          {/* Nav */}
-          <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3.5 sm:px-7">
-            <Link href="/" className="flex items-center gap-2.5">
-              <LandingBrandMark size={36} />
-              <span
-                style={{ fontFamily: 'var(--font-space-mono), monospace' }}
-                className="bg-[linear-gradient(120deg,#fff_0%,#7CF0A6_60%,#4ADE80_100%)] bg-clip-text text-[19px] font-bold tracking-[-0.03em] text-transparent"
-              >
-                Recall
-              </span>
-            </Link>
-
-            <div className="hidden items-center gap-2.5 sm:flex">
-              <a
-                href="#how-it-works"
-                className="px-2.5 text-[14px] text-[#A7B5AC] transition-colors hover:text-white"
-              >
-                How it works
-              </a>
-              <SpotlightLink href="/admin/login">For Schools</SpotlightLink>
-              <SpotlightLink href="/login">Sign in</SpotlightLink>
-              <SpotlightLink href="/pay/individual" filled>
-                Get started
-              </SpotlightLink>
-            </div>
-
-            <div className="sm:hidden">
-              <MobileNav />
-            </div>
-          </nav>
-
-          {/* Hero body */}
-          <div className="flex flex-1 flex-col items-center justify-center px-6 py-8 text-center sm:py-10">
-            <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#4ADE80] sm:mb-[18px] sm:text-[12px]">
-              A modern study platform for secondary school students
-            </p>
-            <h1 className="mb-4 max-w-[640px] text-[32px] font-extrabold leading-[1.1] tracking-[-0.02em] text-white sm:mb-5 sm:text-[50px]">
-              Study smarter.
-              <br />
-              Remember longer.
-            </h1>
-            <p className="mb-6 max-w-[480px] text-[15px] leading-relaxed text-[#C7D2CB] sm:mb-8 sm:text-[17px]">
-              Master every subject in your secondary school curriculum with clear explanations, real world
-              examples, and an AI tutor built to help you actually retain what you learn.
-            </p>
-            <div className="flex w-full max-w-xs flex-col gap-2.5 sm:w-auto sm:max-w-none sm:flex-row sm:gap-3.5">
-              <Link
-                href="/pay/individual"
-                className="inline-flex items-center justify-center rounded-xl bg-[#4ADE80] px-6 py-3.5 text-[15px] font-bold text-[#0F1F17] transition-transform hover:bg-[#3fcf72] active:scale-[0.97] sm:px-7 sm:text-[16px]"
-              >
-                Get started, N1,700 per term
-              </Link>
-              <a
-                href="#how-it-works"
-                className="inline-flex items-center justify-center rounded-xl border border-white/25 px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:border-white/40 active:scale-[0.97] sm:px-7 sm:text-[16px]"
-              >
-                See how it works
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="bg-white text-[#111827]">
+      <LandingNav />
+      <LandingHero />
       {/* ══════════════════════════ STATS STRIP ══════════════════════════ */}
       <div className="border-y border-[#E5E7EB] bg-[#F4FAF6]">
         <div className="mx-auto grid max-w-[900px] grid-cols-2 gap-x-4 gap-y-6 px-6 py-8 text-center sm:grid-cols-4 sm:gap-2.5 sm:py-[34px]">
@@ -247,7 +166,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════ PRICING ══════════════════════════════ */}
-      <section className="bg-[#F4FAF6]">
+      <section id="pricing" className="bg-[#F4FAF6]">
         <div className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
           <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
             Simple, honest pricing
@@ -302,35 +221,9 @@ export default function LandingPage() {
   );
 }
 
-// ── Reusable spotlight-hover primitives ─────────────────────────────────────
-
-function SpotlightLink({
-  href,
-  filled = false,
-  className = '',
-  children,
-}: {
-  href: string;
-  filled?: boolean;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const { ref, onMouseMove } = useSpotlight<HTMLAnchorElement>();
-  return (
-    <Link
-      ref={ref}
-      onMouseMove={onMouseMove}
-      href={href}
-      className={`spotlight relative overflow-hidden rounded-[10px] border px-[18px] py-[9px] text-[14px] font-semibold transition-colors ${
-        filled
-          ? 'spotlight-filled border-[#4ADE80] bg-[#4ADE80] text-[#0F1F17] hover:bg-[#3fcf72]'
-          : 'border-white/[0.18] bg-white/[0.04] text-white hover:border-[#4ADE80]/50'
-      } ${className}`}
-    >
-      <span className="relative z-10">{children}</span>
-    </Link>
-  );
-}
+// ── Reusable spotlight-hover primitive — SpotlightLink now lives in
+// SpotlightLink.tsx (shared with LandingNav); SpotlightCard stays local
+// since only this file's sections use it so far. ──────────────────────────
 
 function SpotlightCard({
   className = '',

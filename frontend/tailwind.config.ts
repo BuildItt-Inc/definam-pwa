@@ -60,6 +60,15 @@ const config: Config = {
 
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        /* Landing-page-only, loaded in components/landing/landingFonts.ts.
+           `heading` intentionally points at the same DM Sans variable as
+           `body` — Syne was dropped from the landing page entirely, so
+           there's no separate heading typeface right now. Kept as its own
+           token (rather than just using `font-body` on headings) so a
+           future real heading font is a one-line remap again, not a
+           markup-wide find/replace. */
+        heading: ["var(--font-dm-sans)", "DM Sans", "sans-serif"],
+        body: ["var(--font-dm-sans)", "DM Sans", "sans-serif"],
       },
 
       fontSize: {
