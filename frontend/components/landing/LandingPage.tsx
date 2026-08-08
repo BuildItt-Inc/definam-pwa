@@ -1,10 +1,28 @@
 'use client';
 
-import { useSpotlight } from '@/hooks/useSpotlight';
+import { motion } from 'framer-motion';
 import LandingNav from '@/components/landing/LandingNav';
 import LandingHero from '@/components/landing/LandingHero';
 import LandingStats from '@/components/landing/LandingStats';
+import LandingHowItWorks from '@/components/landing/LandingHowItWorks';
+import LandingPricing from '@/components/landing/LandingPricing';
+import LandingFaq from '@/components/landing/LandingFaq';
+import HeroBackground from '@/components/landing/HeroBackground';
 import SpotlightLink from '@/components/landing/SpotlightLink';
+import { dmSans, bricolage } from '@/components/landing/landingFonts';
+
+// Same fade-up shape used by LandingHero/LandingStats/LandingHowItWorks,
+// scroll-triggered since this section is below the fold. Not currently
+// exported/shared anywhere — each section defines its own copy, matching
+// how the previous pieces of this redesign already did it.
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] as const },
+  }),
+};
 
 // ── Real data, verified against the live database ───────────────────────────
 // Hardcoded (this is a static marketing page, not a live data integration),
@@ -13,38 +31,6 @@ import SpotlightLink from '@/components/landing/SpotlightLink';
 // lineup or topic count changes materially.
 
 const SUBJECTS = ['Mathematics', 'English Language', 'Chemistry', 'Physics', 'Economics'];
-
-// ── How it works — "Review it later" (not "Recall it later"): the in-app
-// spaced-repetition feature was renamed from "Recall" to "Review" when the
-// app itself was renamed to Recall, specifically to avoid this exact
-// collision (a feature called the same thing as the product). Using
-// "Recall it later" here would reintroduce that confusion on the page most
-// likely to be a new visitor's first impression, so the copy below says
-// "Review" throughout — flagged explicitly per the brief's request rather
-// than picked silently.
-const HOW_STEPS = [
-  {
-    step: 'STEP 1',
-    accent: 'bg-[#E9FBF0] text-[#16A34A]',
-    icon: IconIllustration,
-    title: 'Learn it clearly',
-    body: 'A plain definition, a real world example, and a visual breakdown for every topic, not walls of text to re-read.',
-  },
-  {
-    step: 'STEP 2',
-    accent: 'bg-[#EFF6FF] text-[#2563EB]',
-    icon: IconPracticeIllustration,
-    title: 'Practice it',
-    body: 'Exam style questions with full explanations, so you understand exactly why an answer is right, not just that it is.',
-  },
-  {
-    step: 'STEP 3',
-    accent: 'bg-[#FDF4E7] text-[#D97706]',
-    icon: IconReviewIllustration,
-    title: 'Review it later',
-    body: 'Spaced repetition brings topics back right before you would naturally start forgetting them.',
-  },
-];
 
 const INCLUDED = [
   {
@@ -75,53 +61,59 @@ export default function LandingPage() {
       <LandingNav />
       <LandingHero />
       <LandingStats />
-
-      {/* ══════════════════════════ HOW IT WORKS ══════════════════════════ */}
-      <section id="how-it-works" className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
-        <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
-          How it works
-        </p>
-        <p className="mx-auto mb-8 max-w-[480px] text-center text-[14px] text-[#6B7280] sm:mb-11 sm:text-[15px]">
-          Every topic broken into a simple flow that actually sticks.
-        </p>
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3 sm:gap-5">
-          {HOW_STEPS.map(({ step, accent, icon: Icon, title, body }) => (
-            <SpotlightCard key={title}>
-              <span className="absolute right-[22px] top-[22px] text-[11px] font-bold tracking-[0.06em] text-[#C4CBC5]">
-                {step}
-              </span>
-              <div className={`mb-4 flex h-[46px] w-[46px] items-center justify-center rounded-xl ${accent}`}>
-                <Icon />
-              </div>
-              <h3 className="mb-2 text-[17px] tracking-[-0.01em] text-[#111827]">
-                <span className="font-bold">{title}</span>
-              </h3>
-              <p className="text-[14px] leading-[1.55] text-[#6B7280]">{body}</p>
-            </SpotlightCard>
-          ))}
-        </div>
-      </section>
+      <LandingHowItWorks />
 
       {/* ═══════════════════ EVERYTHING YOU NEED IN ONE PLACE ═══════════════════ */}
-      <section className="bg-[#F4FAF6]">
-        <div className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
-          <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
+      {/* Same dark ink→jade background as the hero (HeroBackground,
+          `overlay="center"` since this section's content is centered, not
+          left-anchored like the hero's). Content/layout below is otherwise
+          untouched — this is a restyle, not a rebuild. */}
+      <section className={`${dmSans.variable} ${bricolage.variable} relative overflow-hidden bg-[#0A0F1E]`}>
+        <HeroBackground overlay="center" />
+        <div className="relative z-10 mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
+          <motion.p
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.6 }}
+            custom={0}
+            variants={fadeUp}
+            className="font-heading mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-white sm:text-[30px]"
+          >
             Everything you need in one place
-          </p>
-          <p className="mx-auto mb-8 max-w-[480px] text-center text-[14px] text-[#6B7280] sm:mb-11 sm:text-[15px]">
+          </motion.p>
+          <motion.p
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.6 }}
+            custom={1}
+            variants={fadeUp}
+            className="font-body mx-auto mb-8 max-w-[480px] text-center text-[14px] text-white/60 sm:mb-11 sm:text-[15px]"
+          >
             No separate apps for practice, tutoring, and tracking progress.
-          </p>
+          </motion.p>
           <div className="mx-auto grid max-w-[700px] grid-cols-1 gap-4 sm:grid-cols-2">
-            {INCLUDED.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="flex items-start gap-3.5 py-1.5">
-                <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[9px] bg-[#E9FBF0] text-[#16A34A]">
+            {INCLUDED.map(({ icon: Icon, title, body }, i) => (
+              <motion.div
+                key={title}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.4 }}
+                custom={i + 2}
+                variants={fadeUp}
+                className="flex items-start gap-3.5 py-1.5"
+              >
+                {/* jade-tint-border (25% opacity, already in the design
+                    system) instead of the light-mode jade-tint (10%) —
+                    needs to read as "a slightly more visible tint" against
+                    dark navy, per the brief. Glyph stays bright jade-light. */}
+                <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[9px] bg-jade-tint-border text-jade-light">
                   <Icon />
                 </div>
                 <div>
-                  <h4 className="mb-0.5 text-[14.5px] font-bold text-[#111827]">{title}</h4>
-                  <p className="text-[13px] leading-[1.5] text-[#6B7280]">{body}</p>
+                  <h4 className="font-heading mb-0.5 text-[14.5px] font-bold text-white">{title}</h4>
+                  <p className="font-body text-[13px] leading-[1.5] text-white/60">{body}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -147,29 +139,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════ PRICING ══════════════════════════════ */}
-      <section id="pricing" className="bg-[#F4FAF6]">
-        <div className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
-          <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
-            Simple, honest pricing
-          </p>
-          <p className="mx-auto mb-8 max-w-[480px] text-center text-[14px] text-[#6B7280] sm:mb-11 sm:text-[15px]">
-            One price per term. Everything included.
-          </p>
-          <SpotlightCard className="mx-auto max-w-[380px] p-6 text-center sm:p-[30px]">
-            <p className="mb-1.5 text-[13px] text-[#6B7280]">Individual student</p>
-            <p className="mb-1 mt-1.5 text-[34px] font-extrabold text-[#0F1F17] sm:text-[40px]">
-              N1,700<span className="text-[15px] font-semibold text-[#6B7280]"> / term</span>
-            </p>
-            <p className="mb-5 text-[13px] text-[#6B7280]">
-              Full access to every subject and the AI tutor for the term. Renew to keep your access going.
-            </p>
-            <SpotlightLink href="/pay/individual" filled className="block w-full">
-              Get started
-            </SpotlightLink>
-          </SpotlightCard>
-        </div>
-      </section>
+      <LandingPricing />
+      <LandingFaq />
 
       {/* ══════════════════════════════ FOR SCHOOLS ══════════════════════════════ */}
       <section className="bg-[#0F1F17] px-6 py-11 text-center sm:py-[70px]">
@@ -203,29 +174,6 @@ export default function LandingPage() {
   );
 }
 
-// ── Reusable spotlight-hover primitive — SpotlightLink now lives in
-// SpotlightLink.tsx (shared with LandingNav); SpotlightCard stays local
-// since only this file's sections use it so far. ──────────────────────────
-
-function SpotlightCard({
-  className = '',
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const { ref, onMouseMove } = useSpotlight<HTMLDivElement>();
-  return (
-    <div
-      ref={ref}
-      onMouseMove={onMouseMove}
-      className={`spotlight spotlight-card relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-[26px] transition-[transform,box-shadow,border-color] duration-200 ${className}`}
-    >
-      <div className="relative z-10">{children}</div>
-    </div>
-  );
-}
-
 // ── Icons — inlined close to the preview's hand-coded paths rather than
 // swapped for lucide equivalents, so proportions match exactly. These are
 // placeholder-quality illustrative icons, not meant for further polish. ──
@@ -241,33 +189,6 @@ function iconProps() {
     width: 22,
     height: 22,
   };
-}
-
-function IconIllustration() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  );
-}
-
-function IconPracticeIllustration() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M9 11l3 3L22 4" />
-      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-    </svg>
-  );
-}
-
-function IconReviewIllustration() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M3 12a9 9 0 1 0 3-6.7" />
-      <path d="M3 4v5h5" />
-    </svg>
-  );
 }
 
 function IconChat() {

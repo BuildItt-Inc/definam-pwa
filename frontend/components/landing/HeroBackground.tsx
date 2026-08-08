@@ -26,10 +26,16 @@ const EDGES: [number, number][] = [
 /**
  * Layered hero background: deep ink→jade gradient, a sparse constellation
  * mesh spanning the full hero width, and 3 slow-drifting glow blobs. Pure
- * CSS/SVG, no image asset. Sits behind hero content via z-index; the hero
- * itself adds `relative z-10` to its content column.
+ * CSS/SVG, no image asset. Sits behind hero content via z-index; the
+ * section using it adds `relative z-10` to its own content.
+ *
+ * `overlay`: `'left'` (default) is the hero's own left-anchored gradient,
+ * tuned for its left-text/right-phone layout. `'center'` is a flat, even
+ * dark wash instead — for sections that reuse this same background but
+ * have centered content, where a directional gradient would darken one
+ * side more than the other for no reason tied to the actual layout.
  */
-export default function HeroBackground() {
+export default function HeroBackground({ overlay = 'left' }: { overlay?: 'left' | 'center' }) {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* Base gradient: ink through a very dark jade, not flat navy */}
@@ -86,13 +92,15 @@ export default function HeroBackground() {
         ))}
       </svg>
 
-      {/* Soft dark overlay under the text zone — keeps hero copy readable
-          now that the mesh/glow behind it spans the whole hero, not just
-          the right side. */}
-      <div
-        className="absolute inset-0"
-        style={{ background: 'linear-gradient(90deg, rgba(10,15,30,0.75) 0%, rgba(10,15,30,0.35) 45%, transparent 75%)' }}
-      />
+      {/* Contrast overlay — keeps copy readable over the mesh/glow. */}
+      {overlay === 'left' ? (
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(90deg, rgba(10,15,30,0.75) 0%, rgba(10,15,30,0.35) 45%, transparent 75%)' }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-[#0A0F1E]/55" />
+      )}
     </div>
   );
 }
