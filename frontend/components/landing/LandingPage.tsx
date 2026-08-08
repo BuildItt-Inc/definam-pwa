@@ -3,6 +3,7 @@
 import { useSpotlight } from '@/hooks/useSpotlight';
 import LandingNav from '@/components/landing/LandingNav';
 import LandingHero from '@/components/landing/LandingHero';
+import LandingStats from '@/components/landing/LandingStats';
 import SpotlightLink from '@/components/landing/SpotlightLink';
 
 // ── Real data, verified against the live database ───────────────────────────
@@ -12,13 +13,6 @@ import SpotlightLink from '@/components/landing/SpotlightLink';
 // lineup or topic count changes materially.
 
 const SUBJECTS = ['Mathematics', 'English Language', 'Chemistry', 'Physics', 'Economics'];
-
-const STATS = [
-  { value: '5', label: 'subjects covered' },
-  { value: '1,200+', label: 'topics and growing' },
-  { value: '24/7', label: 'AI tutor availability' },
-  { value: 'N1,700', label: 'per term, full access' },
-];
 
 // ── How it works — "Review it later" (not "Recall it later"): the in-app
 // spaced-repetition feature was renamed from "Recall" to "Review" when the
@@ -80,19 +74,7 @@ export default function LandingPage() {
     <div className="bg-white text-[#111827]">
       <LandingNav />
       <LandingHero />
-      {/* ══════════════════════════ STATS STRIP ══════════════════════════ */}
-      <div className="border-y border-[#E5E7EB] bg-[#F4FAF6]">
-        <div className="mx-auto grid max-w-[900px] grid-cols-2 gap-x-4 gap-y-6 px-6 py-8 text-center sm:grid-cols-4 sm:gap-2.5 sm:py-[34px]">
-          {STATS.map((stat) => (
-            <div key={stat.label}>
-              <div className="text-[22px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[26px]">
-                {stat.value}
-              </div>
-              <div className="mt-1 text-[12px] text-[#6B7280] sm:text-[12.5px]">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <LandingStats />
 
       {/* ══════════════════════════ HOW IT WORKS ══════════════════════════ */}
       <section id="how-it-works" className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">

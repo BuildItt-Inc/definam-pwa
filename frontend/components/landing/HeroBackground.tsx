@@ -3,26 +3,31 @@
 import { motion } from 'framer-motion';
 
 // Static node/line layout (not runtime-random) so server and client render
-// identically — same reasoning as FloatingSymbols. Weighted toward the
-// right half of the viewBox so the mesh sits behind the phone mockup,
-// keeping the left (text) side clean per the brief.
+// identically — same reasoning as FloatingSymbols. Spread across the FULL
+// viewBox width now (previously clustered x:600-1000, right-weighted to
+// sit only behind the phone) so the mesh reads as covering the whole hero
+// on every breakpoint, mobile included.
 const NODES = [
-  { x: 640, y: 60 }, { x: 760, y: 140 }, { x: 700, y: 240 },
-  { x: 860, y: 90 }, { x: 900, y: 220 }, { x: 820, y: 320 },
-  { x: 950, y: 340 }, { x: 680, y: 400 }, { x: 780, y: 460 },
-  { x: 920, y: 470 }, { x: 600, y: 320 }, { x: 1000, y: 150 },
+  { x: 60, y: 80 }, { x: 180, y: 200 }, { x: 120, y: 340 },
+  { x: 260, y: 120 }, { x: 320, y: 280 }, { x: 220, y: 440 },
+  { x: 420, y: 60 }, { x: 480, y: 220 }, { x: 400, y: 380 },
+  { x: 560, y: 140 }, { x: 620, y: 340 }, { x: 540, y: 460 },
+  { x: 700, y: 80 }, { x: 760, y: 240 }, { x: 680, y: 400 },
+  { x: 860, y: 140 }, { x: 820, y: 320 }, { x: 940, y: 220 },
+  { x: 1000, y: 400 }, { x: 1040, y: 100 },
 ];
 
 const EDGES: [number, number][] = [
-  [0, 1], [1, 2], [1, 3], [3, 4], [4, 5], [2, 10],
-  [5, 6], [5, 8], [8, 9], [7, 8], [2, 7], [3, 11], [4, 11],
+  [0, 1], [1, 3], [1, 2], [2, 5], [3, 4], [3, 6], [4, 5], [4, 7],
+  [6, 9], [7, 9], [7, 8], [8, 11], [9, 10], [9, 12], [10, 13],
+  [12, 15], [13, 15], [13, 14], [15, 17], [16, 15], [16, 18], [17, 19],
 ];
 
 /**
  * Layered hero background: deep ink→jade gradient, a sparse constellation
- * mesh (right side, behind the phone), and 3 slow-drifting glow blobs.
- * Pure CSS/SVG, no image asset. Sits behind hero content via z-index; the
- * hero itself adds `relative z-10` to its content column.
+ * mesh spanning the full hero width, and 3 slow-drifting glow blobs. Pure
+ * CSS/SVG, no image asset. Sits behind hero content via z-index; the hero
+ * itself adds `relative z-10` to its content column.
  */
 export default function HeroBackground() {
   return (
@@ -53,11 +58,15 @@ export default function HeroBackground() {
         transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
       />
 
-      {/* Node network — sparse, right-weighted, low opacity */}
+      {/* Node network — sparse, now spans the full hero on every breakpoint.
+          `xMidYMid slice` (center-cropped, not right-anchored) since the
+          mesh itself is no longer right-weighted. No `hidden`/`sm:` gate —
+          previously this was `hidden sm:block`, which is why it didn't
+          render on mobile at all. */}
       <svg
-        className="absolute inset-0 hidden h-full w-full opacity-[0.35] sm:block"
+        className="absolute inset-0 h-full w-full opacity-[0.28]"
         viewBox="0 0 1100 560"
-        preserveAspectRatio="xMaxYMid slice"
+        preserveAspectRatio="xMidYMid slice"
         fill="none"
       >
         {EDGES.map(([a, b], i) => (
@@ -77,7 +86,9 @@ export default function HeroBackground() {
         ))}
       </svg>
 
-      {/* Left-side contrast overlay — keeps hero copy readable over the mesh/glow */}
+      {/* Soft dark overlay under the text zone — keeps hero copy readable
+          now that the mesh/glow behind it spans the whole hero, not just
+          the right side. */}
       <div
         className="absolute inset-0"
         style={{ background: 'linear-gradient(90deg, rgba(10,15,30,0.75) 0%, rgba(10,15,30,0.35) 45%, transparent 75%)' }}

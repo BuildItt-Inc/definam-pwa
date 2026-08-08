@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import HeroPhoneMockup from '@/components/landing/HeroPhoneMockup';
 import HeroBackground from '@/components/landing/HeroBackground';
-import { dmSans } from '@/components/landing/landingFonts';
+import { dmSans, bricolage } from '@/components/landing/landingFonts';
+import { usePwaInstall } from '@/hooks/usePwaInstall';
 
 // Staggered fade-up — each element ~0.1s behind the last, per the brief.
 const fadeUp = {
@@ -22,16 +23,19 @@ const fadeUp = {
  * clears LandingNav, which is `fixed` (see that file's comment).
  */
 export default function LandingHero() {
+  const { canInstall, promptInstall } = usePwaInstall();
+
   return (
     <section
       id="home"
-      className={`${dmSans.variable} relative overflow-hidden bg-[#0A0F1E]`}
+      className={`${dmSans.variable} ${bricolage.variable} relative overflow-hidden bg-[#0A0F1E]`}
     >
       <HeroBackground />
 
       <div className="relative z-10 mx-auto grid w-full max-w-5xl grid-cols-1 items-center gap-10 px-6 pb-16 pt-28 sm:px-7 sm:pb-24 sm:pt-32 lg:grid-cols-2 lg:gap-16 lg:pb-28">
-        {/* Copy column */}
-        <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+        {/* Copy column — left-aligned at every breakpoint, per the Figma
+            (previously centered below `lg:`, which is what needed fixing) */}
+        <div className="flex flex-col items-start text-left">
           {/* <motion.p
             custom={0}
             initial="hidden"
@@ -47,7 +51,7 @@ export default function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-heading mb-4 max-w-[540px] text-[32px] font-bold leading-[1.08] tracking-[-0.02em] text-white sm:text-[48px] lg:max-w-none"
+            className="font-heading mb-4 max-w-[540px] text-[32px] font-extrabold leading-[1.08] tracking-[-0.02em] text-white sm:text-[48px] lg:max-w-none"
           >
             Study 
             <br />
@@ -82,12 +86,20 @@ export default function LandingHero() {
             >
               Get Started
             </Link>
-            <a
-              href="#how-it-works"
-              className="inline-flex items-center justify-center rounded-xl border border-white/25 px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:border-white/40 active:scale-[0.97] sm:px-7 sm:text-[16px]"
-            >
-              See how it works
-            </a>
+            {/* Only rendered once `beforeinstallprompt` has actually fired —
+                browsers that don't support installable PWAs (Safari) or an
+                already-installed app never fire it, so `canInstall` just
+                stays false and this button never appears rather than
+                showing a control that would do nothing on click. */}
+            {canInstall && (
+              <button
+                type="button"
+                onClick={promptInstall}
+                className="inline-flex items-center justify-center rounded-xl border border-white/25 px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:border-white/40 active:scale-[0.97] sm:px-7 sm:text-[16px]"
+              >
+                Install App
+              </button>
+            )}
           </motion.div>
         </div>
 

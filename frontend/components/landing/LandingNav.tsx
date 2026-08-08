@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import MobileNav from '@/components/landing/MobileNav';
-import { dmSans } from '@/components/landing/landingFonts';
+import { dmSans, bricolage } from '@/components/landing/landingFonts';
 import { NAV_LINKS } from '@/components/landing/navLinks';
 
 /**
@@ -32,7 +32,7 @@ export default function LandingNav() {
 
   return (
     <nav
-      className={`${dmSans.variable} fixed inset-x-0 top-0 z-40 transition-colors duration-200 ${
+      className={`${dmSans.variable} ${bricolage.variable} fixed inset-x-0 top-0 z-40 transition-colors duration-200 ${
         scrolled ? 'border-b border-white/10 bg-[#0A0F1E]/90 backdrop-blur-md' : 'border-b border-transparent bg-transparent'
       }`}
     >
@@ -41,9 +41,14 @@ export default function LandingNav() {
             elements from grid flow entirely on mobile (not just hiding
             them), auto-placement would otherwise shift later items left
             to fill the gap — pin every column explicitly instead. */}
+        {/* font-semibold (600), not font-bold (700) — Bricolage Grotesque is
+            only loaded at 600/800 (see landingFonts.ts); 800 is reserved for
+            the hero headline, so the wordmark uses the other loaded weight
+            rather than requesting an unloaded 700 and triggering a fallback/
+            synthetic-bold render. */}
         <Link
           href="/"
-          className="font-heading col-start-1 justify-self-start text-[19px] font-bold tracking-[-0.03em] text-white"
+          className="font-heading col-start-1 justify-self-start text-[19px] font-semibold tracking-[-0.03em] text-white"
         >
           Recall
         </Link>
