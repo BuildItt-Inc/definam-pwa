@@ -7,8 +7,8 @@ import LandingStats from '@/components/landing/LandingStats';
 import LandingHowItWorks from '@/components/landing/LandingHowItWorks';
 import LandingPricing from '@/components/landing/LandingPricing';
 import LandingFaq from '@/components/landing/LandingFaq';
+import LandingSchools from '@/components/landing/LandingSchools';
 import HeroBackground from '@/components/landing/HeroBackground';
-import SpotlightLink from '@/components/landing/SpotlightLink';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 
 // Same fade-up shape used by LandingHero/LandingStats/LandingHowItWorks,
@@ -141,26 +141,7 @@ export default function LandingPage() {
 
       <LandingPricing />
       <LandingFaq />
-
-      {/* ══════════════════════════════ FOR SCHOOLS ══════════════════════════════ */}
-      <section className="bg-[#0F1F17] px-6 py-11 text-center sm:py-[70px]">
-        <p className="mb-3 text-[24px] font-extrabold tracking-[-0.02em] text-white sm:text-[30px]">
-          Running a school? We have you covered
-        </p>
-        <p className="mx-auto mb-8 max-w-[480px] text-[14px] text-[#C7D2CB] sm:mb-11 sm:text-[15px]">
-          Bulk access codes, a dashboard for your students, and reports your teachers will actually use.
-        </p>
-        {/* Routes to the purchase flow, not /admin/login: this band targets
-            prospective schools who don't have an account yet, distinct from
-            the nav's "For Schools" link (existing admins who already know to
-            look for a login). Confirmed with the team rather than guessing,
-            since /admin/login has no signup path and blindly matching the
-            nav link here would leave new schools with no way to buy access
-            from this page at all. */}
-        <SpotlightLink href="/pay/organisation" className="inline-flex">
-          Talk to us about school access
-        </SpotlightLink>
-      </section>
+      <LandingSchools />
 
       {/* ══════════════════════════════ FOOTER ══════════════════════════════ */}
       <footer className="border-t border-[#E5E7EB] bg-white px-6 py-8 text-center">
