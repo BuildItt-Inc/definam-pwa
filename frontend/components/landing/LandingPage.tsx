@@ -1,20 +1,29 @@
 'use client';
 
-import { Space_Mono } from 'next/font/google';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { useSpotlight } from '@/hooks/useSpotlight';
-import LandingBrandMark from '@/components/landing/LandingBrandMark';
-import FloatingSymbols from '@/components/landing/FloatingSymbols';
-import RunningCharacter from '@/components/landing/RunningCharacter';
-import MobileNav from '@/components/landing/MobileNav';
+import { motion } from 'framer-motion';
+import LandingNav from '@/components/landing/LandingNav';
+import LandingHero from '@/components/landing/LandingHero';
+import LandingStats from '@/components/landing/LandingStats';
+import LandingHowItWorks from '@/components/landing/LandingHowItWorks';
+import LandingPricing from '@/components/landing/LandingPricing';
+import LandingFaq from '@/components/landing/LandingFaq';
+import LandingSchools from '@/components/landing/LandingSchools';
+import LandingFooter from '@/components/landing/LandingFooter';
+import HeroBackground from '@/components/landing/HeroBackground';
+import { dmSans, bricolage } from '@/components/landing/landingFonts';
 
-const spaceMono = Space_Mono({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-space-mono',
-});
+// Same fade-up shape used by LandingHero/LandingStats/LandingHowItWorks,
+// scroll-triggered since this section is below the fold. Not currently
+// exported/shared anywhere — each section defines its own copy, matching
+// how the previous pieces of this redesign already did it.
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] as const },
+  }),
+};
 
 // ── Real data, verified against the live database ───────────────────────────
 // Hardcoded (this is a static marketing page, not a live data integration),
@@ -23,45 +32,6 @@ const spaceMono = Space_Mono({
 // lineup or topic count changes materially.
 
 const SUBJECTS = ['Mathematics', 'English Language', 'Chemistry', 'Physics', 'Economics'];
-
-const STATS = [
-  { value: '5', label: 'subjects covered' },
-  { value: '1,200+', label: 'topics and growing' },
-  { value: '24/7', label: 'AI tutor availability' },
-  { value: 'N1,700', label: 'per term, full access' },
-];
-
-// ── How it works — "Review it later" (not "Recall it later"): the in-app
-// spaced-repetition feature was renamed from "Recall" to "Review" when the
-// app itself was renamed to Recall, specifically to avoid this exact
-// collision (a feature called the same thing as the product). Using
-// "Recall it later" here would reintroduce that confusion on the page most
-// likely to be a new visitor's first impression, so the copy below says
-// "Review" throughout — flagged explicitly per the brief's request rather
-// than picked silently.
-const HOW_STEPS = [
-  {
-    step: 'STEP 1',
-    accent: 'bg-[#E9FBF0] text-[#16A34A]',
-    icon: IconIllustration,
-    title: 'Learn it clearly',
-    body: 'A plain definition, a real world example, and a visual breakdown for every topic, not walls of text to re-read.',
-  },
-  {
-    step: 'STEP 2',
-    accent: 'bg-[#EFF6FF] text-[#2563EB]',
-    icon: IconPracticeIllustration,
-    title: 'Practice it',
-    body: 'Exam style questions with full explanations, so you understand exactly why an answer is right, not just that it is.',
-  },
-  {
-    step: 'STEP 3',
-    accent: 'bg-[#FDF4E7] text-[#D97706]',
-    icon: IconReviewIllustration,
-    title: 'Review it later',
-    body: 'Spaced repetition brings topics back right before you would naturally start forgetting them.',
-  },
-];
 
 const INCLUDED = [
   {
@@ -88,139 +58,63 @@ const INCLUDED = [
 
 export default function LandingPage() {
   return (
-    <div className={`${spaceMono.variable} bg-white text-[#111827]`}>
-      {/* ══════════════════════════════ HERO ══════════════════════════════ */}
-      <div
-        className="relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, #0F1F17 0%, #16321F 55%, #0F1F17 100%)' }}
-      >
-        <FloatingSymbols />
-        <RunningCharacter />
-
-        <div className="relative z-10 flex min-h-screen flex-col">
-          {/* Nav */}
-          <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3.5 sm:px-7">
-            <Link href="/" className="flex items-center gap-2.5">
-              <LandingBrandMark size={36} />
-              <span
-                style={{ fontFamily: 'var(--font-space-mono), monospace' }}
-                className="bg-[linear-gradient(120deg,#fff_0%,#7CF0A6_60%,#4ADE80_100%)] bg-clip-text text-[19px] font-bold tracking-[-0.03em] text-transparent"
-              >
-                Recall
-              </span>
-            </Link>
-
-            <div className="hidden items-center gap-2.5 sm:flex">
-              <a
-                href="#how-it-works"
-                className="px-2.5 text-[14px] text-[#A7B5AC] transition-colors hover:text-white"
-              >
-                How it works
-              </a>
-              <SpotlightLink href="/admin/login">For Schools</SpotlightLink>
-              <SpotlightLink href="/login">Sign in</SpotlightLink>
-              <SpotlightLink href="/pay/individual" filled>
-                Get started
-              </SpotlightLink>
-            </div>
-
-            <div className="sm:hidden">
-              <MobileNav />
-            </div>
-          </nav>
-
-          {/* Hero body */}
-          <div className="flex flex-1 flex-col items-center justify-center px-6 py-8 text-center sm:py-10">
-            <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#4ADE80] sm:mb-[18px] sm:text-[12px]">
-              A modern study platform for secondary school students
-            </p>
-            <h1 className="mb-4 max-w-[640px] text-[32px] font-extrabold leading-[1.1] tracking-[-0.02em] text-white sm:mb-5 sm:text-[50px]">
-              Study smarter.
-              <br />
-              Remember longer.
-            </h1>
-            <p className="mb-6 max-w-[480px] text-[15px] leading-relaxed text-[#C7D2CB] sm:mb-8 sm:text-[17px]">
-              Master every subject in your secondary school curriculum with clear explanations, real world
-              examples, and an AI tutor built to help you actually retain what you learn.
-            </p>
-            <div className="flex w-full max-w-xs flex-col gap-2.5 sm:w-auto sm:max-w-none sm:flex-row sm:gap-3.5">
-              <Link
-                href="/pay/individual"
-                className="inline-flex items-center justify-center rounded-xl bg-[#4ADE80] px-6 py-3.5 text-[15px] font-bold text-[#0F1F17] transition-transform hover:bg-[#3fcf72] active:scale-[0.97] sm:px-7 sm:text-[16px]"
-              >
-                Get started, N1,700 per term
-              </Link>
-              <a
-                href="#how-it-works"
-                className="inline-flex items-center justify-center rounded-xl border border-white/25 px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:border-white/40 active:scale-[0.97] sm:px-7 sm:text-[16px]"
-              >
-                See how it works
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ══════════════════════════ STATS STRIP ══════════════════════════ */}
-      <div className="border-y border-[#E5E7EB] bg-[#F4FAF6]">
-        <div className="mx-auto grid max-w-[900px] grid-cols-2 gap-x-4 gap-y-6 px-6 py-8 text-center sm:grid-cols-4 sm:gap-2.5 sm:py-[34px]">
-          {STATS.map((stat) => (
-            <div key={stat.label}>
-              <div className="text-[22px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[26px]">
-                {stat.value}
-              </div>
-              <div className="mt-1 text-[12px] text-[#6B7280] sm:text-[12.5px]">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ══════════════════════════ HOW IT WORKS ══════════════════════════ */}
-      <section id="how-it-works" className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
-        <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
-          How it works
-        </p>
-        <p className="mx-auto mb-8 max-w-[480px] text-center text-[14px] text-[#6B7280] sm:mb-11 sm:text-[15px]">
-          Every topic broken into a simple flow that actually sticks.
-        </p>
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3 sm:gap-5">
-          {HOW_STEPS.map(({ step, accent, icon: Icon, title, body }) => (
-            <SpotlightCard key={title}>
-              <span className="absolute right-[22px] top-[22px] text-[11px] font-bold tracking-[0.06em] text-[#C4CBC5]">
-                {step}
-              </span>
-              <div className={`mb-4 flex h-[46px] w-[46px] items-center justify-center rounded-xl ${accent}`}>
-                <Icon />
-              </div>
-              <h3 className="mb-2 text-[17px] tracking-[-0.01em] text-[#111827]">
-                <span className="font-bold">{title}</span>
-              </h3>
-              <p className="text-[14px] leading-[1.55] text-[#6B7280]">{body}</p>
-            </SpotlightCard>
-          ))}
-        </div>
-      </section>
+    <div className="bg-white text-[#111827]">
+      <LandingNav />
+      <LandingHero />
+      <LandingStats />
+      <LandingHowItWorks />
 
       {/* ═══════════════════ EVERYTHING YOU NEED IN ONE PLACE ═══════════════════ */}
-      <section className="bg-[#F4FAF6]">
-        <div className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
-          <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
+      {/* Same dark ink→jade background as the hero (HeroBackground,
+          `overlay="center"` since this section's content is centered, not
+          left-anchored like the hero's). Content/layout below is otherwise
+          untouched — this is a restyle, not a rebuild. */}
+      <section className={`${dmSans.variable} ${bricolage.variable} relative overflow-hidden bg-[#0A0F1E]`}>
+        <HeroBackground overlay="center" />
+        <div className="relative z-10 mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
+          <motion.p
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.6 }}
+            custom={0}
+            variants={fadeUp}
+            className="font-heading mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-white sm:text-[30px]"
+          >
             Everything you need in one place
-          </p>
-          <p className="mx-auto mb-8 max-w-[480px] text-center text-[14px] text-[#6B7280] sm:mb-11 sm:text-[15px]">
+          </motion.p>
+          <motion.p
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.6 }}
+            custom={1}
+            variants={fadeUp}
+            className="font-body mx-auto mb-8 max-w-[480px] text-center text-[14px] text-white/60 sm:mb-11 sm:text-[15px]"
+          >
             No separate apps for practice, tutoring, and tracking progress.
-          </p>
+          </motion.p>
           <div className="mx-auto grid max-w-[700px] grid-cols-1 gap-4 sm:grid-cols-2">
-            {INCLUDED.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="flex items-start gap-3.5 py-1.5">
-                <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[9px] bg-[#E9FBF0] text-[#16A34A]">
+            {INCLUDED.map(({ icon: Icon, title, body }, i) => (
+              <motion.div
+                key={title}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.4 }}
+                custom={i + 2}
+                variants={fadeUp}
+                className="flex items-start gap-3.5 py-1.5"
+              >
+                {/* jade-tint-border (25% opacity, already in the design
+                    system) instead of the light-mode jade-tint (10%) —
+                    needs to read as "a slightly more visible tint" against
+                    dark navy, per the brief. Glyph stays bright jade-light. */}
+                <div className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[9px] bg-jade-tint-border text-jade-light">
                   <Icon />
                 </div>
                 <div>
-                  <h4 className="mb-0.5 text-[14.5px] font-bold text-[#111827]">{title}</h4>
-                  <p className="text-[13px] leading-[1.5] text-[#6B7280]">{body}</p>
+                  <h4 className="font-heading mb-0.5 text-[14.5px] font-bold text-white">{title}</h4>
+                  <p className="font-body text-[13px] leading-[1.5] text-white/60">{body}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -246,107 +140,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════ PRICING ══════════════════════════════ */}
-      <section className="bg-[#F4FAF6]">
-        <div className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
-          <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
-            Simple, honest pricing
-          </p>
-          <p className="mx-auto mb-8 max-w-[480px] text-center text-[14px] text-[#6B7280] sm:mb-11 sm:text-[15px]">
-            One price per term. Everything included.
-          </p>
-          <SpotlightCard className="mx-auto max-w-[380px] p-6 text-center sm:p-[30px]">
-            <p className="mb-1.5 text-[13px] text-[#6B7280]">Individual student</p>
-            <p className="mb-1 mt-1.5 text-[34px] font-extrabold text-[#0F1F17] sm:text-[40px]">
-              N1,700<span className="text-[15px] font-semibold text-[#6B7280]"> / term</span>
-            </p>
-            <p className="mb-5 text-[13px] text-[#6B7280]">
-              Full access to every subject and the AI tutor for the term. Renew to keep your access going.
-            </p>
-            <SpotlightLink href="/pay/individual" filled className="block w-full">
-              Get started
-            </SpotlightLink>
-          </SpotlightCard>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════ FOR SCHOOLS ══════════════════════════════ */}
-      <section className="bg-[#0F1F17] px-6 py-11 text-center sm:py-[70px]">
-        <p className="mb-3 text-[24px] font-extrabold tracking-[-0.02em] text-white sm:text-[30px]">
-          Running a school? We have you covered
-        </p>
-        <p className="mx-auto mb-8 max-w-[480px] text-[14px] text-[#C7D2CB] sm:mb-11 sm:text-[15px]">
-          Bulk access codes, a dashboard for your students, and reports your teachers will actually use.
-        </p>
-        {/* Routes to the purchase flow, not /admin/login: this band targets
-            prospective schools who don't have an account yet, distinct from
-            the nav's "For Schools" link (existing admins who already know to
-            look for a login). Confirmed with the team rather than guessing,
-            since /admin/login has no signup path and blindly matching the
-            nav link here would leave new schools with no way to buy access
-            from this page at all. */}
-        <SpotlightLink href="/pay/organisation" className="inline-flex">
-          Talk to us about school access
-        </SpotlightLink>
-      </section>
-
-      {/* ══════════════════════════════ FOOTER ══════════════════════════════ */}
-      <footer className="border-t border-[#E5E7EB] bg-white px-6 py-8 text-center">
-        <p className="mb-1 text-[14px] font-bold text-[#111827]">Recall</p>
-        <p className="mb-3 text-[13px] text-[#6B7280]">
-          A modern study platform for secondary school students.
-        </p>
-        <p className="text-[12px] text-[#9CA3AF]">&copy; Recall 2026.</p>
-      </footer>
-    </div>
-  );
-}
-
-// ── Reusable spotlight-hover primitives ─────────────────────────────────────
-
-function SpotlightLink({
-  href,
-  filled = false,
-  className = '',
-  children,
-}: {
-  href: string;
-  filled?: boolean;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const { ref, onMouseMove } = useSpotlight<HTMLAnchorElement>();
-  return (
-    <Link
-      ref={ref}
-      onMouseMove={onMouseMove}
-      href={href}
-      className={`spotlight relative overflow-hidden rounded-[10px] border px-[18px] py-[9px] text-[14px] font-semibold transition-colors ${
-        filled
-          ? 'spotlight-filled border-[#4ADE80] bg-[#4ADE80] text-[#0F1F17] hover:bg-[#3fcf72]'
-          : 'border-white/[0.18] bg-white/[0.04] text-white hover:border-[#4ADE80]/50'
-      } ${className}`}
-    >
-      <span className="relative z-10">{children}</span>
-    </Link>
-  );
-}
-
-function SpotlightCard({
-  className = '',
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const { ref, onMouseMove } = useSpotlight<HTMLDivElement>();
-  return (
-    <div
-      ref={ref}
-      onMouseMove={onMouseMove}
-      className={`spotlight spotlight-card relative overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white p-[26px] transition-[transform,box-shadow,border-color] duration-200 ${className}`}
-    >
-      <div className="relative z-10">{children}</div>
+      <LandingPricing />
+      <LandingFaq />
+      <LandingSchools />
+      <LandingFooter />
     </div>
   );
 }
@@ -366,33 +163,6 @@ function iconProps() {
     width: 22,
     height: 22,
   };
-}
-
-function IconIllustration() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  );
-}
-
-function IconPracticeIllustration() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M9 11l3 3L22 4" />
-      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-    </svg>
-  );
-}
-
-function IconReviewIllustration() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M3 12a9 9 0 1 0 3-6.7" />
-      <path d="M3 4v5h5" />
-    </svg>
-  );
 }
 
 function IconChat() {

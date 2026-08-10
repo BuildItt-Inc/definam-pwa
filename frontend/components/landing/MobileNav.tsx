@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import LandingBrandMark from '@/components/landing/LandingBrandMark';
+import { NAV_LINKS } from '@/components/landing/navLinks';
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -44,37 +45,34 @@ export default function MobileNav() {
         </button>
       </div>
 
-      {/* Link list — vertically centered in remaining space */}
+      {/* Link list — vertically centered in remaining space. Mirrors
+          LandingNav's desktop link set exactly, per the brief. */}
       <div className="flex flex-1 flex-col items-center justify-center gap-8 p-6">
-        <a
-          href="#how-it-works"
-          onClick={() => setOpen(false)}
-          className="text-lg font-semibold text-white transition-colors hover:text-[#4ADE80]"
-        >
-          How it works
-        </a>
-        <Link
-          href="/admin/login"
-          onClick={() => setOpen(false)}
-          className="text-lg font-semibold text-white transition-colors hover:text-[#4ADE80]"
-        >
-          For Schools
-        </Link>
+        {NAV_LINKS.map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            onClick={() => setOpen(false)}
+            className="text-lg font-semibold text-white transition-colors hover:text-[#4ADE80]"
+          >
+            {link.label}
+          </a>
+        ))}
+        <div className="w-full border-t border-white/10" />
         <Link
           href="/login"
           onClick={() => setOpen(false)}
           className="text-lg font-semibold text-white transition-colors hover:text-[#4ADE80]"
         >
-          Sign in
+          Log in
         </Link>
-        <div className="w-full border-t border-white/10" />
         <div className="w-full max-w-xs">
           <Link
             href="/pay/individual"
             onClick={() => setOpen(false)}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#4ADE80] px-6 py-3 text-[15px] font-bold text-[#0F1F17] transition-colors hover:bg-[#3fcf72]"
           >
-            Get started
+            Sign up
             <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
           </Link>
         </div>

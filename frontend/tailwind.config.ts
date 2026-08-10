@@ -60,6 +60,9 @@ const config: Config = {
 
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        /* Landing-page-only, loaded in components/landing/landingFonts.ts. */
+        heading: ["var(--font-bricolage)", "Bricolage Grotesque", "sans-serif"],
+        body: ["var(--font-dm-sans)", "DM Sans", "sans-serif"],
       },
 
       fontSize: {
