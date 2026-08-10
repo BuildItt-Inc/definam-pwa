@@ -10,10 +10,10 @@ import { dmSans, bricolage } from '@/components/landing/landingFonts';
 // the app, not generic pricing-page filler.
 const BENEFITS = [
   'Every subject in your curriculum, fully unlocked',
-  'AI tutor — ask anything, anytime, in plain language',
+  'AI tutor. Ask anything, anytime, in plain language',
   'Spaced recall so topics come back before you forget',
   'Practice questions with full worked explanations',
-  "Progress tracking — see what you've mastered and what needs work",
+  "Progress tracking. See what you've mastered and what needs work",
   'Daily streaks to build the study habit',
 ];
 

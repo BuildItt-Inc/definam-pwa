@@ -121,7 +121,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════ SUBJECTS ══════════════════════════════ */}
-      <section className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
+      {/* <section className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
         <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
           All the subjects you actually need
         </p>
@@ -138,7 +138,7 @@ export default function LandingPage() {
             </span>
           ))}
         </div>
-      </section>
+      </section> */}
 
       <LandingPricing />
       <LandingFaq />
