@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import HeroPhoneMockup from '@/components/landing/HeroPhoneMockup';
 import HeroBackground from '@/components/landing/HeroBackground';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
@@ -103,7 +103,12 @@ export default function LandingHero() {
           </motion.div>
         </div>
 
-        {/* Phone mockup column — content unchanged, just staggered in */}
+        {/* Product mockup column — laptop + phone screenshot composite (see
+            public/hero-mockup-cropped.png), a trim of the source asset's
+            transparent canvas padding down to its actual content so it
+            fills the column instead of floating tiny in empty space. The
+            PNG itself is transparent outside the devices, so it sits
+            cleanly on the dark hero without a white box. */}
         <motion.div
           custom={4}
           initial="hidden"
@@ -111,7 +116,14 @@ export default function LandingHero() {
           variants={fadeUp}
           className="w-full lg:flex lg:justify-end"
         >
-          <HeroPhoneMockup />
+          <Image
+            src="/hero-mockup-cropped.png"
+            alt="Recall app on laptop and phone"
+            width={1000}
+            height={954}
+            priority
+            className="mx-auto h-auto w-full max-w-[420px] sm:max-w-[480px] lg:max-w-none"
+          />
         </motion.div>
       </div>
     </section>
