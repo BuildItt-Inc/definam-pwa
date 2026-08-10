@@ -107,7 +107,7 @@ export default function LandingPricing() {
 
         <Link
           href="/pay/individual"
-          className="flex w-full items-center justify-center rounded-xl bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97]"
+          className="flex w-full items-center justify-center rounded-md bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97]"
         >
           Get Started
         </Link>

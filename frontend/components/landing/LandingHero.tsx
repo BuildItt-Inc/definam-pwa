@@ -82,7 +82,7 @@ export default function LandingHero() {
           >
             <Link
               href="/pay/individual"
-              className="inline-flex items-center justify-center rounded-xl bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97] sm:px-7 sm:text-[16px]"
+              className="inline-flex items-center justify-center rounded-lg bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97] sm:px-7 sm:text-[16px]"
             >
               Get Started
             </Link>

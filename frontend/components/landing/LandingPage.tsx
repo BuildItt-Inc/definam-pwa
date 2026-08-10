@@ -8,6 +8,7 @@ import LandingHowItWorks from '@/components/landing/LandingHowItWorks';
 import LandingPricing from '@/components/landing/LandingPricing';
 import LandingFaq from '@/components/landing/LandingFaq';
 import LandingSchools from '@/components/landing/LandingSchools';
+import LandingFooter from '@/components/landing/LandingFooter';
 import HeroBackground from '@/components/landing/HeroBackground';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 
@@ -142,15 +143,7 @@ export default function LandingPage() {
       <LandingPricing />
       <LandingFaq />
       <LandingSchools />
-
-      {/* ══════════════════════════════ FOOTER ══════════════════════════════ */}
-      <footer className="border-t border-[#E5E7EB] bg-white px-6 py-8 text-center">
-        <p className="mb-1 text-[14px] font-bold text-[#111827]">Recall</p>
-        <p className="mb-3 text-[13px] text-[#6B7280]">
-          A modern study platform for secondary school students.
-        </p>
-        <p className="text-[12px] text-[#9CA3AF]">&copy; Recall 2026.</p>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }
