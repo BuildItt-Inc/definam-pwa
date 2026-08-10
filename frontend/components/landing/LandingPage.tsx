@@ -120,26 +120,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════ SUBJECTS ══════════════════════════════ */}
-      <section className="mx-auto max-w-[1000px] px-6 py-11 sm:py-[70px]">
-        <p className="mb-3 text-center text-[24px] font-extrabold tracking-[-0.02em] text-[#0F1F17] sm:text-[30px]">
-          All the subjects you actually need
-        </p>
-        <p className="mx-auto mb-8 max-w-[480px] text-center text-[14px] text-[#6B7280] sm:mb-11 sm:text-[15px]">
-          Sciences, languages, and social sciences, all mapped to the official secondary school curriculum.
-        </p>
-        <div className="flex flex-wrap justify-center gap-2.5">
-          {SUBJECTS.map((subject) => (
-            <span
-              key={subject}
-              className="rounded-full border border-[#E5E7EB] bg-white px-4 py-2 text-[13.5px] text-[#374151]"
-            >
-              {subject}
-            </span>
-          ))}
-        </div>
-      </section>
-
       <LandingPricing />
       <LandingFaq />
       <LandingSchools />
