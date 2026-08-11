@@ -31,3 +31,4 @@ __pycache__/
 .ruff_cache/
 backend/.env
 branch_structure.json
+*.tsbuildinfo
