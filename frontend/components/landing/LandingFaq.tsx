@@ -16,12 +16,12 @@ const FAQS = [
   {
     question: 'How much does it cost?',
     answer:
-      '₦1,700 per term for individual students — full access to every subject and the AI tutor. Schools can get bulk access for their students; reach out through "For Schools".',
+      '₦2,000 per term for individual students. Full access to every subject and the AI tutor. Schools can get bulk access for their students; reach out through "For Schools".',
   },
   {
     question: 'Do I need to download it from an app store?',
     answer:
-      'No. Recall is a progressive web app — open it in your browser and tap "Install App" to add it to your home screen. It works like a native app, no app store needed.',
+      'No. Recall is a progressive web app. Open it in your browser and tap "Install App" to add it to your home screen. It works like a native app, no app store needed.',
   },
   {
     question: 'What subjects are covered?',
@@ -30,7 +30,7 @@ const FAQS = [
   {
     question: 'How does the spaced review work?',
     answer:
-      "After you study a topic, Recall schedules it to come back for a quick review right before you'd naturally forget it — so what you learn actually sticks through to exam day. You don't have to plan any of it yourself.",
+      "After you study a topic, Recall schedules it to come back for a quick review right before you'd naturally forget it. So what you learn actually sticks through to exam day. You don't have to plan any of it yourself.",
   },
   {
     question: 'Can my school use Recall for a whole class?',
