@@ -5,6 +5,14 @@ from pydantic import BaseModel, EmailStr, field_validator
 
 class IndividualPaymentRequest(BaseModel):
     email: EmailStr
+    terms: int = 1
+
+    @field_validator("terms")
+    @classmethod
+    def validate_terms(cls, v: int) -> int:
+        if v not in (1, 3):
+            raise ValueError("Terms must be either 1 or 3.")
+        return v
 
 
 class IndividualPaymentResponse(BaseModel):

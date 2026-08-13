@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +11,7 @@ import {
   CreditCard,
   Loader2,
   Mail,
+  Sparkles,
   User,
 } from 'lucide-react';
 
@@ -26,8 +27,14 @@ const individualPaySchema = z.object({
 
 type IndividualPayFormValues = z.infer<typeof individualPaySchema>;
 
-export default function IndividualPayPage() {
+function IndividualPayContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const initialTermsParam = searchParams.get('terms');
+  const [selectedTerms, setSelectedTerms] = useState<number>(
+    initialTermsParam === '3' ? 3 : 1
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
 
@@ -45,7 +52,7 @@ export default function IndividualPayPage() {
     setBannerError(null);
     setIsLoading(true);
     try {
-      const data = await initializeIndividualPayment(values.email);
+      const data = await initializeIndividualPayment(values.email, selectedTerms);
       sessionStorage.setItem('payment_ref', data.reference);
       sessionStorage.setItem('payment_type', 'individual');
       window.location.href = data.authorization_url;
@@ -58,6 +65,13 @@ export default function IndividualPayPage() {
       setIsLoading(false);
     }
   }
+
+  const isThreeTerms = selectedTerms === 3;
+  const priceDisplay = isThreeTerms ? '₦5,100' : '₦2,000';
+  const termLabel = isThreeTerms ? '3 terms' : '1 term';
+  const durationDesc = isThreeTerms
+    ? 'Full access for 3 terms (12 months) · Save 15%'
+    : 'Full access for 1 term (4 months)';
 
   return (
     <div className="min-h-screen bg-bg-0">
@@ -83,21 +97,64 @@ export default function IndividualPayPage() {
           icon={User}
           iconStyle="pill"
           title="Personal Subscription"
-          body="Full access to all subjects · ₦1,700 per term · No school required"
+          body="Full access to all subjects & AI tutor · No school required"
           className="mb-4"
         />
+
+        {/* Term selector toggle */}
+        <div className="grid grid-cols-2 gap-2.5 p-1 bg-bg-2 border border-border-2 rounded-2xl mb-5">
+          <button
+            type="button"
+            onClick={() => setSelectedTerms(1)}
+            className={[
+              'flex flex-col items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-150 cursor-pointer',
+              !isThreeTerms
+                ? 'bg-ink text-white font-bold shadow-xs'
+                : 'text-ink/60 hover:text-ink font-medium',
+            ].join(' ')}
+          >
+            <span className="text-[13px]">Single Term</span>
+            <span className={['text-[11px]', !isThreeTerms ? 'text-white/70' : 'text-ink/40'].join(' ')}>
+              ₦2,000 / term
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedTerms(3)}
+            className={[
+              'relative flex flex-col items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-150 cursor-pointer',
+              isThreeTerms
+                ? 'bg-ink text-white font-bold shadow-xs'
+                : 'text-ink/60 hover:text-ink font-medium',
+            ].join(' ')}
+          >
+            <span className="absolute -top-2.5 right-2 px-2 py-0.5 bg-jade text-white text-[9px] font-black uppercase tracking-wider rounded-full shadow-xs flex items-center gap-0.5">
+              <Sparkles size={10} strokeWidth={2.5} /> Save 15%
+            </span>
+            <span className="text-[13px]">3 Terms</span>
+            <span className={['text-[11px]', isThreeTerms ? 'text-white/70' : 'text-ink/40'].join(' ')}>
+              ₦5,100 / 3 terms
+            </span>
+          </button>
+        </div>
 
         {/* Price card */}
         <div className="bg-ink rounded-xl px-5 py-7 text-center mb-5">
           <p className="text-[11px] font-medium text-white/40 mb-2 uppercase tracking-wide">
-            Amount to pay
+            Amount to pay ({termLabel})
           </p>
           <p className="font-bold text-[42px] font-black text-white tracking-tight leading-none">
-            ₦1,700
+            {priceDisplay}
           </p>
-          <p className="text-[11px] text-white/30 mt-2.5">
-            Per term · One-time access code
+          <p className="text-[11px] text-white/40 mt-2.5">
+            {durationDesc}
           </p>
+          {isThreeTerms && (
+            <p className="text-[11px] text-jade font-semibold mt-1">
+              ₦6,000 value · You save ₦900
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -152,7 +209,7 @@ export default function IndividualPayPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-4"
+            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-4 cursor-pointer"
           >
             {isLoading ? (
               <>
@@ -162,7 +219,7 @@ export default function IndividualPayPage() {
             ) : (
               <>
                 <CreditCard size={18} strokeWidth={2.2} aria-hidden />
-                Proceed to Payment
+                Proceed to Payment ({priceDisplay})
               </>
             )}
           </button>
@@ -178,5 +235,19 @@ export default function IndividualPayPage() {
         </form>
       </main>
     </div>
+  );
+}
+
+export default function IndividualPayPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-bg-0 flex items-center justify-center">
+          <Loader2 size={32} className="animate-spin text-ink" />
+        </div>
+      }
+    >
+      <IndividualPayContent />
+    </Suspense>
   );
 }
