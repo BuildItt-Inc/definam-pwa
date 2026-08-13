@@ -17,13 +17,14 @@ export class PaymentError extends Error {
 
 export async function initializeIndividualPayment(
   email: string,
+  terms: number = 1,
 ): Promise<InitializePaymentResponse> {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/payments/individual`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, terms }),
     },
   );
 

@@ -14,7 +14,8 @@ from app.schemas.payments import (
 )
 
 PAYSTACK_BASE = "https://api.paystack.co"
-INDIVIDUAL_AMOUNT_KOBO = 170_000  # ₦1,700
+SINGLE_TERM_PRICE_KOBO = 200_000  # ₦2,000
+THREE_TERM_PRICE_KOBO = 510_000  # ₦5,100 (15% discount)
 
 
 def _paystack_headers() -> dict[str, str]:
@@ -78,16 +79,22 @@ async def initiate_individual(
     body: IndividualPaymentRequest,
 ) -> IndividualPaymentResponse:
     """
-    Create a Paystack transaction for an individual student (₦1,700).
-    Embeds payment_type metadata so the webhook can route correctly.
+    Create a Paystack transaction for an individual student (1 term = ₦2,000, 3 terms = ₦5,100).
+    Embeds payment_type and terms metadata so the webhook can route correctly.
     """
     settings = get_settings()
-    callback_url = f"{settings.frontend_url.rstrip('/')}/pay/callback?type=individual"
+    terms = 3 if body.terms == 3 else 1
+    amount_kobo = THREE_TERM_PRICE_KOBO if terms == 3 else SINGLE_TERM_PRICE_KOBO
+    callback_url = f"{settings.frontend_url.rstrip('/')}/pay/callback?type=individual&terms={terms}"
 
     data = await _initiate_transaction(
         email=str(body.email),
-        amount_kobo=INDIVIDUAL_AMOUNT_KOBO,
-        metadata={"payment_type": "individual", "email": str(body.email)},
+        amount_kobo=amount_kobo,
+        metadata={
+            "payment_type": "individual",
+            "email": str(body.email),
+            "terms": terms,
+        },
         callback_url=callback_url,
     )
     return IndividualPaymentResponse(
@@ -98,11 +105,11 @@ async def initiate_individual(
 
 async def initiate_org(body: OrgPaymentRequest) -> OrgPaymentResponse:
     """
-    Create a Paystack transaction for a school (N × ₦1,700).
+    Create a Paystack transaction for a school (N × ₦2,000 per seat per term).
     Embeds payment_type metadata so the webhook can route correctly.
     """
     settings = get_settings()
-    total_kobo = body.student_count * INDIVIDUAL_AMOUNT_KOBO
+    total_kobo = body.student_count * SINGLE_TERM_PRICE_KOBO
     callback_url = f"{settings.frontend_url.rstrip('/')}/pay/callback?type=organisation"
 
     data = await _initiate_transaction(

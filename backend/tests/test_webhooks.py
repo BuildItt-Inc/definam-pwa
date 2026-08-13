@@ -93,7 +93,7 @@ async def test_individual_webhook_inserts_code_and_sends_email():
         "event": "charge.success",
         "data": {
             "reference": "ref-ind-001",
-            "amount": 170_000,
+            "amount": 200_000,
             "metadata": {
                 "payment_type": "individual",
                 "email": "student@example.com",
@@ -153,7 +153,7 @@ async def test_org_webhook_creates_org_and_sends_admin_email():
         "event": "charge.success",
         "data": {
             "reference": "ref-org-001",
-            "amount": 5 * 170_000,
+            "amount": 5 * 200_000,
             "metadata": {
                 "payment_type": "org",
                 "school_email": "admin@school.edu.ng",
@@ -235,7 +235,7 @@ async def test_duplicate_webhook_is_skipped():
         "event": "charge.success",
         "data": {
             "reference": "ref-dup-001",
-            "amount": 170_000,
+            "amount": 200_000,
             "metadata": {"payment_type": "individual", "email": "x@x.com"},
         },
     }

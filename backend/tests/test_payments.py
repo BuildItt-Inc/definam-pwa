@@ -58,7 +58,7 @@ async def test_verify_payment_does_not_mutate_access_code_status():
         "status": True,
         "data": {
             "customer": {"email": "payer@example.com"},
-            "amount": 170_000,
+            "amount": 200_000,
         },
     }
 
@@ -100,7 +100,7 @@ async def test_verify_payment_404s_when_no_pending_code_exists():
         "status": True,
         "data": {
             "customer": {"email": "nocode@example.com"},
-            "amount": 170_000,
+            "amount": 200_000,
         },
     }
 

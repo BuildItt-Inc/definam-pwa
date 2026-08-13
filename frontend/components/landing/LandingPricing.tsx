@@ -133,10 +133,8 @@ export default function LandingPricing() {
 
           <BenefitList items={BENEFITS} />
 
-          {/* TODO(backend term-billing): point at the individual flow with an
-              explicit 1-term param once the backend accepts one. */}
           <Link
-            href="/pay/individual"
+            href="/pay/individual?terms=1"
             className="mt-auto flex w-full items-center justify-center rounded-md bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97]"
           >
             Get Started
@@ -179,11 +177,8 @@ export default function LandingPricing() {
 
           <BenefitList items={BENEFITS} />
 
-          {/* TODO(backend term-billing): point at the individual flow with an
-              explicit 3-term param once the backend accepts one — today this
-              goes to the same one-term flow as Card 1. */}
           <Link
-            href="/pay/individual"
+            href="/pay/individual?terms=3"
             className="mt-auto flex w-full items-center justify-center rounded-md bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97]"
           >
             Get 3 Terms

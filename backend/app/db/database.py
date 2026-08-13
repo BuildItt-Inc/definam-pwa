@@ -59,14 +59,24 @@ async def activate_code(
     user_id: str,
     fingerprint: str | None = None,
 ) -> None:
-    """Mark an access code as active, linking it to the activating user and setting 4-month lifespan."""
+    """Mark an access code as active, linking it to the activating user and setting lifespan based on code duration."""
     async with db_session() as session:
         now = datetime.now(tz=UTC)
+        code_obj = (
+            await session.execute(select(AccessCode).where(AccessCode.id == code_id))
+        ).scalar_one_or_none()
+
+        days = 120
+        if code_obj and code_obj.expires_at and code_obj.created_at:
+            delta = code_obj.expires_at - code_obj.created_at
+            if delta.days > 0:
+                days = delta.days
+
         payload: dict[str, Any] = {
             "status": "active",
             "activated_by": user_id,
             "activated_at": now,
-            "expires_at": now + timedelta(days=120),  # 4 months lifespan
+            "expires_at": now + timedelta(days=days),
         }
         if fingerprint:
             payload["device_fingerprint"] = fingerprint
@@ -104,15 +114,15 @@ async def bulk_insert_codes(org_id: str, codes: list[str]) -> None:
         session.add_all(rows)
 
 
-async def insert_individual_code(code: str, email: str) -> None:
-    """Insert a single individual access code with 4-month initial expiration.
+async def insert_individual_code(code: str, email: str, terms: int = 1) -> None:
+    """Insert a single individual access code with 120 days per term initial expiration.
 
     Revokes any previously issued but still-"pending" codes for this email
     first, so at most one pending code ever exists per email. Old codes are
     marked "revoked" rather than deleted, preserving the record.
     """
     now = datetime.now(tz=UTC)
-    expires = now + timedelta(days=120)
+    expires = now + timedelta(days=120 * max(1, terms))
     async with db_session() as session:
         await session.execute(
             update(AccessCode)

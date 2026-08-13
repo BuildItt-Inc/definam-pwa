@@ -97,16 +97,19 @@ async def handle_event(raw_body: bytes, signature: str) -> dict:
 async def _handle_individual(data: dict, metadata: dict) -> None:
     """Generate and email an individual access code after payment."""
     email: str = metadata["email"]
-    amount_kobo: int = data.get("amount", 170_000)
+    terms: int = int(metadata.get("terms", 1))
+    default_amount = 510_000 if terms == 3 else 200_000
+    amount_kobo: int = data.get("amount", default_amount)
 
     code = generate_access_code("individual")
-    await insert_individual_code(code, email)
+    await insert_individual_code(code, email, terms=terms)
 
+    term_text = f"{terms} Terms Access" if terms > 1 else "1 Term Access"
     await send_individual_code(email, code)
     await send_payment_receipt(
-        email, amount_kobo // 100, "Recall Individual Term Access"
+        email, amount_kobo // 100, f"Recall Individual ({term_text})"
     )
-    logger.info("Individual code %s issued to %s", code, email)
+    logger.info("Individual code %s (%d terms) issued to %s", code, terms, email)
 
 
 async def _handle_org(data: dict, metadata: dict) -> None:

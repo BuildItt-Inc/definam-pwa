@@ -332,7 +332,7 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
                 students_data.append(
                     {
                         "id": student.id,
-                        "name": student.username,
+                        "name": student.name or student.username or "Unnamed student",
                         "streak_days": streak,
                         "recall_status": recall_status,
                         "overdue_days": overdue_days,
@@ -462,7 +462,7 @@ async def list_codes(claims: AdminDep) -> dict:
                 AccessCode.id,
                 AccessCode.code,
                 AccessCode.status,
-                User.username.label("student_name"),
+                func.coalesce(User.name, User.username).label("student_name"),
             )
             .outerjoin(User, AccessCode.activated_by == User.id)
             .order_by(AccessCode.code)
@@ -669,7 +669,7 @@ async def get_student_detail(student_id: str, claims: AdminDep) -> dict:
 
     return {
         "id": student.id,
-        "name": student.username,
+        "name": student.name or student.username or "Unnamed student",
         "streak_days": streak,
         "recall_status": recall_status,
         "topic_history": topic_history,
