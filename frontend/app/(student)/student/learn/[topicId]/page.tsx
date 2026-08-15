@@ -263,30 +263,67 @@ function getStepContent(detail: TopicDetail, step: 1 | 2 | 3) {
 function LearningFlowSkeleton() {
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="bg-ink px-4 pb-2.5 pt-3">
+      {/* App bar — same gradient + progress-bar + step-tab structure as
+          LearningTopBar, so the frame is recognizable the instant the page
+          mounts. Step 1 is always where a topic opens, so the progress bar
+          and tab row render in their real "step 1 active" state (no
+          shimmer needed — this part isn't waiting on the fetch); only the
+          title, which comes from the topic response, shimmers. */}
+      <div
+        className="px-4 pb-2.5 pt-[calc(env(safe-area-inset-top)+12px)]"
+        style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 160%)' }}
+      >
         <div className="mb-2.5 flex items-center gap-2">
-          <div className="h-4 w-4 animate-pulse rounded bg-white/20" />
-          <div className="h-3 flex-1 animate-pulse rounded bg-white/20" />
-          <div className="h-3 w-8 animate-pulse rounded bg-white/10" />
+          <div className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-[9px] bg-white/[0.08]">
+            <ArrowLeft size={16} strokeWidth={2} className="text-white/40" />
+          </div>
+          <div className="h-3.5 flex-1 animate-pulse rounded bg-white/20" />
+          <div className="h-3 w-8 flex-shrink-0 rounded bg-white/10" />
         </div>
+
         <div className="mb-1.5 flex gap-1">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-[3px] flex-1 animate-pulse rounded-full bg-white/20" />
+          {STEP_LABELS.map((_, i) => (
+            <div
+              key={i}
+              className={`h-[4px] flex-1 rounded-full ${i === 0 ? 'bg-[#4ADE80]' : 'bg-white/15'}`}
+            />
           ))}
         </div>
+
         <div className="flex gap-1">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-2 flex-1 animate-pulse rounded bg-white/10" />
+          {STEP_LABELS.map((label, i) => (
+            <span
+              key={i}
+              className={`flex-1 text-center text-[9.5px] ${i === 0 ? 'font-bold text-white' : 'text-white/30'}`}
+            >
+              {label}
+            </span>
           ))}
         </div>
       </div>
+
+      {/* Content body — mirrors LearningStep's badge + card layout, with a
+          few text-width shimmer lines standing in for the definition
+          paragraph rather than one flat blob. */}
       <div className="flex-1 bg-bg-0 px-4 py-5">
-        <div className="mb-4 flex items-center gap-2">
-          <div className="h-6 w-6 animate-pulse rounded-md bg-bg-3" />
-          <div className="h-4 w-32 animate-pulse rounded bg-bg-3" />
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-lg bg-[#ECFDF5] text-[13px] font-extrabold text-[#16A34A]">
+            1
+          </div>
+          <div className="h-3 w-36 animate-pulse rounded bg-bg-3" />
         </div>
-        <div className="mb-3 h-28 animate-pulse rounded-lg bg-bg-3" />
-        <div className="h-12 animate-pulse rounded-lg bg-bg-3" />
+
+        <div className="mb-3 rounded-2xl border border-[#F3F4F6] bg-white px-5 py-5 shadow-sm">
+          <div className="space-y-2.5">
+            <div className="h-3 w-full animate-pulse rounded bg-bg-3" />
+            <div className="h-3 w-full animate-pulse rounded bg-bg-3" />
+            <div className="h-3 w-[80%] animate-pulse rounded bg-bg-3" />
+            <div className="h-3 w-[95%] animate-pulse rounded bg-bg-2" />
+            <div className="h-3 w-[60%] animate-pulse rounded bg-bg-2" />
+          </div>
+        </div>
+
+        <div className="h-[52px] animate-pulse rounded-[13px] bg-bg-3" />
       </div>
     </div>
   );
