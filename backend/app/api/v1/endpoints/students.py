@@ -176,7 +176,7 @@ async def get_dashboard(claims: CurrentUserDep) -> dict:
     return {
         "id": user.id,
         "username": user.username,
-        "student_name": user.username,  # Frontend expects student_name
+        "student_name": user.name or user.username or "Unnamed student",  # Frontend expects student_name
         "school_name": school_name or "Independent Learner",
         "streak_days": streak,
         "recall_summary": {

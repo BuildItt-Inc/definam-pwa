@@ -333,7 +333,7 @@ async def get_student_detail(student_id: str, claims: AdminDep) -> dict:
 
     return {
         "id": student.id,
-        "name": student.username,
+        "name": student.name or student.username or "Unnamed student",
         "streak_days": streak,
         "recall_status": recall_status,
         "topic_history": topic_history,
