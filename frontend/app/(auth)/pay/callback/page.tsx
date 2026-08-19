@@ -96,8 +96,7 @@ function CallbackContent() {
               type: 'payment',
               email: data.email,
               accessCode: data.access_code,
-              onRedirect: () =>
-                router.push(`/register?code=${encodeURIComponent(data.access_code!)}`),
+              onRedirect: () => router.push('/register'),
             });
           } else {
             setState({ status: 'error' });
@@ -171,7 +170,7 @@ function CallbackContent() {
             Thank You!
           </h1>
           <p className="text-[13px] text-muted leading-snug max-w-[280px] mx-auto">
-            Payment confirmed. Your access code has been generated and emailed to:
+            Payment confirmed. Your access code has been generated and sent to:
           </p>
           <p className="mt-2 text-[13px] font-bold text-ink break-all bg-bg-2 border border-border px-3 py-1.5 rounded-xl inline-block max-w-full">
             {state.email}
@@ -231,9 +230,9 @@ function CallbackContent() {
             </p>
             <ol className="space-y-3">
               {[
-                'Check your inbox — we sent a confirmation copy with a direct registration link.',
-                'Paste your access code into the registration form to create your account.',
-                'Already have an account? Sign in — your code is already valid.',
+                'Check your email inbox for your generated access code.',
+                'Copy the code from your email and paste it into the registration form to create your account.',
+                'Already have an account? Sign in — your code is active.',
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3 text-[13px] text-ink/80 leading-snug">
                   <span className="w-5 h-5 bg-ink text-white rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -250,11 +249,11 @@ function CallbackContent() {
         <motion.div variants={staggerItem} className="w-full space-y-3">
           <motion.div {...scaleTap}>
             <Link
-              href={`/register?code=${encodeURIComponent(state.accessCode)}`}
+              href="/register"
               className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 transition-colors shadow-sm"
             >
               <CheckCircle2 size={18} strokeWidth={2.2} aria-hidden />
-              Create Account with Code
+              Proceed to Registration
             </Link>
           </motion.div>
 
