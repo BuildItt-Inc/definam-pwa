@@ -8,7 +8,7 @@ from io import StringIO
 
 from fastapi import APIRouter, UploadFile
 from fastapi.responses import Response
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import and_, case, func, select, update
 
 from app.api.deps import AdminDep
@@ -33,6 +33,23 @@ router = APIRouter(tags=["admin"])
 
 class RevokeRequest(BaseModel):
     code_id: str
+
+
+class ReactivateRequest(BaseModel):
+    code_id: str
+
+
+class UpdateSchoolRequest(BaseModel):
+    school_name: str | None = Field(None, min_length=2, max_length=255)
+    school_email: EmailStr | None = None
+
+
+class UpdateAdminProfileRequest(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=255)
+
+
+class RemoveStudentRequest(BaseModel):
+    revoke_code: bool = True
 
 
 def format_next_review(dt: datetime | None, now: datetime) -> str:
@@ -564,6 +581,247 @@ async def revoke_code(
             )
         await session.commit()
         return {"message": f"Code {updated} revoked."}
+
+
+@router.post("/codes/reactivate")
+async def reactivate_code(
+    payload: ReactivateRequest,
+    claims: AdminDep,
+) -> dict:
+    """Re-enable a previously revoked access code (admin only)."""
+    async with db_session() as session:
+        stmt = update(AccessCode).where(
+            and_(
+                AccessCode.id == payload.code_id,
+                AccessCode.status == "revoked",
+            )
+        )
+        org_id = claims.get("org_id")
+        if org_id:
+            stmt = stmt.where(AccessCode.school_id == org_id)
+
+        result = await session.execute(
+            stmt.values(status="pending").returning(AccessCode.code)
+        )
+        updated = result.scalar_one_or_none()
+        if not updated:
+            raise NotFoundError(
+                "Code not found, not revoked, or you do not have permission."
+            )
+        await session.commit()
+        return {"message": f"Code {updated} reactivated."}
+
+
+# ── Admin Settings ─────────────────────────────────────────────────────────
+
+
+@router.get("/settings")
+async def get_admin_settings(claims: AdminDep) -> dict:
+    """Return admin profile + school info for the settings page."""
+    org_id = claims.get("org_id")
+    admin_id = claims.get("sub")
+
+    async with db_session() as session:
+        admin_user = await session.get(User, admin_id)
+        if not admin_user:
+            raise NotFoundError("Admin user not found.")
+
+        school_data = None
+        if org_id:
+            school = await session.get(School, org_id)
+            if school:
+                # Count students and access codes for this school
+                student_count = (
+                    await session.execute(
+                        select(func.count(User.id)).where(
+                            and_(User.org_id == org_id, User.role == "student_org")
+                        )
+                    )
+                ).scalar() or 0
+
+                code_count = (
+                    await session.execute(
+                        select(func.count(AccessCode.id)).where(
+                            AccessCode.school_id == org_id
+                        )
+                    )
+                ).scalar() or 0
+
+                active_codes = (
+                    await session.execute(
+                        select(func.count(AccessCode.id)).where(
+                            and_(
+                                AccessCode.school_id == org_id,
+                                AccessCode.status == "active",
+                            )
+                        )
+                    )
+                ).scalar() or 0
+
+                school_data = {
+                    "id": school.id,
+                    "name": school.name,
+                    "email": school.email,
+                    "active_seats": school.active_seats,
+                    "total_students": int(student_count),
+                    "total_codes": int(code_count),
+                    "active_codes": int(active_codes),
+                    "created_at": school.created_at.isoformat()
+                    if school.created_at
+                    else None,
+                }
+
+    return {
+        "admin": {
+            "id": admin_user.id,
+            "username": admin_user.username,
+            "name": admin_user.name or admin_user.username,
+            "email": admin_user.email,
+            "role": admin_user.role,
+            "created_at": admin_user.created_at.isoformat()
+            if admin_user.created_at
+            else None,
+        },
+        "school": school_data,
+    }
+
+
+@router.patch("/settings/school")
+async def update_school_settings(
+    payload: UpdateSchoolRequest,
+    claims: AdminDep,
+) -> dict:
+    """Update school name and/or email (admin only)."""
+    org_id = claims.get("org_id")
+    if not org_id:
+        raise NotFoundError("No school associated with this admin account.")
+
+    async with db_session() as session:
+        school = await session.get(School, org_id)
+        if not school:
+            raise NotFoundError("School not found.")
+
+        updated_fields: list[str] = []
+
+        if payload.school_name is not None:
+            school.name = payload.school_name
+            updated_fields.append("name")
+
+        if payload.school_email is not None:
+            # Check for email uniqueness
+            existing = await session.execute(
+                select(School.id).where(
+                    and_(
+                        School.email == payload.school_email,
+                        School.id != org_id,
+                    )
+                )
+            )
+            if existing.scalar_one_or_none():
+                from app.core.exceptions import AlreadyExistsError
+
+                raise AlreadyExistsError("A school with this email already exists.")
+            school.email = payload.school_email
+            updated_fields.append("email")
+
+        if not updated_fields:
+            return {"message": "No changes provided.", "updated": []}
+
+        await session.commit()
+
+    return {
+        "message": "School settings updated.",
+        "updated": updated_fields,
+    }
+
+
+@router.patch("/settings/profile")
+async def update_admin_profile(
+    payload: UpdateAdminProfileRequest,
+    claims: AdminDep,
+) -> dict:
+    """Update admin display name."""
+    admin_id = claims.get("sub")
+
+    async with db_session() as session:
+        admin_user = await session.get(User, admin_id)
+        if not admin_user:
+            raise NotFoundError("Admin user not found.")
+
+        updated_fields: list[str] = []
+
+        if payload.name is not None:
+            admin_user.name = payload.name
+            updated_fields.append("name")
+
+        if not updated_fields:
+            return {"message": "No changes provided.", "updated": []}
+
+        await session.commit()
+
+    return {
+        "message": "Admin profile updated.",
+        "updated": updated_fields,
+    }
+
+
+@router.post("/students/{student_id}/remove")
+async def remove_student(
+    student_id: str,
+    claims: AdminDep,
+    payload: RemoveStudentRequest | None = None,
+) -> dict:
+    """Remove a student from the school. Optionally revoke their access code."""
+    org_id = claims.get("org_id")
+    if not org_id:
+        raise NotFoundError("No school associated with this admin account.")
+
+    should_revoke = payload.revoke_code if payload else True
+
+    async with db_session() as session:
+        # Verify student belongs to this school
+        student = (
+            await session.execute(
+                select(User).where(
+                    and_(
+                        User.id == student_id,
+                        User.org_id == org_id,
+                        User.role == "student_org",
+                    )
+                )
+            )
+        ).scalar_one_or_none()
+
+        if not student:
+            raise NotFoundError("Student not found or does not belong to your school.")
+
+        student_name = student.name or student.username or "Unknown"
+
+        # Optionally revoke any active code linked to this student
+        revoked_count = 0
+        if should_revoke:
+            result = await session.execute(
+                update(AccessCode)
+                .where(
+                    and_(
+                        AccessCode.activated_by == student_id,
+                        AccessCode.school_id == org_id,
+                        AccessCode.status == "active",
+                    )
+                )
+                .values(status="revoked")
+            )
+            revoked_count = result.rowcount  # type: ignore[assignment]
+
+        # Unlink the student from the school
+        student.org_id = None
+
+        await session.commit()
+
+    return {
+        "message": f"Student '{student_name}' removed from school.",
+        "codes_revoked": revoked_count,
+    }
 
 
 # ── SCR-11 · Student Drill-Down ────────────────────────────────────────────
