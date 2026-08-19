@@ -7,9 +7,18 @@ export interface AIAlert {
   ef_avg: number;
 }
 
+export interface SchoolClass {
+  id: string;
+  name: string;
+  student_count?: number;
+  created_at?: string;
+}
+
 export interface StudentRow {
   id: string;
   name: string;
+  class_id?: string | null;
+  class_name?: string | null;
   streak_days: number;
   recall_status: RecallStatus;
   overdue_days: number;
@@ -33,6 +42,7 @@ export interface AdminDashboardData {
   active_subjects: string[];
   ai_alert: AIAlert;
   students: StudentRow[];
+  classes?: SchoolClass[];
 }
 
 export interface PreviewMessage {

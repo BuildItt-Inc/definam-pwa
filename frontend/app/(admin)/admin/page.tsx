@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Download, AlertTriangle } from 'lucide-react';
+import { Download, AlertTriangle, ChevronDown } from 'lucide-react';
 import { getAdminDashboard } from '@/lib/api/admin';
 import { ClassTable } from '@/components/admin/ClassTable';
 import type { AdminDashboardData } from '@/types/admin';
 
 // ── Skeleton components ────────────────────────────────────────────────────
+
 
 function SkeletonStatCard() {
   return (
@@ -103,16 +104,18 @@ export default function AdminHomePage() {
   const [data, setData] = useState<AdminDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
   const router = useRouter();
 
   useEffect(() => {
-    getAdminDashboard()
+    setLoading(true);
+    getAdminDashboard(selectedClassId)
       .then(setData)
       .catch((err: unknown) =>
         setError(err instanceof Error ? err.message : 'Failed to load dashboard'),
       )
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedClassId]);
 
   function handleViewStudent(studentId: string) {
     router.push(`/admin/students/${studentId}`);
@@ -175,7 +178,31 @@ export default function AdminHomePage() {
             {data.class_name} · {data.total_students} Students · Updated just now
           </p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {data.classes && data.classes.length > 0 && (
+            <div className="relative flex items-center border border-border-2 bg-card rounded-md px-3 py-[5px] gap-2 hover:border-ink transition-colors cursor-pointer text-[11px] font-bold">
+              <select
+                value={selectedClassId || 'all'}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedClassId(val === 'all' ? undefined : val);
+                }}
+                className="text-ink bg-transparent outline-none appearance-none pr-5 cursor-pointer font-extrabold"
+              >
+                <option value="all">All Classes</option>
+                {data.classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                size={11}
+                className="text-muted pointer-events-none absolute right-2"
+                strokeWidth={2}
+              />
+            </div>
+          )}
           <button className="flex items-center gap-1.5 text-[11px] font-bold border border-border-2 bg-card text-ink rounded-md px-3 py-[5px] hover:border-ink transition-colors">
             <Download size={13} strokeWidth={1.5} />
             Export PDF

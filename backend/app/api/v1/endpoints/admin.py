@@ -22,11 +22,21 @@ from app.db.models import (
     DailyActivity,
     DailyRecallQueue,
     School,
+    SchoolClass,
     Subject,
     Topic,
     TopicReview,
     User,
 )
+
+
+class CreateClassRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+
+
+class AssignStudentsRequest(BaseModel):
+    student_ids: list[str]
+
 
 router = APIRouter(tags=["admin"])
 
@@ -71,12 +81,17 @@ def format_next_review(dt: datetime | None, now: datetime) -> str:
 
 
 @router.get("/dashboard")
-async def get_admin_dashboard(claims: AdminDep) -> dict:
+async def get_admin_dashboard(
+    claims: AdminDep,
+    class_id: str | None = None,
+) -> dict:
     """
     Return the dashboard data for the admin homepage.
     """
     org_id = claims.get("org_id")
     now = datetime.now(UTC)
+
+    from sqlalchemy.orm import selectinload
 
     async with db_session() as session:
         # 1. School Info
@@ -87,6 +102,18 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
             )
             school_name = school_scalar.scalar_one_or_none() or "Your School"
 
+        class_name = "All Classes"
+        if class_id:
+            class_scalar = await session.execute(
+                select(SchoolClass.name).where(
+                    and_(
+                        SchoolClass.id == class_id,
+                        SchoolClass.school_id == org_id,
+                    )
+                )
+            )
+            class_name = class_scalar.scalar_one_or_none() or "All Classes"
+
         admin_user = await session.get(User, claims.get("sub"))
         teacher_name = (
             (admin_user.name or admin_user.username) if admin_user else "School Admin"
@@ -96,6 +123,8 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
         total_q = select(func.count(User.id)).where(User.role == "student_org")
         if org_id:
             total_q = total_q.where(User.org_id == org_id)
+        if class_id:
+            total_q = total_q.where(User.class_id == class_id)
         total_students = (await session.execute(total_q)).scalar() or 0
 
         # 3. Active this week (students with DailyActivity in last 7 days)
@@ -112,6 +141,8 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
         )
         if org_id:
             active_q = active_q.where(User.org_id == org_id)
+        if class_id:
+            active_q = active_q.where(User.class_id == class_id)
         active_this_week = (await session.execute(active_q)).scalar() or 0
 
         # 4. Average accuracy across all TopicReviews for school students
@@ -120,6 +151,8 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
         )
         if org_id:
             avg_q = avg_q.where(User.org_id == org_id)
+        if class_id:
+            avg_q = avg_q.where(User.class_id == class_id)
         avg_accuracy = (await session.execute(avg_q)).scalar()
         class_avg_accuracy = (
             round(float(avg_accuracy), 1) if avg_accuracy is not None else 0.0
@@ -138,6 +171,8 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
         )
         if org_id:
             overdue_q = overdue_q.where(User.org_id == org_id)
+        if class_id:
+            overdue_q = overdue_q.where(User.class_id == class_id)
         recall_overdue = (await session.execute(overdue_q)).scalar() or 0
 
         # 6. Distinct active subjects (topics reviewed in the last 7 days)
@@ -152,6 +187,8 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
         )
         if org_id:
             subjects_q = subjects_q.where(User.org_id == org_id)
+        if class_id:
+            subjects_q = subjects_q.where(User.class_id == class_id)
         active_subjects = (await session.execute(subjects_q)).scalars().all()
         # Fallback if no active subjects to prevent empty pills
         if not active_subjects:
@@ -174,6 +211,8 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
         )
         if org_id:
             struggling_q = struggling_q.where(User.org_id == org_id)
+        if class_id:
+            struggling_q = struggling_q.where(User.class_id == class_id)
         struggling_q = (
             struggling_q.group_by(Topic.id, Topic.title)
             .order_by(func.avg(TopicReview.accuracy_score).asc())
@@ -196,10 +235,25 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
             }
 
         # 8. Students list
-        students_query = select(User).where(User.role == "student_org")
+        students_query = (
+            select(User)
+            .where(User.role == "student_org")
+            .options(selectinload(User.school_class))
+        )
         if org_id:
             students_query = students_query.where(User.org_id == org_id)
+        if class_id:
+            students_query = students_query.where(User.class_id == class_id)
         students_list = (await session.execute(students_query)).scalars().all()
+
+        # 9. Classes list
+        classes_q = (
+            select(SchoolClass)
+            .where(SchoolClass.school_id == org_id)
+            .order_by(SchoolClass.name)
+        )
+        classes_list = (await session.execute(classes_q)).scalars().all()
+        classes_data = [{"id": c.id, "name": c.name} for c in classes_list]
 
         students_data = []
         if students_list:
@@ -350,6 +404,10 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
                     {
                         "id": student.id,
                         "name": student.name or student.username or "Unnamed student",
+                        "class_id": student.class_id,
+                        "class_name": student.school_class.name
+                        if student.school_class
+                        else None,
                         "streak_days": streak,
                         "recall_status": recall_status,
                         "overdue_days": overdue_days,
@@ -363,7 +421,7 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
 
     return {
         "school_name": school_name,
-        "class_name": "All Classes",
+        "class_name": class_name,
         "teacher_name": teacher_name,
         "location": "Lagos",
         "total_students": int(total_students),
@@ -374,6 +432,7 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
         "active_subjects": active_subjects,
         "ai_alert": ai_alert,
         "students": students_data,
+        "classes": classes_data,
     }
 
 
@@ -1063,3 +1122,228 @@ async def generate_curriculum_endpoint(_admin: AdminDep) -> dict:
 
     await seed_curriculum()
     return {"message": "Curriculum structure successfully generated and seeded."}
+
+
+# ── Class Management ───────────────────────────────────────────────────────
+
+
+@router.get("/classes")
+async def list_classes(claims: AdminDep) -> list[dict]:
+    """Get list of classes for this school including student count (admin only)."""
+    org_id = claims.get("org_id")
+    if not org_id:
+        raise NotFoundError("No school associated with this admin account.")
+
+    async with db_session() as session:
+        # Count students per class
+        classes_q = (
+            select(
+                SchoolClass.id,
+                SchoolClass.name,
+                SchoolClass.created_at,
+                func.count(User.id).label("student_count"),
+            )
+            .outerjoin(User, User.class_id == SchoolClass.id)
+            .where(SchoolClass.school_id == org_id)
+            .group_by(SchoolClass.id, SchoolClass.name, SchoolClass.created_at)
+            .order_by(SchoolClass.name)
+        )
+        results = (await session.execute(classes_q)).all()
+
+    return [
+        {
+            "id": r.id,
+            "name": r.name,
+            "student_count": int(r.student_count or 0),
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in results
+    ]
+
+
+@router.post("/classes")
+async def create_class(
+    payload: CreateClassRequest,
+    claims: AdminDep,
+) -> dict:
+    """Create a new class within the school (admin only)."""
+    org_id = claims.get("org_id")
+    if not org_id:
+        raise NotFoundError("No school associated with this admin account.")
+
+    async with db_session() as session:
+        # Check if class name already exists in this school
+        existing_q = select(SchoolClass).where(
+            and_(
+                SchoolClass.school_id == org_id,
+                SchoolClass.name == payload.name,
+            )
+        )
+        existing = (await session.execute(existing_q)).scalar_one_or_none()
+        if existing:
+            from app.core.exceptions import AlreadyExistsError
+
+            raise AlreadyExistsError(
+                f"Class '{payload.name}' already exists in your school."
+            )
+
+        new_class = SchoolClass(
+            school_id=org_id,
+            name=payload.name,
+        )
+        session.add(new_class)
+        await session.commit()
+        await session.refresh(new_class)
+
+    return {
+        "id": new_class.id,
+        "name": new_class.name,
+        "message": f"Class '{new_class.name}' created successfully.",
+    }
+
+
+@router.post("/classes/{class_id}/assign")
+async def assign_students_to_class(
+    class_id: str,
+    payload: AssignStudentsRequest,
+    claims: AdminDep,
+) -> dict:
+    """Assign students to a specific class (admin only)."""
+    org_id = claims.get("org_id")
+    if not org_id:
+        raise NotFoundError("No school associated with this admin account.")
+
+    async with db_session() as session:
+        # Verify class belongs to this school
+        class_obj = (
+            await session.execute(
+                select(SchoolClass).where(
+                    and_(
+                        SchoolClass.id == class_id,
+                        SchoolClass.school_id == org_id,
+                    )
+                )
+            )
+        ).scalar_one_or_none()
+
+        if not class_obj:
+            raise NotFoundError("Class not found in your school.")
+
+        if not payload.student_ids:
+            return {"message": "No students provided.", "assigned_count": 0}
+
+        # Update matching students that belong to this school
+        stmt = (
+            update(User)
+            .where(
+                and_(
+                    User.id.in_(payload.student_ids),
+                    User.org_id == org_id,
+                    User.role == "student_org",
+                )
+            )
+            .values(class_id=class_id)
+        )
+        result = await session.execute(stmt)
+        assigned_count = result.rowcount  # type: ignore[assignment]
+        await session.commit()
+
+    return {
+        "message": f"Successfully assigned {assigned_count} student(s) to class '{class_obj.name}'.",
+        "assigned_count": assigned_count,
+    }
+
+
+@router.post("/classes/{class_id}/remove")
+async def remove_students_from_class(
+    class_id: str,
+    payload: AssignStudentsRequest,
+    claims: AdminDep,
+) -> dict:
+    """Remove students from a class (sets class_id to null) (admin only)."""
+    org_id = claims.get("org_id")
+    if not org_id:
+        raise NotFoundError("No school associated with this admin account.")
+
+    async with db_session() as session:
+        # Verify class belongs to this school
+        class_obj = (
+            await session.execute(
+                select(SchoolClass).where(
+                    and_(
+                        SchoolClass.id == class_id,
+                        SchoolClass.school_id == org_id,
+                    )
+                )
+            )
+        ).scalar_one_or_none()
+
+        if not class_obj:
+            raise NotFoundError("Class not found in your school.")
+
+        if not payload.student_ids:
+            return {"message": "No students provided.", "removed_count": 0}
+
+        stmt = (
+            update(User)
+            .where(
+                and_(
+                    User.id.in_(payload.student_ids),
+                    User.class_id == class_id,
+                    User.org_id == org_id,
+                )
+            )
+            .values(class_id=None)
+        )
+        result = await session.execute(stmt)
+        removed_count = result.rowcount  # type: ignore[assignment]
+        await session.commit()
+
+    return {
+        "message": f"Successfully removed {removed_count} student(s) from class '{class_obj.name}'.",
+        "removed_count": removed_count,
+    }
+
+
+@router.delete("/classes/{class_id}")
+async def delete_class(
+    class_id: str,
+    claims: AdminDep,
+) -> dict:
+    """Delete a class. Students in it will have their class_id set to null (admin only)."""
+    org_id = claims.get("org_id")
+    if not org_id:
+        raise NotFoundError("No school associated with this admin account.")
+
+    async with db_session() as session:
+        from sqlalchemy import delete as sa_delete
+
+        # Verify class belongs to this school
+        class_obj = (
+            await session.execute(
+                select(SchoolClass).where(
+                    and_(
+                        SchoolClass.id == class_id,
+                        SchoolClass.school_id == org_id,
+                    )
+                )
+            )
+        ).scalar_one_or_none()
+
+        if not class_obj:
+            raise NotFoundError("Class not found in your school.")
+
+        class_name = class_obj.name
+
+        # Set class_id to null for students in this class
+        await session.execute(
+            update(User)
+            .where(and_(User.class_id == class_id, User.org_id == org_id))
+            .values(class_id=None)
+        )
+
+        # Delete the class
+        await session.execute(sa_delete(SchoolClass).where(SchoolClass.id == class_id))
+        await session.commit()
+
+    return {"message": f"Class '{class_name}' deleted successfully."}
