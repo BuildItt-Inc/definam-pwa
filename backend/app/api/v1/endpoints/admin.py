@@ -346,7 +346,7 @@ async def get_admin_dashboard(claims: AdminDep) -> dict:
 
     return {
         "school_name": school_name,
-        "class_name": "SS2A",
+        "class_name": "All Classes",
         "teacher_name": teacher_name,
         "location": "Lagos",
         "total_students": int(total_students),
