@@ -1,18 +1,19 @@
-import type { AdminDashboardData, StudentDetail, AccessCodesData } from '@/types/admin';
+import type { AdminDashboardData, StudentDetail, AccessCodesData, SchoolClass } from '@/types/admin';
 import { USE_MOCK, MOCK_DELAY_MS } from '@/lib/api/mock/week2';
 import { ApiError, getAuthHeaders } from '@/lib/api/auth';
 
-export async function getAdminDashboard(): Promise<AdminDashboardData> {
+export async function getAdminDashboard(classId?: string): Promise<AdminDashboardData> {
   if (USE_MOCK) {
     const { mockAdminData } = await import('@/lib/api/mock/admin');
     await new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
     return mockAdminData;
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/dashboard`,
-    { headers: await getAuthHeaders() },
-  );
+  const url = classId
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/dashboard?class_id=${classId}`
+    : `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/dashboard`;
+
+  const res = await fetch(url, { headers: await getAuthHeaders() });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
@@ -21,6 +22,88 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
 
   return res.json() as Promise<AdminDashboardData>;
 }
+
+export async function getClasses(): Promise<SchoolClass[]> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/classes`,
+    { headers: await getAuthHeaders() }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to fetch classes');
+  }
+  return res.json() as Promise<SchoolClass[]>;
+}
+
+export async function createClass(name: string): Promise<{ id: string; name: string }> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/classes`,
+    {
+      method: 'POST',
+      headers: {
+        ...(await getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name }),
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to create class');
+  }
+  return res.json() as Promise<{ id: string; name: string }>;
+}
+
+export async function assignStudentsToClass(classId: string, studentIds: string[]): Promise<void> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/classes/${classId}/assign`,
+    {
+      method: 'POST',
+      headers: {
+        ...(await getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ student_ids: studentIds }),
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to assign students');
+  }
+}
+
+export async function removeStudentsFromClass(classId: string, studentIds: string[]): Promise<void> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/classes/${classId}/remove`,
+    {
+      method: 'POST',
+      headers: {
+        ...(await getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ student_ids: studentIds }),
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to remove students');
+  }
+}
+
+export async function deleteClass(classId: string): Promise<void> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/classes/${classId}`,
+    {
+      method: 'DELETE',
+      headers: await getAuthHeaders(),
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to delete class');
+  }
+}
+
 
 export async function getStudentDetail(studentId: string): Promise<StudentDetail> {
   if (USE_MOCK) {

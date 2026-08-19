@@ -1,7 +1,7 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,16 +13,6 @@ import LogoMark from '@/components/landing/LogoMark';
 
 function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  // Pre-filled from the payment celebration's handoff (?code=...) so the
-  // customer doesn't have to dig the code back out of their email.
-  const prefilledCode = searchParams.get('code') ?? '';
-  useEffect(() => {
-    if (prefilledCode) {
-      window.history.replaceState({}, '', '/register');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -37,7 +27,7 @@ function RegisterForm() {
     resolver: zodResolver(registerSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
-    defaultValues: { access_code: prefilledCode },
+    defaultValues: { access_code: '' },
   });
 
   async function onSubmit(values: RegisterFormValues) {

@@ -6,7 +6,7 @@ import type { CelebrationPayload } from './CelebrationContext';
 
 const LOGIN_DISMISS_MS = 1800;
 const STREAK_DISMISS_MS = 2500;
-const PAYMENT_CELEBRATE_MS = 2000;
+const PAYMENT_CELEBRATE_MS = 12000;
 const PAYMENT_REDIRECT_MS = 1000;
 
 // Floating sparkle particles around the main icon — purely decorative,
@@ -119,10 +119,17 @@ function PaymentCelebration({
   onDismiss: () => void;
 }) {
   const [phase, setPhase] = useState<'celebrate' | 'redirecting'>('celebrate');
+  const [countdown, setCountdown] = useState(12);
 
   useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => Math.max(0, prev - 1));
+    }, 1000);
     const t = setTimeout(() => setPhase('redirecting'), PAYMENT_CELEBRATE_MS);
-    return () => clearTimeout(t);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(t);
+    };
   }, []);
 
   useEffect(() => {
@@ -151,9 +158,12 @@ function PaymentCelebration({
         <Particles />
         <CircleCheck size={30} strokeWidth={2} className="celebration-icon-pop text-white" />
       </div>
-      <p className="text-[18px] font-bold text-ink">Payment successful</p>
-      <p className="mt-1 text-[13px] text-muted">
-        Check your email ({email}) for your access code
+      <p className="text-[18px] font-bold text-ink">Payment Successful</p>
+      <p className="mt-1.5 text-[13px] text-muted leading-snug">
+        Check your email ({email}) for your access code.
+      </p>
+      <p className="mt-3 text-[12px] font-semibold text-ink/70">
+        Redirecting to signup in {countdown}s…
       </p>
     </CelebrationShell>
   );

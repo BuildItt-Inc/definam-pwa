@@ -50,6 +50,37 @@ class School(Base):
     access_codes: Mapped[list[AccessCode]] = relationship(
         "AccessCode", back_populates="school"
     )
+    classes: Mapped[list[SchoolClass]] = relationship(
+        "SchoolClass", back_populates="school", cascade="all, delete-orphan"
+    )
+
+
+# ── School Classes ─────────────────────────────────────────────────────────
+
+
+class SchoolClass(Base):
+    """A classroom/class (e.g., SS2A) within a school."""
+
+    __tablename__ = "school_classes"
+    __table_args__ = (
+        UniqueConstraint("school_id", "name", name="uq_school_class_name"),
+    )
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    school_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("schools.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
+    )
+
+    school: Mapped[School] = relationship("School", back_populates="classes")
+    users: Mapped[list[User]] = relationship("User", back_populates="school_class")
 
 
 # ── Users ──────────────────────────────────────────────────────────────────
@@ -76,6 +107,11 @@ class User(Base):
         ForeignKey("schools.id", ondelete="SET NULL"),
         nullable=True,
     )
+    class_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("school_classes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     device_fingerprint: Mapped[str | None] = mapped_column(Text, nullable=True)
     force_password_change: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
@@ -85,6 +121,9 @@ class User(Base):
     )
 
     school: Mapped[School | None] = relationship("School", back_populates="users")
+    school_class: Mapped[SchoolClass | None] = relationship(
+        "SchoolClass", back_populates="users"
+    )
 
 
 # ── Access Codes ───────────────────────────────────────────────────────────
