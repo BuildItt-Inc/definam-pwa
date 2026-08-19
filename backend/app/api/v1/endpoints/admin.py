@@ -578,7 +578,9 @@ async def list_codes(claims: AdminDep) -> dict:
                 "id": row.id,
                 "code": row.code,
                 "student_name": row.student_name,
-                "status": "active" if row.status == "active" else ("revoked" if row.status == "revoked" else "unused"),
+                "status": "active"
+                if row.status == "active"
+                else ("revoked" if row.status == "revoked" else "unused"),
                 "activated_at": None,  # not tracked per-row yet — MVP stub
             }
             for row in codes_rows
