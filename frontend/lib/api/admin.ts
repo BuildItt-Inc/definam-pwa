@@ -201,3 +201,51 @@ export async function downloadCodes(filter: 'all' | 'unused'): Promise<void> {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+export async function revokeCode(codeId: string): Promise<void> {
+  if (USE_MOCK) {
+    await new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
+    return;
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/codes/revoke`,
+    {
+      method: 'POST',
+      headers: {
+        ...(await getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code_id: codeId }),
+    }
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? 'Failed to revoke code');
+  }
+}
+
+export async function reactivateCode(codeId: string): Promise<void> {
+  if (USE_MOCK) {
+    await new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
+    return;
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/codes/reactivate`,
+    {
+      method: 'POST',
+      headers: {
+        ...(await getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code_id: codeId }),
+    }
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? 'Failed to reactivate code');
+  }
+}

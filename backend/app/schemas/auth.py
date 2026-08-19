@@ -36,6 +36,7 @@ class OrgLoginRequest(BaseModel):
     access_code: str
     user_agent: str = "unknown"
     ip: str = "0.0.0.0"
+    student_name: str | None = None
 
 
 class OrgLoginResponse(BaseModel):

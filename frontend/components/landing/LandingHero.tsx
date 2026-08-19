@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import HeroBackground from '@/components/landing/HeroBackground';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
-import { usePwaInstall } from '@/hooks/usePwaInstall';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 // Staggered fade-up — each element ~0.1s behind the last, per the brief.
 const fadeUp = {
@@ -23,7 +23,7 @@ const fadeUp = {
  * clears LandingNav, which is `fixed` (see that file's comment).
  */
 export default function LandingHero() {
-  const { canInstall, promptInstall } = usePwaInstall();
+  const { canInstall, promptInstall } = usePWAInstall();
 
   return (
     <section

@@ -7,6 +7,7 @@ import { changePassword, getMe, logout, ApiError, getAuthHeaders } from '@/lib/a
 import { getHomeData } from '@/lib/api/topics';
 import type { UserMe } from '@/types/auth';
 import { BottomNav } from '@/components/student/BottomNav';
+import { InstallAppButton } from '@/components/ui/InstallAppButton';
 
 const APP_VERSION = '0.1.0';
 
@@ -220,6 +221,19 @@ export default function SettingsPage() {
             <p className="mt-1.5 text-[14px] text-muted">
               {isIndividual ? 'Independent Learner' : schoolName}
             </p>
+          </div>
+        </div>
+
+        {/* ── Install App ───────────────────────────────────────────────── */}
+        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
+          <div className="border-b border-border bg-bg-0 px-4 py-2.5">
+            <span className="text-[13px] font-bold text-ink">Install App</span>
+          </div>
+          <div className="px-4 py-3 flex items-center justify-between gap-3">
+            <p className="text-[13px] text-muted leading-snug flex-1">
+              Add Recall to your home screen for faster access — works offline too.
+            </p>
+            <InstallAppButton variant="solid" className="shrink-0 text-[12px] px-3 py-1.5" />
           </div>
         </div>
 

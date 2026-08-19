@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Flame } from 'lucide-react';
+import { Flame, Download } from 'lucide-react';
 import { getHomeData, getSubjects } from '@/lib/api/topics';
 import type { HomeData, RecentTopic, Subject } from '@/types/topics';
 import { RecallCard } from '@/components/student/RecallCard';
@@ -12,6 +12,7 @@ import { BottomNav } from '@/components/student/BottomNav';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { subjectIcon, subjectColor } from '@/lib/utils/subjects';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -142,6 +143,7 @@ export default function StudentHomePage() {
   const router = useRouter();
   const { celebrate } = useCelebration();
   const { ref: glowRef, onMouseMove: onGlowMouseMove } = useSpotlight<HTMLDivElement>();
+  const { canInstall, promptInstall } = usePWAInstall();
 
   useEffect(() => {
     setGreeting(getGreeting());
@@ -252,6 +254,24 @@ export default function StudentHomePage() {
             onStart={() => router.push('/student/review')}
           />
         </div>
+
+        {canInstall && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-[#E5E7EB] bg-white p-3.5 shadow-sm">
+            <div className="flex-1 min-w-0">
+              <p className="text-[13.5px] font-bold text-[#111827]">Install Definam App</p>
+              <p className="text-[11.5px] text-[#6B7280] mt-0.5 leading-snug">
+                Add Definam to your home screen for quick, offline-capable access.
+              </p>
+            </div>
+            <button
+              onClick={promptInstall}
+              className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 py-1.5 text-[12px] font-bold text-white shadow-sm hover:bg-[#15803D] active:scale-95 transition-all"
+            >
+              <Download size={13} strokeWidth={2.5} />
+              Install
+            </button>
+          </div>
+        )}
 
         {/* Stats row */}
         <div className="mb-5 grid grid-cols-3 gap-2">

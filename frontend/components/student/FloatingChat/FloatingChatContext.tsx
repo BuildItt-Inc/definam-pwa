@@ -18,6 +18,8 @@ interface FloatingChatContextValue {
   openChat: (options?: OpenChatOptions) => void;
   closeChat: () => void;
   consumeSeedMessage: () => void;
+  isSuppressed: boolean;
+  setSuppressed: (suppressed: boolean) => void;
 }
 
 const FloatingChatContext = createContext<FloatingChatContextValue | null>(null);
@@ -40,6 +42,7 @@ export function FloatingChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [topicId, setTopicId] = useState<string | undefined>(undefined);
   const [pendingSeedMessage, setPendingSeedMessage] = useState<string | undefined>(undefined);
+  const [isSuppressed, setIsSuppressed] = useState(false);
 
   const openChat = useCallback((options?: OpenChatOptions) => {
     setTopicId(options?.topicId);
@@ -51,9 +54,22 @@ export function FloatingChatProvider({ children }: { children: ReactNode }) {
 
   const consumeSeedMessage = useCallback(() => setPendingSeedMessage(undefined), []);
 
+  const setSuppressed = useCallback((suppressed: boolean) => {
+    setIsSuppressed(suppressed);
+  }, []);
+
   return (
     <FloatingChatContext.Provider
-      value={{ isOpen, topicId, pendingSeedMessage, openChat, closeChat, consumeSeedMessage }}
+      value={{
+        isOpen,
+        topicId,
+        pendingSeedMessage,
+        openChat,
+        closeChat,
+        consumeSeedMessage,
+        isSuppressed,
+        setSuppressed,
+      }}
     >
       {children}
     </FloatingChatContext.Provider>

@@ -364,11 +364,13 @@ class TopicReview(Base):
         UUID(as_uuid=False),
         ForeignKey("topics.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     user_id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     accuracy_score: Mapped[float | None] = mapped_column(Float, nullable=True)  # 0-100
     ease_factor: Mapped[float] = mapped_column(
@@ -408,11 +410,13 @@ class DailyRecallQueue(Base):
         UUID(as_uuid=False),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     topic_id: Mapped[str] = mapped_column(
         UUID(as_uuid=False),
         ForeignKey("topics.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     completed: Mapped[int] = mapped_column(
