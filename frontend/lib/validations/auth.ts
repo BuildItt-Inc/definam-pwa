@@ -101,6 +101,11 @@ export const orgLoginSchema = z.object({
     .refine((val) => /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/.test(val), {
       message: 'Invalid access code format',
     }),
+  student_name: z
+    .string()
+    .max(100, 'Name cannot exceed 100 characters')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type OrgLoginFormValues = z.infer<typeof orgLoginSchema>;

@@ -20,6 +20,7 @@ import { MathContent } from '@/components/student/MathContent';
 import { getChatHistory, sendChatMessageStream, type ChatMessage } from '@/lib/api/chat';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
+import { useFloatingChat } from '@/components/student/FloatingChat/FloatingChatContext';
 import { stepSlide } from '@/lib/motion';
 import { toast } from '@/lib/toast';
 
@@ -454,7 +455,7 @@ function ScoreSummary({
         onClick={onContinue}
         className="btn-primary w-full shadow-brand-sm"
       >
-        Continue to AI Tutor
+        Continue to Zikora
         <ChevronRight size={18} strokeWidth={2.5} />
       </button>
     </div>
@@ -481,6 +482,15 @@ function AITutorScaffold({
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { setSuppressed } = useFloatingChat();
+
+  // Suppress floating AI widget while at the full-screen AI chat page
+  useEffect(() => {
+    setSuppressed(true);
+    return () => {
+      setSuppressed(false);
+    };
+  }, [setSuppressed]);
 
   // Load chat history on mount
   useEffect(() => {
@@ -584,7 +594,7 @@ function AITutorScaffold({
           <Bot size={18} strokeWidth={1.5} className="text-white" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-[16px] text-white">AI Tutor</p>
+          <p className="font-bold text-[16px] text-white">Zikora</p>
           <p className="truncate text-[13px] text-white/50">{topicTitle}</p>
         </div>
       </header>

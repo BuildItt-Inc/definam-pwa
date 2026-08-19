@@ -153,6 +153,7 @@ async def org_login(body: OrgLoginRequest) -> dict:
             org_id=code_row["school_id"],
             role="student_org",
             username=user_id,  # org students have no username — use ID
+            name=body.student_name,  # store the student's actual name
             device_fingerprint=fingerprint,
         )
         await activate_code(code_row["id"], user_id, fingerprint)

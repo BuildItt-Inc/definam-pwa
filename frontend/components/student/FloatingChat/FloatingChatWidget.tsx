@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { Bot, MessageCircle, Send, Trash2, X } from 'lucide-react';
 import { useFloatingChat } from './FloatingChatContext';
 import {
@@ -21,21 +21,34 @@ import { toast } from '@/lib/toast';
  * cross-session persistence yet — reactive only, per this iteration's scope).
  */
 export function FloatingChatWidget() {
-  const { isOpen, topicId, pendingSeedMessage, openChat, closeChat, consumeSeedMessage } =
-    useFloatingChat();
+  const {
+    isOpen,
+    topicId,
+    pendingSeedMessage,
+    openChat,
+    closeChat,
+    consumeSeedMessage,
+    isSuppressed,
+  } = useFloatingChat();
   // On a topic page, default the launcher button to that topic's context
   // so tapping it "just works" without needing an explicit openChat() call
   // from the page itself.
   const params = useParams<{ topicId?: string }>();
   const currentPageTopicId = params?.topicId;
+  const pathname = usePathname();
+
+  // On the dedicated /student/chat page the full-screen Zikora interface
+  // is already open — rendering the floating launcher there would give
+  // the student two simultaneous chat surfaces, which is confusing.
+  const isOnChatPage = pathname === '/student/chat';
 
   return (
     <>
-      {!isOpen && (
+      {!isOpen && !isOnChatPage && !isSuppressed && (
         <button
           type="button"
           onClick={() => openChat(currentPageTopicId ? { topicId: currentPageTopicId } : undefined)}
-          aria-label="Open AI tutor chat"
+          aria-label="Open Zikora AI tutor"
           // z-[60], not z-50: BottomNav portals directly to document.body,
           // which places it later in DOM order than this button's normal
           // (non-portaled) position. Equal z-index falls back to DOM order
@@ -201,7 +214,7 @@ function FloatingChatPanel({
             <Bot size={18} strokeWidth={1.5} className="text-white" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-[15px] text-white">AI Tutor</p>
+            <p className="font-bold text-[15px] text-white">Zikora</p>
             <p className="truncate text-[12px] text-white/50">
               {topicId ? 'Chatting about this topic' : 'General study help'}
             </p>
@@ -244,9 +257,10 @@ function FloatingChatPanel({
           ) : messages.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
               <Bot size={28} strokeWidth={1.5} className="text-ink/30" />
-              <p className="text-[13px] text-muted">
+              <p className="text-[13px] font-semibold text-ink/50">Zikora</p>
+              <p className="text-[12px] text-muted">
                 {topicId
-                  ? "Ask me anything about this topic."
+                  ? 'Ask me anything about this topic.'
                   : "Ask me anything — study tips, a topic you're stuck on, anything."}
               </p>
             </div>

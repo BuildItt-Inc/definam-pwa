@@ -37,6 +37,7 @@ export default function OrgCodePage() {
     try {
       await orgLogin({
         access_code: values.access_code,
+        student_name: values.student_name,
         user_agent: navigator.userAgent,
         ip: '0.0.0.0',
       });
@@ -116,15 +117,38 @@ export default function OrgCodePage() {
 
           {/* ── Field error ── */}
           {errors.access_code && (
-            <p className="mb-2 ml-0.5 text-[11px] leading-none text-danger">
+            <p className="mb-4 ml-0.5 text-[11px] leading-none text-danger">
               {errors.access_code.message}
             </p>
           )}
 
-          {/* ── Helper text ── */}
-          <p className="text-[12px] text-ink/35 text-center mb-5">
-            Given to you by your teacher or school admin
-          </p>
+          {/* ── Student Name ── */}
+          <div className="flex flex-col gap-1.5 mb-5 text-left">
+            <label htmlFor="student_name" className="text-[11px] font-bold uppercase tracking-[0.07em] text-ink/35">
+              Your Full Name
+            </label>
+            <input
+              id="student_name"
+              type="text"
+              autoComplete="name"
+              placeholder="e.g. Chisom Okeke"
+              className={[
+                'w-full rounded-xl border bg-white px-4 py-2.5 text-[15px] outline-none transition-all text-ink placeholder:text-muted',
+                errors.student_name
+                  ? 'border-danger focus:ring-red-100'
+                  : 'border-[#D1D5DB] focus:border-[#16A34A] focus:ring-green-100',
+              ].join(' ')}
+              {...register('student_name')}
+            />
+            {errors.student_name && (
+              <p className="text-[11px] leading-none text-danger mt-1">
+                {errors.student_name.message}
+              </p>
+            )}
+            <p className="text-[11px] text-ink/35 leading-tight mt-1">
+              Only required the first time you activate this code.
+            </p>
+          </div>
 
           {/* ── Error banner ── */}
           {bannerError && (

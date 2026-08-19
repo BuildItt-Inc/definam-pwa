@@ -154,6 +154,7 @@ async def create_student_user(
     org_id: str | None,
     role: str,
     username: str | None = None,
+    name: str | None = None,
     password_hash: str | None = None,
     device_fingerprint: str | None = None,
     force_password_change: bool = False,
@@ -165,6 +166,7 @@ async def create_student_user(
             User(
                 id=user_id,
                 username=username or user_id,
+                name=name,
                 password_hash=password_hash,
                 role=role,
                 org_id=org_id,

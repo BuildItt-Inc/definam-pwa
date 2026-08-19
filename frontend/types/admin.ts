@@ -79,7 +79,7 @@ export interface StudentDetail {
 
 // ── SCR-12 · Access Code Management ───────────────────────────────────────
 
-export type AccessCodeStatus = 'active' | 'unused';
+export type AccessCodeStatus = 'active' | 'unused' | 'revoked';
 
 export interface SubscriptionInfo {
   term: string;

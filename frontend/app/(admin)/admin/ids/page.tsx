@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Building2, Download } from 'lucide-react';
-import { getAccessCodes, downloadCodes } from '@/lib/api/admin';
+import { getAccessCodes, downloadCodes, revokeCode, reactivateCode } from '@/lib/api/admin';
 import { IdManagementTable } from '@/components/admin/IdManagementTable';
 import type { AccessCodesData } from '@/types/admin';
 
@@ -86,6 +86,49 @@ export default function AdminIdsPage() {
       await downloadCodes('unused');
     } finally {
       setDownloadingUnused(false);
+    }
+  }
+
+  async function handleRevokeCode(codeId: string) {
+    try {
+      await revokeCode(codeId);
+      setData((prev) => {
+        if (!prev) return null;
+        const codeToUpdate = prev.codes.find((c) => c.id === codeId);
+        const wasActive = codeToUpdate?.status === 'active';
+        return {
+          ...prev,
+          codes: prev.codes.map((c) =>
+            c.id === codeId ? { ...c, status: 'revoked' as const } : c
+          ),
+          stats: {
+            ...prev.stats,
+            activated: wasActive ? prev.stats.activated - 1 : prev.stats.activated,
+            // revoked counts as unused in terms of seats / subscription stats definition
+            unused: wasActive ? prev.stats.unused + 1 : prev.stats.unused,
+          },
+        };
+      });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to revoke code');
+    }
+  }
+
+  async function handleReactivateCode(codeId: string) {
+    try {
+      await reactivateCode(codeId);
+      setData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          codes: prev.codes.map((c) =>
+            c.id === codeId ? { ...c, status: 'unused' as const } : c
+          ),
+          // deactivated codes go back to unused/pending status; total counts remain the same.
+        };
+      });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to reactivate code');
     }
   }
 
@@ -182,6 +225,8 @@ export default function AdminIdsPage() {
           codes={codes}
           onDownloadAll={handleDownloadAll}
           onDownloadUnused={handleDownloadUnused}
+          onRevokeCode={handleRevokeCode}
+          onReactivateCode={handleReactivateCode}
         />
       </div>
     </div>

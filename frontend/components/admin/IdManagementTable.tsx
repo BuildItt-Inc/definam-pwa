@@ -10,14 +10,17 @@ interface IdManagementTableProps {
   codes: AccessCode[];
   onDownloadAll: () => void;
   onDownloadUnused: () => void;
+  onRevokeCode: (codeId: string) => Promise<void>;
+  onReactivateCode: (codeId: string) => Promise<void>;
 }
 
-type StatusFilter = 'all' | 'active' | 'unused';
+type StatusFilter = 'all' | 'active' | 'unused' | 'revoked';
 
 const STATUS_TABS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'active', label: 'Active' },
   { key: 'unused', label: 'Unused' },
+  { key: 'revoked', label: 'Revoked' },
 ];
 
 function formatDate(iso: string | null): string {
@@ -35,9 +38,12 @@ export function IdManagementTable({
   codes,
   onDownloadAll: _onDownloadAll,
   onDownloadUnused: _onDownloadUnused,
+  onRevokeCode,
+  onReactivateCode,
 }: IdManagementTableProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [actioningIds, setActioningIds] = useState<Record<string, boolean>>({});
 
   const filtered = codes.filter((c) => {
     const q = search.toLowerCase();
@@ -100,6 +106,9 @@ export function IdManagementTable({
               <th className="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-muted">
                 Activated
               </th>
+              <th className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-muted">
+                Actions
+              </th>
             </tr>
           </thead>
           <motion.tbody
@@ -110,7 +119,7 @@ export function IdManagementTable({
             {filtered.length === 0 ? (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={5}
                   className="px-6 py-12 text-center text-[12px] font-medium text-muted"
                 >
                   No codes match your search.
@@ -119,6 +128,21 @@ export function IdManagementTable({
             ) : (
               filtered.map((code, idx) => {
                 const rowBg = idx % 2 === 0 ? 'bg-bg-0' : 'bg-bg-1/30';
+                const isActioning = !!actioningIds[code.id];
+
+                const handleAction = async () => {
+                  setActioningIds((prev) => ({ ...prev, [code.id]: true }));
+                  try {
+                    if (code.status === 'revoked') {
+                      await onReactivateCode(code.id);
+                    } else {
+                      await onRevokeCode(code.id);
+                    }
+                  } finally {
+                    setActioningIds((prev) => ({ ...prev, [code.id]: false }));
+                  }
+                };
+
                 return (
                   <motion.tr
                     variants={staggerItem}
@@ -143,6 +167,11 @@ export function IdManagementTable({
                           <span className="w-1.5 h-1.5 rounded-full bg-success mr-2" />
                           Active
                         </span>
+                      ) : code.status === 'revoked' ? (
+                        <span className="inline-flex items-center px-3 py-1 text-[10px] font-bold rounded-[16px] bg-bg-0 text-danger border border-border-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-danger mr-2" />
+                          Revoked
+                        </span>
                       ) : (
                         <span className="inline-flex items-center px-3 py-1 text-[10px] font-bold rounded-[16px] bg-bg-0 text-muted border border-border-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-gray-300 mr-2" />
@@ -152,6 +181,23 @@ export function IdManagementTable({
                     </td>
                     <td className="px-6 py-4 text-[12px] font-medium text-muted">
                       {formatDate(code.activated_at)}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={handleAction}
+                        disabled={isActioning}
+                        className={`px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all duration-150 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          code.status === 'revoked'
+                            ? 'bg-transparent text-success border-success/30 hover:bg-success/5'
+                            : 'bg-transparent text-danger border-danger/30 hover:bg-danger/5'
+                        }`}
+                      >
+                        {isActioning
+                          ? 'Processing...'
+                          : code.status === 'revoked'
+                          ? 'Reactivate'
+                          : 'Revoke'}
+                      </button>
                     </td>
                   </motion.tr>
                 );

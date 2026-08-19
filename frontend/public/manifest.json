@@ -1,9 +1,27 @@
 {
-  "name": "Recall",
+  "name": "Recall — Study Smarter",
   "short_name": "Recall",
-  "start_url": "/",
+  "description": "AI-powered spaced-repetition learning for secondary school students",
+  "start_url": "/student",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#0d2b5e",
-  "icons": []
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["education"],
+  "lang": "en"
 }

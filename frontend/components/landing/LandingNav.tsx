@@ -5,6 +5,7 @@ import Link from 'next/link';
 import MobileNav from '@/components/landing/MobileNav';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 import { NAV_LINKS } from '@/components/landing/navLinks';
+import { InstallAppButton } from '@/components/ui/InstallAppButton';
 
 /**
  * Landing nav — transparent over the dark navy hero, solidifies (navy +
@@ -68,6 +69,7 @@ export default function LandingNav() {
 
         {/* Right — auth actions, desktop only */}
         <div className="font-body col-start-3 hidden items-center gap-4 justify-self-end sm:flex">
+          <InstallAppButton variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-[13px]" />
           <Link href="/login" className="text-[14px] font-semibold text-white/80 transition-colors hover:text-white">
             Log in
           </Link>
