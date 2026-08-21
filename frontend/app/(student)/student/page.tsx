@@ -13,6 +13,7 @@ import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { subjectIcon, subjectColor } from '@/lib/utils/subjects';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -143,7 +144,12 @@ export default function StudentHomePage() {
   const router = useRouter();
   const { celebrate } = useCelebration();
   const { ref: glowRef, onMouseMove: onGlowMouseMove } = useSpotlight<HTMLDivElement>();
-  const { canInstall, promptInstall } = usePWAInstall();
+  const { 
+    canInstall, 
+    promptInstall, 
+    showIOSInstructions, 
+    setShowIOSInstructions 
+  } = usePWAInstall();
 
   useEffect(() => {
     setGreeting(getGreeting());
@@ -272,6 +278,11 @@ export default function StudentHomePage() {
             </button>
           </div>
         )}
+
+        <IOSInstallModal 
+          isOpen={showIOSInstructions}
+          onClose={() => setShowIOSInstructions(false)}
+        />
 
         {/* Stats row */}
         <div className="mb-5 grid grid-cols-3 gap-2">

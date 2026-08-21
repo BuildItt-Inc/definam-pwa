@@ -33,6 +33,7 @@ from app.db.database import (
     revoke_and_reactivate_code,
     set_force_password_change,
     update_user_password,
+    update_user_session_id,
 )
 from app.schemas.auth import (
     ChangePasswordRequest,
@@ -109,7 +110,10 @@ async def login(body: LoginRequest) -> dict:
     user_id: str = user_row["id"]
     role: str = user_row["role"]
 
-    extra_claims: dict = {"role": role}
+    session_id = str(uuid.uuid4())
+    await update_user_session_id(user_id, session_id)
+
+    extra_claims: dict = {"role": role, "session_id": session_id}
     if user_row.get("org_id"):
         extra_claims["org_id"] = user_row["org_id"]
 
@@ -170,7 +174,14 @@ async def org_login(body: OrgLoginRequest) -> dict:
     else:
         raise AccessCodeRevokedError()
 
-    extra_claims = {"role": "student_org", "org_id": code_row["school_id"]}
+    session_id = str(uuid.uuid4())
+    await update_user_session_id(user_id, session_id)
+
+    extra_claims = {
+        "role": "student_org",
+        "org_id": code_row["school_id"],
+        "session_id": session_id,
+    }
     access_token = create_jwt(subject=user_id, extra_claims=extra_claims)
     refresh_token = create_refresh_jwt(subject=user_id, extra_claims=extra_claims)
 
@@ -201,12 +212,14 @@ async def change_password(token: str, body: ChangePasswordRequest) -> dict:
     return {"message": "Password updated successfully"}
 
 
-async def logout() -> dict:
+async def logout(user_id: str | None = None) -> dict:
     """
-    Both token types are stateless JWTs — the client discards them.
-    The refresh-token cookie is cleared by the endpoint directly.
+    Sign out: clear the current_session_id in the database to invalidate active tokens,
+    then return standard success.
     """
-    return {"message": "Logged out"}
+    if user_id:
+        await update_user_session_id(user_id, None)
+    return {"status": "success"}
 
 
 async def refresh(refresh_token: str) -> dict:
@@ -226,6 +239,7 @@ async def refresh(refresh_token: str) -> dict:
         raise InvalidTokenError("Invalid token type")
 
     user_id: str = claims["sub"]
+    jwt_session_id = claims.get("session_id")
 
     # Re-fetch role AND org_id from DB (not from the old token's claims) so
     # revoked/changed accounts, or an admin reassigned to a different
@@ -233,9 +247,20 @@ async def refresh(refresh_token: str) -> dict:
     user_row = await get_user_by_id(user_id)
     if not user_row:
         raise InvalidTokenError("User no longer exists")
+
+    db_session_id = user_row.get("current_session_id")
+    if jwt_session_id and db_session_id and db_session_id != jwt_session_id:
+        raise InvalidTokenError("Session expired or logged in elsewhere.")
+
     role = user_row["role"]
 
     extra_claims: dict = {"role": role}
+    # Keep the same session ID for the refreshed session
+    if jwt_session_id:
+        extra_claims["session_id"] = jwt_session_id
+    elif db_session_id:
+        extra_claims["session_id"] = db_session_id
+
     if user_row.get("org_id"):
         extra_claims["org_id"] = user_row["org_id"]
 

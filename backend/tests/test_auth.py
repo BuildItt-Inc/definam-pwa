@@ -13,6 +13,19 @@ def anyio_backend():
     return "asyncio"
 
 
+@pytest.fixture(autouse=True)
+def mock_update_user_session_id():
+    with (
+        patch(
+            "app.services.auth_service.update_user_session_id", new_callable=AsyncMock
+        ) as m1,
+        patch(
+            "app.api.v1.endpoints.auth.update_user_session_id", new_callable=AsyncMock
+        ) as m2,
+    ):
+        yield (m1, m2)
+
+
 # ── /auth/register ─────────────────────────────────────────────────────────
 
 

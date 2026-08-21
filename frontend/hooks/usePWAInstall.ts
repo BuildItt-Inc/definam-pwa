@@ -19,8 +19,12 @@ export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [canInstall, setCanInstall] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     // Already running as a standalone app
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -28,8 +32,19 @@ export function usePWAInstall() {
       ('standalone' in window.navigator &&
         (window.navigator as { standalone?: boolean }).standalone === true);
 
+    const isIOSDevice =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    
+    setIsIOS(isIOSDevice);
+
     if (isStandalone) {
       setIsInstalled(true);
+      return;
+    }
+
+    // iOS supports manual install, so if it's iOS and not standalone, we can install!
+    if (isIOSDevice) {
+      setCanInstall(true);
       return;
     }
 
@@ -55,6 +70,11 @@ export function usePWAInstall() {
   }, []);
 
   const promptInstall = async () => {
+    if (isIOS) {
+      setShowIOSInstructions(true);
+      return;
+    }
+
     if (!deferredPrompt) return;
     await deferredPrompt.prompt();
     const choice = await deferredPrompt.userChoice;
@@ -64,5 +84,12 @@ export function usePWAInstall() {
     }
   };
 
-  return { canInstall, isInstalled, promptInstall };
+  return { 
+    canInstall, 
+    isInstalled, 
+    isIOS, 
+    promptInstall, 
+    showIOSInstructions, 
+    setShowIOSInstructions 
+  };
 }
