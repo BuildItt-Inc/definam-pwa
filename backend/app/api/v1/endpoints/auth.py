@@ -213,6 +213,7 @@ async def logout(
             claims = decode_jwt(token)
             user_id = claims.get("sub")
         except Exception:
+            # If the token is invalid or expired, continue and log out anonymously.
             pass
     return await auth_service.logout(user_id)
 
