@@ -2,6 +2,7 @@
 
 import { Download } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
 
 interface InstallAppButtonProps {
   /** Visual variant */
@@ -18,7 +19,12 @@ interface InstallAppButtonProps {
  * show a non-functional one).
  */
 export function InstallAppButton({ variant = 'solid', className = '' }: InstallAppButtonProps) {
-  const { canInstall, promptInstall } = usePWAInstall();
+  const { 
+    canInstall, 
+    promptInstall, 
+    showIOSInstructions, 
+    setShowIOSInstructions 
+  } = usePWAInstall();
 
   if (!canInstall) return null;
 
@@ -32,14 +38,21 @@ export function InstallAppButton({ variant = 'solid', className = '' }: InstallA
   };
 
   return (
-    <button
-      type="button"
-      onClick={promptInstall}
-      className={`${base} ${variants[variant]} ${className}`}
-      aria-label="Install Recall as an app"
-    >
-      <Download size={15} strokeWidth={2} />
-      Install App
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={promptInstall}
+        className={`${base} ${variants[variant]} ${className}`}
+        aria-label="Install Recall as an app"
+      >
+        <Download size={15} strokeWidth={2} />
+        Install App
+      </button>
+
+      <IOSInstallModal 
+        isOpen={showIOSInstructions}
+        onClose={() => setShowIOSInstructions(false)}
+      />
+    </>
   );
 }

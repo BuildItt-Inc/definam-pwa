@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import HeroBackground from '@/components/landing/HeroBackground';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
 
 // Staggered fade-up — each element ~0.1s behind the last, per the brief.
 const fadeUp = {
@@ -23,7 +24,12 @@ const fadeUp = {
  * clears LandingNav, which is `fixed` (see that file's comment).
  */
 export default function LandingHero() {
-  const { canInstall, promptInstall } = usePWAInstall();
+  const { 
+    canInstall, 
+    promptInstall, 
+    showIOSInstructions, 
+    setShowIOSInstructions 
+  } = usePWAInstall();
 
   return (
     <section
@@ -101,6 +107,11 @@ export default function LandingHero() {
               </button>
             )}
           </motion.div>
+
+          <IOSInstallModal 
+            isOpen={showIOSInstructions}
+            onClose={() => setShowIOSInstructions(false)}
+          />
         </div>
 
         {/* Product mockup column — laptop + phone screenshot composite (see

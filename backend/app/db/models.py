@@ -113,6 +113,7 @@ class User(Base):
         nullable=True,
     )
     device_fingerprint: Mapped[str | None] = mapped_column(Text, nullable=True)
+    current_session_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     force_password_change: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )

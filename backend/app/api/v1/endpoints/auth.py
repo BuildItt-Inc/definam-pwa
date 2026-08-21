@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import hashlib
 import os
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import httpx
-from fastapi import APIRouter, Cookie, HTTPException, Request, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr
 
-from app.api.deps import BearerTokenDep, CurrentUserDep
+from app.api.deps import BearerTokenDep, CurrentUserDep, get_bearer_token
 from app.core.config import get_settings
 from app.core.exceptions import BadRequestError, InvalidTokenError
 from app.core.limiter import limiter
-from app.core.security import create_jwt, create_refresh_jwt, hash_password
+from app.core.security import create_jwt, create_refresh_jwt, decode_jwt, hash_password
 from app.db.database import (
     consume_password_reset_token,
     create_password_reset_token,
@@ -20,6 +21,7 @@ from app.db.database import (
     get_user_by_id,
     get_user_by_username,
     update_user_password,
+    update_user_session_id,
 )
 from app.schemas.auth import (
     ChangePasswordRequest,
@@ -92,9 +94,16 @@ async def register(request: Request, body: RegisterRequest, response: Response) 
         raise HTTPException(404, "User not found after registration")
 
     # Generate JWTs
-    token = create_jwt(subject=user["id"], extra_claims={"role": user["role"]})
+    session_id = str(uuid.uuid4())
+    await update_user_session_id(user["id"], session_id)
+
+    token = create_jwt(
+        subject=user["id"],
+        extra_claims={"role": user["role"], "session_id": session_id},
+    )
     refresh_token = create_refresh_jwt(
-        subject=user["id"], extra_claims={"role": user["role"]}
+        subject=user["id"],
+        extra_claims={"role": user["role"], "session_id": session_id},
     )
     _set_refresh_cookie(response, refresh_token)
 
@@ -192,10 +201,20 @@ async def change_password(
     summary="Logout",
     description="Clear the refresh-token cookie. The client must also discard the access token.",
 )
-async def logout(response: Response) -> dict:
-    """Sign out: clear the refresh-token cookie."""
+async def logout(
+    response: Response,
+    token: str | None = Depends(get_bearer_token),
+) -> dict:
+    """Sign out: clear the refresh-token cookie and database session."""
     _clear_refresh_cookie(response)
-    return await auth_service.logout()
+    user_id = None
+    if token:
+        try:
+            claims = decode_jwt(token)
+            user_id = claims.get("sub")
+        except Exception:
+            pass
+    return await auth_service.logout(user_id)
 
 
 @router.get(

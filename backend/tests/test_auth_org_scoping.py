@@ -23,6 +23,19 @@ def anyio_backend():
 
 
 @pytest.fixture(autouse=True)
+def mock_update_user_session_id():
+    with (
+        patch(
+            "app.services.auth_service.update_user_session_id", new_callable=AsyncMock
+        ) as m1,
+        patch(
+            "app.api.v1.endpoints.auth.update_user_session_id", new_callable=AsyncMock
+        ) as m2,
+    ):
+        yield (m1, m2)
+
+
+@pytest.fixture(autouse=True)
 def patch_jwt_settings(monkeypatch):
     """Use a fixed secret so tokens created here can be decoded again."""
     import app.core.security as sec

@@ -210,6 +210,7 @@ async def get_user_by_id(user_id: str) -> dict[str, Any] | None:
             "force_password_change": row.force_password_change,
             "name": row.name,
             "email": row.email,
+            "current_session_id": row.current_session_id,
         }
 
 
@@ -233,6 +234,14 @@ async def update_user_name(user_id: str, name: str) -> None:
     """Update a user's display name."""
     async with db_session() as session:
         await session.execute(update(User).where(User.id == user_id).values(name=name))
+
+
+async def update_user_session_id(user_id: str, session_id: str | None) -> None:
+    """Update a user's active session ID."""
+    async with db_session() as session:
+        await session.execute(
+            update(User).where(User.id == user_id).values(current_session_id=session_id)
+        )
 
 
 async def get_user_by_email(email: str) -> dict[str, Any] | None:
