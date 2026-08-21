@@ -347,6 +347,71 @@ FALLBACK_CURRICULUM = [
             },
         ],
     },
+    {
+        "name": "Biology",
+        "class_level": "SS2",
+        "chapters": [
+            {
+                "num": 1,
+                "title": "Tissues and Supporting Systems",
+                "topics": [
+                    "Skeleton and Supporting Systems",
+                    "Types of Skeleton",
+                    "Functions of Skeleton",
+                    "Supporting Tissues in Plants",
+                ],
+            },
+            {
+                "num": 2,
+                "title": "Alimentary System & Nutrition",
+                "topics": [
+                    "Autotrophic & Heterotrophic Nutrition",
+                    "Digestive System of Mammals",
+                    "Feeding Habits of Animals",
+                    "Modes of Nutrition",
+                ],
+            },
+            {
+                "num": 3,
+                "title": "Transport System",
+                "topics": [
+                    "Need for Transport System",
+                    "Transport System in Plants",
+                    "Transport System in Mammals",
+                    "Composition and Functions of Blood",
+                ],
+            },
+            {
+                "num": 4,
+                "title": "Respiratory System",
+                "topics": [
+                    "Aerobic & Anaerobic Respiration",
+                    "Respiratory Organs in Organisms",
+                    "Mechanism of Respiration in Man",
+                    "Gaseous Exchange in Plants",
+                ],
+            },
+            {
+                "num": 5,
+                "title": "Excretory System",
+                "topics": [
+                    "Excretory Organs in Organisms",
+                    "Excretion in Mammals (Kidney, Skin)",
+                    "Excretion in Plants",
+                ],
+            },
+            {
+                "num": 6,
+                "title": "Regulation of Internal Environment (Homeostasis)",
+                "topics": [
+                    "Concept of Homeostasis",
+                    "Osmoregulation",
+                    "Thermoregulation",
+                    "Liver Functions and Diseases",
+                ],
+            },
+        ],
+    },
 ]
 
 CLASS_LEVELS = ["SS1", "SS2", "SS3"]
@@ -502,9 +567,15 @@ async def seed_curriculum() -> None:
                     f"AI generation failed for {sub_name} (SS2); using fallback predefined curriculum."
                 )
                 fallback_sub = next(
-                    s for s in FALLBACK_CURRICULUM if s["name"] == sub_name
+                    (s for s in FALLBACK_CURRICULUM if s["name"] == sub_name), None
                 )
-                curriculum_data.append(fallback_sub)
+                if fallback_sub:
+                    curriculum_data.append(fallback_sub)
+                else:
+                    logger.warning(
+                        f"AI generation failed for {sub_name} (SS2) and no "
+                        f"hand-authored fallback exists for this subject -- skipping."
+                    )
             else:
                 logger.warning(
                     f"AI generation failed for {sub_name} ({class_level}) and no "
