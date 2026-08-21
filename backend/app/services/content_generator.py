@@ -1,4 +1,4 @@
-"""Service to dynamically generate learning content and questions on-demand via Gemini and Groq."""
+"""Service to dynamically generate learning content and questions on-demand via Gemini and Claude."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import json
 import logging
 from typing import Any
 
+import anthropic
 from google import genai
-from groq import AsyncGroq
 
 from app.core.config import get_settings
 
@@ -19,9 +19,13 @@ settings = get_settings()
 client_gemini = (
     genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
 )
-client_groq = (
-    AsyncGroq(api_key=settings.groq_api_key) if settings.groq_api_key else None
+client_claude = (
+    anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    if settings.anthropic_api_key
+    else None
 )
+
+_CLAUDE_MODEL = "claude-sonnet-4-6"
 
 PROMPT_STEP1 = """
 You are a friendly tutor writing for secondary school students.
@@ -256,44 +260,40 @@ async def generate_gemini_questions(prompt: str) -> list[dict[str, Any]]:
         return []
 
 
-# ── Groq Async Generators ──────────────────────────────────────────────────
+# ── Claude Async Generators ────────────────────────────────────────────────
 
 
-async def generate_groq_step(prompt: str) -> str:
-    """Generate a step content via Groq."""
-    if not client_groq:
+async def generate_claude_step(prompt: str) -> str:
+    """Generate a step content via Claude."""
+    if not client_claude:
         return ""
     try:
-        completion = await client_groq.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
+        message = await client_claude.messages.create(
+            model=_CLAUDE_MODEL,
             max_tokens=600,
+            temperature=0.7,
+            messages=[{"role": "user", "content": prompt}],
         )
-        return completion.choices[0].message.content.strip()
+        return message.content[0].text.strip()
     except Exception as e:
-        logger.error(f"Groq step generation error: {e}")
+        logger.error(f"Claude step generation error: {e}")
         return ""
 
 
-async def generate_groq_questions(prompt: str) -> list[dict[str, Any]]:
-    """Generate practice questions via Groq."""
-    if not client_groq:
+async def generate_claude_questions(prompt: str) -> list[dict[str, Any]]:
+    """Generate practice questions via Claude."""
+    if not client_claude:
         return []
     try:
-        completion = await client_groq.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            # 2 MCQs with full explanations routinely need
-            # more than 1000 tokens; a tight cap truncates mid-JSON-string
-            # ("Unterminated string"), which silently falls back to generic
-            # content just like the escape-corruption bug above.
+        message = await client_claude.messages.create(
+            model=_CLAUDE_MODEL,
             max_tokens=2000,
+            temperature=0.7,
+            messages=[{"role": "user", "content": prompt}],
         )
-        text = completion.choices[0].message.content.strip()
+        text = message.content[0].text.strip()
 
-        # Strip markdown syntax if LLM returns it
+        # Strip markdown fences if present
         if text.startswith("```"):
             lines = text.split("\n")
             if lines[0].startswith("```"):
@@ -307,7 +307,7 @@ async def generate_groq_questions(prompt: str) -> list[dict[str, Any]]:
             return parsed
         return []
     except Exception as e:
-        logger.error(f"Groq questions generation error: {e}")
+        logger.error(f"Claude questions generation error: {e}")
         return []
 
 
@@ -341,18 +341,18 @@ async def generate_gemini_recall(prompt: str) -> dict[str, Any] | None:
         return None
 
 
-async def generate_groq_recall(prompt: str) -> dict[str, Any] | None:
-    """Generate a single recall question + model_answer pair via Groq."""
-    if not client_groq:
+async def generate_claude_recall(prompt: str) -> dict[str, Any] | None:
+    """Generate a single recall question + model_answer pair via Claude."""
+    if not client_claude:
         return None
     try:
-        completion = await client_groq.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
+        message = await client_claude.messages.create(
+            model=_CLAUDE_MODEL,
             max_tokens=500,
+            temperature=0.7,
+            messages=[{"role": "user", "content": prompt}],
         )
-        text = completion.choices[0].message.content.strip()
+        text = message.content[0].text.strip()
         if text.startswith("```"):
             lines = text.split("\n")
             if lines[0].startswith("```"):
@@ -369,7 +369,7 @@ async def generate_groq_recall(prompt: str) -> dict[str, Any] | None:
             return parsed
         return None
     except Exception as e:
-        logger.error(f"Groq recall generation error: {e}")
+        logger.error(f"Claude recall generation error: {e}")
         return None
 
 
@@ -388,7 +388,7 @@ async def generate_all_topic_content(
     model's general knowledge. Falls back to ungrounded generation if no
     syllabus material has been ingested yet for that subject.
 
-    Tries Gemini first, then falls back to Groq, then falls back to static template.
+    Tries Gemini first, then falls back to Claude Sonnet, then falls back to static template.
     """
     syllabus_context = ""
     if subject_name:
@@ -434,15 +434,15 @@ async def generate_all_topic_content(
                 or get_fallback_content(title)["recall_questions"],
             }
 
-    # 2. Try Groq (Fallback)
-    if client_groq:
-        logger.info(f"Generating content for '{title}' via Groq...")
+    # 2. Try Claude Sonnet (fallback)
+    if client_claude:
+        logger.info(f"Generating content for '{title}' via Claude...")
         step1, step2, step3, questions, recall = await asyncio.gather(
-            generate_groq_step(step1_p),
-            generate_groq_step(step2_p),
-            generate_groq_step(step3_p),
-            generate_groq_questions(questions_p),
-            generate_groq_recall(recall_p),
+            generate_claude_step(step1_p),
+            generate_claude_step(step2_p),
+            generate_claude_step(step3_p),
+            generate_claude_questions(questions_p),
+            generate_claude_recall(recall_p),
         )
         if step1 and step2 and step3:
             return {

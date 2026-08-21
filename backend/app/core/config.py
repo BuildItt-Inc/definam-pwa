@@ -49,8 +49,8 @@ class Settings(BaseSettings):
     smtp_username: str = ""
     smtp_password: str = ""
 
-    # ── AI — Chat & content generation (Groq / Llama) ────────
-    groq_api_key: str = ""
+    # ── AI — Chat & content generation (Claude Sonnet) ────────
+    anthropic_api_key: str = ""
 
     # ── AI — Embeddings (Gemini text-embedding-004) ────────────
     gemini_api_key: str = ""

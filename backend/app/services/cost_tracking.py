@@ -6,10 +6,10 @@ from sqlalchemy import func, select
 from app.db.database import db_session
 from app.db.models import ChatMessage
 
-# Groq llama-3.3-70b-versatile pricing (as of July 2026)
-# Source: https://groq.com/pricing
-INPUT_COST_PER_1K = 0.0001  # $0.0001 per 1K input tokens
-OUTPUT_COST_PER_1K = 0.0002  # $0.0002 per 1K output tokens
+# Claude Sonnet 4.6 pricing (as of Aug 2026)
+# Source: https://anthropic.com/pricing
+INPUT_COST_PER_1K = 0.003  # $3.00 per 1M input tokens  → $0.003 per 1K
+OUTPUT_COST_PER_1K = 0.015  # $15.00 per 1M output tokens → $0.015 per 1K
 
 
 async def get_cost_report() -> list[dict]:
