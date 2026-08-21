@@ -1,16 +1,18 @@
-from groq import AsyncGroq
+import anthropic
 
 from app.core.config import get_settings
 
 settings = get_settings()
-client = AsyncGroq(api_key=settings.groq_api_key)
+client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+
+_MODEL = "claude-sonnet-4-6"
 
 
-async def stream_groq_response(
+async def stream_claude_response(
     user_question: str, topic_context: str, history: list[dict]
 ):
     """
-    Stream Groq's response. Yields:
+    Stream Claude's response. Yields:
         - ("chunk", text) for each content chunk
         - ("usage", {"input_tokens": n, "output_tokens": m}) after the stream ends
     """
@@ -46,35 +48,28 @@ async def stream_groq_response(
         "Avoid starting every response with 'My inquisitive student.'"
     )
 
+    # Anthropic uses a separate `system` param; strip any system messages from history
+    clean_history = [m for m in history if m.get("role") != "system"]
     messages = [
-        {"role": "system", "content": system_prompt},
-        *history,
+        *clean_history,
         {"role": "user", "content": user_question},
     ]
 
-    stream = await client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+    input_tokens = output_tokens = 0
+
+    async with client.messages.stream(
+        model=_MODEL,
+        system=system_prompt,
         messages=messages,
-        temperature=0.7,
         max_tokens=1024,
-        stream=True,
-    )
+        temperature=0.7,
+    ) as stream:
+        async for text in stream.text_stream:
+            yield ("chunk", text)
 
-    usage = None
-    async for chunk in stream:
-        if chunk.choices[0].delta.content:
-            yield ("chunk", chunk.choices[0].delta.content)
-        if hasattr(chunk, "usage") and chunk.usage:
-            usage = chunk.usage
+        # Final message contains token usage
+        final = await stream.get_final_message()
+        input_tokens = final.usage.input_tokens
+        output_tokens = final.usage.output_tokens
 
-    if usage:
-        yield (
-            "usage",
-            {
-                "input_tokens": usage.prompt_tokens,
-                "output_tokens": usage.completion_tokens,
-            },
-        )
-    else:
-        # Fallback (should not happen with Groq)
-        yield ("usage", {"input_tokens": 0, "output_tokens": 0})
+    yield ("usage", {"input_tokens": input_tokens, "output_tokens": output_tokens})

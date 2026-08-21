@@ -2,7 +2,7 @@
 Automatically generate and seed a comprehensive curriculum (subjects, chapters, topics)
 aligned with the WAEC syllabus.
 
-Runs via Groq if API key is present; otherwise falls back to a hand-crafted complete
+Runs via Claude Sonnet if API key is present; otherwise falls back to a hand-crafted complete
 syllabus structure.
 """
 
@@ -14,8 +14,8 @@ import logging
 import uuid
 from typing import Any
 
+import anthropic
 from google import genai
-from groq import Groq
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
 
@@ -31,10 +31,16 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # Initialize API clients
-groq_client = Groq(api_key=settings.groq_api_key) if settings.groq_api_key else None
 gemini_client = (
     genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
 )
+claude_client = (
+    anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    if settings.anthropic_api_key
+    else None
+)
+
+_CLAUDE_MODEL = "claude-sonnet-4-6"
 
 # ── Fallback Curriculum Definition ────────────────────────────────────────
 
@@ -491,19 +497,18 @@ def generate_subject_curriculum(
                 f"Failed to generate curriculum via Gemini for {subject_name} ({class_level}): {e}"
             )
 
-    # 2. Try Groq (Fallback)
-    if groq_client:
+    # 2. Try Claude Sonnet (fallback)
+    if claude_client:
         try:
             logger.info(
-                f"Generating curriculum for {subject_name} ({class_level}) via Groq..."
+                f"Generating curriculum for {subject_name} ({class_level}) via Claude..."
             )
-            completion = groq_client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.3,
+            message = claude_client.messages.create(
+                model=_CLAUDE_MODEL,
                 max_tokens=2000,
+                messages=[{"role": "user", "content": prompt}],
             )
-            text = completion.choices[0].message.content.strip()
+            text = message.content[0].text.strip()
             if text.startswith("```"):
                 lines = text.split("\n")
                 if lines[0].startswith("```"):
@@ -515,12 +520,12 @@ def generate_subject_curriculum(
             parsed = json.loads(text)
             if isinstance(parsed, list) and len(parsed) >= 5:
                 logger.info(
-                    f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Groq."
+                    f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Claude."
                 )
                 return parsed
         except Exception as e:
             logger.error(
-                f"Failed to generate curriculum via Groq for {subject_name} ({class_level}): {e}"
+                f"Failed to generate curriculum via Claude for {subject_name} ({class_level}): {e}"
             )
 
     return None

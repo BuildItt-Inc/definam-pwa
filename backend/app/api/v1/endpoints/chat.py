@@ -15,7 +15,7 @@ from app.api.deps import CurrentUserDep
 from app.core.exceptions import NotFoundError, RateLimitExceededError
 from app.db.database import db_session
 from app.db.models import ChatMessage, Topic
-from app.services.chat import stream_groq_response
+from app.services.chat import stream_claude_response
 from app.services.redis_client import get_redis
 from app.services.usage import get_daily_usage, increment_daily_usage
 
@@ -137,14 +137,14 @@ async def chat_stream(
         )
         await session.commit()
 
-    # 4. Stream Groq response
+    # 4. Stream Claude response
     async def generate():
         full_response = ""
         usage_input_tokens = 0
         usage_output_tokens = 0
 
         try:
-            async for item in stream_groq_response(question, context, history):
+            async for item in stream_claude_response(question, context, history):
                 if item[0] == "chunk":
                     full_response += item[1]
                     yield f"data: {json.dumps({'chunk': item[1]})}\n\n"
