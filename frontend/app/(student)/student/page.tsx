@@ -264,9 +264,9 @@ export default function StudentHomePage() {
         {canInstall && (
           <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-[#E5E7EB] bg-white p-3.5 shadow-sm">
             <div className="flex-1 min-w-0">
-              <p className="text-[13.5px] font-bold text-[#111827]">Install Definam App</p>
+              <p className="text-[13.5px] font-bold text-[#111827]">Install Recall App</p>
               <p className="text-[11.5px] text-[#6B7280] mt-0.5 leading-snug">
-                Add Definam to your home screen for quick, offline-capable access.
+                Add Recall to your home screen for quick, offline-capable access.
               </p>
             </div>
             <button
