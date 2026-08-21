@@ -31,7 +31,7 @@ export function IOSInstallModal({ isOpen, onClose }: IOSInstallModalProps) {
 
         {/* Title */}
         <div className="mb-6 text-center">
-          <h2 className="text-[18px] font-extrabold text-ink">Install Definam on iOS</h2>
+          <h2 className="text-[18px] font-extrabold text-ink">Install Recall on iOS</h2>
           <p className="mt-1 text-[13px] text-muted">
             Add Recall to your home screen in just a few taps.
           </p>
