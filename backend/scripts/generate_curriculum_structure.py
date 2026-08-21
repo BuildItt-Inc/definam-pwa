@@ -35,7 +35,10 @@ gemini_client = (
     genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
 )
 claude_client = (
-    anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    anthropic.Anthropic(
+        api_key=settings.anthropic_api_key,
+        base_url=settings.anthropic_base_url or None,
+    )
     if settings.anthropic_api_key
     else None
 )

@@ -1,12 +1,19 @@
+import logging
+
 import anthropic
 
 from app.core.config import get_settings
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
-client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+client = anthropic.AsyncAnthropic(
+    api_key=settings.anthropic_api_key,
+    base_url=settings.anthropic_base_url or None,
+)
 
 _MODEL = "claude-sonnet-4-6"
 
+_MODEL = "claude-sonnet-4-6"
 
 async def stream_claude_response(
     user_question: str, topic_context: str, history: list[dict]
@@ -57,19 +64,35 @@ async def stream_claude_response(
 
     input_tokens = output_tokens = 0
 
-    async with client.messages.stream(
-        model=_MODEL,
-        system=system_prompt,
-        messages=messages,
-        max_tokens=1024,
-        temperature=0.7,
-    ) as stream:
-        async for text in stream.text_stream:
-            yield ("chunk", text)
+    try:
+        async with client.messages.stream(
+            model=_MODEL,
+            system=system_prompt,
+            messages=messages,
+            max_tokens=1024,
+            temperature=0.7,
+        ) as stream:
+            async for text in stream.text_stream:
+                yield ("chunk", text)
 
-        # Final message contains token usage
-        final = await stream.get_final_message()
-        input_tokens = final.usage.input_tokens
-        output_tokens = final.usage.output_tokens
+            # Final message contains token usage
+            final = await stream.get_final_message()
+            input_tokens = final.usage.input_tokens
+            output_tokens = final.usage.output_tokens
+    except anthropic.AuthenticationError as e:
+        logger.error(f"Anthropic Authentication Error: {e}")
+        yield (
+            "chunk",
+            "Error: Invalid API key. Please check your Claude API key configuration.",
+        )
+    except anthropic.AnthropicError as e:
+        logger.error(f"Anthropic API Error: {e}")
+        yield ("chunk", f"Error: Failed to connect to Claude AI ({e}).")
+    except Exception as e:
+        logger.error(f"Unexpected error in stream_claude_response: {e}")
+        yield (
+            "chunk",
+            "Error: An unexpected error occurred while communicating with the AI.",
+        )
 
     yield ("usage", {"input_tokens": input_tokens, "output_tokens": output_tokens})

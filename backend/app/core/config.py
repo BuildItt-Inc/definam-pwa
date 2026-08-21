@@ -51,6 +51,7 @@ class Settings(BaseSettings):
 
     # ── AI — Chat & content generation (Claude Sonnet) ────────
     anthropic_api_key: str = ""
+    anthropic_base_url: str = ""
 
     # ── AI — Embeddings (Gemini text-embedding-004) ────────────
     gemini_api_key: str = ""
