@@ -565,6 +565,15 @@ async def seed_curriculum() -> None:
                 "Geography",
                 "Financial Accounting",
                 "Agricultural Science",
+                "Fishery",
+                "Food and Nutrition",
+                "Computer Studies",
+                "Marketing",
+                "Commerce",
+                "Further Mathematics",
+                "Animal Husbandry",
+                "Technical Drawing",
+                "Office Practice",
             ]
             + uploaded_subjects
         )
