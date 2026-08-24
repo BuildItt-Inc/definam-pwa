@@ -245,7 +245,7 @@ function TopicsView({ chapterId }: { chapterId: string }) {
 
 // ── Learning flow ──────────────────────────────────────────────────────────
 
-const STEP_LABELS = ['Def', 'Example', 'Visual', 'Practice', 'Chat'] as const;
+const STEP_LABELS = ['Explanation', 'Example', 'Visual', 'Practice', 'Chat'] as const;
 
 const STEP_CTA: Record<1 | 2 | 3, string> = {
   1: 'See a Real-World Example',

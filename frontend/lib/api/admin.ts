@@ -249,3 +249,40 @@ export async function reactivateCode(codeId: string): Promise<void> {
     throw new ApiError(res.status, body.detail ?? 'Failed to reactivate code');
   }
 }
+
+// ── Subject Management ─────────────────────────────────────────────────────
+
+export async function deleteSubject(subjectName: string): Promise<{ message: string; deleted_rows: number }> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/subjects/${encodeURIComponent(subjectName)}`,
+    {
+      method: 'DELETE',
+      headers: await getAuthHeaders(),
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to delete subject');
+  }
+  return res.json();
+}
+
+export async function mergeSubjects(sourceName: string, targetName: string): Promise<{ message: string; renamed: number; dropped: number }> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/subjects/merge`,
+    {
+      method: 'POST',
+      headers: {
+        ...(await getAuthHeaders()),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ source_name: sourceName, target_name: targetName }),
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to merge subjects');
+  }
+  return res.json();
+}
+

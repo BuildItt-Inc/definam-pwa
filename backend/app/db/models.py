@@ -532,3 +532,33 @@ class ChatDailyUsage(Base):
     )
 
     user: Mapped[User] = relationship("User")
+
+
+# ── FCM Registration Tokens ───────────────────────────────────────────────
+
+
+class UserNotificationToken(Base):
+    """FCM registration tokens associated with users for push notifications."""
+
+    __tablename__ = "user_notification_tokens"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    user_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    fcm_token: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    device_type: Mapped[str | None] = mapped_column(String(50), nullable=True)  # web, android, ios
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
+    )
+    last_used_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
+    )
+
+    user: Mapped[User] = relationship("User")
+

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Download, AlertTriangle, ChevronDown } from 'lucide-react';
 import { getAdminDashboard } from '@/lib/api/admin';
 import { ClassTable } from '@/components/admin/ClassTable';
+import { SubjectManagementPanel } from '@/components/admin/SubjectManagementPanel';
 import type { AdminDashboardData } from '@/types/admin';
 
 // ── Skeleton components ────────────────────────────────────────────────────
@@ -266,6 +267,14 @@ export default function AdminHomePage() {
           activeSubjects={data.active_subjects}
           onViewStudent={handleViewStudent}
         />
+
+        {/* Subject management */}
+        <div className="mt-6">
+          <SubjectManagementPanel
+            subjects={data.active_subjects}
+            onSubjectsChanged={() => getAdminDashboard().then(setData)}
+          />
+        </div>
       </div>
     </div>
   );
