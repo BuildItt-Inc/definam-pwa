@@ -618,7 +618,11 @@ function AITutorScaffold({
                   : 'rounded-tl-sm bg-bg-2 text-ink'
               }`}
             >
-              {msg.content}
+              {msg.role === 'user' ? (
+                <span>{msg.content}</span>
+              ) : (
+                <MathContent content={msg.content} className="text-[15px]" />
+              )}
             </div>
           </div>
         ))}
