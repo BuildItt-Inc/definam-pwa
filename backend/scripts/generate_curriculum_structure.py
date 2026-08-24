@@ -21,7 +21,7 @@ from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.db.database import db_session
-from app.db.models import Chapter, Subject, Topic
+from app.db.models import Chapter, Subject, Topic, SyllabusChunk
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -427,37 +427,41 @@ CLASS_LEVELS = ["SS1", "SS2", "SS3"]
 
 PROMPT_TEMPLATE = """
 You are an expert curriculum designer for the West African Examinations Council (WAEC).
-Generate a comprehensive syllabus/curriculum for {class_level} level "{subject_name}" only.
-Cover the portion of the WAEC syllabus typically taught at {class_level} specifically —
-not the full three-year SS1-SS3 span, and not content that properly belongs to an earlier
-or later year. Divide it into 8 to 15 chapters appropriate for that year's depth and difficulty.
-{context}
-Each chapter must have:
-- a chapter number (starting from 1)
-- a chapter title
-- a list of 4 to 8 topic titles (specific, clear sub-topics)
+Your task is to generate a comprehensive, structured three-year syllabus/curriculum for the subject "{subject_name}" split across three class levels: SS1, SS2, and SS3.
 
-Respond ONLY with a JSON array of chapters in this format:
-[
-  {{
-    "num": 1,
-    "title": "Chapter Title",
-    "topics": ["Topic 1", "Topic 2", "Topic 3"]
-  }}
-]
-Do not include any introductory text, markdown code blocks, or explanations. Only return the raw JSON array.
+You must design a logical, non-duplicative academic progression from basic/foundational concepts (SS1) to intermediate concepts (SS2) to advanced topics (SS3) preparing students for the final WAEC exams.
+
+{context}
+
+Requirements:
+1. For each class level (SS1, SS2, SS3), generate 6 to 12 chapters.
+2. Each chapter must have:
+   - a chapter number (starting from 1 for each class level)
+   - a chapter title
+   - a list of 4 to 8 topic titles (specific, clear sub-topics)
+3. Strict Non-Duplication: Do not duplicate any chapter titles or topic titles across different class levels. Each level must cover distinct stages of the syllabus.
+
+Respond ONLY with a JSON object containing keys "SS1", "SS2", and "SS3", where each key maps to a JSON array of chapters in this format:
+{{
+  "SS1": [
+    {{
+      "num": 1,
+      "title": "Chapter Title",
+      "topics": ["Topic 1", "Topic 2", "Topic 3"]
+    }}
+  ],
+  "SS2": [ ... ],
+  "SS3": [ ... ]
+}}
+Do not include any introductory text, markdown code blocks, or explanations. Only return the raw JSON object.
 """
 
 
-def generate_subject_curriculum(
-    subject_name: str, class_level: str, syllabus_context: str = ""
-) -> list[dict[str, Any]] | None:
-    """Call Gemini or Groq to generate a complete syllabus for a subject at a specific class level.
-
-    If `syllabus_context` is provided (real WAEC syllabus text ingested via
-    scripts/ingest_syllabus.py), the model is grounded in it so chapters and
-    topics reflect the actual examinable scope rather than the model's
-    general sense of what a subject "usually" covers.
+def generate_subject_full_curriculum(
+    subject_name: str, syllabus_context: str = ""
+) -> dict[str, list[dict[str, Any]]] | None:
+    """Call Gemini or Claude to generate a complete structured 3-year syllabus
+    (SS1, SS2, SS3) for a subject, ensuring no topic or chapter duplication.
     """
     context_block = (
         f"\nBase this on the following official WAEC syllabus excerpt — reflect its actual "
@@ -467,86 +471,92 @@ def generate_subject_curriculum(
         else ""
     )
     prompt = PROMPT_TEMPLATE.format(
-        subject_name=subject_name, class_level=class_level, context=context_block
+        subject_name=subject_name, context=context_block
     )
 
-    # 1. Try Gemini
+    def clean_json(text: str) -> str:
+        text = text.strip()
+        if text.startswith("```"):
+            lines = text.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines[-1].startswith("```"):
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
+        return text
+
+    # 1. Try Claude Sonnet (primary)
+    if claude_client:
+        try:
+            logger.info(
+                f"Generating full curriculum for {subject_name} via Claude..."
+            )
+            message = claude_client.messages.create(
+                model=_CLAUDE_MODEL,
+                max_tokens=4000,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            text = clean_json(message.content[0].text)
+            parsed = json.loads(text)
+            if isinstance(parsed, dict):
+                parsed = {k.upper(): v for k, v in parsed.items() if k.upper() in ["SS1", "SS2", "SS3"]}
+                if any(k in parsed for k in ["SS1", "SS2", "SS3"]):
+                    logger.info(
+                        f"Successfully generated full curriculum for {subject_name} via Claude."
+                    )
+                    return parsed
+        except Exception as e:
+            logger.error(
+                f"Failed to generate full curriculum via Claude for {subject_name}: {e}"
+            )
+
+    # 2. Try Gemini (fallback)
     if gemini_client:
         try:
             logger.info(
-                f"Generating curriculum for {subject_name} ({class_level}) via Gemini..."
+                f"Generating full curriculum for {subject_name} via Gemini..."
             )
             response = gemini_client.models.generate_content(
                 model="gemini-2.0-flash",
                 contents=prompt,
             )
-            text = response.text.strip()
-            if text.startswith("```"):
-                lines = text.split("\n")
-                if lines[0].startswith("```"):
-                    lines = lines[1:]
-                if lines[-1].startswith("```"):
-                    lines = lines[:-1]
-                text = "\n".join(lines).strip()
-
+            text = clean_json(response.text)
             parsed = json.loads(text)
-            if isinstance(parsed, list) and len(parsed) >= 5:
-                logger.info(
-                    f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Gemini."
-                )
-                return parsed
+            if isinstance(parsed, dict):
+                parsed = {k.upper(): v for k, v in parsed.items() if k.upper() in ["SS1", "SS2", "SS3"]}
+                if any(k in parsed for k in ["SS1", "SS2", "SS3"]):
+                    logger.info(
+                        f"Successfully generated full curriculum for {subject_name} via Gemini."
+                    )
+                    return parsed
         except Exception as e:
             logger.error(
-                f"Failed to generate curriculum via Gemini for {subject_name} ({class_level}): {e}"
-            )
-
-    # 2. Try Claude Sonnet (fallback)
-    if claude_client:
-        try:
-            logger.info(
-                f"Generating curriculum for {subject_name} ({class_level}) via Claude..."
-            )
-            message = claude_client.messages.create(
-                model=_CLAUDE_MODEL,
-                max_tokens=2000,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            text = message.content[0].text.strip()
-            if text.startswith("```"):
-                lines = text.split("\n")
-                if lines[0].startswith("```"):
-                    lines = lines[1:]
-                if lines[-1].startswith("```"):
-                    lines = lines[:-1]
-                text = "\n".join(lines).strip()
-
-            parsed = json.loads(text)
-            if isinstance(parsed, list) and len(parsed) >= 5:
-                logger.info(
-                    f"Successfully generated {len(parsed)} chapters for {subject_name} ({class_level}) via Claude."
-                )
-                return parsed
-        except Exception as e:
-            logger.error(
-                f"Failed to generate curriculum via Claude for {subject_name} ({class_level}): {e}"
+                f"Failed to generate full curriculum via Gemini for {subject_name}: {e}"
             )
 
     return None
 
 
 async def seed_curriculum() -> None:
-    subjects = [
+    # ── Database query to get uploaded subjects ──
+    async with db_session() as session:
+        # Fetch distinct subjects that have uploaded syllabus chunks
+        uploaded_subjects_result = await session.execute(
+            select(SyllabusChunk.subject_name).distinct()
+        )
+        uploaded_subjects = [r[0] for r in uploaded_subjects_result.fetchall() if r[0]]
+
+    # Keep default subjects and combine with any uploaded subjects
+    subjects = list(set([
         "Mathematics",
         "English Language",
         "Chemistry",
         "Physics",
         "Economics",
         "Biology",
-        # Add each remaining WAEC subject here once its syllabus PDF has
-        # been ingested via scripts/ingest_syllabus.py — ungrounded
-        # generation still works via Gemini/Groq fallback, but accuracy is
-        # meaningfully better once real syllabus text is available.
-    ]
+    ] + uploaded_subjects))
+
+    logger.info(f"Seeding/Updating curriculum for subjects: {subjects}")
 
     curriculum_data = []
 
@@ -555,10 +565,14 @@ async def seed_curriculum() -> None:
 
         syllabus_context = await get_full_subject_syllabus(sub_name)
 
+        logger.info(f"Generating full curriculum progression for {sub_name}...")
+        generated_full = generate_subject_full_curriculum(sub_name, syllabus_context)
+
         for class_level in CLASS_LEVELS:
-            generated = generate_subject_curriculum(
-                sub_name, class_level, syllabus_context
-            )
+            generated = None
+            if generated_full and class_level in generated_full:
+                generated = generated_full[class_level]
+
             if generated:
                 curriculum_data.append(
                     {
