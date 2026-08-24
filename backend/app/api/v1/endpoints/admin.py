@@ -1355,3 +1355,100 @@ async def delete_class(
         await session.commit()
 
     return {"message": f"Class '{class_name}' deleted successfully."}
+
+
+# ── Subject Management ──────────────────────────────────────────────────────
+
+
+@router.delete("/subjects/{subject_name}")
+async def delete_subject(
+    subject_name: str,
+    _admin: AdminDep,
+) -> dict:
+    """Delete a subject and all its chapters/topics by name (cascades automatically).
+
+    All class_level rows that share the given subject name are removed.
+    """
+    from sqlalchemy import delete as sa_delete
+
+    async with db_session() as session:
+        # Find all Subject rows with this name (SS1, SS2, SS3 rows)
+        result = await session.execute(
+            select(Subject.id, Subject.name).where(Subject.name == subject_name)
+        )
+        rows = result.fetchall()
+
+        if not rows:
+            raise NotFoundError(f"Subject '{subject_name}' not found.")
+
+        subject_ids = [r[0] for r in rows]
+
+        # CASCADE: chapters → topics are handled by DB FK cascade.
+        # Delete all Subject rows with this name.
+        await session.execute(sa_delete(Subject).where(Subject.id.in_(subject_ids)))
+        await session.commit()
+
+    return {
+        "message": f"Subject '{subject_name}' and all its chapters/topics deleted successfully.",
+        "deleted_rows": len(subject_ids),
+    }
+
+
+class MergeSubjectsRequest(BaseModel):
+    source_name: str  # The name to be absorbed (e.g. "English")
+    target_name: str  # The canonical name to keep (e.g. "English Language")
+
+
+@router.post("/subjects/merge")
+async def merge_subjects(
+    body: MergeSubjectsRequest,
+    _admin: AdminDep,
+) -> dict:
+    """Merge one subject name into another.
+
+    All Subject rows (SS1/SS2/SS3) under source_name are renamed to target_name.
+    If a target_name row already exists for a given class_level, the source row
+    is deleted (its chapters/topics cascade away). This prevents unique constraint
+    violations on (name, class_level).
+    """
+    from sqlalchemy import delete as sa_delete
+
+    async with db_session() as session:
+        # Fetch all source rows
+        source_result = await session.execute(
+            select(Subject).where(Subject.name == body.source_name)
+        )
+        source_rows = source_result.scalars().all()
+
+        if not source_rows:
+            raise NotFoundError(f"Source subject '{body.source_name}' not found.")
+
+        # Fetch all existing target rows keyed by class_level
+        target_result = await session.execute(
+            select(Subject.class_level).where(Subject.name == body.target_name)
+        )
+        existing_target_levels = {r[0] for r in target_result.fetchall()}
+
+        renamed = 0
+        dropped = 0
+
+        for subj in source_rows:
+            if subj.class_level in existing_target_levels:
+                # Target already exists for this class_level → drop source (cascade chapters/topics)
+                await session.execute(sa_delete(Subject).where(Subject.id == subj.id))
+                dropped += 1
+            else:
+                # Safe to rename
+                subj.name = body.target_name
+                renamed += 1
+
+        await session.commit()
+
+    return {
+        "message": (
+            f"Merged '{body.source_name}' into '{body.target_name}'. "
+            f"{renamed} row(s) renamed, {dropped} duplicate row(s) dropped (cascaded)."
+        ),
+        "renamed": renamed,
+        "dropped": dropped,
+    }

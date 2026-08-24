@@ -537,3 +537,33 @@ async def get_progress(claims: CurrentUserDep) -> dict:
         "upcoming_reviews": upcoming_reviews,
         "heatmap_data": heatmap_data,
     }
+
+
+class FCMTokenRegisterRequest(BaseModel):
+    fcm_token: str
+    device_type: str | None = None
+
+
+@router.post("/notification-token")
+async def register_notification_token(
+    body: FCMTokenRegisterRequest,
+    claims: CurrentUserDep,
+) -> dict:
+    """Register or update an FCM registration token for the authenticated user."""
+    from app.services.fcm import register_token
+
+    user_id: str = claims["sub"]
+    await register_token(user_id, body.fcm_token, body.device_type)
+    return {"ok": True}
+
+
+@router.delete("/notification-token")
+async def unregister_notification_token(
+    fcm_token: str,
+    claims: CurrentUserDep,
+) -> dict:
+    """Unregister/delete an FCM token."""
+    from app.services.fcm import unregister_token
+
+    await unregister_token(fcm_token)
+    return {"ok": True}

@@ -27,6 +27,7 @@ dependencies = [
     "pyjwt>=2.13.0",
     "anthropic>=0.115.1",
     "pdfplumber>=0.11.0",
+    "firebase-admin>=6.5.0",
 ]
 
 [project.optional-dependencies]

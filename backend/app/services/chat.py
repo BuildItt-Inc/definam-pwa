@@ -15,6 +15,8 @@ _MODEL = "claude-sonnet-4-6"
 
 _MODEL = "claude-sonnet-4-6"
 
+_MODEL = "claude-sonnet-4-6"
+
 async def stream_claude_response(
     user_question: str, topic_context: str, history: list[dict]
 ):
