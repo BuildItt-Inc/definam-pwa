@@ -489,7 +489,7 @@ def generate_subject_full_curriculum(
             logger.info(f"Generating full curriculum for {subject_name} via Claude...")
             message = claude_client.messages.create(
                 model=_CLAUDE_MODEL,
-                max_tokens=4000,
+                max_tokens=8192,
                 messages=[{"role": "user", "content": prompt}],
             )
             text = clean_json(message.content[0].text)
@@ -515,7 +515,7 @@ def generate_subject_full_curriculum(
         try:
             logger.info(f"Generating full curriculum for {subject_name} via Gemini...")
             response = gemini_client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=prompt,
             )
             text = clean_json(response.text)
