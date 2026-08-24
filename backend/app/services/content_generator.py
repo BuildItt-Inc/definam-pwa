@@ -37,11 +37,7 @@ Use a relatable real-world example where natural.
 {context}
 FORMATTING RULES (CRITICAL):
 - Separate each paragraph with a BLANK LINE (two newlines).
-- Wrap ALL mathematical expressions in single dollar signs: $expression$
-- Examples: $x^2 + 5x + 6 = 0$, $\\frac{{250x}}{{0.5}}$, $500x$, $\\times$, $\\div$
-- Use proper LaTeX: \\frac{{a}}{{b}} for fractions, x^2 for squares, x_1 for subscripts
-- Never write math operators as plain text inside an expression
-- Keep surrounding prose in plain English, only the math parts in $ $
+{math_rules}
 
 Return only the explanation text. No greeting or intro.
 """
@@ -53,10 +49,7 @@ Provide a clear, numbered step-by-step worked example of "{title}" set in a prac
 FORMATTING RULES (CRITICAL):
 - Each numbered step MUST be on its own paragraph separated by a BLANK LINE.
 - Format steps like: Step 1: [label]\n\n[working]\n\nStep 2: ...
-- Wrap ALL mathematical expressions in single dollar signs: $expression$
-- Examples: $500x - 2000 = 0$, $x = \\frac{{2000}}{{100}} = 20$, $\\therefore$
-- Use proper LaTeX: \\frac{{a}}{{b}} for fractions, \\times for multiplication, \\div for division
-- Prose text stays in plain English, only the math in $ $
+{math_rules}
 
 Return only the worked example text. No greeting or intro.
 """
@@ -69,10 +62,7 @@ Create a clean visual summary / cheat-sheet of "{title}" using:
 - Clearly labelled sections
 {context}
 FORMATTING RULES (CRITICAL):
-- Wrap ALL mathematical expressions in single dollar signs: $expression$
-- Examples: $ax^2 + bx + c = 0$, $x = \\frac{{-b \\pm \\sqrt{{b^2 - 4ac}}}}{{2a}}$
-- Use proper LaTeX inside $: \\frac, \\sqrt, \\pm, \\times, \\leq, \\geq, etc.
-- Keep labels and headings in plain text
+{math_rules}
 
 Return only the breakdown text. No intro.
 """
@@ -82,9 +72,7 @@ You are an expert tutor. Generate 2 distinct multiple choice practice questions 
 Use a realistic real-world context.
 {context}
 FORMATTING RULES (CRITICAL):
-- Wrap ALL mathematical expressions in single dollar signs: $expression$
-- In questions AND options AND explanations: use LaTeX for any formula, fraction, symbol
-- Examples: $\\frac{{x}}{{2}} + 3 = 7$, $x = 5$, $100x - 2000 = 0$
+{math_rules}
 
 Respond STRICTLY as a raw JSON array (no markdown fences). Each object:
 - "type": "mcq"
@@ -100,7 +88,7 @@ This is for a student reviewing material they've already learned — it should t
 core fact or concept, answerable in one or two sentences.
 {context}
 FORMATTING RULES (CRITICAL):
-- Wrap ALL mathematical expressions in single dollar signs: $expression$
+{math_rules}
 
 Respond STRICTLY as a raw JSON object (no markdown fences, no array):
 {{"question": "...", "model_answer": "..."}}
@@ -411,11 +399,73 @@ async def generate_all_topic_content(
         else ""
     )
 
-    step1_p = PROMPT_STEP1.format(title=title, context=context_block)
-    step2_p = PROMPT_STEP2.format(title=title, context=context_block)
-    step3_p = PROMPT_STEP3.format(title=title, context=context_block)
-    questions_p = PROMPT_QUESTIONS.format(title=title, context=context_block)
-    recall_p = PROMPT_RECALL.format(title=title, context=context_block)
+    is_math_or_science = False
+    if subject_name:
+        is_math_or_science = subject_name.lower() in {
+            "mathematics",
+            "further mathematics",
+            "physics",
+            "chemistry",
+            "economics",
+            "financial accounting",
+        }
+
+    if is_math_or_science:
+        rules_s1 = (
+            "- Wrap ALL mathematical expressions in single dollar signs: $expression$\n"
+            "- Examples: $x^2 + 5x + 6 = 0$, $\\frac{{250x}}{{0.5}}$, $500x$, $\\times$, $\\div$\n"
+            "- Use proper LaTeX: \\frac{{a}}{{b}} for fractions, x^2 for squares, x_1 for subscripts\n"
+            "- Never write math operators as plain text inside an expression\n"
+            "- Keep surrounding prose in plain English, only the math parts in $ $"
+        )
+        rules_s2 = (
+            "- Wrap ALL mathematical expressions in single dollar signs: $expression$\n"
+            "- Examples: $500x - 2000 = 0$, $x = \\frac{{2000}}{{100}} = 20$, $\\therefore$\n"
+            "- Use proper LaTeX: \\frac{{a}}{{b}} for fractions, \\times for multiplication, \\div for division\n"
+            "- Prose text stays in plain English, only the math in $ $"
+        )
+        rules_s3 = (
+            "- Wrap ALL mathematical expressions in single dollar signs: $expression$\n"
+            "- Examples: $ax^2 + bx + c = 0$, $x = \\frac{{-b \\pm \\sqrt{{b^2 - 4ac}}}}{{2a}}$\n"
+            "- Use proper LaTeX inside $: \\frac, \\sqrt, \\pm, \\times, \\leq, \\geq, etc.\n"
+            "- Keep headings and labels in plain text"
+        )
+        rules_qs = (
+            "- Wrap ALL mathematical expressions in single dollar signs: $expression$\n"
+            "- In questions AND options AND explanations: use LaTeX for any formula, fraction, symbol\n"
+            "- Examples: $\\frac{{x}}{{2}} + 3 = 7$, $x = 5$, $100x - 2000 = 0$"
+        )
+        rules_rc = (
+            "- Wrap ALL mathematical expressions in single dollar signs: $expression$"
+        )
+    else:
+        non_math_rule = (
+            "- This is a non-mathematical subject. Do NOT write any mathematical equations, variables, or formulas.\n"
+            "- Do NOT use LaTeX or wrap normal text, numbers, years/dates, or words in single dollar signs ($).\n"
+            "- Write all dates (e.g. 1960), percentages (e.g. 50%), and normal numbers as standard plain text."
+        )
+        rules_s1 = rules_s2 = rules_s3 = non_math_rule
+        rules_qs = (
+            "- This is a non-mathematical subject. Do NOT write any mathematical equations, variables, or formulas.\n"
+            "- In questions, options, and explanations: do NOT use LaTeX or wrap normal text, numbers, years/dates, or words in single dollar signs ($)."
+        )
+        rules_rc = "- This is a non-mathematical subject. Do NOT use LaTeX or wrap normal text, numbers, years/dates, or words in single dollar signs ($)."
+
+    step1_p = PROMPT_STEP1.format(
+        title=title, context=context_block, math_rules=rules_s1
+    )
+    step2_p = PROMPT_STEP2.format(
+        title=title, context=context_block, math_rules=rules_s2
+    )
+    step3_p = PROMPT_STEP3.format(
+        title=title, context=context_block, math_rules=rules_s3
+    )
+    questions_p = PROMPT_QUESTIONS.format(
+        title=title, context=context_block, math_rules=rules_qs
+    )
+    recall_p = PROMPT_RECALL.format(
+        title=title, context=context_block, math_rules=rules_rc
+    )
     # 1. Try Gemini
     if client_gemini:
         logger.info(f"Generating content for '{title}' via Gemini...")
