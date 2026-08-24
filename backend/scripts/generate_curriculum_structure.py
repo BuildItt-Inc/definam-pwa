@@ -21,7 +21,7 @@ from sqlalchemy import select
 
 from app.core.config import get_settings
 from app.db.database import db_session
-from app.db.models import Chapter, Subject, Topic, SyllabusChunk
+from app.db.models import Chapter, Subject, SyllabusChunk, Topic
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -470,9 +470,7 @@ def generate_subject_full_curriculum(
         if syllabus_context
         else ""
     )
-    prompt = PROMPT_TEMPLATE.format(
-        subject_name=subject_name, context=context_block
-    )
+    prompt = PROMPT_TEMPLATE.format(subject_name=subject_name, context=context_block)
 
     def clean_json(text: str) -> str:
         text = text.strip()
@@ -488,9 +486,7 @@ def generate_subject_full_curriculum(
     # 1. Try Claude Sonnet (primary)
     if claude_client:
         try:
-            logger.info(
-                f"Generating full curriculum for {subject_name} via Claude..."
-            )
+            logger.info(f"Generating full curriculum for {subject_name} via Claude...")
             message = claude_client.messages.create(
                 model=_CLAUDE_MODEL,
                 max_tokens=4000,
@@ -499,7 +495,11 @@ def generate_subject_full_curriculum(
             text = clean_json(message.content[0].text)
             parsed = json.loads(text)
             if isinstance(parsed, dict):
-                parsed = {k.upper(): v for k, v in parsed.items() if k.upper() in ["SS1", "SS2", "SS3"]}
+                parsed = {
+                    k.upper(): v
+                    for k, v in parsed.items()
+                    if k.upper() in ["SS1", "SS2", "SS3"]
+                }
                 if any(k in parsed for k in ["SS1", "SS2", "SS3"]):
                     logger.info(
                         f"Successfully generated full curriculum for {subject_name} via Claude."
@@ -513,9 +513,7 @@ def generate_subject_full_curriculum(
     # 2. Try Gemini (fallback)
     if gemini_client:
         try:
-            logger.info(
-                f"Generating full curriculum for {subject_name} via Gemini..."
-            )
+            logger.info(f"Generating full curriculum for {subject_name} via Gemini...")
             response = gemini_client.models.generate_content(
                 model="gemini-2.0-flash",
                 contents=prompt,
@@ -523,7 +521,11 @@ def generate_subject_full_curriculum(
             text = clean_json(response.text)
             parsed = json.loads(text)
             if isinstance(parsed, dict):
-                parsed = {k.upper(): v for k, v in parsed.items() if k.upper() in ["SS1", "SS2", "SS3"]}
+                parsed = {
+                    k.upper(): v
+                    for k, v in parsed.items()
+                    if k.upper() in ["SS1", "SS2", "SS3"]
+                }
                 if any(k in parsed for k in ["SS1", "SS2", "SS3"]):
                     logger.info(
                         f"Successfully generated full curriculum for {subject_name} via Gemini."
@@ -547,14 +549,19 @@ async def seed_curriculum() -> None:
         uploaded_subjects = [r[0] for r in uploaded_subjects_result.fetchall() if r[0]]
 
     # Keep default subjects and combine with any uploaded subjects
-    subjects = list(set([
-        "Mathematics",
-        "English Language",
-        "Chemistry",
-        "Physics",
-        "Economics",
-        "Biology",
-    ] + uploaded_subjects))
+    subjects = list(
+        set(
+            [
+                "Mathematics",
+                "English Language",
+                "Chemistry",
+                "Physics",
+                "Economics",
+                "Biology",
+            ]
+            + uploaded_subjects
+        )
+    )
 
     logger.info(f"Seeding/Updating curriculum for subjects: {subjects}")
 
