@@ -92,7 +92,7 @@ async def get_topic(
 
     return {
         "step1": {
-            "title": "Simple Definition",
+            "title": "Simple Explanation",
             "content": topic.get("content_step1"),
         },
         "step2": {

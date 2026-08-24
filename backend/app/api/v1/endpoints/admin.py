@@ -1050,7 +1050,13 @@ async def ingest_syllabus_pdf(
         return {
             "subject": subj,
             "chunks_ingested": 0,
-            "warning": "No extractable text found in PDF (scanned/image PDF?).",
+            "warning": (
+                "No extractable text found — this appears to be a scanned/image-based PDF. "
+                "pdfplumber can only read PDFs with a text layer. "
+                "Tip: You can still generate the curriculum for this subject without a PDF upload — "
+                "click 'Generate Curriculum' and Claude will use its built-in WAEC knowledge. "
+                "For grounded generation, re-export or re-scan the PDF as a searchable/text PDF."
+            ),
         }
 
     # Chunk at WAEC syllabus heading boundaries
