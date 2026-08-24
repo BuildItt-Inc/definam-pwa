@@ -175,16 +175,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-[14px] text-[#6B7280]">
+        <p className="mt-5 text-center text-[12px] text-[#6B7280]">
           No account?{' '}
           <Link
             href="/register"
             className="font-semibold text-[#111827] hover:text-[#16A34A] transition-colors"
           >
             Create one
-          </Link>
-        </p>
-        <div className="pt-2 text-center text-[14px] text-[#6B7280]">
+          </Link>{' '}
           Administrator?{' '}
           <Link
             href="/admin/login"
@@ -192,7 +190,16 @@ export default function LoginPage() {
           >
             Log in here
           </Link>
-        </div>
+        </p>
+        {/* <div className="pt-2 text-center text-[14px] text-[#6B7280]">
+          Administrator?{' '}
+          <Link
+            href="/admin/login"
+            className="font-semibold text-[#111827] hover:text-[#16A34A] transition-colors"
+          >
+            Log in here
+          </Link>
+        </div> */}
       </div>
 
       <p className="mt-6 text-[13px] text-[#9CA3AF]">
