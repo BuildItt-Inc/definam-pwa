@@ -558,6 +558,13 @@ async def seed_curriculum() -> None:
                 "Physics",
                 "Economics",
                 "Biology",
+                "Literature in English",
+                "Government",
+                "Civic Education",
+                "Christian Religious Studies",
+                "Geography",
+                "Financial Accounting",
+                "Agricultural Science",
             ]
             + uploaded_subjects
         )
