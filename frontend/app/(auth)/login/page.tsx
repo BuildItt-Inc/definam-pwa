@@ -191,17 +191,7 @@ export default function LoginPage() {
             Log in here
           </Link>
         </p>
-        {/* <div className="pt-2 text-center text-[14px] text-[#6B7280]">
-          Administrator?{' '}
-          <Link
-            href="/admin/login"
-            className="font-semibold text-[#111827] hover:text-[#16A34A] transition-colors"
-          >
-            Log in here
-          </Link>
-        </div> */}
       </div>
-
       <p className="mt-6 text-[13px] text-[#9CA3AF]">
         &copy; Recall 2026
       </p>
