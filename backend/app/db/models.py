@@ -552,7 +552,9 @@ class UserNotificationToken(Base):
         index=True,
     )
     fcm_token: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    device_type: Mapped[str | None] = mapped_column(String(50), nullable=True)  # web, android, ios
+    device_type: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )  # web, android, ios
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
@@ -561,4 +563,3 @@ class UserNotificationToken(Base):
     )
 
     user: Mapped[User] = relationship("User")
-

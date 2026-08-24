@@ -1385,9 +1385,7 @@ async def delete_subject(
 
         # CASCADE: chapters → topics are handled by DB FK cascade.
         # Delete all Subject rows with this name.
-        await session.execute(
-            sa_delete(Subject).where(Subject.id.in_(subject_ids))
-        )
+        await session.execute(sa_delete(Subject).where(Subject.id.in_(subject_ids)))
         await session.commit()
 
     return {
@@ -1437,9 +1435,7 @@ async def merge_subjects(
         for subj in source_rows:
             if subj.class_level in existing_target_levels:
                 # Target already exists for this class_level → drop source (cascade chapters/topics)
-                await session.execute(
-                    sa_delete(Subject).where(Subject.id == subj.id)
-                )
+                await session.execute(sa_delete(Subject).where(Subject.id == subj.id))
                 dropped += 1
             else:
                 # Safe to rename
@@ -1456,4 +1452,3 @@ async def merge_subjects(
         "renamed": renamed,
         "dropped": dropped,
     }
-

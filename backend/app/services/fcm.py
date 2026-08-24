@@ -34,15 +34,21 @@ try:
                 cred = credentials.Certificate(parsed_json)
                 firebase_admin.initialize_app(cred)
                 firebase_initialized = True
-                logger.info("Firebase Admin SDK initialized from JSON environment variable.")
+                logger.info(
+                    "Firebase Admin SDK initialized from JSON environment variable."
+                )
             except Exception as json_err:
-                logger.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: %s", json_err)
+                logger.error(
+                    "Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON: %s", json_err
+                )
         else:
             # Fallback to default application credentials if available
             try:
                 firebase_admin.initialize_app()
                 firebase_initialized = True
-                logger.info("Firebase Admin SDK initialized with Application Default Credentials.")
+                logger.info(
+                    "Firebase Admin SDK initialized with Application Default Credentials."
+                )
             except Exception:
                 logger.warning(
                     "No valid Firebase credentials found. FCM running in DRY RUN (logging-only) mode."
@@ -139,8 +145,7 @@ async def send_multicast_fcm(
 
     # Group tokens for batching
     token_records = [
-        {"id": r.id, "token": r.fcm_token, "user_id": r.user_id}
-        for r in tokens_result
+        {"id": r.id, "token": r.fcm_token, "user_id": r.user_id} for r in tokens_result
     ]
     tokens = [r["token"] for r in token_records]
 
@@ -217,7 +222,9 @@ async def send_multicast_fcm(
                 )
             )
             await session.commit()
-        logger.info("Automatically purged %d expired FCM tokens.", len(tokens_to_remove))
+        logger.info(
+            "Automatically purged %d expired FCM tokens.", len(tokens_to_remove)
+        )
 
     return {
         "status": "completed",

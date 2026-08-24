@@ -567,4 +567,3 @@ async def unregister_notification_token(
 
     await unregister_token(fcm_token)
     return {"ok": True}
-
