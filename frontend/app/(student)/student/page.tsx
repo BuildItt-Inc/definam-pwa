@@ -11,7 +11,7 @@ import { CompletionRing } from '@/components/student/CompletionRing';
 import { BottomNav } from '@/components/student/BottomNav';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
-import { subjectIcon, subjectColor } from '@/lib/utils/subjects';
+import { SUBJECT_ICONS, subjectIcon, subjectColor } from '@/lib/utils/subjects';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
 
@@ -112,11 +112,19 @@ function TopicRow({ topic }: { topic: RecentTopic }) {
 }
 
 // ── Subject strip ───────────────────────────────────────────────────────────
+// Only the subjects with a real, dedicated icon in SUBJECT_ICONS are shown
+// (capped at 5) — with ~23 subjects now seeded, showing one tile per subject
+// meant the strip overflowed the header and mostly rendered the same
+// BookOpen fallback for anything without a mapped icon. Restricting to
+// mapped subjects means no fallback icon and no overflow, at the cost of
+// hiding unmapped subjects from this strip (Browse still lists all of them).
 
 function SubjectStrip({ subjects }: { subjects: Subject[] }) {
+  const mappedSubjects = subjects.filter((s) => s.name in SUBJECT_ICONS).slice(0, 5);
+
   return (
     <div className="relative z-10 mt-3.5 flex gap-2">
-      {subjects.map((subject) => {
+      {mappedSubjects.map((subject) => {
         const Icon = subjectIcon(subject.name);
         return (
           <Link
