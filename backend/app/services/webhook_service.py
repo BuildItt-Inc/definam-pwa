@@ -175,7 +175,7 @@ async def _handle_org(data: dict, metadata: dict) -> None:
         )
 
     csv_bytes = _build_csv(codes)
-    login_url = f"{settings.frontend_url}/login"
+    login_url = f"{settings.frontend_url.rstrip('/')}/admin/login"
 
     await send_org_admin_credentials(
         school_email, school_name, temp_password, login_url, csv_bytes, student_count

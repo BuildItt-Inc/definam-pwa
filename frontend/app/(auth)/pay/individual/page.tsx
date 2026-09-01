@@ -86,19 +86,32 @@ function IndividualPayContent() {
           <ArrowLeft size={20} strokeWidth={2.2} />
         </button>
         <span className="text-[15px] font-bold text-ink tracking-tight">
-          Individual Access
+          Individual Student Access
         </span>
       </header>
 
       <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
 
-        {/* Info card */}
+        {/* Badge */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink text-white text-[10px] font-bold uppercase tracking-widest mb-4">
+          <User size={10} strokeWidth={3} aria-hidden />
+          Individual Student License
+        </div>
+
+        <h1 className="font-black text-[26px] text-ink tracking-tight leading-tight mb-1.5">
+          Single-Student Access
+        </h1>
+        <p className="text-[13px] text-ink/50 mb-5">
+          Your personal access code unlocks all subjects &amp; AI tutor on one device.
+        </p>
+
+        {/* What you get */}
         <InfoCard
           icon={User}
           iconStyle="pill"
-          title="Personal Subscription"
-          body="Full access to all subjects & AI tutor · No school required"
-          className="mb-4"
+          title="What you get"
+          body="1 access code · Valid on 1 device · Your code is delivered instantly to your email · Use it to register or log in"
+          className="mb-5"
         />
 
         {/* Term selector toggle */}

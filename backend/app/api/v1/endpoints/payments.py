@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 
 from app.core.config import get_settings
-from app.db.database import db_session
+from app.db.database import db_session, get_school_by_email, is_webhook_processed
 from app.db.models import AccessCode
 from app.schemas.payments import (
     IndividualPaymentRequest,
@@ -36,7 +36,7 @@ async def initiate_org_payment(body: OrgPaymentRequest) -> OrgPaymentResponse:
 async def verify_payment(
     reference: str = Query(..., description="Paystack transaction reference"),
 ):
-    """Verify a Paystack transaction confirmed and a pending access code exists.
+    """Verify a Paystack transaction confirmed and that access setup has occurred.
 
     Does not mutate the access code's status — it stays "pending" until the
     customer registers with it (see auth_service.register/activate_code).
@@ -53,14 +53,48 @@ async def verify_payment(
         raise HTTPException(400, detail=data.get("message", "Verification failed"))
 
     transaction = data["data"]
+    if transaction.get("status") != "success":
+        raise HTTPException(
+            400, detail=f"Transaction status is {transaction.get('status', 'failed')}"
+        )
+
     email = transaction["customer"]["email"]
     amount = transaction["amount"] / 100  # kobo to naira
+    metadata = transaction.get("metadata") or {}
+    payment_type = metadata.get("payment_type", "individual")
 
-    # Confirm the webhook has created a pending access code for this email.
-    # Do NOT change its status here — the code must stay "pending" until the
-    # customer actually registers with it. register()'s activate_code() is
-    # the only place a code is meant to transition out of "pending", tied
-    # to the real user_id that redeemed it.
+    if payment_type == "org":
+        school_email = metadata.get("school_email", email)
+        school_name = metadata.get("school_name", "")
+        student_count = int(metadata.get("student_count", 0))
+
+        school = await get_school_by_email(school_email)
+        webhook_done = await is_webhook_processed(reference)
+
+        if school or webhook_done:
+            return {
+                "status": "success",
+                "payment_type": "organisation",
+                "reference": reference,
+                "admin_email": school_email,
+                "org_name": school_name or (school["name"] if school else ""),
+                "student_count": student_count
+                or (school["active_seats"] if school else 0),
+                "amount": amount,
+            }
+
+        return {
+            "status": "processing",
+            "payment_type": "organisation",
+            "reference": reference,
+            "admin_email": school_email,
+            "org_name": school_name,
+            "student_count": student_count,
+            "amount": amount,
+            "message": "Payment confirmed. School account creation is in progress...",
+        }
+
+    # Individual payment path
     async with db_session() as session:
         result = await session.execute(
             select(AccessCode).where(
@@ -68,18 +102,41 @@ async def verify_payment(
             )
         )
         code = result.scalar_one_or_none()
-        if not code:
-            raise HTTPException(
-                404, detail="No pending access code found for this email"
+
+    if code:
+        return {
+            "status": "success",
+            "payment_type": "individual",
+            "reference": reference,
+            "email": email,
+            "amount": amount,
+            "access_code": code.code,
+        }
+
+    webhook_done = await is_webhook_processed(reference)
+    if webhook_done:
+        async with db_session() as session:
+            result = await session.execute(
+                select(AccessCode).where(AccessCode.email == email)
             )
-        access_code = code.code
+            any_code = result.scalars().first()
+            if any_code:
+                return {
+                    "status": "success",
+                    "payment_type": "individual",
+                    "reference": reference,
+                    "email": email,
+                    "amount": amount,
+                    "access_code": any_code.code,
+                }
 
     return {
-        "status": "success",
+        "status": "processing",
+        "payment_type": "individual",
         "reference": reference,
         "email": email,
         "amount": amount,
-        "access_code": access_code,
+        "message": "Payment confirmed. Access code generation is in progress...",
     }
 
 

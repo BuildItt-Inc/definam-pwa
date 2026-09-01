@@ -5,9 +5,15 @@ export interface InitializePaymentResponse {
 
 export interface VerifyPaymentResponse {
   status: string;
+  payment_type?: string;
+  reference?: string;
   email?: string;
   amount?: number;
   access_code?: string;
+  admin_email?: string;
+  org_name?: string;
+  student_count?: number;
+  message?: string;
   error?: string;
 }
 

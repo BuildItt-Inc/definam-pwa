@@ -100,6 +100,7 @@ export default function OrgPayPage() {
       });
       sessionStorage.setItem('payment_ref', data.reference);
       sessionStorage.setItem('org_email', values.school_email);
+      sessionStorage.setItem('org_name', values.school_name);
       sessionStorage.setItem('payment_type', 'organisation');
       sessionStorage.setItem('total_amount_naira', data.total_amount_naira.toString());
       window.location.href = data.authorization_url;
@@ -133,18 +134,31 @@ export default function OrgPayPage() {
           <ArrowLeft size={20} strokeWidth={2.2} />
         </button>
         <span className="text-[15px] font-bold text-ink tracking-tight">
-          Organisation Access
+          School &amp; Organisation Access
         </span>
       </header>
 
       <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
 
-        {/* Info card */}
+        {/* Badge */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink text-white text-[10px] font-bold uppercase tracking-widest mb-4">
+          <Building2 size={10} strokeWidth={3} aria-hidden />
+          School &amp; Institutional Bulk License
+        </div>
+
+        <h1 className="font-black text-[26px] text-ink tracking-tight leading-tight mb-1.5">
+          School Administrator Portal
+        </h1>
+        <p className="text-[13px] text-ink/50 mb-5">
+          Purchase bulk student seats. Admin credentials and access code CSV are emailed to your administrator address.
+        </p>
+
+        {/* What you get */}
         <InfoCard
           icon={Building2}
           iconStyle="pill"
-          title="For Schools & Organisations"
-          body="Pay for all your students at once. You get an admin dashboard + access codes to share."
+          title="What your school receives"
+          body="Admin login credentials · Temporary password (change on first login) · CSV file of all student access codes · Payment receipt"
           className="mb-5"
         />
 
