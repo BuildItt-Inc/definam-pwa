@@ -28,7 +28,7 @@ client_claude = (
     else None
 )
 
-_CLAUDE_MODEL = "claude-sonnet-4-6"
+_CLAUDE_MODEL = settings.anthropic_model
 
 PROMPT_STEP1 = """
 You are a friendly tutor writing for secondary school students.

@@ -11,11 +11,7 @@ client = anthropic.AsyncAnthropic(
     base_url=settings.anthropic_base_url or None,
 )
 
-_MODEL = "claude-sonnet-4-6"
-
-_MODEL = "claude-sonnet-4-6"
-
-_MODEL = "claude-sonnet-4-6"
+_MODEL = settings.anthropic_model
 
 async def stream_claude_response(
     user_question: str, topic_context: str, history: list[dict]

@@ -6,7 +6,7 @@ import csv
 from datetime import UTC, datetime, timedelta
 from io import StringIO
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, Query, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import and_, case, func, select, update
@@ -24,6 +24,7 @@ from app.db.models import (
     School,
     SchoolClass,
     Subject,
+    SyllabusChunk,
     Topic,
     TopicReview,
     User,
@@ -1023,12 +1024,18 @@ async def ingest_syllabus_pdf(
 
     from app.db.models import SyllabusChunk
     from app.services.embeddings import embed_text
+    from app.services.subject_service import normalize_subject_name
 
     # Derive subject name from filename if not explicitly supplied
     raw_name = subject_name or (file.filename or "Unknown").removesuffix(
         ".pdf"
     ).removesuffix(".PDF")
-    subj = raw_name.strip() or "Unknown"
+
+    async with db_session() as session:
+        existing_names_res = await session.execute(select(Subject.name).distinct())
+        existing_names = [r[0] for r in existing_names_res.fetchall() if r[0]]
+
+    subj = normalize_subject_name(raw_name, existing_names)
 
     # Read PDF bytes in-memory (no disk I/O needed)
     pdf_bytes = await file.read()
@@ -1124,12 +1131,35 @@ async def ingest_syllabus_pdf(
         "the subjects and chapters when logging into the application."
     ),
 )
-async def generate_curriculum_endpoint(_admin: AdminDep) -> dict:
-    """Trigger the curriculum generation process."""
+async def generate_curriculum_endpoint(
+    _admin: AdminDep, subject_name: str | None = Query(None)
+) -> dict:
+    """Trigger the curriculum generation process for all subjects or a targeted subject."""
     from scripts.generate_curriculum_structure import seed_curriculum
 
-    await seed_curriculum()
+    await seed_curriculum(target_subject=subject_name)
+    if subject_name:
+        return {
+            "message": f"Curriculum structure for '{subject_name}' successfully generated and seeded."
+        }
     return {"message": "Curriculum structure successfully generated and seeded."}
+
+
+@router.post(
+    "/curriculum/generate/{subject_name}",
+    summary="Generate curriculum structure for a specific subject",
+    description="Parses syllabus to generate curriculum structure for a single specific subject.",
+)
+async def generate_subject_curriculum_endpoint(
+    subject_name: str, _admin: AdminDep
+) -> dict:
+    """Trigger curriculum generation for a single subject."""
+    from scripts.generate_curriculum_structure import seed_curriculum
+
+    await seed_curriculum(target_subject=subject_name)
+    return {
+        "message": f"Curriculum structure for '{subject_name}' successfully generated and seeded."
+    }
 
 
 # ── Class Management ───────────────────────────────────────────────────────
@@ -1360,6 +1390,127 @@ async def delete_class(
 # ── Subject Management ──────────────────────────────────────────────────────
 
 
+@router.get("/subjects")
+async def list_all_subjects(_admin: AdminDep) -> list[dict]:
+    """List all subjects in the system with aggregated chapter, topic, and syllabus chunk counts."""
+    async with db_session() as session:
+        result = await session.execute(
+            select(Subject).order_by(Subject.name, Subject.class_level)
+        )
+        subjects = result.scalars().all()
+
+        grouped: dict[str, dict] = {}
+        for s in subjects:
+            name = s.name
+            if name not in grouped:
+                grouped[name] = {
+                    "name": name,
+                    "class_levels": [],
+                    "subject_ids": [],
+                    "chapter_count": 0,
+                    "topic_count": 0,
+                    "syllabus_chunks": 0,
+                    "updated_at": (
+                        s.updated_at.isoformat()
+                        if s.updated_at
+                        else (s.created_at.isoformat() if s.created_at else None)
+                    ),
+                }
+
+            grouped[name]["class_levels"].append(s.class_level)
+            grouped[name]["subject_ids"].append(s.id)
+
+        for name, data in grouped.items():
+            subject_ids = data["subject_ids"]
+            ch_count_res = await session.execute(
+                select(func.count(Chapter.id)).where(
+                    Chapter.subject_id.in_(subject_ids)
+                )
+            )
+            data["chapter_count"] = ch_count_res.scalar() or 0
+
+            top_count_res = await session.execute(
+                select(func.count(Topic.id))
+                .join(Chapter, Topic.chapter_id == Chapter.id)
+                .where(Chapter.subject_id.in_(subject_ids))
+            )
+            data["topic_count"] = top_count_res.scalar() or 0
+
+            syl_count_res = await session.execute(
+                select(func.count(SyllabusChunk.id)).where(
+                    SyllabusChunk.subject_name == name
+                )
+            )
+            data["syllabus_chunks"] = syl_count_res.scalar() or 0
+
+            del data["subject_ids"]
+
+        return list(grouped.values())
+
+
+@router.get("/subjects/{subject_name}")
+async def get_subject_detail(subject_name: str, _admin: AdminDep) -> dict:
+    """Get details of a specific subject, including chapter and topic hierarchy."""
+    async with db_session() as session:
+        subject_rows = (
+            await session.execute(
+                select(Subject)
+                .where(Subject.name == subject_name)
+                .order_by(Subject.class_level)
+            )
+        ).scalars().all()
+
+        if not subject_rows:
+            raise NotFoundError(f"Subject '{subject_name}' not found.")
+
+        levels = [s.class_level for s in subject_rows]
+        subject_ids = [s.id for s in subject_rows]
+
+        chapters_res = await session.execute(
+            select(Chapter)
+            .where(Chapter.subject_id.in_(subject_ids))
+            .order_by(Chapter.chapter_num)
+        )
+        chapters = chapters_res.scalars().all()
+
+        chapter_data = []
+        for ch in chapters:
+            parent_subj = next(
+                (s for s in subject_rows if s.id == ch.subject_id), None
+            )
+            class_lvl = parent_subj.class_level if parent_subj else ""
+
+            topics_res = await session.execute(
+                select(Topic)
+                .where(Topic.chapter_id == ch.id)
+                .order_by(Topic.title)
+            )
+            topics = topics_res.scalars().all()
+
+            chapter_data.append(
+                {
+                    "id": ch.id,
+                    "chapter_num": ch.chapter_num,
+                    "title": ch.title,
+                    "class_level": class_lvl,
+                    "topics": [
+                        {
+                            "id": t.id,
+                            "title": t.title,
+                            "status": t.status,
+                        }
+                        for t in topics
+                    ],
+                }
+            )
+
+        return {
+            "name": subject_name,
+            "class_levels": levels,
+            "chapters": chapter_data,
+        }
+
+
 @router.delete("/subjects/{subject_name}")
 async def delete_subject(
     subject_name: str,
@@ -1441,6 +1592,30 @@ async def merge_subjects(
                 # Safe to rename
                 subj.name = body.target_name
                 renamed += 1
+
+        # Also handle SyllabusChunk re-attribution/cleanup
+        target_chunks = (
+            await session.execute(
+                select(SyllabusChunk.id).where(
+                    SyllabusChunk.subject_name == body.target_name
+                ).limit(1)
+            )
+        ).scalar_one_or_none()
+
+        if target_chunks is not None:
+            # Target syllabus chunks exist -> delete source syllabus chunks
+            await session.execute(
+                sa_delete(SyllabusChunk).where(
+                    SyllabusChunk.subject_name == body.source_name
+                )
+            )
+        else:
+            # Otherwise update subject_name on source syllabus chunks
+            await session.execute(
+                update(SyllabusChunk)
+                .where(SyllabusChunk.subject_name == body.source_name)
+                .values(subject_name=body.target_name)
+            )
 
         await session.commit()
 

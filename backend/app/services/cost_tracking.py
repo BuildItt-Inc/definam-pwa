@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from app.db.database import db_session
 from app.db.models import ChatMessage
 
-# Claude Sonnet 4.6 pricing (as of Aug 2026)
+# Claude Sonnet pricing
 # Source: https://anthropic.com/pricing
 INPUT_COST_PER_1K = 0.003  # $3.00 per 1M input tokens  → $0.003 per 1K
 OUTPUT_COST_PER_1K = 0.015  # $15.00 per 1M output tokens → $0.015 per 1K

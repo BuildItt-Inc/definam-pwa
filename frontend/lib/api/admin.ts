@@ -1,4 +1,4 @@
-import type { AdminDashboardData, StudentDetail, AccessCodesData, SchoolClass } from '@/types/admin';
+import type { AdminDashboardData, StudentDetail, AccessCodesData, SchoolClass, AdminSubjectItem, SubjectDetail } from '@/types/admin';
 import { USE_MOCK, MOCK_DELAY_MS } from '@/lib/api/mock/week2';
 import { ApiError, getAuthHeaders } from '@/lib/api/auth';
 
@@ -250,7 +250,44 @@ export async function reactivateCode(codeId: string): Promise<void> {
   }
 }
 
-// ── Subject Management ─────────────────────────────────────────────────────
+export async function getAdminSubjects(): Promise<AdminSubjectItem[]> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/subjects`,
+    { headers: await getAuthHeaders() }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to fetch subjects');
+  }
+  return res.json() as Promise<AdminSubjectItem[]>;
+}
+
+export async function getSubjectDetail(subjectName: string): Promise<SubjectDetail> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/subjects/${encodeURIComponent(subjectName)}`,
+    { headers: await getAuthHeaders() }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to fetch subject detail');
+  }
+  return res.json() as Promise<SubjectDetail>;
+}
+
+export async function regenerateSubjectCurriculum(subjectName: string): Promise<{ message: string }> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/curriculum/generate/${encodeURIComponent(subjectName)}`,
+    {
+      method: 'POST',
+      headers: await getAuthHeaders(),
+    }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new Error(body.detail ?? 'Failed to regenerate subject curriculum');
+  }
+  return res.json();
+}
 
 export async function deleteSubject(subjectName: string): Promise<{ message: string; deleted_rows: number }> {
   const res = await fetch(

@@ -107,3 +107,34 @@ export interface AccessCodesData {
   stats: CodeStats;
   codes: AccessCode[];
 }
+
+// ── Subject Management ─────────────────────────────────────────────────────
+
+export interface AdminSubjectItem {
+  name: string;
+  class_levels: string[];
+  chapter_count: number;
+  topic_count: number;
+  syllabus_chunks: number;
+  updated_at: string | null;
+}
+
+export interface SubjectTopic {
+  id: string;
+  title: string;
+  status: string;
+}
+
+export interface SubjectChapter {
+  id: string;
+  chapter_num: number;
+  title: string;
+  class_level: string;
+  topics: SubjectTopic[];
+}
+
+export interface SubjectDetail {
+  name: string;
+  class_levels: string[];
+  chapters: SubjectChapter[];
+}
