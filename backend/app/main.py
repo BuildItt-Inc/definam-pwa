@@ -41,6 +41,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # ty
 
 # ── CORS & Middleware ──────────────────────────────────────────────────────
 
+
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
@@ -48,9 +52,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.state.limiter = limiter
-app.add_middleware(SlowAPIMiddleware)
 
 # ── Routes ─────────────────────────────────────────────────────────────────
 app.include_router(api_router, prefix="/api/v1")
