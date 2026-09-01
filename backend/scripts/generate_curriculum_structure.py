@@ -43,7 +43,7 @@ claude_client = (
     else None
 )
 
-_CLAUDE_MODEL = "claude-sonnet-4-6"
+_CLAUDE_MODEL = settings.anthropic_model
 
 # ── Fallback Curriculum Definition ────────────────────────────────────────
 
@@ -539,45 +539,59 @@ def generate_subject_full_curriculum(
     return None
 
 
-async def seed_curriculum() -> None:
-    # ── Database query to get uploaded subjects ──
-    async with db_session() as session:
-        # Fetch distinct subjects that have uploaded syllabus chunks
-        uploaded_subjects_result = await session.execute(
-            select(SyllabusChunk.subject_name).distinct()
-        )
-        uploaded_subjects = [r[0] for r in uploaded_subjects_result.fetchall() if r[0]]
+async def seed_curriculum(target_subject: str | None = None) -> None:
+    from app.services.subject_service import normalize_subject_name
 
-    # Keep default subjects and combine with any uploaded subjects
-    subjects = list(
-        set(
-            [
-                "Mathematics",
-                "English Language",
-                "Chemistry",
-                "Physics",
-                "Economics",
-                "Biology",
-                "Literature in English",
-                "Government",
-                "Civic Education",
-                "Christian Religious Studies",
-                "Geography",
-                "Financial Accounting",
-                "Agricultural Science",
-                "Fishery",
-                "Food and Nutrition",
-                "Computer Studies",
-                "Marketing",
-                "Commerce",
-                "Further Mathematics",
-                "Animal Husbandry",
-                "Technical Drawing",
-                "Office Practice",
+    if target_subject:
+        # Normalize and target only the requested subject
+        async with db_session() as session:
+            existing_names_res = await session.execute(
+                select(SyllabusChunk.subject_name).distinct()
+            )
+            existing_names = [r[0] for r in existing_names_res.fetchall() if r[0]]
+        normalized_target = normalize_subject_name(target_subject, existing_names)
+        subjects = [normalized_target]
+    else:
+        # ── Database query to get uploaded subjects ──
+        async with db_session() as session:
+            # Fetch distinct subjects that have uploaded syllabus chunks
+            uploaded_subjects_result = await session.execute(
+                select(SyllabusChunk.subject_name).distinct()
+            )
+            uploaded_subjects = [
+                r[0] for r in uploaded_subjects_result.fetchall() if r[0]
             ]
-            + uploaded_subjects
+
+        # Keep default subjects and combine with any uploaded subjects
+        subjects = list(
+            set(
+                [
+                    "Mathematics",
+                    "English Language",
+                    "Chemistry",
+                    "Physics",
+                    "Economics",
+                    "Biology",
+                    "Literature in English",
+                    "Government",
+                    "Civic Education",
+                    "Christian Religious Studies",
+                    "Geography",
+                    "Financial Accounting",
+                    "Agricultural Science",
+                    "Fishery",
+                    "Food and Nutrition",
+                    "Computer Studies",
+                    "Marketing",
+                    "Commerce",
+                    "Further Mathematics",
+                    "Animal Husbandry",
+                    "Technical Drawing",
+                    "Office Practice",
+                ]
+                + uploaded_subjects
+            )
         )
-    )
 
     logger.info(f"Seeding/Updating curriculum for subjects: {subjects}")
 

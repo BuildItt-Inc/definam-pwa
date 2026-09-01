@@ -270,10 +270,7 @@ export default function AdminHomePage() {
 
         {/* Subject management */}
         <div className="mt-6">
-          <SubjectManagementPanel
-            subjects={data.active_subjects}
-            onSubjectsChanged={() => getAdminDashboard().then(setData)}
-          />
+          <SubjectManagementPanel />
         </div>
       </div>
     </div>
