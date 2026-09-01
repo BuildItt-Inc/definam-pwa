@@ -141,7 +141,7 @@ function AdminLoginForm() {
       {/* App bar */}
       <header className="flex items-center px-4 h-[56px] border-b border-border-2 bg-bg-0">
         <span className="text-[15px] font-bold text-ink tracking-tight">
-          Admin Login
+          School Admin Portal
         </span>
       </header>
 
@@ -404,6 +404,15 @@ function AdminLoginForm() {
             </form>
           </>
         )}
+          <p className="mt-8 text-center text-[12px] text-ink/40">
+            Not a school admin?{' '}
+            <a
+              href="/login"
+              className="font-semibold text-ink/60 hover:text-ink transition-colors"
+            >
+              Student Sign In
+            </a>
+          </p>
       </main>
     </div>
   );

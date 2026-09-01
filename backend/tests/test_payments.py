@@ -1,11 +1,12 @@
-"""Regression test for the individual payment -> registration flow.
+"""Regression tests for the payment verification flow.
 
-Guards against re-introducing the bug where verify_payment() prematurely
-marked an access code "active" before the customer ever registered with
-it, causing register() to reject it as already-used. verify_payment()
-must confirm the transaction and confirm a pending code exists, but must
-NOT mutate the code's status -- only register()'s activate_code() may do
-that, tied to the real user_id that redeemed it.
+Guards:
+- verify_payment() must NOT mutate access code status.
+- For individual payments, when no code exists yet, returns 'processing'
+  (not 404) so the frontend can retry — since the webhook can arrive slightly
+  after Paystack redirects the customer.
+- For org payments, success is determined by school record / webhook marker,
+  not AccessCode lookup.
 """
 
 from __future__ import annotations
@@ -57,8 +58,10 @@ async def test_verify_payment_does_not_mutate_access_code_status():
     paystack_payload = {
         "status": True,
         "data": {
+            "status": "success",
             "customer": {"email": "payer@example.com"},
             "amount": 200_000,
+            "metadata": {"payment_type": "individual"},
         },
     }
 
@@ -68,6 +71,10 @@ async def test_verify_payment_does_not_mutate_access_code_status():
             return_value=_FakePaystackClient(paystack_payload),
         ),
         patch("app.api.v1.endpoints.payments.db_session") as mock_ctx,
+        patch(
+            "app.api.v1.endpoints.payments.is_webhook_processed",
+            new=AsyncMock(return_value=False),
+        ),
     ):
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock(
@@ -82,25 +89,27 @@ async def test_verify_payment_does_not_mutate_access_code_status():
             resp = await client.get("/api/v1/payment/verify?reference=test-ref-123")
 
     assert resp.status_code == 200
-    assert resp.json()["email"] == "payer@example.com"
-    assert resp.json()["access_code"] == "IND-TEST-1234"
+    data = resp.json()
+    assert data["email"] == "payer@example.com"
+    assert data["access_code"] == "IND-TEST-1234"
+    assert data["payment_type"] == "individual"
 
-    # The core regression guard: verify_payment must never flip the code's
-    # status. If this fails, register() will reject the code as already
-    # used the moment the customer tries to redeem it.
+    # Core regression guard: verify_payment must never flip the code's status.
     assert fake_code.status == "pending"
     mock_session.commit.assert_not_awaited()
 
 
 @pytest.mark.anyio
-async def test_verify_payment_404s_when_no_pending_code_exists():
-    """If the webhook hasn't created a pending code yet, verify should 404,
-    not silently succeed."""
+async def test_verify_payment_returns_processing_when_no_pending_code_exists():
+    """If the webhook hasn't created a pending code yet, verify should return
+    'processing' so the frontend can retry — NOT a hard 404."""
     paystack_payload = {
         "status": True,
         "data": {
+            "status": "success",
             "customer": {"email": "nocode@example.com"},
             "amount": 200_000,
+            "metadata": {"payment_type": "individual"},
         },
     }
 
@@ -110,10 +119,19 @@ async def test_verify_payment_404s_when_no_pending_code_exists():
             return_value=_FakePaystackClient(paystack_payload),
         ),
         patch("app.api.v1.endpoints.payments.db_session") as mock_ctx,
+        patch(
+            "app.api.v1.endpoints.payments.is_webhook_processed",
+            new=AsyncMock(return_value=False),
+        ),
     ):
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock(
-            return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None))
+            return_value=MagicMock(
+                scalar_one_or_none=MagicMock(return_value=None),
+                scalars=MagicMock(
+                    return_value=MagicMock(first=MagicMock(return_value=None))
+                ),
+            )
         )
         mock_ctx.return_value.__aenter__ = AsyncMock(return_value=mock_session)
         mock_ctx.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -123,4 +141,8 @@ async def test_verify_payment_404s_when_no_pending_code_exists():
         ) as client:
             resp = await client.get("/api/v1/payment/verify?reference=test-ref-456")
 
-    assert resp.status_code == 404
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "processing"
+    assert data["payment_type"] == "individual"
+    assert data["email"] == "nocode@example.com"

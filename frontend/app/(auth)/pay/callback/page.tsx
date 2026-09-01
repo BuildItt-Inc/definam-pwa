@@ -38,7 +38,7 @@ type VerifyState =
       orgName: string;
       totalAmountNaira: number;
     }
-  | { status: 'error' };
+  | { status: 'error'; reference?: string; message?: string };
 
 // ── Inner component (needs Suspense boundary because of useSearchParams) ───
 
@@ -53,35 +53,42 @@ function CallbackContent() {
     const reference = searchParams.get('reference');
 
     if (!reference) {
-      setState({ status: 'error' });
+      setState({ status: 'error', message: 'No payment reference provided.' });
       return;
     }
 
     const paymentType = sessionStorage.getItem('payment_type') ?? 'individual';
     let cancelled = false;
 
-    verifyPayment(reference)
-      .then((data) => {
+    const pollVerification = async (attempt = 1): Promise<void> => {
+      if (cancelled) return;
+      try {
+        const data = await verifyPayment(reference);
         if (cancelled) return;
 
-        if (data.status !== 'success') {
-          setState({ status: 'error' });
-          toast.error('Payment could not be verified');
-          return;
+        if (data.status === 'processing' && attempt < 4) {
+          await new Promise((res) => setTimeout(res, attempt * 1500));
+          return pollVerification(attempt + 1);
         }
 
-        if (paymentType === 'organisation') {
-          const orgData = data as unknown as VerifyOrgPaymentResponse;
+        const isOrg =
+          data.payment_type === 'organisation' ||
+          data.payment_type === 'org' ||
+          paymentType === 'organisation';
+
+        if (isOrg) {
           const storedTotal = sessionStorage.getItem('total_amount_naira');
-          const totalAmountNaira = parseInt(storedTotal ?? '0', 10) || 0;
+          const totalAmountNaira =
+            parseInt(storedTotal ?? '0', 10) || (data.amount || 0);
           setState({
             status: 'success',
             paymentType: 'organisation',
             adminEmail:
-              orgData.admin_email ||
+              data.admin_email ||
+              data.email ||
               sessionStorage.getItem('org_email') ||
               '',
-            orgName: orgData.org_name || '',
+            orgName: data.org_name || sessionStorage.getItem('org_name') || '',
             totalAmountNaira,
           });
         } else {
@@ -99,16 +106,31 @@ function CallbackContent() {
               onRedirect: () => router.push('/register'),
             });
           } else {
-            setState({ status: 'error' });
-            toast.error('Payment verified, but no access code was found', 'Contact support.');
+            setState({
+              status: 'error',
+              reference,
+              message:
+                data.message ||
+                'Payment confirmed, but your access code is still processing. Please check your email or contact support.',
+            });
           }
         }
-      })
-      .catch(() => {
+      } catch (err: any) {
+        if (attempt < 3) {
+          await new Promise((res) => setTimeout(res, 2000));
+          return pollVerification(attempt + 1);
+        }
         if (cancelled) return;
-        setState({ status: 'error' });
-        toast.error('Payment could not be verified');
-      });
+        setState({
+          status: 'error',
+          reference,
+          message:
+            err?.message || 'Payment verification failed or timed out.',
+        });
+      }
+    };
+
+    pollVerification();
 
     return () => {
       cancelled = true;
@@ -196,7 +218,7 @@ function CallbackContent() {
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-white/40 font-medium">
                 <CheckCircle2 size={12} strokeWidth={2} aria-hidden />
-                Valid for 4 months from activation
+                Valid for term duration from activation
               </div>
               <motion.button
                 type="button"
@@ -299,7 +321,7 @@ function CallbackContent() {
             <p className="text-[14px] font-bold text-ink mb-1">{state.orgName}</p>
           )}
           <p className="text-[13px] text-muted leading-snug max-w-[300px] mx-auto">
-            Admin credentials and student access codes (4-month lifespan) are on their way to your inbox.
+            Admin credentials and student access code CSV are on their way to your inbox.
           </p>
         </motion.div>
 
@@ -324,9 +346,9 @@ function CallbackContent() {
             {/* Checklist */}
             <div className="space-y-2.5 pt-4 border-t border-border">
               {[
-                'Admin login URL + one-time temporary password',
+                'Admin login URL + temporary password',
                 'CSV file with all student access codes attached',
-                'Payment receipt & 4-month license details',
+                'Payment receipt & seat license details',
               ].map((item) => (
                 <div key={item} className="flex items-start gap-2.5 text-[12px] text-ink/80">
                   <Mail size={13} strokeWidth={2} className="text-success flex-shrink-0 mt-0.5" aria-hidden />
@@ -364,6 +386,14 @@ function CallbackContent() {
   }
 
   // ── Error ────────────────────────────────────────────────────────────────
+  const refText = state.reference ? `Ref: ${state.reference}` : '';
+  const supportSubject = encodeURIComponent(
+    `Payment Verification Inquiry - ${state.reference || 'No Ref'}`
+  );
+  const supportBody = encodeURIComponent(
+    `Hello Support,\n\nI am having an issue verifying my payment.\nReference: ${state.reference || 'N/A'}\n\nPlease assist.\n`
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -376,31 +406,39 @@ function CallbackContent() {
       </div>
 
       <h1 className="font-black text-[24px] text-ink tracking-tight leading-none mb-2">
-        Verification Failed
+        Verification Pending or Unconfirmed
       </h1>
-      <p className="text-[13px] text-muted leading-snug mb-8 max-w-[260px]">
-        We could not confirm your payment. Please try again or contact support.
+      <p className="text-[13px] text-muted leading-snug mb-4 max-w-[280px]">
+        {state.message ||
+          'We could not automatically confirm your payment yet. If you completed payment, your receipt was sent to your email.'}
       </p>
+
+      {state.reference && (
+        <div className="mb-6 px-3.5 py-2 bg-bg-2 border border-border rounded-xl font-mono text-[12px] text-ink">
+          Transaction Reference: <span className="font-bold">{state.reference}</span>
+        </div>
+      )}
 
       <motion.div {...scaleTap} className="w-full mb-3">
-        <Link
-          href="/pay/individual"
+        <a
+          href={`mailto:support@definam.ng?subject=${supportSubject}&body=${supportBody}`}
           className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 transition-colors shadow-sm"
         >
-          <RefreshCw size={16} strokeWidth={2.2} aria-hidden />
-          Try Again
-        </Link>
+          <Mail size={16} strokeWidth={2.2} aria-hidden />
+          Contact Support with Reference
+        </a>
       </motion.div>
 
-      <p className="text-[12px] text-muted">
-        Need help?{' '}
-        <a
-          href="mailto:support@definam.ng"
-          className="text-ink font-bold hover:text-ink/70 transition-colors underline underline-offset-2"
+      <motion.div {...scaleTap} className="w-full mb-4">
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="w-full min-h-[44px] bg-bg-0 border border-border-2 text-ink rounded-xl font-semibold text-[13px] tracking-tight flex items-center justify-center gap-2 hover:bg-bg-2 transition-colors"
         >
-          Contact support
-        </a>
-      </p>
+          <RefreshCw size={14} strokeWidth={2} aria-hidden />
+          Re-check Verification Status
+        </button>
+      </motion.div>
     </motion.div>
   );
 }

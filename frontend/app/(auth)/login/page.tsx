@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, School } from 'lucide-react';
 import Link from 'next/link';
 
 import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
@@ -84,14 +84,25 @@ export default function LoginPage() {
         <span className="font-bold text-[18px] text-[#111827] tracking-tight">Recall</span>
       </Link>
 
+      {/* School Admin redirect banner */}
+      <div className="w-full max-w-[400px] mb-3 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB]">
+        <School size={15} className="text-[#6B7280] flex-shrink-0" strokeWidth={2} aria-hidden />
+        <p className="text-[13px] text-[#6B7280]">
+          School administrator?{' '}
+          <Link href="/admin/login" className="font-semibold text-[#111827] hover:underline">
+            Go to School Admin Portal →
+          </Link>
+        </p>
+      </div>
+
       {/* Card */}
       <div className="w-full max-w-[400px] bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-8">
         <div className="mb-6">
           <h1 className="text-[22px] font-bold text-[#111827] tracking-tight mb-1">
-            Sign in
+            Student Sign In
           </h1>
           <p className="text-[14px] text-[#6B7280]">
-            Enter your username and password to continue.
+            Enter your username and password to access your learning dashboard.
           </p>
         </div>
 
@@ -176,19 +187,12 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-5 text-center text-[12px] text-[#6B7280]">
-          No account?{' '}
+          Have an access code?{' '}
           <Link
             href="/register"
             className="font-semibold text-[#111827] hover:text-[#16A34A] transition-colors"
           >
-            Create one
-          </Link>{' '}
-          Administrator?{' '}
-          <Link
-            href="/admin/login"
-            className="font-semibold text-[#111827] hover:text-[#16A34A] transition-colors"
-          >
-            Log in here
+            Register here
           </Link>
         </p>
       </div>
