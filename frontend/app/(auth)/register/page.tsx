@@ -9,7 +9,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth';
 import { registerUser, ApiError } from '@/lib/api/auth';
-import LogoMark from '@/components/landing/LogoMark';
+import LandingBrandMark from '@/components/landing/LandingBrandMark';
 
 function RegisterForm() {
   const router = useRouter();
@@ -67,7 +67,7 @@ function RegisterForm() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB] px-4 py-12">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2 mb-8">
-        <LogoMark size={28} />
+        <LandingBrandMark size={28} />
         <span className="font-bold text-[18px] text-[#111827] tracking-tight">Recall</span>
       </Link>
 
