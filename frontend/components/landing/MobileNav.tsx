@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 import { NAV_LINKS } from '@/components/landing/navLinks';
+import LandingBrandMark from './LandingBrandMark';
 
 /**
  * Mobile nav — a right-edge drawer over a dimmed backdrop, matching the
@@ -64,8 +65,9 @@ export default function MobileNav() {
       >
         {/* Top row — mirrors the sticky nav bar's wordmark + a close X */}
         <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-white/10 px-5">
-          <Link href="/" onClick={close} className="font-heading text-[19px] font-semibold tracking-[-0.03em] text-white">
-            Recall
+          <Link href="/" className="flex items-center gap-2">
+            <LandingBrandMark size={32} />
+            <span className="font-heading font-semibold text-white">Recall</span>
           </Link>
           <button
             onClick={close}

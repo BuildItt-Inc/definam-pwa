@@ -6,6 +6,7 @@ import MobileNav from '@/components/landing/MobileNav';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 import { NAV_LINKS } from '@/components/landing/navLinks';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
+import LandingBrandMark from './LandingBrandMark';
 
 /**
  * Landing nav — transparent over the dark navy hero, solidifies (navy +
@@ -49,9 +50,10 @@ export default function LandingNav() {
             synthetic-bold render. */}
         <Link
           href="/"
-          className="font-heading col-start-1 justify-self-start text-[19px] font-semibold tracking-[-0.03em] text-white"
+          className="flex items-center gap-2"
         >
-          Recall
+          <LandingBrandMark size={32} />
+          <span className="font-heading font-semibold text-white">Recall</span>
         </Link>
 
         {/* Center — nav links, desktop only */}

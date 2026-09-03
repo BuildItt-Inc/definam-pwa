@@ -25,6 +25,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Recall PWA',
   description: 'AI-powered learning for secondary school students',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
