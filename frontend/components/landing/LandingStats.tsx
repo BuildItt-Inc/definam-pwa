@@ -10,7 +10,7 @@ import { dmSans, bricolage } from '@/components/landing/landingFonts';
 // a topic is added. AI tutor availability is a real product feature (no
 // scheduled downtime), not a placeholder claim.
 const STATS = [
-  { value: '5', label: 'subjects covered' },
+  { value: '20+', label: 'subjects covered' },
   { value: '1,200+', label: 'topics and growing' },
   { value: '24/7', label: 'AI tutor availability' },
 ];
