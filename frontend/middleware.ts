@@ -1,6 +1,12 @@
 /**
  * middleware.ts — Next.js Edge Middleware for route protection.
  *
+ * PUBLIC ENTRY ROUTES
+ * ─────────────────────────────────────────────────────────────────
+ * /login          → Individual student login ("I bought my own access code")
+ * /join           → School-issued code entry ("My school gave me a code")
+ * /admin/login    → School administrator login
+ *
  * PROTECTED ROUTES
  * ─────────────────────────────────────────────────────────────────
  * /admin/*         → role must be "admin"   → else → /admin/login

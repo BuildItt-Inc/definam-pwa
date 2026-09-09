@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Building2, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth';
 import { registerUser, ApiError } from '@/lib/api/auth';
@@ -44,7 +44,7 @@ function RegisterForm() {
       if (err instanceof ApiError) {
         if (err.status === 409 || (err.status === 400 && err.message.toLowerCase().includes('username'))) {
           setError('username', { type: 'server', message: err.message || 'Username already taken' });
-        } else if (err.status === 400 && (err.message.toLowerCase().includes('access code') || err.message.toLowerCase().includes('code'))) {
+        } else if (err.status === 400 && (err.message.toLowerCase().includes('access code') || err.message.toLowerCase().includes('code') || err.message.toLowerCase().includes('join'))) {
           setError('access_code', { type: 'server', message: err.message });
         } else if (err.status === 400) {
           setBannerError(err.message || 'Check your details and try again.');
@@ -71,14 +71,25 @@ function RegisterForm() {
         <span className="font-bold text-[18px] text-[#111827] tracking-tight">Recall</span>
       </Link>
 
+      {/* School Code redirect banner */}
+      <div className="w-full max-w-[400px] mb-3 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#F0FDF4] border border-[#DCFCE7]">
+        <Building2 size={15} className="text-[#16A34A] flex-shrink-0" strokeWidth={2} aria-hidden />
+        <p className="text-[13px] text-[#15803D]">
+          My school gave me a code?{' '}
+          <Link href="/join" className="font-semibold text-[#166534] hover:underline">
+            Enter school access code at /join →
+          </Link>
+        </p>
+      </div>
+
       {/* Card */}
       <div className="w-full max-w-[400px] bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-8">
         <div className="mb-6">
           <h1 className="text-[22px] font-bold text-[#111827] tracking-tight mb-1">
-            Create an account
+            Individual Registration
           </h1>
           <p className="text-[14px] text-[#6B7280]">
-            You need an access code from your school or a Recall subscription.
+            For access codes purchased individually (<code className="text-[12px] bg-gray-100 px-1 py-0.5 rounded">IND-XXXX-XX</code>).
           </p>
         </div>
 

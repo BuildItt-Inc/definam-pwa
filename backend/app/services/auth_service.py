@@ -128,7 +128,7 @@ async def login(body: LoginRequest) -> dict:
     }
 
 
-async def org_login(body: OrgLoginRequest) -> dict:
+async def org_login(body: OrgLoginRequest, client_ip: str = "0.0.0.0") -> dict:
     """
     Authenticate an org student by access code only.
     First use: creates the user record. Subsequent uses: validates device fingerprint.
@@ -148,7 +148,8 @@ async def org_login(body: OrgLoginRequest) -> dict:
         if exp < datetime.now(UTC):
             raise AccessCodeExpiredError()
 
-    fingerprint = fingerprint_device(body.user_agent, body.ip)
+    user_agent = body.user_agent if body.user_agent else "unknown"
+    fingerprint = fingerprint_device(user_agent, client_ip)
 
     if code_row["status"] == "pending":
         user_id = str(uuid.uuid4())

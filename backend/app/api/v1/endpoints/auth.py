@@ -149,7 +149,20 @@ async def org_login(
     request: Request, body: OrgLoginRequest, response: Response
 ) -> OrgLoginResponse:
     """Authenticate an org student by access code; set refresh-token cookie."""
-    result = await auth_service.org_login(body)
+    xff = request.headers.get("x-forwarded-for", "")
+    client_ip = (
+        xff.split(",")[0].strip()
+        if xff
+        else request.headers.get("x-real-ip", "").strip()
+        or (request.client.host if request.client else "0.0.0.0")
+    )
+    if not client_ip:
+        client_ip = "0.0.0.0"
+
+    if body.user_agent == "unknown" or not body.user_agent:
+        body.user_agent = request.headers.get("user-agent", "unknown")
+
+    result = await auth_service.org_login(body, client_ip=client_ip)
     _set_refresh_cookie(response, result["refresh_token"])
     return OrgLoginResponse(
         access_token=result["access_token"],

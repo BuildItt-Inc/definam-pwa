@@ -1,6 +1,20 @@
 /** @type {import('next').NextConfig} */
 const baseConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: '/mobile',
+        destination: '/join',
+        permanent: true,
+      },
+      {
+        source: '/mobile/code',
+        destination: '/join',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 let nextConfig = baseConfig;

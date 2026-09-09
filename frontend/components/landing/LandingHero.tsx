@@ -84,24 +84,25 @@ export default function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-body flex w-full max-w-xs flex-col gap-2.5 sm:w-auto sm:max-w-none sm:flex-row sm:gap-3.5"
+            className="font-body flex w-full max-w-md flex-col gap-2.5 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap sm:gap-3"
           >
             <Link
-              href="/pay/individual"
-              className="inline-flex items-center justify-center rounded-lg bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97] sm:px-7 sm:text-[16px]"
+              href="/join"
+              className="inline-flex items-center justify-center rounded-lg bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97] sm:px-6 sm:text-[15px]"
             >
-              Get Started
+              My school gave me a code →
             </Link>
-            {/* Only rendered once `beforeinstallprompt` has actually fired —
-                browsers that don't support installable PWAs (Safari) or an
-                already-installed app never fire it, so `canInstall` just
-                stays false and this button never appears rather than
-                showing a control that would do nothing on click. */}
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-lg border border-white/25 bg-white/5 px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:border-white/40 hover:bg-white/10 active:scale-[0.97] sm:px-6 sm:text-[15px]"
+            >
+              I bought my own code
+            </Link>
             {canInstall && (
               <button
                 type="button"
                 onClick={promptInstall}
-                className="inline-flex items-center justify-center rounded-xl border border-white/25 px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:border-white/40 active:scale-[0.97] sm:px-7 sm:text-[16px]"
+                className="inline-flex items-center justify-center rounded-lg border border-white/20 px-5 py-3.5 text-[14px] font-semibold text-white/80 transition-colors hover:border-white/30 active:scale-[0.97]"
               >
                 Install App
               </button>
