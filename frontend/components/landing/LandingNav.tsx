@@ -70,14 +70,17 @@ export default function LandingNav() {
         </div>
 
         {/* Right — auth actions, desktop only */}
-        <div className="font-body col-start-3 hidden items-center gap-4 justify-self-end sm:flex">
+        <div className="font-body col-start-3 hidden items-center gap-3 justify-self-end sm:flex">
           <InstallAppButton variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-[13px]" />
-          <Link href="/login" className="text-[14px] font-semibold text-white/80 transition-colors hover:text-white">
+          <Link href="/join" className="text-[13px] font-medium text-white/80 transition-colors hover:text-white border border-white/20 rounded-lg px-3 py-1.5 hover:bg-white/10">
+            School Code
+          </Link>
+          <Link href="/login" className="text-[13px] font-semibold text-white/80 transition-colors hover:text-white">
             Log in
           </Link>
           <Link
             href="/pay/individual"
-            className="inline-flex items-center justify-center rounded-[10px] bg-jade px-[18px] py-[9px] text-[14px] font-semibold text-white transition-colors hover:bg-jade-dark"
+            className="inline-flex items-center justify-center rounded-[10px] bg-jade px-[16px] py-[8px] text-[13px] font-semibold text-white transition-colors hover:bg-jade-dark"
           >
             Sign up
           </Link>

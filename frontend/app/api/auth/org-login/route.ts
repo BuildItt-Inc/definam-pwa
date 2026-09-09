@@ -4,11 +4,24 @@ import { BACKEND, transplantRefreshCookie } from '@/lib/auth-proxy';
 export async function POST(request: NextRequest) {
   const body = await request.text();
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  const xff = request.headers.get('x-forwarded-for');
+  if (xff) headers['x-forwarded-for'] = xff;
+
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) headers['x-real-ip'] = realIp;
+
+  const ua = request.headers.get('user-agent');
+  if (ua) headers['user-agent'] = ua;
+
   let backendRes: Response;
   try {
     backendRes = await fetch(`${BACKEND}/api/v1/auth/org-login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body,
     });
   } catch {

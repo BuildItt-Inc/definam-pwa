@@ -242,8 +242,8 @@ async def test_org_login_first_use_creates_account():
                 json={
                     "access_code": "DA-ABCD-EF",
                     "user_agent": "TestUA",
-                    "ip": "1.2.3.4",
                 },
+                headers={"x-forwarded-for": "1.2.3.4, 10.0.0.1"},
             )
 
     assert resp.status_code == 200
@@ -293,12 +293,93 @@ async def test_org_login_new_device_revokes_old():
                 json={
                     "access_code": "DA-ABCD-EF",
                     "user_agent": "NewDevice",
-                    "ip": "5.6.7.8",
                 },
+                headers={"x-forwarded-for": "5.6.7.8"},
             )
 
     assert resp.status_code == 200
     mock_revoke.assert_called_once()
+
+
+@pytest.mark.anyio
+async def test_register_rejects_org_code_with_actionable_message():
+    code_row = {"id": "c1", "type": "org", "status": "pending", "school_id": "s1"}
+    with patch(
+        "app.services.auth_service.get_access_code",
+        new_callable=AsyncMock,
+        return_value=code_row,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/register",
+                json={
+                    "username": "testuser",
+                    "password": "password123",
+                    "confirm_password": "password123",
+                    "access_code": "DA-ORG-CODE",
+                },
+            )
+    assert resp.status_code == 400
+    assert "school-issued code" in resp.json()["detail"]
+    assert "/join" in resp.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_org_login_rejects_individual_code_with_actionable_message():
+    code_row = {"id": "c1", "type": "individual", "status": "pending", "school_id": None}
+    with patch(
+        "app.services.auth_service.get_access_code",
+        new_callable=AsyncMock,
+        return_value=code_row,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/org-login",
+                json={
+                    "access_code": "IND-INDIV-CODE",
+                    "user_agent": "TestUA",
+                },
+            )
+    assert resp.status_code == 400
+    assert "individual access code" in resp.json()["detail"]
+    assert "/register" in resp.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_org_login_extracts_first_ip_from_multihop_x_forwarded_for():
+    code_row = {
+        "id": "code-id",
+        "type": "org",
+        "status": "pending",
+        "school_id": "school-uuid",
+    }
+    with (
+        patch(
+            "app.services.auth_service.get_access_code",
+            new_callable=AsyncMock,
+            return_value=code_row,
+        ),
+        patch(
+            "app.services.auth_service.org_login",
+            new_callable=AsyncMock,
+            return_value={"access_token": "a", "refresh_token": "r", "role": "student_org"},
+        ) as mock_service_org_login,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/v1/auth/org-login",
+                json={"access_code": "DA-ABCD-EF", "user_agent": "TestUA"},
+                headers={"x-forwarded-for": "203.0.113.195, 70.41.3.18, 10.0.0.1"},
+            )
+    assert resp.status_code == 200
+    _, kwargs = mock_service_org_login.call_args
+    assert kwargs.get("client_ip") == "203.0.113.195"
 
 
 # ── /auth/refresh ──────────────────────────────────────────────────────────
@@ -631,7 +712,6 @@ async def test_org_login_rejects_expired_code():
                 json={
                     "access_code": "DA-ABCD-EF",
                     "user_agent": "TestUA",
-                    "ip": "1.2.3.4",
                 },
             )
     assert resp.status_code == 400
