@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2, School } from 'lucide-react';
+import { Building2, Eye, EyeOff, Loader2, School } from 'lucide-react';
 import Link from 'next/link';
 
 import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
@@ -84,6 +84,17 @@ export default function LoginPage() {
         <span className="font-bold text-[18px] text-[#111827] tracking-tight">Recall</span>
       </Link>
 
+      {/* School Code redirect banner */}
+      <div className="w-full max-w-[400px] mb-3 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#F0FDF4] border border-[#DCFCE7]">
+        <Building2 size={15} className="text-[#16A34A] flex-shrink-0" strokeWidth={2} aria-hidden />
+        <p className="text-[13px] text-[#15803D]">
+          My school gave me an access code?{' '}
+          <Link href="/join" className="font-semibold text-[#166534] hover:underline">
+            Enter school code at /join →
+          </Link>
+        </p>
+      </div>
+
       {/* School Admin redirect banner */}
       <div className="w-full max-w-[400px] mb-3 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#F3F4F6] border border-[#E5E7EB]">
         <School size={15} className="text-[#6B7280] flex-shrink-0" strokeWidth={2} aria-hidden />
@@ -99,10 +110,10 @@ export default function LoginPage() {
       <div className="w-full max-w-[400px] bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-8">
         <div className="mb-6">
           <h1 className="text-[22px] font-bold text-[#111827] tracking-tight mb-1">
-            Student Sign In
+            Individual Student Sign In
           </h1>
           <p className="text-[14px] text-[#6B7280]">
-            Enter your username and password to access your learning dashboard.
+            For students who purchased an individual subscription. Enter your username and password.
           </p>
         </div>
 

@@ -42,7 +42,6 @@ export interface RegisterResponse {
 export interface OrgLoginRequest {
   access_code: string;
   user_agent: string;
-  ip: string;
   student_name?: string;
 }
 

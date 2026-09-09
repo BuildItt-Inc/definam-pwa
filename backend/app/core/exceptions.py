@@ -167,8 +167,15 @@ class AccessCodeWrongTypeError(CustomDomainException):
     """Raised when an access code is presented to the wrong auth path."""
 
     def __init__(self, expected: str = "", message: str = "") -> None:
+        if not message:
+            if expected == "individual":
+                message = "This looks like a school-issued code — please enter it at /join instead."
+            elif expected == "org":
+                message = "This looks like an individual access code — please register or log in at /register or /login instead."
+            else:
+                message = f"This code is not a valid {expected} access code."
         super().__init__(
-            message=message or f"This code is not a valid {expected} access code.",
+            message=message,
             code="BAD_REQUEST",
         )
 

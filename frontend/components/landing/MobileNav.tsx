@@ -92,22 +92,31 @@ export default function MobileNav() {
           ))}
         </div>
 
-        {/* Auth actions — compact buttons grouped together, not a full-width block */}
-        <div className="font-body mt-auto flex items-center gap-3 border-t border-white/10 px-5 py-5">
+        {/* Auth actions — compact buttons grouped together */}
+        <div className="font-body mt-auto flex flex-col gap-2.5 border-t border-white/10 px-5 py-5">
           <Link
-            href="/login"
+            href="/join"
             onClick={close}
-            className="inline-flex items-center justify-center rounded-lg border border-white/25 px-4 py-2 text-[13px] font-semibold text-white/85 transition-colors hover:border-white/40 hover:text-white"
+            className="inline-flex items-center justify-center rounded-lg bg-white/10 border border-white/20 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-white/15"
           >
-            Log in
+            Enter School Code (/join)
           </Link>
-          <Link
-            href="/pay/individual"
-            onClick={close}
-            className="inline-flex items-center justify-center rounded-lg bg-jade px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-jade-dark"
-          >
-            Sign up
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              onClick={close}
+              className="flex-1 inline-flex items-center justify-center rounded-lg border border-white/25 px-4 py-2 text-[13px] font-semibold text-white/85 transition-colors hover:border-white/40 hover:text-white"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/pay/individual"
+              onClick={close}
+              className="flex-1 inline-flex items-center justify-center rounded-lg bg-jade px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-jade-dark"
+            >
+              Sign up
+            </Link>
+          </div>
         </div>
       </div>
     </div>
