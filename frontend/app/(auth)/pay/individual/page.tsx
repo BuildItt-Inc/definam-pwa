@@ -123,7 +123,7 @@ function IndividualPayContent() {
               'flex flex-col items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-150 cursor-pointer',
               !isThreeTerms
                 ? 'bg-ink text-white font-bold shadow-xs'
-                : 'text-ink/60 hover:text-ink font-medium',
+                : 'text-ink/60 font-medium',
             ].join(' ')}
           >
             <span className="text-[13px]">Single Term</span>
@@ -139,10 +139,10 @@ function IndividualPayContent() {
               'relative flex flex-col items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-150 cursor-pointer',
               isThreeTerms
                 ? 'bg-ink text-white font-bold shadow-xs'
-                : 'text-ink/60 hover:text-ink font-medium',
+                : 'text-ink/60 font-medium',
             ].join(' ')}
           >
-            <span className="absolute -top-2.5 right-2 px-2 py-0.5 bg-jade text-white text-[9px] font-black uppercase tracking-wider rounded-full shadow-xs flex items-center gap-0.5">
+            <span className="absolute -top-2.5 right-2 px-2 py-0.5 bg-brand text-white text-[9px] font-black uppercase tracking-wider rounded-full shadow-xs flex items-center gap-0.5">
               <Sparkles size={10} strokeWidth={2.5} /> Save 15%
             </span>
             <span className="text-[13px]">3 Terms</span>
@@ -172,38 +172,22 @@ function IndividualPayContent() {
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
-          {/* ── Email ── */}
-          <div className="mb-5">
-            <div
-              className={[
-                'border rounded-xl transition-colors',
-                errors.email
-                  ? 'border-danger'
-                  : 'border-border-2 focus-within:border-ink',
-              ].join(' ')}
-            >
-              <label
-                htmlFor="email"
-                className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
-              >
-                <Mail size={11} strokeWidth={2.5} aria-hidden />
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                spellCheck={false}
-                autoCapitalize="none"
-                placeholder="you@example.com"
-                className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
-                {...register('email')}
-              />
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="email" className="text-sm font-semibold text-ink-2">
+              Email address
+            </label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              spellCheck={false}
+              autoCapitalize="none"
+              placeholder="you@example.com"
+              className={`input-field ${errors.email ? 'error' : ''}`}
+              {...register('email')}
+            />
             {errors.email && (
-              <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
-                {errors.email.message}
-              </p>
+              <p className="text-xs text-danger">{errors.email.message}</p>
             )}
           </div>
 
