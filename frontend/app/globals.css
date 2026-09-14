@@ -49,6 +49,10 @@
     --jade-tint-border: rgba(22, 163, 74, 0.25);
     --jade-dark:      #15803D;
 
+    /* ── Brand RGB (for rgba() usage) ────────────────────────────────────── */
+    --brand-rgb:  22, 163, 74;
+    --brand-dim:  rgba(22, 163, 74, 0.08);
+
     /* ── Radius ───────────────────────────────────────────────────────────── */
     --radius-sm:   6px;
     --radius:      10px;
@@ -147,6 +151,41 @@
   /* Standard card */
   .card {
     @apply rounded-xl bg-card shadow-sm border border-border;
+  }
+
+  /* Bottom-nav clearance — every student page uses pb-nav on <main> */
+  .pb-nav {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Premium multi-layer shadow */
+  .shadow-premium {
+    box-shadow:
+      0 1px 3px rgba(0,0,0,0.06),
+      0 4px 16px rgba(0,0,0,0.05),
+      0 0 0 1px rgba(0,0,0,0.04);
+  }
+
+  /* Glassmorphism card — solid fallback for older Android Chrome */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(22, 101, 52, 0.08);
+  }
+  @supports (backdrop-filter: blur(1px)) {
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+  }
+
+  /* Auth page ambient background blob */
+  .auth-blob {
+    position: absolute;
+    border-radius: 9999px;
+    background: radial-gradient(circle, rgba(var(--brand-rgb), 0.12), transparent 70%);
+    pointer-events: none;
+    filter: blur(60px);
   }
 
   /* Primary button */
