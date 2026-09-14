@@ -134,29 +134,24 @@ export default function JoinPage() {
 
             {/* ── Student Name ── */}
             <div className="flex flex-col gap-1.5 mb-5 text-left">
-              <label htmlFor="student_name" className="text-[11px] font-bold uppercase tracking-[0.07em] text-ink/35">
-                Your Full Name
+              <label htmlFor="student_name" className="text-sm font-semibold text-ink-2">
+                Your full name
               </label>
               <input
                 id="student_name"
                 type="text"
                 autoComplete="name"
                 placeholder="e.g. Chisom Okeke"
-                className={[
-                  'w-full rounded-xl border bg-white px-4 py-2.5 text-[15px] outline-none transition-all text-ink placeholder:text-muted',
-                  errors.student_name
-                    ? 'border-danger focus:ring-red-100'
-                    : 'border-[#D1D5DB] focus:border-[#16A34A] focus:ring-green-100',
-                ].join(' ')}
+                className={`input-field ${errors.student_name ? 'error' : ''}`}
                 {...register('student_name')}
               />
               {errors.student_name && (
-                <p className="text-[11px] leading-none text-danger mt-1">
+                <p className="text-xs leading-none text-danger mt-1">
                   {errors.student_name.message}
                 </p>
               )}
-              <p className="text-[11px] text-ink/35 leading-tight mt-1">
-                Only required the first time you activate this code.
+              <p className="text-xs text-faint leading-tight">
+                Only needed the first time you use this code.
               </p>
             </div>
 
