@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth';
 import { registerUser, ApiError } from '@/lib/api/auth';
@@ -13,7 +13,6 @@ import LandingBrandMark from '@/components/landing/LandingBrandMark';
 
 function RegisterForm() {
   const router = useRouter();
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
@@ -42,9 +41,20 @@ function RegisterForm() {
       router.push('/student');
     } catch (err) {
       if (err instanceof ApiError) {
-        if (err.status === 409 || (err.status === 400 && err.message.toLowerCase().includes('username'))) {
-          setError('username', { type: 'server', message: err.message || 'Username already taken' });
-        } else if (err.status === 400 && (err.message.toLowerCase().includes('access code') || err.message.toLowerCase().includes('code') || err.message.toLowerCase().includes('join'))) {
+        if (
+          err.status === 409 ||
+          (err.status === 400 && err.message.toLowerCase().includes('username'))
+        ) {
+          setError('username', {
+            type: 'server',
+            message: err.message || 'That username is already taken',
+          });
+        } else if (
+          err.status === 400 &&
+          (err.message.toLowerCase().includes('access code') ||
+            err.message.toLowerCase().includes('code') ||
+            err.message.toLowerCase().includes('join'))
+        ) {
           setError('access_code', { type: 'server', message: err.message });
         } else if (err.status === 400) {
           setBannerError(err.message || 'Check your details and try again.');
@@ -57,83 +67,87 @@ function RegisterForm() {
     }
   }
 
-  const fieldClass = (hasError: boolean) =>
-    `w-full rounded-xl border bg-white px-4 py-2.5 text-[15px] text-[#111827] placeholder:text-[#9CA3AF] outline-none focus:ring-2 transition-all ${hasError
-      ? 'border-[#EF4444] focus:ring-red-100'
-      : 'border-[#D1D5DB] focus:border-[#16A34A] focus:ring-green-100'
-    }`;
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB] px-4 py-12">
+    <div className="relative min-h-screen bg-bg-0 flex flex-col items-center justify-center px-4 py-10 overflow-hidden">
+
+      {/* Decorative blobs — CSS only, Android-safe */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 -right-16 w-72 h-72 rounded-full opacity-40"
+        style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.14) 0%, transparent 70%)' }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full opacity-30"
+        style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.10) 0%, transparent 70%)' }}
+      />
+
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 mb-8">
+      <Link href="/" className="relative z-10 flex items-center gap-2 mb-8">
         <LandingBrandMark size={28} />
-        <span className="font-bold text-[18px] text-[#111827] tracking-tight">Recall</span>
+        <span className="font-bold text-lg text-ink tracking-tight">Recall</span>
       </Link>
 
-      {/* School Code redirect banner */}
-      <div className="w-full max-w-[400px] mb-3 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#F0FDF4] border border-[#DCFCE7]">
-        <Building2 size={15} className="text-[#16A34A] flex-shrink-0" strokeWidth={2} aria-hidden />
-        <p className="text-[13px] text-[#15803D]">
-          My school gave me a code?{' '}
-          <Link href="/join" className="font-semibold text-[#166534] hover:underline">
-            Enter school access code at /join →
-          </Link>
-        </p>
-      </div>
-
       {/* Card */}
-      <div className="w-full max-w-[400px] bg-white rounded-2xl border border-[#E5E7EB] shadow-sm p-8">
-        <div className="mb-6">
-          <h1 className="text-[22px] font-bold text-[#111827] tracking-tight mb-1">
-            Individual Registration
-          </h1>
-          <p className="text-[14px] text-[#6B7280]">
-            For access codes purchased individually (<code className="text-[12px] bg-gray-100 px-1 py-0.5 rounded">IND-XXXX-XX</code>).
-          </p>
-        </div>
+      <div className="relative z-10 w-full max-w-[400px] bg-white rounded-2xl shadow-premium border border-border p-7">
+
+        <h1 className="text-[22px] font-bold text-ink tracking-tight mb-1">
+          Create your account
+        </h1>
+        <p className="text-sm text-muted mb-6">
+          You need an access code to register. Check your email for it.
+        </p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+
           {/* Access Code */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="access_code" className="text-[14px] font-medium text-[#111827]">
+            <label htmlFor="access_code" className="text-sm font-semibold text-ink-2">
               Access code
             </label>
             <input
               id="access_code"
               type="text"
               autoCapitalize="characters"
+              spellCheck={false}
               placeholder="e.g. IND-A1B2-C3"
-              className={fieldClass(!!errors.access_code)}
+              className={`input-field font-mono tracking-wider ${errors.access_code ? 'error' : ''}`}
               {...register('access_code')}
             />
-            {errors.access_code && (
-              <p className="text-[13px] text-[#EF4444]">{errors.access_code.message}</p>
+            {errors.access_code ? (
+              <p className="text-xs text-danger">{errors.access_code.message}</p>
+            ) : (
+              <p className="text-xs text-faint">
+                This was sent to your email when you purchased Recall
+              </p>
             )}
           </div>
 
           {/* Username */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="username" className="text-[14px] font-medium text-[#111827]">
-              Username
+            <label htmlFor="username" className="text-sm font-semibold text-ink-2">
+              Choose a username
             </label>
             <input
               id="username"
               type="text"
               autoComplete="username"
               autoCapitalize="none"
+              spellCheck={false}
               placeholder="e.g. chisom123"
-              className={fieldClass(!!errors.username)}
+              className={`input-field ${errors.username ? 'error' : ''}`}
               {...register('username')}
             />
-            {errors.username && (
-              <p className="text-[13px] text-[#EF4444]">{errors.username.message}</p>
+            {errors.username ? (
+              <p className="text-xs text-danger">{errors.username.message}</p>
+            ) : (
+              <p className="text-xs text-faint">This is what you&apos;ll use to sign in</p>
             )}
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-[14px] font-medium text-[#111827]">
+            <label htmlFor="password" className="text-sm font-semibold text-ink-2">
               Password
             </label>
             <div className="relative">
@@ -141,27 +155,29 @@ function RegisterForm() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
-                placeholder="Choose a password"
-                className={`${fieldClass(!!errors.password)} pr-12`}
+                placeholder="Create a password"
+                className={`input-field pr-12 ${errors.password ? 'error' : ''}`}
                 {...register('password')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#9CA3AF] hover:text-[#374151] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-faint active:text-muted transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff size={17} strokeWidth={2} /> : <Eye size={17} strokeWidth={2} />}
+                {showPassword
+                  ? <EyeOff size={17} strokeWidth={2} />
+                  : <Eye size={17} strokeWidth={2} />}
               </button>
             </div>
             {errors.password && (
-              <p className="text-[13px] text-[#EF4444]">{errors.password.message}</p>
+              <p className="text-xs text-danger">{errors.password.message}</p>
             )}
           </div>
 
           {/* Confirm Password */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="confirm_password" className="text-[14px] font-medium text-[#111827]">
+            <label htmlFor="confirm_password" className="text-sm font-semibold text-ink-2">
               Confirm password
             </label>
             <div className="relative">
@@ -170,20 +186,22 @@ function RegisterForm() {
                 type={showConfirmPassword ? 'text' : 'password'}
                 autoComplete="new-password"
                 placeholder="Repeat your password"
-                className={`${fieldClass(!!errors.confirm_password)} pr-12`}
+                className={`input-field pr-12 ${errors.confirm_password ? 'error' : ''}`}
                 {...register('confirm_password')}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-[#9CA3AF] hover:text-[#374151] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-faint active:text-muted transition-colors"
                 aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
               >
-                {showConfirmPassword ? <EyeOff size={17} strokeWidth={2} /> : <Eye size={17} strokeWidth={2} />}
+                {showConfirmPassword
+                  ? <EyeOff size={17} strokeWidth={2} />
+                  : <Eye size={17} strokeWidth={2} />}
               </button>
             </div>
             {errors.confirm_password && (
-              <p className="text-[13px] text-[#EF4444]">{errors.confirm_password.message}</p>
+              <p className="text-xs text-danger">{errors.confirm_password.message}</p>
             )}
           </div>
 
@@ -191,7 +209,7 @@ function RegisterForm() {
           {bannerError && (
             <div
               role="alert"
-              className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-[14px] text-[#DC2626]"
+              className="rounded-xl border border-danger/25 bg-danger-bg px-4 py-3 text-sm text-danger"
             >
               {bannerError}
             </div>
@@ -201,30 +219,36 @@ function RegisterForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-1 w-full rounded-xl bg-[#111827] text-white text-[15px] font-semibold py-3 flex items-center justify-center gap-2 hover:bg-[#1F2937] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="btn-primary w-full mt-1"
           >
-            {isSubmitting ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              'Create account'
-            )}
+            {isSubmitting
+              ? <Loader2 size={18} className="animate-spin" />
+              : 'Create account'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-[14px] text-[#6B7280]">
+        <p className="mt-5 text-center text-xs text-muted">
           Already have an account?{' '}
           <Link
             href="/login"
-            className="font-semibold text-[#111827] hover:text-[#16A34A] transition-colors"
+            className="font-semibold text-ink hover:text-brand transition-colors"
           >
             Sign in
           </Link>
         </p>
+
+        <p className="mt-3 text-center text-xs text-muted">
+          School gave you a code?{' '}
+          <Link
+            href="/join"
+            className="font-semibold text-brand hover:text-brand-dark transition-colors"
+          >
+            Use it here
+          </Link>
+        </p>
       </div>
 
-      <p className="mt-6 text-[13px] text-[#9CA3AF]">
-        &copy; Recall 2026
-      </p>
+      <p className="relative z-10 mt-6 text-xs text-faint">© Recall 2026</p>
     </div>
   );
 }
