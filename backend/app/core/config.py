@@ -57,7 +57,9 @@ class Settings(BaseSettings):
     # ── AI — Embeddings (Gemini text-embedding-004) ────────────
     gemini_api_key: str = ""
 
-    # ── Push notifications (OneSignal) ────────────────────────
+    # ── Push notifications (Firebase & OneSignal) ─────────────
+    firebase_credentials_path: str = ""
+    firebase_service_account_json: str = ""
     onesignal_app_id: str = ""
     onesignal_api_key: str = ""
 

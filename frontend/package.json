@@ -23,6 +23,7 @@
     "ai": "latest",
     "bullmq": "latest",
     "clsx": "latest",
+    "firebase": "^12.18.0",
     "framer-motion": "^12.42.2",
     "ioredis": "latest",
     "isomorphic-dompurify": "^3.18.0",

@@ -2,9 +2,15 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Pencil, Check, X } from 'lucide-react';
+import { LogOut, Pencil, Check, X, Bell } from 'lucide-react';
 import { changePassword, getMe, logout, ApiError, getAuthHeaders } from '@/lib/api/auth';
 import { getHomeData } from '@/lib/api/topics';
+import {
+  requestNotificationPermissionAndGetToken,
+  getStoredFcmToken,
+  clearStoredFcmToken,
+} from '@/lib/firebase';
+import { registerNotificationToken, unregisterNotificationToken } from '@/lib/api/notifications';
 import type { UserMe } from '@/types/auth';
 import { BottomNav } from '@/components/student/BottomNav';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
@@ -52,6 +58,40 @@ export default function SettingsPage() {
 
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Push notifications state
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotifEnabled(Notification.permission === 'granted' && !!getStoredFcmToken());
+    }
+  }, []);
+
+  async function handleToggleNotifications() {
+    setNotifLoading(true);
+    try {
+      if (notifEnabled) {
+        const token = getStoredFcmToken();
+        if (token) {
+          await unregisterNotificationToken(token).catch(() => {});
+          clearStoredFcmToken();
+        }
+        setNotifEnabled(false);
+      } else {
+        const token = await requestNotificationPermissionAndGetToken();
+        if (token) {
+          await registerNotificationToken(token, 'web');
+          setNotifEnabled(true);
+        }
+      }
+    } catch {
+      // Best effort toggle update
+    } finally {
+      setNotifLoading(false);
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -234,6 +274,33 @@ export default function SettingsPage() {
               Add Recall to your home screen for faster access — works offline too.
             </p>
             <InstallAppButton variant="solid" className="shrink-0 text-[12px] px-3 py-1.5" />
+          </div>
+        </div>
+
+        {/* ── Push Notifications ────────────────────────────────────────── */}
+        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
+          <div className="border-b border-border bg-bg-0 px-4 py-2.5 flex items-center justify-between">
+            <span className="text-[13px] font-bold text-ink flex items-center gap-1.5">
+              <Bell size={14} />
+              Push Notifications
+            </span>
+          </div>
+          <div className="px-4 py-3 flex items-center justify-between gap-3">
+            <p className="text-[13px] text-muted leading-snug flex-1">
+              Get daily recall reminders and streak alerts on your device.
+            </p>
+            <button
+              type="button"
+              onClick={handleToggleNotifications}
+              disabled={notifLoading}
+              className={`shrink-0 rounded-xl px-3 py-1.5 text-[12px] font-bold transition-all ${
+                notifEnabled
+                  ? 'bg-jade/10 text-jade hover:bg-jade/20'
+                  : 'bg-jade text-white hover:bg-jade/90'
+              } disabled:opacity-60`}
+            >
+              {notifLoading ? 'Updating…' : notifEnabled ? 'Enabled ✓' : 'Enable'}
+            </button>
           </div>
         </div>
 

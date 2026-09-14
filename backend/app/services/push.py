@@ -46,3 +46,44 @@ async def send_daily_recall_push(
         )
         response.raise_for_status()
         return response.json()
+
+
+async def send_streak_warning_push(
+    user_id: str,
+    streak_count: int,
+    display_name: str = "Student",
+    client: httpx.AsyncClient | None = None,
+) -> dict:
+    """Send a streak warning push notification via OneSignal."""
+    title = "🔥 Keep your streak alive!"
+    body = (
+        f"Hi {display_name}, you have a {streak_count}-day learning streak going! "
+        "Don't lose it, open Recall and complete today's review or topic."
+    )
+
+    payload = {
+        "app_id": settings.onesignal_app_id,
+        "include_external_user_ids": [user_id],
+        "contents": {"en": body},
+        "headings": {"en": title},
+        "data": {"type": "streak", "streak": str(streak_count)},
+    }
+    headers = {"Authorization": f"Basic {settings.onesignal_api_key}"}
+
+    if client is not None:
+        response = await client.post(
+            "https://onesignal.com/api/v1/notifications",
+            json=payload,
+            headers=headers,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async with httpx.AsyncClient() as new_client:
+        response = await new_client.post(
+            "https://onesignal.com/api/v1/notifications",
+            json=payload,
+            headers=headers,
+        )
+        response.raise_for_status()
+        return response.json()
