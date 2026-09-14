@@ -96,13 +96,13 @@ export default function BrowsePage() {
       {/* ── Subject list ─────────────────────────────────────────────────── */}
       <main className="flex-1 pb-nav">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                  <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
             <BookOpen
               size={32}
               strokeWidth={1.5}
-              className="mb-3 text-gray-300"
+              className="mb-3 text-faint"
             />
-            <p className="text-[15px] text-muted">
+            <p className="text-base text-muted">
               No subjects found
             </p>
           </div>
