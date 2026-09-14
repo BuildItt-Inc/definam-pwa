@@ -84,25 +84,29 @@ export default function LandingHero() {
             initial="hidden"
             animate="visible"
             variants={fadeUp}
-            className="font-body flex w-full max-w-md flex-col gap-2.5 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap sm:gap-3"
+            className={`${dmSans.variable} font-body flex w-full max-w-md flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap`}
           >
+            {/* Primary CTA — school students (majority of users) */}
             <Link
               href="/join"
-              className="inline-flex items-center justify-center rounded-lg bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97] sm:px-6 sm:text-[15px]"
+              className="inline-flex items-center justify-center rounded-xl bg-brand px-6 py-4 text-[15px] font-bold text-white active:scale-[0.97] transition-transform shadow-sm"
             >
               My school gave me a code →
             </Link>
+
+            {/* Secondary CTA — individual or returning */}
             <Link
               href="/login"
-              className="inline-flex items-center justify-center rounded-lg border border-white/25 bg-white/5 px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:border-white/40 hover:bg-white/10 active:scale-[0.97] sm:px-6 sm:text-[15px]"
+              className="inline-flex items-center justify-center rounded-xl border border-white/25 bg-white/8 px-6 py-4 text-[15px] font-semibold text-white active:scale-[0.97] transition-transform"
             >
-              I bought my own code
+              Sign in / Get started
             </Link>
+
             {canInstall && (
               <button
                 type="button"
                 onClick={promptInstall}
-                className="inline-flex items-center justify-center rounded-lg border border-white/20 px-5 py-3.5 text-[14px] font-semibold text-white/80 transition-colors hover:border-white/30 active:scale-[0.97]"
+                className="inline-flex items-center justify-center rounded-xl border border-white/20 px-5 py-4 text-[14px] font-semibold text-white/80 active:scale-[0.97] transition-transform"
               >
                 Install App
               </button>
