@@ -15,19 +15,19 @@ function heatmapColor(level: number): string {
 function ProgressSkeleton() {
   return (
     <div className="min-h-screen bg-bg-0">
-      <div className="border-b border-gray-200/60 bg-bg-0 px-4 py-3.5">
-        <div className="h-5 w-28 animate-pulse rounded bg-gray-300/50" />
+      <div className="border-b border-border bg-bg-0 px-4 py-3.5">
+        <div className="h-5 w-28 animate-pulse rounded bg-border-2" />
       </div>
 
       <div className="px-4 py-4 pb-24">
         <div className="mb-4 grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-300/40" />
+            <div key={i} className="h-20 animate-pulse rounded-xl bg-bg-2" />
           ))}
         </div>
-        <div className="mb-4 h-36 animate-pulse rounded-xl bg-gray-300/40" />
-        <div className="mb-4 h-28 animate-pulse rounded-xl bg-gray-300/40" />
-        <div className="h-32 animate-pulse rounded-xl bg-gray-300/40" />
+        <div className="mb-4 h-36 animate-pulse rounded-xl bg-bg-2" />
+        <div className="mb-4 h-28 animate-pulse rounded-xl bg-bg-2" />
+        <div className="h-32 animate-pulse rounded-xl bg-bg-2" />
       </div>
     </div>
   );
@@ -55,7 +55,7 @@ function StatCard({ variant, value, label }: StatCardProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200/80 bg-card px-3 py-4">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card px-3 py-4">
       <span className="font-bold text-[28px] leading-none text-ink">{value}</span>
       <span className="mt-1 text-[13px] text-muted">{label}</span>
     </div>
@@ -215,7 +215,7 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
               ? 'bg-ink'
               : item.urgency === 'medium'
                 ? 'bg-ink-2'
-                : 'border border-gray-300 bg-bg-2';
+                : 'border border-border-2 bg-bg-2';
 
           return (
             <div
