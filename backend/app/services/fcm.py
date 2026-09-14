@@ -32,7 +32,12 @@ try:
             logger.info("Firebase Admin SDK initialized from credentials file.")
         elif cred_json:
             try:
-                parsed_json = json.loads(cred_json)
+                raw_str = cred_json.strip()
+                if not raw_str.startswith("{"):
+                    import base64
+
+                    raw_str = base64.b64decode(raw_str).decode("utf-8")
+                parsed_json = json.loads(raw_str)
                 cred = credentials.Certificate(parsed_json)
                 firebase_admin.initialize_app(cred)
                 firebase_initialized = True
