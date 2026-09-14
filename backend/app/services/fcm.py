@@ -10,6 +10,7 @@ import firebase_admin
 from firebase_admin import credentials, messaging
 from sqlalchemy import delete, select, update
 
+from app.core.config import get_settings
 from app.db.database import db_session
 from app.db.models import UserNotificationToken
 
@@ -20,8 +21,9 @@ firebase_initialized = False
 
 try:
     if not firebase_admin._apps:
-        cred_path = os.environ.get("FIREBASE_CREDENTIALS")
-        cred_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
+        settings = get_settings()
+        cred_path = settings.firebase_credentials_path or os.environ.get("FIREBASE_CREDENTIALS")
+        cred_json = settings.firebase_service_account_json or os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
 
         if cred_path and os.path.exists(cred_path):
             cred = credentials.Certificate(cred_path)

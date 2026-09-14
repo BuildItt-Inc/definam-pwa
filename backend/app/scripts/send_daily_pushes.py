@@ -14,7 +14,7 @@ from sqlalchemy import Date, and_, cast, select
 from app.db.database import db_session
 from app.db.models import DailyActivity, DailyRecallQueue, Topic, User
 from app.services.fcm import send_multicast_fcm
-from app.services.push import send_daily_recall_push
+from app.services.push import send_daily_recall_push, send_streak_warning_push
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -150,7 +150,7 @@ async def process_streak_notifications():
                 title = "🔥 Keep your streak alive!"
                 body = (
                     f"Hi {display_name}, you have a {streak_count}-day learning streak going! "
-                    "Don't lose it — open DefinAm and complete today's review or topic."
+                    "Don't lose it, open Recall and complete today's review or topic."
                 )
 
                 fcm_res = await send_multicast_fcm(
@@ -169,31 +169,15 @@ async def process_streak_notifications():
                 else:
                     # OneSignal fallback for streak reminders
                     try:
-                        # Attempt to construct OneSignal payload manually
-                        from app.core.config import get_settings
-
-                        settings = get_settings()
-                        payload = {
-                            "app_id": settings.onesignal_app_id,
-                            "include_external_user_ids": [user_id],
-                            "contents": {"en": body},
-                            "headings": {"en": title},
-                            "data": {"type": "streak", "streak": str(streak_count)},
-                        }
-                        headers = {
-                            "Authorization": f"Basic {settings.onesignal_api_key}"
-                        }
-                        async with httpx.AsyncClient() as client:
-                            response = await client.post(
-                                "https://onesignal.com/api/v1/notifications",
-                                json=payload,
-                                headers=headers,
-                            )
-                            if response.status_code == 200:
-                                logger.info(
-                                    "Sent OneSignal streak warning to user %s",
-                                    user_id,
-                                )
+                        await send_streak_warning_push(
+                            user_id=user_id,
+                            streak_count=streak_count,
+                            display_name=display_name,
+                        )
+                        logger.info(
+                            "Sent OneSignal streak warning to user %s",
+                            user_id,
+                        )
                     except Exception as e:
                         logger.error(
                             "Failed OneSignal streak warning for user %s: %s",

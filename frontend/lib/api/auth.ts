@@ -186,6 +186,18 @@ export async function refreshToken(): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
+  try {
+    const { getStoredFcmToken, clearStoredFcmToken } = await import('@/lib/firebase');
+    const { unregisterNotificationToken } = await import('@/lib/api/notifications');
+    const token = getStoredFcmToken();
+    if (token) {
+      await unregisterNotificationToken(token).catch(() => {});
+      clearStoredFcmToken();
+    }
+  } catch {
+    // Best-effort cleanup — proceed with logout regardless
+  }
+
   await fetch('/api/auth/logout', { method: 'POST' });
   accessToken = null;
   broadcastAuthChange('logout');
