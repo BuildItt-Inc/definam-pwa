@@ -19,18 +19,18 @@ import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
 
 function getGreeting(): string {
   const h = new Date().getHours();
-  if (h < 12) return 'Morning';
-  if (h < 17) return 'Afternoon';
-  return 'Evening';
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
 }
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
 
 function HomeSkeleton() {
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="min-h-screen bg-bg-0">
       <div
-        className="relative overflow-hidden px-5 pb-11 pt-[calc(env(safe-area-inset-top)+24px)]"
+        className="relative overflow-hidden px-5 pb-11 pt-[calc(env(safe-area-inset-top,0px)+24px)]"
         style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 130%)' }}
       >
         <div className="mb-1 h-3 w-20 animate-pulse rounded bg-white/10" />
@@ -47,16 +47,11 @@ function HomeSkeleton() {
         </div>
       </div>
       <div className="-mt-7 px-4">
-        <div className="h-28 animate-pulse rounded-2xl bg-white border border-gray-200" />
+        <div className="h-28 animate-pulse rounded-2xl bg-white border border-border" />
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-2 px-4">
+      <div className="mt-4 px-4 space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 animate-pulse rounded-2xl bg-white border border-gray-100" />
-        ))}
-      </div>
-      <div className="mt-6 px-5 space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 animate-pulse rounded-xl bg-white border border-gray-100" />
+          <div key={i} className="h-16 animate-pulse rounded-xl bg-white border border-border" />
         ))}
       </div>
     </div>
@@ -77,7 +72,7 @@ function TopicRow({ topic }: { topic: RecentTopic }) {
       ref={ref}
       onMouseMove={onMouseMove}
       href={`/student/learn/${topic.topic_id}`}
-      className="spotlight spotlight-card relative flex items-center gap-3 overflow-hidden rounded-[14px] border border-[#F3F4F6] bg-white px-3 py-3"
+      className="spotlight spotlight-card relative flex items-center gap-3 overflow-hidden rounded-[14px] border border-border bg-white px-3 py-3 active:scale-[0.99] transition-transform"
     >
       {/* Subject icon */}
       <span
@@ -89,22 +84,22 @@ function TopicRow({ topic }: { topic: RecentTopic }) {
 
       {/* Info + progress bar */}
       <span className="relative z-10 min-w-0 flex-1">
-        <span className="block truncate text-[14px] font-bold text-[#111827]">
+        <span className="block truncate text-sm font-bold text-ink">
           {topic.topic_title}
         </span>
-        <span className="mt-1.5 block h-[5px] overflow-hidden rounded-full bg-[#F3F4F6]">
+        <span className="mt-1.5 block h-[5px] overflow-hidden rounded-full bg-bg-2">
           <span
             className="block h-full rounded-full"
-            style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#4ADE80,#16A34A)' }}
+            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #4ADE80, #16A34A)' }}
           />
         </span>
-        <span className="mt-1 block text-[11px] text-[#9CA3AF]">
-          {topic.subject} &middot; {started ? `${progress}% done` : 'Not started'}
+        <span className="mt-1 block text-xs text-faint">
+          {topic.subject} · {started ? `${progress}% done` : 'Not started'}
         </span>
       </span>
 
-      {/* CTA — per-topic, not page-wide: each row reflects its own progress */}
-      <span className="relative z-10 flex-shrink-0 rounded-[9px] bg-[#111827] px-3 py-1.5 text-[12px] font-bold text-white">
+      {/* CTA */}
+      <span className="relative z-10 flex-shrink-0 rounded-[9px] bg-ink px-3 py-1.5 text-xs font-bold text-white">
         {started ? 'Continue' : 'Start'}
       </span>
     </Link>
@@ -112,12 +107,6 @@ function TopicRow({ topic }: { topic: RecentTopic }) {
 }
 
 // ── Subject strip ───────────────────────────────────────────────────────────
-// Only the subjects with a real, dedicated icon in SUBJECT_ICONS are shown
-// (capped at 5) — with ~23 subjects now seeded, showing one tile per subject
-// meant the strip overflowed the header and mostly rendered the same
-// BookOpen fallback for anything without a mapped icon. Restricting to
-// mapped subjects means no fallback icon and no overflow, at the cost of
-// hiding unmapped subjects from this strip (Browse still lists all of them).
 
 function SubjectStrip({ subjects }: { subjects: Subject[] }) {
   const mappedSubjects = subjects.filter((s) => s.name in SUBJECT_ICONS).slice(0, 5);
@@ -132,7 +121,7 @@ function SubjectStrip({ subjects }: { subjects: Subject[] }) {
             href={`/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`}
             aria-label={subject.name}
             title={subject.name}
-            className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[10px] border border-white/10 bg-white/[0.08] text-white transition-colors hover:bg-white/[0.16]"
+            className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[10px] border border-white/10 bg-white/[0.08] text-white active:bg-white/[0.16] transition-colors"
           >
             <Icon size={16} strokeWidth={1.8} />
           </Link>
@@ -148,15 +137,15 @@ export default function StudentHomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [subjects, setSubjects] = useState<Subject[] | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [greeting, setGreeting] = useState('Morning');
+  const [greeting, setGreeting] = useState('Good morning');
   const router = useRouter();
   const { celebrate } = useCelebration();
   const { ref: glowRef, onMouseMove: onGlowMouseMove } = useSpotlight<HTMLDivElement>();
-  const { 
-    canInstall, 
-    promptInstall, 
-    showIOSInstructions, 
-    setShowIOSInstructions 
+  const {
+    canInstall,
+    promptInstall,
+    showIOSInstructions,
+    setShowIOSInstructions,
   } = usePWAInstall();
 
   useEffect(() => {
@@ -164,8 +153,6 @@ export default function StudentHomePage() {
     getHomeData()
       .then((homeData) => {
         setData(homeData);
-        // Set by the login page right before redirecting here — every
-        // session, no manual dismiss needed (auto-dismisses on its own).
         if (sessionStorage.getItem('celebrate_login') === '1') {
           sessionStorage.removeItem('celebrate_login');
           celebrate({ type: 'login', name: homeData.student_name });
@@ -181,10 +168,6 @@ export default function StudentHomePage() {
           setFetchError(err instanceof Error ? err.message : 'Failed to load');
         }
       });
-    // Subject strip + "subjects covered" stat both need the real subject
-    // list — already exposed via the existing /subjects endpoint (same one
-    // Browse uses), so this isn't a new backend addition, just a second
-    // consumer of it.
     getSubjects()
       .then(setSubjects)
       .catch(() => setSubjects([]));
@@ -192,12 +175,12 @@ export default function StudentHomePage() {
 
   if (fetchError) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-6 bg-[#F9FAFB]">
+      <div className="flex min-h-screen items-center justify-center px-6 bg-bg-0">
         <div className="text-center">
-          <p className="text-[15px] text-[#6B7280] mb-4">{fetchError}</p>
+          <p className="text-base text-muted mb-4">{fetchError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-[14px] font-semibold text-[#16A34A] underline"
+            className="text-sm font-semibold text-brand underline underline-offset-2"
           >
             Try again
           </button>
@@ -210,58 +193,56 @@ export default function StudentHomePage() {
 
   const { student_name, school_name, streak_days, completion_percent, recall_queue, recent_topics } = data;
   const hasStarted = recent_topics.some((t) => (t.mastery_percent ?? 0) > 0);
-  const currentTopic = recent_topics[0];
 
   return (
-    <div className="page-with-nav bg-[#F9FAFB] page-enter">
+    <div className="page-with-nav bg-bg-0 page-enter">
 
-      {/* ── 1. Header ── */}
+      {/* ── 1. Hero Header ── */}
       <div
         ref={glowRef}
         onMouseMove={onGlowMouseMove}
-        className="relative shrink-0 overflow-hidden px-5 pb-11 pt-[calc(env(safe-area-inset-top)+24px)]"
+        className="relative shrink-0 overflow-hidden px-5 pb-12 pt-[calc(env(safe-area-inset-top,0px)+24px)]"
         style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 130%)' }}
       >
-        {/* Fixed corner glow (not spotlight-following — a static accent, per
-            the preview's .header-glow, distinct from the cursor-tracked
-            spotlight used on cards/buttons elsewhere).*/}
+        {/* Static corner glow */}
         <div
-          aria-hidden="true"
+          aria-hidden
           className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.25), transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.22), transparent 70%)' }}
         />
 
-        <p className="relative z-10 mb-1 text-[13px] font-medium text-white/40 tracking-wide">
+        <p className="relative z-10 mb-0.5 text-xs font-medium text-white/50 tracking-wide">
           {greeting}
         </p>
         <h1 className="relative z-10 mb-0.5 text-[26px] font-bold leading-tight text-white tracking-tight">
           {student_name}
         </h1>
-        <p className="relative z-10 mb-[18px] text-[13px] text-white/40">{school_name}</p>
+        {school_name && (
+          <p className="relative z-10 mb-5 text-sm text-white/40">{school_name}</p>
+        )}
 
-        {/* Streak + completion ring */}
+        {/* Streak pill + completion ring — streak shown once only here */}
         <div className="relative z-10 flex items-center justify-between gap-2.5">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#4ADE80]/30 bg-white/10 px-3.5 py-2">
-            <Flame size={15} strokeWidth={2} className="flame-pulse text-[#4ADE80]" />
-            <span className="font-bold text-[15px] leading-none text-white">
+          <div className="inline-flex items-center gap-2 rounded-full border border-brand-light/30 bg-white/10 px-3.5 py-2">
+            <Flame size={15} strokeWidth={2} className="flame-pulse text-brand-light" />
+            <span className="font-bold text-base leading-none text-white">
               {streak_days}
             </span>
-            <span className="text-[12.5px] text-white/55">
-              {streak_days === 1 ? 'day streak' : streak_days === 0 ? 'Start your streak' : 'day streak'}
+            <span className="text-xs text-white/55">
+              {streak_days === 0 ? 'Start your streak' : streak_days === 1 ? 'day streak' : 'day streak'}
             </span>
           </div>
           <CompletionRing percent={completion_percent} />
         </div>
 
-        {/* Subject strip — tappable, jumps straight to that subject's
-            chapter list on Browse. */}
+        {/* Subject shortcut strip */}
         {subjects && subjects.length > 0 && <SubjectStrip subjects={subjects} />}
       </div>
 
-      {/* ── Main scroll area ── */}
+      {/* ── 2. Main scroll area ── */}
       <main className="flex-1 px-4 pb-nav">
 
-        {/* Recall card - floats over header bottom */}
+        {/* Recall card — floats over header */}
         <div className="-mt-7 mb-4">
           <RecallCard
             queue={recall_queue}
@@ -269,17 +250,18 @@ export default function StudentHomePage() {
           />
         </div>
 
+        {/* PWA install banner */}
         {canInstall && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-[#E5E7EB] bg-white p-3.5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-border bg-white p-3.5 shadow-xs">
             <div className="flex-1 min-w-0">
-              <p className="text-[13.5px] font-bold text-[#111827]">Install Recall App</p>
-              <p className="text-[11.5px] text-[#6B7280] mt-0.5 leading-snug">
-                Add Recall to your home screen for quick, offline-capable access.
+              <p className="text-sm font-bold text-ink">Install Recall App</p>
+              <p className="text-xs text-muted mt-0.5 leading-snug">
+                Add to your home screen for fast, offline access.
               </p>
             </div>
             <button
               onClick={promptInstall}
-              className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 py-1.5 text-[12px] font-bold text-white shadow-sm hover:bg-[#15803D] active:scale-95 transition-all"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white active:scale-95 transition-transform"
             >
               <Download size={13} strokeWidth={2.5} />
               Install
@@ -287,42 +269,36 @@ export default function StudentHomePage() {
           </div>
         )}
 
-        <IOSInstallModal 
+        <IOSInstallModal
           isOpen={showIOSInstructions}
           onClose={() => setShowIOSInstructions(false)}
         />
 
-        {/* Stats row */}
-        <div className="mb-5 grid grid-cols-3 gap-2">
-          <div className="rounded-[14px] border border-[#E5E7EB] bg-white px-2 py-3 text-center">
-            <div className="text-[18px] font-extrabold text-[#111827]">
+        {/* Stats row — removed duplicate streak; shows subjects + top topic mastery */}
+        <div className="mb-5 grid grid-cols-2 gap-2">
+          <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
+            <div className="text-xl font-extrabold text-ink">
               {subjects ? subjects.length : '—'}
             </div>
-            <div className="mt-0.5 text-[10.5px] text-[#9CA3AF]">subjects</div>
+            <div className="mt-0.5 text-xs text-muted">subjects</div>
           </div>
-          <div className="rounded-[14px] border border-[#E5E7EB] bg-white px-2 py-3 text-center">
-            <div className="text-[18px] font-extrabold text-[#111827]">
-              {currentTopic ? `${currentTopic.mastery_percent ?? 0}%` : '—'}
+          <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
+            <div className="text-xl font-extrabold text-ink">
+              {completion_percent}%
             </div>
-            <div className="mt-0.5 truncate text-[10.5px] text-[#9CA3AF]">
-              {currentTopic ? currentTopic.topic_title : 'No topic yet'}
-            </div>
-          </div>
-          <div className="rounded-[14px] border border-[#E5E7EB] bg-white px-2 py-3 text-center">
-            <div className="text-[18px] font-extrabold text-[#111827]">{streak_days}</div>
-            <div className="mt-0.5 text-[10.5px] text-[#9CA3AF]">day streak</div>
+            <div className="mt-0.5 text-xs text-muted">overall done</div>
           </div>
         </div>
 
         {/* Topics section */}
         <section className="mb-6">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[15px] font-bold text-[#111827]">
+            <span className="text-base font-bold text-ink">
               {hasStarted ? 'Continue studying' : 'Start here'}
             </span>
             <Link
               href="/student/learn"
-              className="text-[13px] font-semibold text-[#16A34A] hover:text-[#15803D] transition-colors"
+              className="text-sm font-semibold text-brand active:opacity-70 transition-opacity"
             >
               Browse all
             </Link>
