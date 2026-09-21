@@ -245,18 +245,15 @@ function TopicsView({ chapterId }: { chapterId: string }) {
 
 // ── Learning flow ──────────────────────────────────────────────────────────
 
-const STEP_LABELS = ['Explanation', 'Example', 'Visual', 'Practice', 'Chat'] as const;
+const STEP_LABELS = ['Explanation', 'Example', 'Practice', 'Chat'] as const; //removed visual temporarily
 
-const STEP_CTA: Record<1 | 2 | 3, string> = {
+const STEP_CTA: Record<1 | 2, string> = {
   1: 'See a Real-World Example',
-  2: 'Continue to Visual',
-  3: 'Continue to Practice',
+  2: 'Continue to Practice',
 };
 
-function getStepContent(detail: TopicDetail, step: 1 | 2 | 3) {
-  if (step === 1) return detail.step1;
-  if (step === 2) return detail.step2;
-  return detail.step3;
+function getStepContent(detail: TopicDetail, step: 1 | 2 ) {
+  return step === 1 ? detail.step1 : detail.step2;
 }
 
 // ── Learning flow skeleton ──────────────────────────────────────────────────
@@ -341,7 +338,7 @@ function LearningTopBar({
   onBack,
   onExit,
 }: {
-  step: 1 | 2 | 3 | 4 | 5;
+  step: 1 | 2 | 3 | 4 ;
   showScoreSummary: boolean;
   topicTitle: string;
   questionIndex: number;
@@ -349,7 +346,7 @@ function LearningTopBar({
   onBack: () => void;
   onExit: () => void;
 }) {
-  const isPracticeStep = step === 4;
+  const isPracticeStep = step === 3;
 
   return (
     <div
@@ -697,7 +694,7 @@ function LearningFlow({
   const { celebrate } = useCelebration();
   const [detail, setDetail] = useState<TopicDetail | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showScoreSummary, setShowScoreSummary] = useState(false);
@@ -726,9 +723,9 @@ function LearningFlow({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
 
-  const advanceStep = (nextStep: 1 | 2 | 3 | 4 | 5) => {
+  const advanceStep = (nextStep: 1 | 2 | 3 | 4) => {
     setDirection(1);
-    if (nextStep === 4) {
+    if (nextStep === 3) { // was: nextStep === 4 — practice is now 3
       setQuestionIndex(0);
       setScore(0);
       setShowScoreSummary(false);
@@ -738,8 +735,8 @@ function LearningFlow({
 
   const handleBack = () => {
     setDirection(-1);
-    if (step === 5) {
-      setStep(4);
+    if (step === 4) { // was: step === 5 (chat)
+      setStep(3); // was: setStep(4) — back to practice
       setShowScoreSummary(true);
       return;
     }
@@ -747,20 +744,20 @@ function LearningFlow({
       setShowScoreSummary(false);
       setQuestionIndex(0);
       setScore(0);
-      setStep(3);
+      setStep(2); // was: setStep(3) — back to Example, since Visual (old step 3) is gone
       return;
     }
-    if (step === 4) {
+    if (step === 3) { // was: step === 4 (practice)
       setQuestionIndex(0);
       setScore(0);
-      setStep(3);
+      setStep(2); // was: setStep(3) — back to Example
       return;
     }
     if (step === 1) {
       onExit();
       return;
     }
-    setStep((s) => (s - 1) as 1 | 2 | 3 | 4 | 5);
+    setStep((s) => (s - 1) as 1 | 2 | 3 | 4);
   };
 
   const handleQuestionComplete = (correct: boolean) => {
@@ -800,7 +797,7 @@ function LearningFlow({
   const totalQuestions = questions.length;
 
   // Step 5 — completely different layout
-  if (step === 5) {
+  if (step === 4) {
     return (
       <AITutorScaffold
         topicId={topicId}
@@ -838,7 +835,7 @@ function LearningFlow({
             exit="exit"
           >
             {/* Steps 1–3 — content card + CTA */}
-            {(step === 1 || step === 2 || step === 3) && (
+            {(step === 1 || step === 2) && (
               <>
                 <LearningStep
                   step={step}
@@ -846,7 +843,7 @@ function LearningFlow({
                   content={getStepContent(detail!, step).content}
                 />
                 <div className="mt-5 pb-safe">
-                  <StepCta onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4 | 5)}>
+                  <StepCta onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4)}>
                     {STEP_CTA[step]}
                     <ChevronRight size={18} strokeWidth={2.5} />
                   </StepCta>
@@ -855,7 +852,7 @@ function LearningFlow({
             )}
 
             {/* Step 4 — practice questions */}
-            {step === 4 && !showScoreSummary && (
+            {step === 3 && !showScoreSummary && (
               totalQuestions > 0 ? (
                 <PracticeQuestion
                   question={questions[questionIndex]}
@@ -871,11 +868,11 @@ function LearningFlow({
             )}
 
             {/* Step 4 — score summary before AI tutor */}
-            {step === 4 && showScoreSummary && (
+            {step === 3 && showScoreSummary && (
               <ScoreSummary
                 score={score}
                 total={totalQuestions}
-                onContinue={() => advanceStep(5)}
+                onContinue={() => advanceStep(4)}
               />
             )}
           </motion.div>
