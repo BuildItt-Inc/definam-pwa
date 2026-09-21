@@ -5,7 +5,7 @@ import { MathContent } from '@/components/student/MathContent';
 import { useSpotlight } from '@/hooks/useSpotlight';
 
 interface LearningStepProps {
-  step: 1 | 2 | 3;
+  step: 1 | 2 ; //removed step 3 might be added back later
   title: string;
   content: string;
 }
@@ -59,53 +59,6 @@ export function LearningStep({ step, title, content }: LearningStepProps) {
               content={content}
               className="step-body text-[14.5px] leading-[1.75] text-ink"
             />
-          </div>
-        )}
-
-        {/* ── Step 3 — Visual Breakdown ────────────────────────────────────── */}
-        {step === 3 && (
-          <div className="relative z-10">
-            {/* Line-by-line so tree chars (├──/└──) and math coexist cleanly */}
-            <div className="space-y-1.5">
-              {content.split('\n').map((line, i) => {
-                if (line.trim() === '') return <div key={i} className="h-2" />;
-
-                // Indent width before a connector varies (AI output isn't a fixed
-                // 4-char grid — seen 3, 4, and 5 spaces after "│" in practice), so
-                // match indent units loosely and count them rather than dividing
-                // a fixed-width prefix length.
-                const treeMatch = line.match(/^((?:│\s*|\s{2,})*)(├──|└──)\s*(?:•\s*)?(.*)$/);
-                if (treeMatch) {
-                  const [, indent, connector, rest] = treeMatch;
-                  const depth = (indent.match(/│\s*|\s{2,}/g) || []).length;
-                  return (
-                    <div
-                      key={i}
-                      className="flex items-start gap-1.5"
-                      style={{ paddingLeft: `${depth * 20}px` }}
-                    >
-                      <span className="flex-shrink-0 select-none font-mono text-ink/30">
-                        {connector}
-                      </span>
-                      <MathContent
-                        content={rest}
-                        allowBlock={false}
-                        className="font-mono text-[15px] leading-relaxed text-ink"
-                      />
-                    </div>
-                  );
-                }
-
-                return (
-                  <MathContent
-                    key={i}
-                    content={line}
-                    allowBlock={false}
-                    className="block font-mono text-[15px] leading-relaxed text-ink"
-                  />
-                );
-              })}
-            </div>
           </div>
         )}
       </div>
