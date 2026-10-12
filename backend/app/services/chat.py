@@ -1,23 +1,50 @@
 import logging
 
-import anthropic
+from openai import AsyncAzureOpenAI, AsyncOpenAI
 
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
-client = anthropic.AsyncAnthropic(
-    api_key=settings.anthropic_api_key,
-    base_url=settings.anthropic_base_url or None,
-)
 
-_MODEL = settings.anthropic_model
+
+def _get_client():
+    endpoint = (
+        settings.azure_openai_endpoint.strip() if settings.azure_openai_endpoint else ""
+    )
+    key = settings.azure_openai_api_key.strip() if settings.azure_openai_api_key else ""
+    if not endpoint or not key:
+        return None
+
+    if "services.ai.azure.com" in endpoint:
+        base_url = endpoint.rstrip("/")
+        for suffix in ("/responses", "/chat/completions"):
+            if base_url.endswith(suffix):
+                base_url = base_url[: -len(suffix)]
+        if not base_url.endswith("/openai/v1"):
+            if not base_url.endswith("/openai"):
+                base_url = f"{base_url}/openai/v1"
+            else:
+                base_url = f"{base_url}/v1"
+        return AsyncOpenAI(base_url=base_url, api_key=key)
+
+    return AsyncAzureOpenAI(
+        api_key=key,
+        azure_endpoint=endpoint,
+        api_version=settings.azure_openai_api_version,
+    )
+
+
+client = _get_client()
+_MODEL = settings.azure_openai_deployment
+_FALLBACK_MODEL = settings.azure_openai_fallback_deployment
+
 
 async def stream_claude_response(
     user_question: str, topic_context: str, history: list[dict]
 ):
     """
-    Stream Claude's response. Yields:
+    Stream an AI response via Azure OpenAI (with fallback). Yields:
         - ("chunk", text) for each content chunk
         - ("usage", {"input_tokens": n, "output_tokens": m}) after the stream ends
     """
@@ -57,44 +84,57 @@ async def stream_claude_response(
         "Keep responses friendly, academically accurate, clear, and appropriately leveled for high school / secondary students."
     )
 
-    # Anthropic uses a separate `system` param; strip any system messages from history
+    # Build messages: system prompt first, then clean history, then the new user question
     clean_history = [m for m in history if m.get("role") != "system"]
     messages = [
+        {"role": "system", "content": system_prompt},
         *clean_history,
         {"role": "user", "content": user_question},
     ]
 
     input_tokens = output_tokens = 0
 
-    try:
-        async with client.messages.stream(
-            model=_MODEL,
-            system=system_prompt,
-            messages=messages,
-            max_tokens=1024,
-            temperature=0.7,
-        ) as stream:
-            async for text in stream.text_stream:
-                yield ("chunk", text)
+    if not client:
+        yield (
+            "chunk",
+            "Error: Azure OpenAI is not configured. Please set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT.",
+        )
+        yield ("usage", {"input_tokens": 0, "output_tokens": 0})
+        return
 
-            # Final message contains token usage
-            final = await stream.get_final_message()
-            input_tokens = final.usage.input_tokens
-            output_tokens = final.usage.output_tokens
-    except anthropic.AuthenticationError as e:
-        logger.error(f"Anthropic Authentication Error: {e}")
-        yield (
-            "chunk",
-            "Error: Invalid API key. Please check your Claude API key configuration.",
-        )
-    except anthropic.AnthropicError as e:
-        logger.error(f"Anthropic API Error: {e}")
-        yield ("chunk", f"Error: Failed to connect to Claude AI ({e}).")
-    except Exception as e:
-        logger.error(f"Unexpected error in stream_claude_response: {e}")
-        yield (
-            "chunk",
-            "Error: An unexpected error occurred while communicating with the AI.",
-        )
+    models_to_try = [_MODEL]
+    if _FALLBACK_MODEL and _FALLBACK_MODEL != _MODEL:
+        models_to_try.append(_FALLBACK_MODEL)
+
+    streamed_any = False
+    for attempt_idx, model_name in enumerate(models_to_try):
+        try:
+            stream = await client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                max_completion_tokens=1024,
+                stream=True,
+                stream_options={"include_usage": True},
+            )
+            try:
+                async for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        streamed_any = True
+                        yield ("chunk", chunk.choices[0].delta.content)
+                    if chunk.usage:
+                        input_tokens = chunk.usage.prompt_tokens
+                        output_tokens = chunk.usage.completion_tokens
+            finally:
+                await stream.close()
+            break
+        except Exception as e:
+            logger.error(f"Streaming error with model {model_name}: {e}")
+            if streamed_any:
+                yield ("chunk", f"\n\n[Response interrupted: {e}]")
+                break
+            if attempt_idx < len(models_to_try) - 1:
+                logger.info(f"Falling back to model: {models_to_try[attempt_idx + 1]}")
+                continue
+            yield ("chunk", f"Error: Failed to connect to AI service ({e}).")
 
     yield ("usage", {"input_tokens": input_tokens, "output_tokens": output_tokens})

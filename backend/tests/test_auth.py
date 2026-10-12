@@ -328,7 +328,12 @@ async def test_register_rejects_org_code_with_actionable_message():
 
 @pytest.mark.anyio
 async def test_org_login_rejects_individual_code_with_actionable_message():
-    code_row = {"id": "c1", "type": "individual", "status": "pending", "school_id": None}
+    code_row = {
+        "id": "c1",
+        "type": "individual",
+        "status": "pending",
+        "school_id": None,
+    }
     with patch(
         "app.services.auth_service.get_access_code",
         new_callable=AsyncMock,
@@ -366,7 +371,11 @@ async def test_org_login_extracts_first_ip_from_multihop_x_forwarded_for():
         patch(
             "app.services.auth_service.org_login",
             new_callable=AsyncMock,
-            return_value={"access_token": "a", "refresh_token": "r", "role": "student_org"},
+            return_value={
+                "access_token": "a",
+                "refresh_token": "r",
+                "role": "student_org",
+            },
         ) as mock_service_org_login,
     ):
         async with AsyncClient(

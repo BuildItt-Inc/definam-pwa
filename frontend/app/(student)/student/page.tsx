@@ -256,7 +256,7 @@ export default function StudentHomePage() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-ink">Install Recall App</p>
               <p className="text-xs text-muted mt-0.5 leading-snug">
-                Add to your home screen for fast, offline access.
+                Add Recall to your home screen for quick, one-tap access.
               </p>
             </div>
             <button

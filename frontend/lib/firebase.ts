@@ -2,11 +2,16 @@ import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'MOCK_API_KEY',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'definam-pwa',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:1234567890:web:abcdef',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyB7WiyEMDutwpVTC2SlvBZ1eO_IBAykC-A',
+  authDomain: 'recall-sr.firebaseapp.com',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'recall-sr',
+  storageBucket: 'recall-sr.firebasestorage.app',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '687015329695',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:687015329695:web:17db4b9d91fcb4fdc207aa',
 };
+
+const DEFAULT_VAPID_KEY =
+  'BPrUUZ-krMP5PzHIbClw3MA2_SG5-a_asn9FtUjTd2enKejZc1GgzY-KdxqVXqyIAg-xTGTpMBLD8aY24pKxK80';
 
 const FCM_TOKEN_STORAGE_KEY = 'definam_fcm_token';
 
@@ -67,8 +72,17 @@ export async function requestNotificationPermissionAndGetToken(): Promise<string
   if (!msg) return null;
 
   try {
-    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-    const token = await getToken(msg, vapidKey ? { vapidKey } : undefined);
+    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || DEFAULT_VAPID_KEY;
+    let serviceWorkerRegistration: ServiceWorkerRegistration | undefined;
+    if ('serviceWorker' in navigator) {
+      serviceWorkerRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      await navigator.serviceWorker.ready;
+    }
+
+    const token = await getToken(msg, {
+      vapidKey,
+      serviceWorkerRegistration,
+    });
     if (token) {
       setStoredFcmToken(token);
       return token;

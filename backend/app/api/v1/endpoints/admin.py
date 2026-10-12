@@ -1453,12 +1453,16 @@ async def get_subject_detail(subject_name: str, _admin: AdminDep) -> dict:
     """Get details of a specific subject, including chapter and topic hierarchy."""
     async with db_session() as session:
         subject_rows = (
-            await session.execute(
-                select(Subject)
-                .where(Subject.name == subject_name)
-                .order_by(Subject.class_level)
+            (
+                await session.execute(
+                    select(Subject)
+                    .where(Subject.name == subject_name)
+                    .order_by(Subject.class_level)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
         if not subject_rows:
             raise NotFoundError(f"Subject '{subject_name}' not found.")
@@ -1475,15 +1479,11 @@ async def get_subject_detail(subject_name: str, _admin: AdminDep) -> dict:
 
         chapter_data = []
         for ch in chapters:
-            parent_subj = next(
-                (s for s in subject_rows if s.id == ch.subject_id), None
-            )
+            parent_subj = next((s for s in subject_rows if s.id == ch.subject_id), None)
             class_lvl = parent_subj.class_level if parent_subj else ""
 
             topics_res = await session.execute(
-                select(Topic)
-                .where(Topic.chapter_id == ch.id)
-                .order_by(Topic.title)
+                select(Topic).where(Topic.chapter_id == ch.id).order_by(Topic.title)
             )
             topics = topics_res.scalars().all()
 
@@ -1596,9 +1596,9 @@ async def merge_subjects(
         # Also handle SyllabusChunk re-attribution/cleanup
         target_chunks = (
             await session.execute(
-                select(SyllabusChunk.id).where(
-                    SyllabusChunk.subject_name == body.target_name
-                ).limit(1)
+                select(SyllabusChunk.id)
+                .where(SyllabusChunk.subject_name == body.target_name)
+                .limit(1)
             )
         ).scalar_one_or_none()
 

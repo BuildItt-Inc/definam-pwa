@@ -1,4 +1,4 @@
-"""Service to dynamically generate learning content and questions on-demand via Gemini and Claude."""
+"""Service to dynamically generate learning content and questions on-demand via Gemini and Azure OpenAI."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import json
 import logging
 from typing import Any
 
-import anthropic
 from google import genai
+from openai import AsyncAzureOpenAI, AsyncOpenAI
 
 from app.core.config import get_settings
 
@@ -19,16 +19,42 @@ settings = get_settings()
 client_gemini = (
     genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
 )
-client_claude = (
-    anthropic.AsyncAnthropic(
-        api_key=settings.anthropic_api_key,
-        base_url=settings.anthropic_base_url or None,
-    )
-    if settings.anthropic_api_key
-    else None
-)
 
-_CLAUDE_MODEL = settings.anthropic_model
+
+def _get_openai_client():
+    endpoint = (
+        settings.azure_openai_endpoint.strip() if settings.azure_openai_endpoint else ""
+    )
+    key = settings.azure_openai_api_key.strip() if settings.azure_openai_api_key else ""
+    if not endpoint or not key:
+        return None
+
+    if "services.ai.azure.com" in endpoint:
+        base_url = endpoint.rstrip("/")
+        for suffix in ("/responses", "/chat/completions"):
+            if base_url.endswith(suffix):
+                base_url = base_url[: -len(suffix)]
+        if not base_url.endswith("/openai/v1"):
+            if not base_url.endswith("/openai"):
+                base_url = f"{base_url}/openai/v1"
+            else:
+                base_url = f"{base_url}/v1"
+        return AsyncOpenAI(base_url=base_url, api_key=key)
+
+    return AsyncAzureOpenAI(
+        api_key=key,
+        azure_endpoint=endpoint,
+        api_version=settings.azure_openai_api_version,
+    )
+
+
+client_openai = _get_openai_client()
+
+_OPENAI_MODEL = settings.azure_openai_deployment
+_FALLBACK_MODEL = settings.azure_openai_fallback_deployment
+_AZURE_MODELS = [_OPENAI_MODEL]
+if _FALLBACK_MODEL and _FALLBACK_MODEL != _OPENAI_MODEL:
+    _AZURE_MODELS.append(_FALLBACK_MODEL)
 
 PROMPT_STEP1 = """
 You are a friendly tutor writing for secondary school students.
@@ -251,57 +277,6 @@ async def generate_gemini_questions(prompt: str) -> list[dict[str, Any]]:
         return []
 
 
-# ── Claude Async Generators ────────────────────────────────────────────────
-
-
-async def generate_claude_step(prompt: str) -> str:
-    """Generate a step content via Claude."""
-    if not client_claude:
-        return ""
-    try:
-        message = await client_claude.messages.create(
-            model=_CLAUDE_MODEL,
-            max_tokens=600,
-            temperature=0.7,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return message.content[0].text.strip()
-    except Exception as e:
-        logger.error(f"Claude step generation error: {e}")
-        return ""
-
-
-async def generate_claude_questions(prompt: str) -> list[dict[str, Any]]:
-    """Generate practice questions via Claude."""
-    if not client_claude:
-        return []
-    try:
-        message = await client_claude.messages.create(
-            model=_CLAUDE_MODEL,
-            max_tokens=2000,
-            temperature=0.7,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = message.content[0].text.strip()
-
-        # Strip markdown fences if present
-        if text.startswith("```"):
-            lines = text.split("\n")
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines[-1].startswith("```"):
-                lines = lines[:-1]
-            text = "\n".join(lines).strip()
-
-        parsed = json.loads(_sanitize_json_escapes(text))
-        if isinstance(parsed, list):
-            return parsed
-        return []
-    except Exception as e:
-        logger.error(f"Claude questions generation error: {e}")
-        return []
-
-
 async def generate_gemini_recall(prompt: str) -> dict[str, Any] | None:
     """Generate a single recall question + model_answer pair via Gemini."""
     if not client_gemini:
@@ -332,36 +307,95 @@ async def generate_gemini_recall(prompt: str) -> dict[str, Any] | None:
         return None
 
 
-async def generate_claude_recall(prompt: str) -> dict[str, Any] | None:
-    """Generate a single recall question + model_answer pair via Claude."""
-    if not client_claude:
+# ── Azure OpenAI Async Generators ─────────────────────────────────────────
+
+
+async def generate_openai_step(prompt: str) -> str:
+    """Generate a step content via Azure OpenAI (with fallback)."""
+    if not client_openai:
+        return ""
+    for model_name in _AZURE_MODELS:
+        if not model_name:
+            continue
+        try:
+            response = await client_openai.chat.completions.create(
+                model=model_name,
+                max_completion_tokens=600,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.warning(f"Azure OpenAI step generation error with {model_name}: {e}")
+    return ""
+
+
+async def generate_openai_questions(prompt: str) -> list[dict[str, Any]]:
+    """Generate practice questions via Azure OpenAI (with fallback)."""
+    if not client_openai:
+        return []
+    for model_name in _AZURE_MODELS:
+        if not model_name:
+            continue
+        try:
+            response = await client_openai.chat.completions.create(
+                model=model_name,
+                max_completion_tokens=2000,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            text = response.choices[0].message.content.strip()
+
+            # Strip markdown fences if present
+            if text.startswith("```"):
+                lines = text.split("\n")
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                text = "\n".join(lines).strip()
+
+            parsed = json.loads(_sanitize_json_escapes(text))
+            if isinstance(parsed, list):
+                return parsed
+        except Exception as e:
+            logger.warning(
+                f"Azure OpenAI questions generation error with {model_name}: {e}"
+            )
+    return []
+
+
+async def generate_openai_recall(prompt: str) -> dict[str, Any] | None:
+    """Generate a single recall question + model_answer pair via Azure OpenAI (with fallback)."""
+    if not client_openai:
         return None
-    try:
-        message = await client_claude.messages.create(
-            model=_CLAUDE_MODEL,
-            max_tokens=500,
-            temperature=0.7,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = message.content[0].text.strip()
-        if text.startswith("```"):
-            lines = text.split("\n")
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines[-1].startswith("```"):
-                lines = lines[:-1]
-            text = "\n".join(lines).strip()
-        parsed = json.loads(_sanitize_json_escapes(text))
-        if (
-            isinstance(parsed, dict)
-            and "question" in parsed
-            and "model_answer" in parsed
-        ):
-            return parsed
-        return None
-    except Exception as e:
-        logger.error(f"Claude recall generation error: {e}")
-        return None
+    for model_name in _AZURE_MODELS:
+        if not model_name:
+            continue
+        try:
+            response = await client_openai.chat.completions.create(
+                model=model_name,
+                max_completion_tokens=500,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            text = response.choices[0].message.content.strip()
+            if text.startswith("```"):
+                lines = text.split("\n")
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                text = "\n".join(lines).strip()
+            parsed = json.loads(_sanitize_json_escapes(text))
+            if (
+                isinstance(parsed, dict)
+                and "question" in parsed
+                and "model_answer" in parsed
+            ):
+                return parsed
+        except Exception as e:
+            logger.warning(
+                f"Azure OpenAI recall generation error with {model_name}: {e}"
+            )
+    return None
 
 
 # ── Core Router ────────────────────────────────────────────────────────────
@@ -379,7 +413,7 @@ async def generate_all_topic_content(
     model's general knowledge. Falls back to ungrounded generation if no
     syllabus material has been ingested yet for that subject.
 
-    Tries Gemini first, then falls back to Claude Sonnet, then falls back to static template.
+    Tries Gemini first, then falls back to Azure OpenAI (gpt-4o-mini), then falls back to static template.
     """
     syllabus_context = ""
     if subject_name:
@@ -487,15 +521,15 @@ async def generate_all_topic_content(
                 or get_fallback_content(title)["recall_questions"],
             }
 
-    # 2. Try Claude Sonnet (fallback)
-    if client_claude:
-        logger.info(f"Generating content for '{title}' via Claude...")
+    # 2. Try Azure OpenAI (fallback)
+    if client_openai:
+        logger.info(f"Generating content for '{title}' via Azure OpenAI...")
         step1, step2, step3, questions, recall = await asyncio.gather(
-            generate_claude_step(step1_p),
-            generate_claude_step(step2_p),
-            generate_claude_step(step3_p),
-            generate_claude_questions(questions_p),
-            generate_claude_recall(recall_p),
+            generate_openai_step(step1_p),
+            generate_openai_step(step2_p),
+            generate_openai_step(step3_p),
+            generate_openai_questions(questions_p),
+            generate_openai_recall(recall_p),
         )
         if step1 and step2 and step3:
             return {

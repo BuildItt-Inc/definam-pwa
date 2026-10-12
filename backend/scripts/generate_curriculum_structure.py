@@ -14,8 +14,8 @@ import logging
 import uuid
 from typing import Any
 
-import anthropic
 from google import genai
+from openai import AzureOpenAI, OpenAI
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
 
@@ -34,16 +34,42 @@ settings = get_settings()
 gemini_client = (
     genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
 )
-claude_client = (
-    anthropic.Anthropic(
-        api_key=settings.anthropic_api_key,
-        base_url=settings.anthropic_base_url or None,
-    )
-    if settings.anthropic_api_key
-    else None
-)
 
-_CLAUDE_MODEL = settings.anthropic_model
+
+def _get_openai_client():
+    endpoint = (
+        settings.azure_openai_endpoint.strip() if settings.azure_openai_endpoint else ""
+    )
+    key = settings.azure_openai_api_key.strip() if settings.azure_openai_api_key else ""
+    if not endpoint or not key:
+        return None
+
+    if "services.ai.azure.com" in endpoint:
+        base_url = endpoint.rstrip("/")
+        for suffix in ("/responses", "/chat/completions"):
+            if base_url.endswith(suffix):
+                base_url = base_url[: -len(suffix)]
+        if not base_url.endswith("/openai/v1"):
+            if not base_url.endswith("/openai"):
+                base_url = f"{base_url}/openai/v1"
+            else:
+                base_url = f"{base_url}/v1"
+        return OpenAI(base_url=base_url, api_key=key)
+
+    return AzureOpenAI(
+        api_key=key,
+        azure_endpoint=endpoint,
+        api_version=settings.azure_openai_api_version,
+    )
+
+
+openai_client = _get_openai_client()
+_OPENAI_MODELS = [settings.azure_openai_deployment]
+if (
+    settings.azure_openai_fallback_deployment
+    and settings.azure_openai_fallback_deployment != settings.azure_openai_deployment
+):
+    _OPENAI_MODELS.append(settings.azure_openai_fallback_deployment)
 
 # ── Fallback Curriculum Definition ────────────────────────────────────────
 
@@ -483,32 +509,35 @@ def generate_subject_full_curriculum(
             text = "\n".join(lines).strip()
         return text
 
-    # 1. Try Claude Sonnet (primary)
-    if claude_client:
-        try:
-            logger.info(f"Generating full curriculum for {subject_name} via Claude...")
-            message = claude_client.messages.create(
-                model=_CLAUDE_MODEL,
-                max_tokens=8192,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            text = clean_json(message.content[0].text)
-            parsed = json.loads(text)
-            if isinstance(parsed, dict):
-                parsed = {
-                    k.upper(): v
-                    for k, v in parsed.items()
-                    if k.upper() in ["SS1", "SS2", "SS3"]
-                }
-                if any(k in parsed for k in ["SS1", "SS2", "SS3"]):
-                    logger.info(
-                        f"Successfully generated full curriculum for {subject_name} via Claude."
-                    )
-                    return parsed
-        except Exception as e:
-            logger.error(
-                f"Failed to generate full curriculum via Claude for {subject_name}: {e}"
-            )
+    # 1. Try Azure OpenAI (primary + fallback)
+    if openai_client:
+        for model_name in _OPENAI_MODELS:
+            try:
+                logger.info(
+                    f"Generating full curriculum for {subject_name} via {model_name}..."
+                )
+                response = openai_client.chat.completions.create(
+                    model=model_name,
+                    max_completion_tokens=8192,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                text = clean_json(response.choices[0].message.content)
+                parsed = json.loads(text)
+                if isinstance(parsed, dict):
+                    parsed = {
+                        k.upper(): v
+                        for k, v in parsed.items()
+                        if k.upper() in ["SS1", "SS2", "SS3"]
+                    }
+                    if any(k in parsed for k in ["SS1", "SS2", "SS3"]):
+                        logger.info(
+                            f"Successfully generated full curriculum for {subject_name} via {model_name}."
+                        )
+                        return parsed
+            except Exception as e:
+                logger.error(
+                    f"Failed to generate full curriculum via {model_name} for {subject_name}: {e}"
+                )
 
     # 2. Try Gemini (fallback)
     if gemini_client:
