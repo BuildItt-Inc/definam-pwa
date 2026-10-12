@@ -145,7 +145,7 @@ async def send_individual_code(to: str, code: str) -> None:
         code=code,
         register_url=register_url,
         login_url=login_url,
-        frontend_url=settings.frontend_url.rstrip('/'),
+        frontend_url=settings.frontend_url.rstrip("/"),
     )
     await send_email(to, "Your Recall Access Code", html)
 
@@ -164,7 +164,7 @@ async def send_expiration_reminder(
         code=code,
         expires_at_str=expires_at_str,
         renew_url=renew_url,
-        frontend_url=get_settings().frontend_url.rstrip('/'),
+        frontend_url=get_settings().frontend_url.rstrip("/"),
     )
     await send_email(
         to, "Your Recall Access Code Expires Soon (7 Days Remaining)", html
@@ -197,7 +197,7 @@ async def send_org_admin_credentials(
         temp_password=temp_password,
         login_url=login_url,
         seat_count=seat_count,
-        frontend_url=get_settings().frontend_url.rstrip('/'),
+        frontend_url=get_settings().frontend_url.rstrip("/"),
     )
     attachment = {"filename": "recall_access_codes.csv", "content": codes_csv}
     await send_email(
@@ -223,6 +223,6 @@ async def send_payment_receipt(to: str, amount_naira: int, description: str) -> 
         "payment_receipt.html",
         amount=formatted,
         description=description,
-        frontend_url=settings.frontend_url.rstrip('/'),
+        frontend_url=settings.frontend_url.rstrip("/"),
     )
     await send_email(to, f"Recall Payment Receipt — {formatted}", html)

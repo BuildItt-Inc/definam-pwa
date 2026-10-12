@@ -22,8 +22,12 @@ firebase_initialized = False
 try:
     if not firebase_admin._apps:
         settings = get_settings()
-        cred_path = settings.firebase_credentials_path or os.environ.get("FIREBASE_CREDENTIALS")
-        cred_json = settings.firebase_service_account_json or os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON")
+        cred_path = settings.firebase_credentials_path or os.environ.get(
+            "FIREBASE_CREDENTIALS"
+        )
+        cred_json = settings.firebase_service_account_json or os.environ.get(
+            "FIREBASE_SERVICE_ACCOUNT_JSON"
+        )
 
         if cred_path and os.path.exists(cred_path):
             cred = credentials.Certificate(cred_path)
@@ -177,12 +181,22 @@ async def send_multicast_fcm(
             continue
 
         try:
-            # Prepare message
+            # Prepare message with WebpushConfig for browser notifications
+            webpush_config = messaging.WebpushConfig(
+                notification=messaging.WebpushNotification(
+                    title=title,
+                    body=body,
+                    icon="/icons/icon-192x192.png",
+                    badge="/icons/icon-192x192.png",
+                ),
+                fcm_options=messaging.WebpushFCMOptions(link="/student/review"),
+            )
             message = messaging.MulticastMessage(
                 notification=messaging.Notification(
                     title=title,
                     body=body,
                 ),
+                webpush=webpush_config,
                 data=data or {},
                 tokens=batch_tokens,
             )

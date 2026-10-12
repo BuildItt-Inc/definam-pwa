@@ -49,10 +49,12 @@ class Settings(BaseSettings):
     smtp_username: str = ""
     smtp_password: str = ""
 
-    # ── AI — Chat & content generation (Claude Sonnet) ────────
-    anthropic_api_key: str = ""
-    anthropic_base_url: str = ""
-    anthropic_model: str = "claude-3-5-sonnet-20241022"
+    # ── AI — Chat & content generation (Azure OpenAI) ──────────
+    azure_openai_api_key: str = ""
+    azure_openai_endpoint: str = ""  # e.g. https://<resource>.services.ai.azure.com/... or https://<resource>.openai.azure.com/
+    azure_openai_deployment: str = "gpt-5.6-luna"
+    azure_openai_fallback_deployment: str = "DeepSeek-V4-Pro"
+    azure_openai_api_version: str = "2024-10-21"
 
     # ── AI — Embeddings (Gemini text-embedding-004) ────────────
     gemini_api_key: str = ""

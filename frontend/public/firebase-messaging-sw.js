@@ -4,10 +4,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-com
 
 // Public Firebase config (safe for client-side inclusion)
 const firebaseConfig = {
-  apiKey: self.FIREBASE_API_KEY || 'MOCK_API_KEY',
-  projectId: self.FIREBASE_PROJECT_ID || 'definam-pwa',
-  messagingSenderId: self.FIREBASE_MESSAGING_SENDER_ID || '1234567890',
-  appId: self.FIREBASE_APP_ID || '1:1234567890:web:abcdef',
+  apiKey: self.FIREBASE_API_KEY || 'AIzaSyB7WiyEMDutwpVTC2SlvBZ1eO_IBAykC-A',
+  authDomain: 'recall-sr.firebaseapp.com',
+  projectId: self.FIREBASE_PROJECT_ID || 'recall-sr',
+  storageBucket: 'recall-sr.firebasestorage.app',
+  messagingSenderId: self.FIREBASE_MESSAGING_SENDER_ID || '687015329695',
+  appId: self.FIREBASE_APP_ID || '1:687015329695:web:17db4b9d91fcb4fdc207aa',
 };
 
 if (!firebase.apps.length) {

@@ -10,7 +10,11 @@ import {
   getStoredFcmToken,
   clearStoredFcmToken,
 } from '@/lib/firebase';
-import { registerNotificationToken, unregisterNotificationToken } from '@/lib/api/notifications';
+import {
+  registerNotificationToken,
+  unregisterNotificationToken,
+  sendTestNotification,
+} from '@/lib/api/notifications';
 import type { UserMe } from '@/types/auth';
 import { BottomNav } from '@/components/student/BottomNav';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
@@ -49,6 +53,8 @@ export default function SettingsPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [testNotifLoading, setTestNotifLoading] = useState(false);
+  const [testNotifMessage, setTestNotifMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -58,6 +64,7 @@ export default function SettingsPage() {
 
   async function handleToggleNotifications() {
     setNotifLoading(true);
+    setTestNotifMessage(null);
     try {
       if (notifEnabled) {
         const token = getStoredFcmToken();
@@ -75,6 +82,21 @@ export default function SettingsPage() {
       }
     } catch { /* best effort */ } finally {
       setNotifLoading(false);
+    }
+  }
+
+  async function handleSendTestNotification() {
+    setTestNotifLoading(true);
+    setTestNotifMessage(null);
+    try {
+      await sendTestNotification();
+      setTestNotifMessage('Notification sent! Check your device.');
+    } catch (err: unknown) {
+      setTestNotifMessage(
+        err instanceof Error ? err.message : 'Failed to send test notification',
+      );
+    } finally {
+      setTestNotifLoading(false);
     }
   }
 
@@ -194,7 +216,7 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <p className="flex-1 text-[13px] text-muted leading-snug">
-              Add Recall to your home screen for faster access. Works offline too.
+              Add Recall to your home screen for faster, one-tap access.
             </p>
             <InstallAppButton variant="solid" className="shrink-0 text-[12px] px-3 py-1.5" />
           </div>
@@ -215,6 +237,21 @@ export default function SettingsPage() {
               {notifLoading ? 'Updating...' : notifEnabled ? 'Enabled' : 'Enable'}
             </button>
           </div>
+          {notifEnabled && (
+            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-2.5 flex items-center justify-between gap-3">
+              <span className="text-[12px] text-muted truncate">
+                {testNotifMessage || 'Verify notifications on this device'}
+              </span>
+              <button
+                type="button"
+                onClick={handleSendTestNotification}
+                disabled={testNotifLoading}
+                className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {testNotifLoading ? 'Sending…' : 'Send Test Notification'}
+              </button>
+            </div>
+          )}
         </div>
 
         {isIndividual && (

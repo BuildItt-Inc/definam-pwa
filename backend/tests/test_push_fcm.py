@@ -24,7 +24,9 @@ async def test_register_and_unregister_token():
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
 
-        await register_token(user_id="user-123", fcm_token="token-abc", device_type="web")
+        await register_token(
+            user_id="user-123", fcm_token="token-abc", device_type="web"
+        )
         assert mock_session.commit.called
 
         # Test unregister

@@ -567,3 +567,20 @@ async def unregister_notification_token(
 
     await unregister_token(fcm_token)
     return {"ok": True}
+
+
+@router.post("/test-notification")
+async def send_test_notification(
+    claims: CurrentUserDep,
+) -> dict:
+    """Send a test push notification to the authenticated user's devices."""
+    from app.services.fcm import send_fcm_notification
+
+    user_id: str = claims["sub"]
+    result = await send_fcm_notification(
+        user_ids=[user_id],
+        title="🔔 Test Notification",
+        body="Recall push notifications are active on your device!",
+        data={"type": "test_ping"},
+    )
+    return {"ok": True, "result": result}
