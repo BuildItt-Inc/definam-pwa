@@ -37,3 +37,20 @@ export async function unregisterNotificationToken(fcmToken: string): Promise<voi
     throw new ApiError(res.status, body.detail ?? 'Failed to unregister notification token');
   }
 }
+
+export async function sendTestNotification(): Promise<void> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/students/test-notification`,
+    {
+      method: 'POST',
+      headers,
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: '' }));
+    throw new ApiError(res.status, body.detail ?? 'Failed to send test notification');
+  }
+}
+

@@ -36,9 +36,7 @@ async def merge_english_subject() -> None:
 
         for subj in source_rows:
             if subj.class_level in existing_target_levels:
-                await session.execute(
-                    sa_delete(Subject).where(Subject.id == subj.id)
-                )
+                await session.execute(sa_delete(Subject).where(Subject.id == subj.id))
                 dropped += 1
             else:
                 subj.name = target_name
