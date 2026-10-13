@@ -7,11 +7,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, School, User } from 'lucide-react';
 import Link from 'next/link';
-
 import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
 import { loginUser, logout, ApiError } from '@/lib/api/auth';
-import LandingBrandMark from '@/components/landing/LandingBrandMark';
-
+import Image from 'next/image';
 // ── Reset success banner (shown after /reset-password redirects here) ──────
 function ResetSuccessBanner() {
   const searchParams = useSearchParams();
@@ -90,8 +88,14 @@ function LoginContent() {
 
       {/* Logo */}
       <Link href="/" className="relative z-10 flex items-center gap-2 mb-8">
-        <LandingBrandMark size={28} />
-        <span className="font-bold text-lg text-ink tracking-tight">Recall</span>
+        <Image
+          src="/recall-logo2.svg"
+          alt="Recall"
+          width={512}
+          height={166}
+          priority
+          className="h-8 w-auto"
+        />
       </Link>
 
       {/* Card — solid white, no backdrop-filter, works on all Android devices */}
