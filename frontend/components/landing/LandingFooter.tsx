@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 import { NAV_LINKS } from '@/components/landing/navLinks';
 
@@ -35,7 +36,13 @@ export default function LandingFooter() {
       <div className="mx-auto max-w-[1000px]">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-[1.3fr_1fr_1fr_1fr] sm:gap-6">
           <div>
-            <p className="font-heading text-[19px] font-bold text-white">Recall</p>
+            <Image
+              src="/recall-logo.svg"
+              alt="Recall"
+              width={512}
+              height={166}
+              className="h-8 w-auto"
+            />
             <p className="font-body mt-3 max-w-[260px] text-[13px] leading-[1.6] text-white/60">
               A modern study platform for Nigerian secondary school students.
             </p>
