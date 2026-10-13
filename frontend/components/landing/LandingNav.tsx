@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import MobileNav from '@/components/landing/MobileNav';
 import { dmSans, bricolage } from '@/components/landing/landingFonts';
 import { NAV_LINKS } from '@/components/landing/navLinks';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
-import LandingBrandMark from './LandingBrandMark';
 
 /**
  * Landing nav — transparent over the dark navy hero, solidifies (navy +
@@ -43,17 +43,18 @@ export default function LandingNav() {
             elements from grid flow entirely on mobile (not just hiding
             them), auto-placement would otherwise shift later items left
             to fill the gap — pin every column explicitly instead. */}
-        {/* font-semibold (600), not font-bold (700) — Bricolage Grotesque is
-            only loaded at 600/800 (see landingFonts.ts); 800 is reserved for
-            the hero headline, so the wordmark uses the other loaded weight
-            rather than requesting an unloaded 700 and triggering a fallback/
-            synthetic-bold render. */}
         <Link
           href="/"
           className="flex items-center gap-2"
         >
-          <LandingBrandMark size={32} />
-          <span className="font-heading font-semibold text-white">Recall</span>
+          <Image
+            src="/recall-logo.svg"
+            alt="Recall"
+            width={512}
+            height={166}
+            priority
+            className="h-8 w-auto"
+          />
         </Link>
 
         {/* Center — nav links, desktop only */}
