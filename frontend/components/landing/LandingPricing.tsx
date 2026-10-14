@@ -3,13 +3,11 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Check, Sparkles } from 'lucide-react';
-import { dmSans, bricolage } from '@/components/landing/landingFonts';
+
 
 // ── Pricing constants ────────────────────────────────────────────────────
-// Dev-preview build, ahead of backend term-billing support. Single source
-// of truth for every price/badge/total shown below — once the backend
-// adds a term param to the payment request, only these constants (plus
-// the CTA hrefs, marked below) need to change.
+// Match backend/app/services/payment_service.py. Both checkout routes
+// send the selected term count; one term corresponds to 120 days.
 const TERM_PRICE = 2000;
 const BUNDLE_TERMS = 3;
 const BUNDLE_DISCOUNT = 0.15;
@@ -49,7 +47,7 @@ function BenefitList({ items }: { items: string[] }) {
           <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-jade-tint text-jade">
             <Check size={12} strokeWidth={3} aria-hidden />
           </span>
-          <span className="font-body text-left text-[13.5px] leading-[1.45] text-ink">{benefit}</span>
+          <span className="font-body text-left text-[0.8438rem] leading-[1.45] text-ink">{benefit}</span>
         </li>
       ))}
     </ul>
@@ -57,76 +55,69 @@ function BenefitList({ items }: { items: string[] }) {
 }
 
 /**
- * Pricing — two cards: a single-term plan and a 3-term bundle. Light
- * `cream` section: the page's actual neighbor before this is "Subjects"
- * (light, untouched by this redesign), not the dark "Everything you need"
- * section a few sections up, so cream both distinguishes this section from
- * the plain-white one right before it and still contrasts against the dark
- * "For Schools" band right after.
- *
- * Dev-preview: CTAs both point at the existing /pay/individual flow (the
- * only one that exists today). The 3-term card's href is marked TODO —
- * swap it for a term-aware route/param once the backend supports
- * multi-term purchases (see docs recon: access is a single expires_at,
- * always a fixed one-term lifespan, with no term-count concept yet).
+ * Individual access: fixed-period purchases, selected via the terms query.
+ * Explain activation and expiry next to the offer, before checkout.
  */
 export default function LandingPricing() {
   return (
     <section
       id="pricing"
-      className={`${dmSans.variable} ${bricolage.variable} bg-cream px-6 py-14 sm:py-20`}
+      className={`bg-cream px-6 py-14 sm:py-20`}
     >
       <div className="mx-auto max-w-[520px] text-center">
         <motion.p
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, amount: 0.6 }}
           custom={0}
           variants={fadeUp}
-          className="font-body mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-jade sm:text-[12px]"
+          className="font-body mb-3 text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-brand-dark sm:text-[0.75rem]"
         >
           Pricing
         </motion.p>
         <motion.h2
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, amount: 0.6 }}
           custom={1}
           variants={fadeUp}
-          className="font-heading mb-3 text-[26px] font-extrabold tracking-[-0.02em] text-ink sm:text-[34px]"
+          className="font-heading mb-3 text-[1.625rem] font-extrabold tracking-[-0.02em] text-ink sm:text-[2.125rem]"
         >
           Simple, honest pricing
         </motion.h2>
         <motion.p
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, amount: 0.6 }}
           custom={2}
           variants={fadeUp}
-          className="font-body text-[14px] text-muted sm:text-[15px]"
+          className="font-body text-[0.875rem] text-muted sm:text-[0.9375rem]"
         >
           One price per term. Everything included.
         </motion.p>
+        <p className="font-body mt-3 text-muted">One term is 120 days. Three terms give you 360 days of access.</p>
       </div>
 
       <div className="mx-auto mt-10 grid max-w-[900px] gap-6 sm:mt-14 md:grid-cols-2 md:items-stretch md:gap-7">
         {/* ── Card 1 — Single Term ── */}
         <motion.div
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           custom={3}
           variants={fadeUp}
           className="flex flex-col rounded-3xl border border-border bg-white p-7 shadow-md sm:p-9"
         >
-          <p className="font-body mb-1.5 text-[13px] text-muted">Single term</p>
+          <p className="font-body mb-1.5 text-[0.8125rem] text-muted">Single term</p>
+          <p className="mb-3 text-sm font-medium text-brand-dark">120 days from code activation</p>
+          <p className="mb-4 text-sm text-muted">For one student on one device.</p>
 
-          <p className="font-heading mb-1 flex items-baseline gap-1.5 text-[38px] font-extrabold tracking-[-0.02em] text-ink sm:text-[44px]">
+          <p className="font-heading mb-1 flex items-baseline gap-1.5 text-[2.375rem] font-extrabold tracking-[-0.02em] text-ink sm:text-[2.75rem]">
             {formatNaira(TERM_PRICE)}
-            <span className="font-body text-[15px] font-medium text-muted">/ term</span>
+            <span className="font-body text-[0.9375rem] font-medium text-muted">/ term</span>
           </p>
 
-          <p className="font-body mb-6 text-[13.5px] leading-[1.5] text-muted">
+          <p className="font-body mb-6 text-[0.8438rem] leading-[1.5] text-muted">
             Full access to every subject and the AI tutor for one term. Renew to keep your
             access going.
           </p>
@@ -135,15 +126,15 @@ export default function LandingPricing() {
 
           <Link
             href="/pay/individual?terms=1"
-            className="mt-auto flex w-full items-center justify-center rounded-md bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97]"
+            className="mt-auto flex w-full items-center justify-center rounded-md bg-brand-dark px-6 py-3.5 text-[0.9375rem] font-bold text-white transition-colors hover:bg-green-900 active:scale-[0.97]"
           >
-            Get Started
+            Get individual access
           </Link>
         </motion.div>
 
         {/* ── Card 2 — 3 Terms (emphasized) ── */}
         <motion.div
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           custom={4}
@@ -151,27 +142,29 @@ export default function LandingPricing() {
           className="relative flex flex-col rounded-3xl border-2 border-jade bg-white p-7 shadow-lg sm:scale-[1.03] sm:p-9"
         >
           {/* Savings badge */}
-          <span className="absolute -top-3.5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-jade px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
+          <span className="absolute -top-3.5 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-brand-dark px-3.5 py-1.5 text-[0.6875rem] font-bold uppercase tracking-wide text-white shadow-sm">
             <Sparkles size={12} strokeWidth={2.5} aria-hidden />
             Save {BUNDLE_SAVINGS_PCT}%
           </span>
 
-          <p className="font-body mb-1.5 mt-1.5 text-[13px] text-muted">3 terms</p>
+          <p className="font-body mb-1.5 mt-1.5 text-[0.8125rem] text-muted">3 terms</p>
+          <p className="mb-3 text-sm font-medium text-brand-dark">360 days from code activation</p>
+          <p className="mb-4 text-sm text-muted">For one student on one device.</p>
 
           <div className="mb-1 flex items-baseline gap-2">
-            <p className="font-heading flex items-baseline gap-1.5 text-[38px] font-extrabold tracking-[-0.02em] text-ink sm:text-[44px]">
+            <p className="font-heading flex items-baseline gap-1.5 text-[2.375rem] font-extrabold tracking-[-0.02em] text-ink sm:text-[2.75rem]">
               {formatNaira(BUNDLE_TOTAL)}
-              <span className="font-body text-[15px] font-medium text-muted">/ 3 terms</span>
+              <span className="font-body text-[0.9375rem] font-medium text-muted">/ 3 terms</span>
             </p>
           </div>
-          <p className="font-body mb-6 text-[13px] text-muted">
+          <p className="font-body mb-6 text-[0.8125rem] text-muted">
             <span className="line-through">{formatNaira(BUNDLE_FULL_PRICE)}</span>{' '}
-            <span className="font-semibold text-jade">
+            <span className="font-semibold text-brand-dark">
               you save {formatNaira(BUNDLE_FULL_PRICE - BUNDLE_TOTAL)}
             </span>
           </p>
 
-          <p className="font-body mb-6 text-[13.5px] leading-[1.5] text-muted">
+          <p className="font-body mb-6 text-[0.8438rem] leading-[1.5] text-muted">
             Everything in Single Term, for three terms. Our best value option.
           </p>
 
@@ -179,11 +172,17 @@ export default function LandingPricing() {
 
           <Link
             href="/pay/individual?terms=3"
-            className="mt-auto flex w-full items-center justify-center rounded-md bg-jade px-6 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-jade-dark active:scale-[0.97]"
+            className="mt-auto flex w-full items-center justify-center rounded-md bg-brand-dark px-6 py-3.5 text-[0.9375rem] font-bold text-white transition-colors hover:bg-green-900 active:scale-[0.97]"
           >
-            Get 3 Terms
+            Get 3 terms of access
           </Link>
         </motion.div>
+      </div>
+      <div className="mx-auto mt-8 max-w-[900px] rounded-2xl border border-border bg-white p-6">
+        <h3 className="mb-3 font-semibold text-ink">How your access works</h3>
+        <p className="font-body mb-3 font-medium text-ink">Individual access is for one student on one device.</p>
+        <p className="font-body text-muted">Pay once for your chosen period. After payment is confirmed, your personal access code is emailed to you. Use it to register your account and activate access.</p>
+        <p className="font-body mt-3 text-muted">Your access period starts when you activate the code, and expires after 120 or 360 days. Unused codes must also be activated before their expiry date. There is no recurring charge; continued access requires another purchase.</p>
       </div>
     </section>
   );
