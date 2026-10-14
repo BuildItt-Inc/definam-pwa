@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 // Static node/line layout (not runtime-random) so server and client render
 // identically — same reasoning as FloatingSymbols. Spread across the FULL
@@ -36,6 +36,7 @@ const EDGES: [number, number][] = [
  * side more than the other for no reason tied to the actual layout.
  */
 export default function HeroBackground({ overlay = 'left' }: { overlay?: 'left' | 'center' }) {
+  const reduceMotion = useReducedMotion();
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* Base gradient: ink through a very dark jade, not flat navy */}
@@ -47,21 +48,24 @@ export default function HeroBackground({ overlay = 'left' }: { overlay?: 'left' 
       {/* Glow blobs — soft, low-opacity, slow pulse/drift */}
       <motion.div
         className="absolute -left-24 top-[10%] h-72 w-72 rounded-full blur-3xl"
+        initial={{ scale: 1, opacity: 0.65 }}
         style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.22) 0%, transparent 70%)' }}
-        animate={{ scale: [1, 1.12, 1], opacity: [0.6, 0.85, 0.6] }}
-        transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+        animate={reduceMotion ? { scale: 1, opacity: 0.65 } : { scale: [1, 1.12, 1], opacity: [0.6, 0.85, 0.6] }}
+        transition={reduceMotion ? { duration: 0 } : { duration: 11, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
         className="absolute right-[8%] top-[-6%] h-96 w-96 rounded-full blur-3xl"
+        initial={{ scale: 1, opacity: 0.6 }}
         style={{ background: 'radial-gradient(circle, rgba(56,189,178,0.16) 0%, transparent 70%)' }}
-        animate={{ scale: [1, 1.08, 1], opacity: [0.5, 0.75, 0.5] }}
-        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+        animate={reduceMotion ? { scale: 1, opacity: 0.6 } : { scale: [1, 1.08, 1], opacity: [0.5, 0.75, 0.5] }}
+        transition={reduceMotion ? { duration: 0 } : { duration: 14, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
       />
       <motion.div
         className="absolute bottom-[-10%] right-[20%] h-80 w-80 rounded-full blur-3xl"
+        initial={{ scale: 1, opacity: 0.5 }}
         style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.14) 0%, transparent 70%)' }}
-        animate={{ scale: [1, 1.1, 1], opacity: [0.4, 0.65, 0.4] }}
-        transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+        animate={reduceMotion ? { scale: 1, opacity: 0.5 } : { scale: [1, 1.1, 1], opacity: [0.4, 0.65, 0.4] }}
+        transition={reduceMotion ? { duration: 0 } : { duration: 13, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
       />
 
       {/* Node network — sparse, now spans the full hero on every breakpoint.

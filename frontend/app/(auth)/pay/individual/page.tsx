@@ -70,8 +70,8 @@ function IndividualPayContent() {
   const priceDisplay = isThreeTerms ? '₦5,100' : '₦2,000';
   const termLabel = isThreeTerms ? '3 terms' : '1 term';
   const durationDesc = isThreeTerms
-    ? 'Full access for 3 terms (12 months) · Save 15%'
-    : 'Full access for 1 term (4 months)';
+    ? 'Full access for 3 terms (360 days) · Save 15%'
+    : 'Full access for 1 term (120 days)';
 
   return (
     <div className="min-h-screen bg-bg-0">
@@ -163,6 +163,7 @@ function IndividualPayContent() {
           <p className="text-[11px] text-white/40 mt-2.5">
             {durationDesc}
           </p>
+          <p className="mt-3 text-sm leading-relaxed text-white/80">Access starts when your code is activated. Activate your unused code before its expiry date. One payment, no recurring charge; buy another access period to continue after expiry.</p>
           {isThreeTerms && (
             <p className="text-[11px] text-jade font-semibold mt-1">
               ₦6,000 value · You save ₦900

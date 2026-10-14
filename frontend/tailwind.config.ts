@@ -59,18 +59,17 @@ const config: Config = {
       },
 
       fontFamily: {
-        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
-        /* Landing-page-only, loaded in components/landing/landingFonts.ts. */
-        heading: ["var(--font-bricolage)", "Bricolage Grotesque", "sans-serif"],
-        body: ["var(--font-dm-sans)", "DM Sans", "sans-serif"],
+        sans: ["var(--font-ui)"],
+        heading: ["var(--font-ui)"],
+        body: ["var(--font-ui)"],
       },
 
       fontSize: {
         "2xs": ["10px", { lineHeight: "14px" }],
         xs:    ["12px", { lineHeight: "16px" }],
-        sm:    ["13px", { lineHeight: "20px" }],
-        base:  ["15px", { lineHeight: "24px" }],
-        lg:    ["17px", { lineHeight: "28px" }],
+        sm:    ["0.875rem", { lineHeight: "1.375rem" }],
+        base:  ["1rem", { lineHeight: "1.5rem" }],
+        lg:    ["1.125rem", { lineHeight: "1.75rem" }],
         xl:    ["20px", { lineHeight: "30px" }],
         "2xl": ["24px", { lineHeight: "32px" }],
         "3xl": ["30px", { lineHeight: "38px" }],
