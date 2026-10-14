@@ -3,6 +3,7 @@
 // drift out of sync — the brief calls for them to match exactly.
 export const NAV_LINKS = [
   { href: '#home', label: 'Home' },
+  { href: '#sample', label: 'Free sample' },
   { href: '#how-it-works', label: 'How it works' },
   { href: '#pricing', label: 'Pricing' },
   { href: '#faqs', label: 'FAQs' },

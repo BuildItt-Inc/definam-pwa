@@ -5,7 +5,7 @@ import Script from 'next/script';
 
 // mhchem extends window.katex, so it must not load until katex.min.js has
 // actually finished executing — two independent afterInteractive <Script>
-// tags don't guarantee that order, so mhchem is gated on katex's onLoad.
+// tags don't guarantee that order, so mhchem is gated on katex's onReady.
 export function KatexScripts() {
   const [katexLoaded, setKatexLoaded] = useState(false);
 
@@ -15,7 +15,7 @@ export function KatexScripts() {
         src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
         crossOrigin="anonymous"
         strategy="afterInteractive"
-        onLoad={() => setKatexLoaded(true)}
+        onReady={() => setKatexLoaded(true)}
       />
       {katexLoaded && (
         <Script

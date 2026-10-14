@@ -1,0 +1,39 @@
+{
+  "accepted": [
+    {
+      "look": "classic",
+      "skip": {
+        "name": "Skip to content",
+        "top": 16,
+        "position": "fixed",
+        "visible": true
+      },
+      "main": "main-content",
+      "retry": "3"
+    },
+    {
+      "look": "vivid",
+      "skip": {
+        "name": "Skip to content",
+        "top": 16,
+        "position": "fixed",
+        "visible": true
+      },
+      "main": "main-content",
+      "retry": "3"
+    }
+  ],
+  "reducedMotion": {
+    "before": [
+      "0.65",
+      "0.6",
+      "0.5"
+    ],
+    "after": [
+      "0.65",
+      "0.6",
+      "0.5"
+    ]
+  },
+  "consoleProblems": []
+}

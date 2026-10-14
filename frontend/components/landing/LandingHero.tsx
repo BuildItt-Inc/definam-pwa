@@ -1,146 +1,51 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import HeroBackground from '@/components/landing/HeroBackground';
-import { dmSans, bricolage } from '@/components/landing/landingFonts';
-import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
+import type { MouseEvent } from 'react';
+import { ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react';
+import HeroBackground from './HeroBackground';
 
-// Staggered fade-up — each element ~0.1s behind the last, per the brief.
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] as const },
-  }),
-};
+function revealQuestion(event: MouseEvent<HTMLAnchorElement>) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const question = document.getElementById('sample-question');
+  if (!question) return;
+  question.focus({ preventScroll: true });
+  question.scrollIntoView({ behavior: 'instant', block: 'start' });
+  // The normal anchor action still updates the URL and supports no-JS navigation.
+}
 
-/**
- * Dark hero — layered ink/jade background (see HeroBackground), mobile-first
- * stack → `lg:` two-column (copy left, phone right). `pt-28`/`sm:pt-32`
- * clears LandingNav, which is `fixed` (see that file's comment).
- */
 export default function LandingHero() {
-  const { 
-    canInstall, 
-    promptInstall, 
-    showIOSInstructions, 
-    setShowIOSInstructions 
-  } = usePWAInstall();
-
   return (
-    <section
-      id="home"
-      className={`${dmSans.variable} ${bricolage.variable} relative overflow-hidden bg-[#0A0F1E]`}
-    >
+    <section id="home" className="relative overflow-hidden bg-[#0A0F1E]">
       <HeroBackground />
-
-      <div className="relative z-10 mx-auto grid w-full max-w-5xl grid-cols-1 items-center gap-10 px-6 pb-16 pt-28 sm:px-7 sm:pb-24 sm:pt-32 lg:grid-cols-2 lg:gap-16 lg:pb-28">
-        {/* Copy column — left-aligned at every breakpoint, per the Figma
-            (previously centered below `lg:`, which is what needed fixing) */}
-        <div className="flex flex-col items-start text-left">
-          {/* <motion.p
-            custom={0}
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            className="font-body mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-jade-light sm:text-[12px]"
-          >
-            A modern study platform for Nigerian secondary school students
-          </motion.p> */}
-
-          <motion.h1
-            custom={1}
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            className="font-heading mb-4 max-w-[540px] text-[32px] font-extrabold leading-[1.08] tracking-[-0.02em] text-white sm:text-[48px] lg:max-w-none"
-          >
-            Study 
-            <br />
-            smarter.
-            <br />
-            Remember
-            <br />
-            longer.
-          </motion.h1>
-
-          <motion.p
-            custom={2}
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            className="font-body mb-7 max-w-[460px] text-[15px] leading-relaxed text-white/60 sm:text-[16px]"
-          >
-            Master every subject in your secondary school curriculum with clear explanations, real
-            world examples, and an AI tutor built to help you actually retain what you learn.
-          </motion.p>
-
-          <motion.div
-            custom={3}
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            className={`${dmSans.variable} font-body flex w-full max-w-md flex-col gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:flex-wrap`}
-          >
-            {/* Primary CTA — school students (majority of users) */}
-            <Link
-              href="/join"
-              className="inline-flex items-center justify-center rounded-xl bg-brand px-6 py-4 text-[15px] font-bold text-white active:scale-[0.97] transition-transform shadow-sm"
-            >
-              My school gave me a code →
-            </Link>
-
-            {/* Secondary CTA — individual or returning */}
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center rounded-xl border border-white/25 bg-white/8 px-6 py-4 text-[15px] font-semibold text-white active:scale-[0.97] transition-transform"
-            >
-              Sign in / Get started
-            </Link>
-
-            {canInstall && (
-              <button
-                type="button"
-                onClick={promptInstall}
-                className="inline-flex items-center justify-center rounded-xl border border-white/20 px-5 py-4 text-[14px] font-semibold text-white/80 active:scale-[0.97] transition-transform"
-              >
-                Install App
-              </button>
-            )}
-          </motion.div>
-
-          <IOSInstallModal 
-            isOpen={showIOSInstructions}
-            onClose={() => setShowIOSInstructions(false)}
-          />
+      <div className="relative z-10 mx-auto grid max-w-5xl items-center gap-9 px-6 pb-14 pt-28 sm:px-7 sm:pb-20 sm:pt-32 lg:grid-cols-2 lg:gap-12">
+        <div className="min-w-0">
+          <h1 className="font-heading mb-5 text-[clamp(2.125rem,4vw,3rem)] font-bold leading-[1.12] text-white">
+            <span className="block">Study smarter.</span><span className="block">Remember longer.</span>
+          </h1>
+          <p className="font-body mb-6 max-w-[460px] text-white/80">Master every subject in your secondary school curriculum. Learn with clear explanations, real-world examples, and an AI tutor.</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link href="/join" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-dark px-5 py-3 text-[0.9375rem] font-semibold text-white hover:bg-brand-dark">Enter school code <ArrowRight size={18} aria-hidden /></Link>
+            <Link href="/pay/individual" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-[0.9375rem] font-semibold text-white hover:bg-white/10">Get individual access</Link>
+          </div>
+          <p className="font-body mt-4 text-sm text-white/75">Already have access? <Link href="/login" className="font-semibold text-white underline underline-offset-4">Log in</Link></p>
+          <a href="#sample-question" onClick={revealQuestion} className="inline-flex min-h-11 items-center gap-2 font-semibold text-jade-light underline underline-offset-4">Try a free question <ArrowRight size={17} aria-hidden /></a>
         </div>
-
-        {/* Product mockup column — laptop + phone screenshot composite (see
-            public/hero-mockup-cropped.png), a trim of the source asset's
-            transparent canvas padding down to its actual content so it
-            fills the column instead of floating tiny in empty space. The
-            PNG itself is transparent outside the devices, so it sits
-            cleanly on the dark hero without a white box. */}
-        <motion.div
-          custom={4}
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          className="w-full lg:flex lg:justify-end"
-        >
-          <Image
-            src="/hero-mockup-cropped.png"
-            alt="Recall app on laptop and phone"
-            width={1000}
-            height={954}
-            priority
-            className="mx-auto h-auto w-full max-w-[420px] sm:max-w-[480px] lg:max-w-none"
-          />
-        </motion.div>
+        <div className="min-w-0 rounded-3xl border border-white/15 bg-white p-6 text-ink shadow-xl sm:p-7">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4">
+            <span className="flex items-center gap-2 text-sm font-semibold text-brand-dark"><BookOpen size={18} aria-hidden /> Sample lesson</span>
+            <span className="rounded-full bg-bg-2 px-3 py-1 text-xs font-medium">Mathematics</span>
+          </div>
+          <h2 className="font-heading mb-3 font-bold">Make equations click.</h2>
+          <p className="font-body text-muted">An equation is a balance. Whatever you do to one side, do to the other.</p>
+          <div className="my-5 rounded-2xl bg-bg-0 px-5 py-4">
+            <p className="mb-2 text-sm font-medium text-muted">Solve for x</p>
+            <p className="text-[1.75rem] font-bold tracking-tight">2x + 3 = 11</p>
+            <p className="mt-2 text-base text-ink-2">Subtract 3, then divide by 2. <strong>x = 4.</strong></p>
+          </div>
+          <p className="mb-5 flex items-start gap-2 text-sm text-ink-2"><CheckCircle2 size={18} className="mt-0.5 shrink-0 text-brand-dark" aria-hidden /> Learn the idea. Check your understanding. Review it again.</p>
+          <a href="#sample-question" onClick={revealQuestion} className="inline-flex min-h-11 items-center gap-2 font-semibold text-brand-dark underline underline-offset-4">Try a free practice question <ArrowRight size={17} aria-hidden /></a>
+        </div>
       </div>
     </section>
   );

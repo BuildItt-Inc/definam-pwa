@@ -1,0 +1,18 @@
+[
+  {
+    "look": "classic",
+    "ratios": {
+      "savings": 5.02,
+      "footer": 10.29,
+      "cta": 5.02
+    }
+  },
+  {
+    "look": "vivid",
+    "ratios": {
+      "savings": 10.96,
+      "footer": 10.82,
+      "cta": 9.62
+    }
+  }
+]

@@ -5,6 +5,8 @@
 
 @layer base {
   :root {
+    --reading-size: 1rem;
+    --heading-tracking: -0.025em;
     /* ── Backgrounds ──────────────────────────────────────────────────────── */
     --bg-0:   #F6FAF7; /* App body — very soft green-white */
     --bg-1:   #FFFFFF; /* Cards, modals, elevated surfaces */
@@ -70,6 +72,17 @@
     --nav-h: 56px; /* base nav height, excluding safe-area-inset-bottom */
   }
 
+  html[data-typography='ios'] body {
+    --font-ui: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --reading-size: 1.0625rem;
+    --heading-tracking: -0.022em;
+  }
+
+  html[data-typography='android'] body {
+    --font-ui: var(--font-roboto, Roboto), 'Noto Sans', system-ui, sans-serif;
+    --heading-tracking: -0.015em;
+  }
+
   /* ── Base resets ────────────────────────────────────────────────────────── */
   *, *::before, *::after {
     box-sizing: border-box;
@@ -87,13 +100,18 @@
   }
 
   body {
+    --font-ui: var(--font-inter, Inter), system-ui, sans-serif;
     overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
     margin: 0;
     min-height: 100dvh; /* dvh = dynamic viewport height — fixes mobile chrome bar */
-    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Inter ligatures */
+    font-family: var(--font-ui);
+    font-size: var(--reading-size);
+    line-height: 1.6;
+    font-optical-sizing: auto;
     @apply bg-bg-0 text-ink antialiased;
   }
+
+  input, select, textarea { font-family: inherit; font-size: 1rem; }
 
   /* ── Mobile safe area (bottom nav never overlaps OS bar) ─────────────────── */
   .pb-safe {
@@ -411,3 +429,54 @@
   50%      { transform: scale(1.12); }
 }
 .flame-pulse { animation: flamePulseScale 1s ease-in-out infinite; }
+
+/* Shared platform typography; landing prose stays readable at every width. */
+.landing-page { font-family: var(--font-ui); }
+.landing-skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-180%);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #111827;
+  font-weight: 600;
+  transition: none;
+}
+.landing-skip-link:focus { transform: translateY(0); }
+.landing-page section[id], .landing-page main[id] { scroll-margin-top: 6rem; }
+.landing-page #sample-question { scroll-margin-top: 6rem; }
+.landing-menu::backdrop { background: rgb(10 15 30 / 0.7); backdrop-filter: blur(4px); }
+.landing-menu a { min-width: 0; overflow-wrap: anywhere; }
+.landing-page .font-heading { letter-spacing: var(--heading-tracking); }
+.landing-page h2 { font-size: clamp(1.75rem, 3vw, 2.25rem); line-height: 1.2; text-wrap: balance; }
+.landing-page h1 { text-wrap: balance; }
+.landing-page p.font-body:not(.uppercase),
+.landing-page li.font-body { font-size: var(--reading-size); line-height: 1.6; }
+.landing-page .text-white\/60 { color: rgb(255 255 255 / 0.76); }
+.landing-page .font-body.uppercase { font-size: 0.75rem; line-height: 1.5; }
+.landing-page button, .landing-page a { font-family: var(--font-ui); }
+.landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4,
+.landing-page p, .landing-page .font-body { overflow-wrap: anywhere; }
+.landing-stats { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5rem), 1fr)); }
+.landing-page #faqs button > span { min-width: 0; overflow-wrap: anywhere; }
+/* Grid items may shrink when users enlarge text; price units can wrap. */
+.landing-page #pricing .grid > div { min-width: 0; }
+.landing-page #pricing .font-heading.flex { flex-wrap: wrap; }
+.landing-page #pricing .items-baseline { flex-wrap: wrap; }
+.landing-page #pricing li > span { min-width: 0; overflow-wrap: anywhere; }
+.landing-page #pricing .absolute.rounded-full { max-width: 90%; text-align: center; }
+
+@media (max-width: 639px) {
+  .input-field { font-size: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .landing-page *, .landing-page *::before, .landing-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

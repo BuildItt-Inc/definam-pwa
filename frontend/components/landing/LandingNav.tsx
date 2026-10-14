@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import MobileNav from '@/components/landing/MobileNav';
-import { dmSans, bricolage } from '@/components/landing/landingFonts';
+
 import { NAV_LINKS } from '@/components/landing/navLinks';
-import { InstallAppButton } from '@/components/ui/InstallAppButton';
 
 /**
  * Landing nav — transparent over the dark navy hero, solidifies (navy +
@@ -34,11 +33,12 @@ export default function LandingNav() {
 
   return (
     <nav
-      className={`${dmSans.variable} ${bricolage.variable} fixed inset-x-0 top-0 z-40 transition-colors duration-200 ${
+      aria-label="Main navigation"
+      className={`landing-nav fixed inset-x-0 top-0 z-40 transition-colors duration-200 ${
         scrolled ? 'border-b border-white/10 bg-[#0A0F1E]/90 backdrop-blur-md' : 'border-b border-transparent bg-transparent'
       }`}
     >
-      <div className="mx-auto grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center px-4 py-3.5 sm:px-7">
+      <div className="mx-auto grid w-full max-w-5xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3.5 sm:px-7">
         {/* Left — wordmark. Explicit col-start-1: with `hidden` removing
             elements from grid flow entirely on mobile (not just hiding
             them), auto-placement would otherwise shift later items left
@@ -58,12 +58,12 @@ export default function LandingNav() {
         </Link>
 
         {/* Center — nav links, desktop only */}
-        <div className="font-body col-start-2 hidden items-center gap-6 justify-self-center sm:flex">
+        <div className="font-body col-start-2 hidden items-center gap-4 justify-self-center xl:flex">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="text-[14px] text-white/65 transition-colors hover:text-white"
+              className="text-[0.875rem] text-white/65 transition-colors hover:text-white"
             >
               {link.label}
             </a>
@@ -71,27 +71,27 @@ export default function LandingNav() {
         </div>
 
         {/* Right — auth actions, desktop only */}
-        <div className="font-body col-start-3 hidden items-center gap-3 justify-self-end sm:flex">
-          <InstallAppButton variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 text-[13px]" />
-          <Link href="/join" className="text-[13px] font-medium text-white/80 transition-colors hover:text-white border border-white/20 rounded-lg px-3 py-1.5 hover:bg-white/10">
-            School Code
+        <div className="font-body col-start-3 hidden items-center gap-3 justify-self-end xl:flex">
+          <Link href="/join" className="text-[0.8125rem] font-medium text-white/80 transition-colors hover:text-white border border-white/20 rounded-lg px-3 py-1.5 hover:bg-white/10">
+            Enter school code
           </Link>
-          <Link href="/login" className="text-[13px] font-semibold text-white/80 transition-colors hover:text-white">
+          <Link href="/login" className="text-[0.8125rem] font-semibold text-white/80 transition-colors hover:text-white">
             Log in
           </Link>
           <Link
             href="/pay/individual"
-            className="inline-flex items-center justify-center rounded-[10px] bg-jade px-[16px] py-[8px] text-[13px] font-semibold text-white transition-colors hover:bg-jade-dark"
+            className="inline-flex items-center justify-center rounded-[10px] bg-brand-dark px-[16px] py-[8px] text-[0.8125rem] font-semibold text-white transition-colors hover:bg-green-900"
           >
-            Sign up
+            Get individual access
           </Link>
         </div>
 
         {/* Mobile — hamburger, same column as the desktop right column */}
-        <div className="col-start-3 justify-self-end sm:hidden">
+        <div className="col-start-3 justify-self-end xl:hidden">
           <MobileNav />
         </div>
       </div>
+      <noscript><style>{'.landing-nav { background: #0A0F1E; }'}</style></noscript>
     </nav>
   );
 }

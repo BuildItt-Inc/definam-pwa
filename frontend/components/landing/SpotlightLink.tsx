@@ -26,9 +26,9 @@ export default function SpotlightLink({
       ref={ref}
       onMouseMove={onMouseMove}
       href={href}
-      className={`spotlight relative overflow-hidden rounded-[10px] border px-[18px] py-[9px] text-[14px] font-semibold transition-colors ${
+      className={`spotlight relative overflow-hidden rounded-[10px] border px-[18px] py-[9px] text-[0.875rem] font-semibold transition-colors ${
         filled
-          ? 'spotlight-filled border-jade bg-jade text-white hover:bg-jade-dark'
+          ? 'spotlight-filled border-jade bg-brand-dark text-white hover:bg-green-900'
           : 'border-white/[0.18] bg-white/[0.04] text-white hover:border-jade-light/50'
       } ${className}`}
     >

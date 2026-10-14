@@ -1,7 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import { KatexScripts } from '@/components/KatexScripts';
+import { Inter, Roboto } from 'next/font/google';
+import { typographyPlatformScript } from '@/lib/typography';
 import { AppToaster } from '@/components/ui/AppToaster';
 import { CelebrationProvider } from '@/components/ui/celebration/CelebrationContext';
 import AuthSyncListener from '@/components/AuthSyncListener';
@@ -12,13 +12,20 @@ const inter = Inter({
   display: 'swap',
 });
 
+const roboto = Roboto({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-roboto',
+  display: 'swap',
+  preload: false,
+});
+
 import type { Viewport } from 'next';
 
 export const viewport: Viewport = {
   themeColor: '#111827',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: 'cover',
 };
 
@@ -36,25 +43,18 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        {/* KaTeX CSS — renders LaTeX math beautifully, child-friendly */}
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
-          crossOrigin="anonymous"
-        />
+        <script dangerouslySetInnerHTML={{ __html: typographyPlatformScript }} />
       </head>
       <body
-        className={`${inter.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}
+        className={`${inter.variable} ${roboto.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}
       >
         <CelebrationProvider>
           {children}
           <AppToaster />
         </CelebrationProvider>
         <AuthSyncListener />
-        {/* KaTeX JS + mhchem — loaded after page content, never blocks render */}
-        <KatexScripts />
       </body>
     </html>
   );
