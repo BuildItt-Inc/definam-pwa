@@ -1,0 +1,52 @@
+[
+  {
+    "look": "classic",
+    "widths": [
+      {
+        "width": 320,
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "overflow": 0
+      },
+      {
+        "width": 1024,
+        "overflow": 0
+      },
+      {
+        "width": 1440,
+        "overflow": 0
+      }
+    ]
+  },
+  {
+    "look": "vivid",
+    "widths": [
+      {
+        "width": 320,
+        "overflow": 0
+      },
+      {
+        "width": 390,
+        "overflow": 0
+      },
+      {
+        "width": 768,
+        "overflow": 0
+      },
+      {
+        "width": 1024,
+        "overflow": 0
+      },
+      {
+        "width": 1440,
+        "overflow": 0
+      }
+    ]
+  }
+]
