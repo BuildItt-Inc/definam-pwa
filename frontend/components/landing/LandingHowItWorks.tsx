@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { BookOpen, ClipboardCheck, RotateCcw } from 'lucide-react';
-import { dmSans, bricolage } from '@/components/landing/landingFonts';
+
 
 // The real 3-step model — this is what the app genuinely does, not
 // marketing filler. "Review it later" (not "Recall it later"): the in-app
@@ -49,35 +49,35 @@ const fadeUp = {
  */
 export default function LandingHowItWorks() {
   return (
-    <section id="how-it-works" className={`${dmSans.variable} ${bricolage.variable} px-6 py-14 sm:py-20`}>
+    <section id="how-it-works" className={`px-6 py-14 sm:py-20`}>
       <div className="mx-auto max-w-[520px] text-center">
         <motion.p
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, amount: 0.6 }}
           custom={0}
           variants={fadeUp}
-          className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-jade sm:text-[12px]"
+          className="mb-3 text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-brand-dark sm:text-[0.75rem]"
         >
           The Process
         </motion.p>
         <motion.h2
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, amount: 0.6 }}
           custom={1}
           variants={fadeUp}
-          className="font-heading mb-3 text-[26px] font-extrabold tracking-[-0.02em] text-ink sm:text-[34px]"
+          className="font-heading mb-3 text-[1.625rem] font-extrabold tracking-[-0.02em] text-ink sm:text-[2.125rem]"
         >
           How It Works
         </motion.h2>
         <motion.p
-          initial="hidden"
+          initial={false}
           whileInView="visible"
           viewport={{ once: true, amount: 0.6 }}
           custom={2}
           variants={fadeUp}
-          className="font-body text-[14px] text-muted sm:text-[15px]"
+          className="font-body text-[0.875rem] text-muted sm:text-[0.9375rem]"
         >
           Every topic broken into a simple flow that actually sticks.
         </motion.p>
@@ -87,7 +87,7 @@ export default function LandingHowItWorks() {
         {STEPS.map(({ step, icon: Icon, title, body }, i) => (
           <motion.div
             key={title}
-            initial="hidden"
+            initial={false}
             whileInView="visible"
             viewport={{ once: true, amount: 0.4 }}
             custom={i}
@@ -97,11 +97,11 @@ export default function LandingHowItWorks() {
             <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-jade-tint text-jade">
               <Icon size={20} strokeWidth={1.8} aria-hidden />
             </div>
-            <p className="font-body mb-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-muted">
+            <p className="font-body mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-muted">
               {step}
             </p>
-            <h3 className="font-heading mb-2 text-[17px] font-bold tracking-[-0.01em] text-ink">{title}</h3>
-            <p className="font-body text-[14px] leading-[1.55] text-muted">{body}</p>
+            <h3 className="font-heading mb-2 text-[1.0625rem] font-bold tracking-[-0.01em] text-ink">{title}</h3>
+            <p className="font-body text-[0.875rem] leading-[1.55] text-muted">{body}</p>
           </motion.div>
         ))}
       </div>

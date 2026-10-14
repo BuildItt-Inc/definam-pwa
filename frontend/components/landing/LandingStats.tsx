@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { dmSans, bricolage } from '@/components/landing/landingFonts';
+
 
 // Real, verified numbers — confirmed against `get_all_subjects()` per
 // docs/WEEK18_LANDING_PAGE_REDESIGN.md (queried 2026-07-25): 5 real
@@ -39,21 +39,21 @@ const fadeUp = {
  */
 export default function LandingStats() {
   return (
-    <section className={`${dmSans.variable} ${bricolage.variable} border-b border-border bg-cream`}>
-      <div className="mx-auto grid max-w-[700px] grid-cols-3 gap-4 px-6 py-10 text-center sm:gap-6 sm:py-12">
+    <section className={`border-b border-border bg-cream`}>
+      <div className="landing-stats mx-auto grid max-w-[700px] gap-4 px-6 py-10 text-center sm:gap-6 sm:py-12">
         {STATS.map((stat, i) => (
           <motion.div
             key={stat.label}
             custom={i}
-            initial="hidden"
+            initial={false}
             whileInView="visible"
             viewport={{ once: true, amount: 0.5 }}
             variants={fadeUp}
           >
-            <div className="font-heading text-[26px] font-extrabold tracking-[-0.02em] text-ink sm:text-[34px]">
+            <div className="font-heading text-[1.625rem] font-extrabold tracking-[-0.02em] text-ink sm:text-[2.125rem]">
               {stat.value}
             </div>
-            <div className="font-body mt-1.5 text-[11.5px] leading-snug text-muted sm:text-[13px]">
+            <div className="font-body mt-1.5 text-[0.7188rem] leading-snug text-muted sm:text-[0.8125rem]">
               {stat.label}
             </div>
           </motion.div>
