@@ -456,28 +456,47 @@ async def get_chapters_by_subject_name(name: str) -> list[dict[str, Any]]:
 
 
 async def get_topics_by_chapter(
-    chapter_id: str, published_only: bool = True
+    chapter_id: str, published_only: bool = True, user_id: str | None = None
 ) -> list[dict[str, Any]]:
-    """Return topics for a given chapter."""
-    from app.db.models import Topic
+    """Return topics for a given chapter, annotated with per-student progress when user_id is provided."""
+    from app.db.models import Topic, TopicReview
 
     async with db_session() as session:
-        stmt = select(Topic).where(Topic.chapter_id == chapter_id)
+        if user_id:
+            # Join TopicReview so we can surface per-student mastery + last studied date
+            stmt = (
+                select(
+                    Topic,
+                    TopicReview.accuracy_score.label("mastery_percent"),
+                    TopicReview.last_reviewed_at.label("last_studied_at"),
+                )
+                .outerjoin(
+                    TopicReview,
+                    (TopicReview.topic_id == Topic.id) & (TopicReview.user_id == user_id),
+                )
+                .where(Topic.chapter_id == chapter_id)
+            )
+        else:
+            stmt = select(Topic).where(Topic.chapter_id == chapter_id)
+
         if published_only:
             stmt = stmt.where(Topic.status == "published")
         stmt = stmt.order_by(Topic.created_at)
         result = await session.execute(stmt)
+
+        rows = result.all() if user_id else [(row, None, None) for row in result.scalars()]
         return [
             {
                 "id": row.id,
                 "chapter_id": row.chapter_id,
                 "title": row.title,
                 "status": row.status,
-                "mastery_percent": None,
-                "last_studied_at": None,
+                "mastery_percent": int(mastery) if mastery is not None else None,
+                "last_studied_at": last_studied.isoformat() if last_studied is not None else None,
             }
-            for row in result.scalars()
+            for row, mastery, last_studied in rows
         ]
+
 
 
 async def get_topic_by_id(

@@ -574,10 +574,10 @@ async def send_test_notification(
     claims: CurrentUserDep,
 ) -> dict:
     """Send a test push notification to the authenticated user's devices."""
-    from app.services.fcm import send_fcm_notification
+    from app.services.fcm import send_multicast_fcm
 
     user_id: str = claims["sub"]
-    result = await send_fcm_notification(
+    result = await send_multicast_fcm(
         user_ids=[user_id],
         title="🔔 Test Notification",
         body="Recall push notifications are active on your device!",
