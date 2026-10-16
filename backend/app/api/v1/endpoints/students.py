@@ -579,8 +579,8 @@ async def send_test_notification(
     user_id: str = claims["sub"]
     result = await send_multicast_fcm(
         user_ids=[user_id],
-        title="🔔 Test Notification",
-        body="Recall push notifications are active on your device!",
+        title="Test Notification",
+        body="Recall push notifications are active on your device.",
         data={"type": "test_ping"},
     )
     return {"ok": True, "result": result}

@@ -24,7 +24,7 @@ async def send_daily_recall_push(
         "app_id": settings.onesignal_app_id,
         "include_external_user_ids": [user_id],
         "contents": {"en": message},
-        "headings": {"en": "📚 Daily Review Reminder"},
+        "headings": {"en": "Daily Review Reminder"},
         "data": {"type": "recall"},
     }
     headers = {"Authorization": f"Basic {settings.onesignal_api_key}"}
@@ -55,7 +55,7 @@ async def send_streak_warning_push(
     client: httpx.AsyncClient | None = None,
 ) -> dict:
     """Send a streak warning push notification via OneSignal."""
-    title = "🔥 Keep your streak alive!"
+    title = "Keep your streak alive"
     body = (
         f"Hi {display_name}, you have a {streak_count}-day learning streak going! "
         "Don't lose it, open Recall and complete today's review or topic."

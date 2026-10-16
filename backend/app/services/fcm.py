@@ -154,10 +154,14 @@ async def send_multicast_fcm(
         logger.info("No registered FCM tokens found for users: %s", user_ids)
         return {"status": "skipped", "reason": "no registered devices"}
 
-    # Group tokens for batching
-    token_records = [
-        {"id": r.id, "token": r.fcm_token, "user_id": r.user_id} for r in tokens_result
-    ]
+    # Group tokens for batching and deduplicate by token string
+    seen_tokens = set()
+    token_records = []
+    for r in tokens_result:
+        if r.fcm_token not in seen_tokens:
+            seen_tokens.add(r.fcm_token)
+            token_records.append({"id": r.id, "token": r.fcm_token, "user_id": r.user_id})
+
     tokens = [r["token"] for r in token_records]
 
     # FCM allows up to 500 tokens in a multicast message
@@ -204,20 +208,23 @@ async def send_multicast_fcm(
                 if frontend_url.startswith("https://")
                 else "/icons/icon-192.png"
             )
+            # Ensure all values in data payload are strings (FCM requirement)
+            clean_data = {str(k): str(v) for k, v in (data or {}).items()}
+            if "link" not in clean_data:
+                clean_data["link"] = target_path
+
+            # Tag allows the browser/OS to collapse multiple or duplicate notifications into one
+            notification_tag = clean_data.get("type") or "recall-notification"
             webpush_config = messaging.WebpushConfig(
                 notification=messaging.WebpushNotification(
                     title=title,
                     body=body,
                     icon=icon_url,
                     badge=icon_url,
+                    tag=notification_tag,
                 ),
                 fcm_options=fcm_options,
             )
-
-            # Ensure all values in data payload are strings (FCM requirement)
-            clean_data = {str(k): str(v) for k, v in (data or {}).items()}
-            if "link" not in clean_data:
-                clean_data["link"] = target_path
 
             message = messaging.MulticastMessage(
                 notification=messaging.Notification(

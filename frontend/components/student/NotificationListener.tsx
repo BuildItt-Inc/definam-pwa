@@ -19,7 +19,7 @@ export function NotificationListener() {
         if (celebration?.celebrate) {
           celebration.celebrate({ type: 'streak', days: streakDays });
         } else {
-          toast(title || '🔥 Keep your streak alive!', {
+          toast(title || 'Keep your streak alive', {
             description: body || "Don't lose your streak! Complete today's review.",
             action: {
               label: 'Review Now',
@@ -28,7 +28,7 @@ export function NotificationListener() {
           });
         }
       } else {
-        toast(title || '📚 Daily Review Reminder', {
+        toast(title || 'Daily Review Reminder', {
           description: body || 'You have topics to review today.',
           action: {
             label: 'Review Now',

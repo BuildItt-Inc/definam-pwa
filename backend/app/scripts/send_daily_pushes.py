@@ -78,7 +78,7 @@ async def process_recall_notifications():
 
         fcm_res = await send_multicast_fcm(
             user_ids=[user_id],
-            title="📚 Daily Review Reminder",
+            title="Daily Review Reminder",
             body=message,
             data={"type": "recall"},
         )
@@ -147,7 +147,7 @@ async def process_streak_notifications():
             if streak_count >= 1:
                 # User has an active streak and has not logged in today
                 display_name = name or "Student"
-                title = "🔥 Keep your streak alive!"
+                title = "Keep your streak alive"
                 body = (
                     f"Hi {display_name}, you have a {streak_count}-day learning streak going! "
                     "Don't lose it, open Recall and complete today's review or topic."
