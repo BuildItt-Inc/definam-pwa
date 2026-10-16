@@ -186,8 +186,8 @@ async def send_multicast_fcm(
                 notification=messaging.WebpushNotification(
                     title=title,
                     body=body,
-                    icon="/icons/icon-192x192.png",
-                    badge="/icons/icon-192x192.png",
+                    icon="/icons/icon-192.png",
+                    badge="/icons/icon-192.png",
                 ),
                 fcm_options=messaging.WebpushFCMOptions(link="/student/review"),
             )

@@ -24,8 +24,8 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title || payload.data?.title || 'Recall Reminder';
   const options = {
     body: payload.notification?.body || payload.data?.body || 'You have pending learning tasks.',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-192x192.png',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
     data: payload.data || {},
   };
 
