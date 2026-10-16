@@ -181,23 +181,51 @@ async def send_multicast_fcm(
             continue
 
         try:
+            settings = get_settings()
+            frontend_url = (settings.frontend_url or "").rstrip("/")
+
+            target_path = (data or {}).get("link") or "/student/review"
+            if not target_path.startswith("/") and not target_path.startswith("http"):
+                target_path = "/" + target_path
+
+            # Firebase Admin SDK requires WebpushFCMOptions.link to be a valid HTTPS URL.
+            # If frontend_url is not HTTPS or absent, omit fcm_options so serialization doesn't fail.
+            fcm_link = None
+            if target_path.startswith("https://"):
+                fcm_link = target_path
+            elif frontend_url.startswith("https://"):
+                fcm_link = f"{frontend_url}{target_path}"
+
+            fcm_options = messaging.WebpushFCMOptions(link=fcm_link) if fcm_link else None
+
             # Prepare message with WebpushConfig for browser notifications
+            icon_url = (
+                f"{frontend_url}/icons/icon-192.png"
+                if frontend_url.startswith("https://")
+                else "/icons/icon-192.png"
+            )
             webpush_config = messaging.WebpushConfig(
                 notification=messaging.WebpushNotification(
                     title=title,
                     body=body,
-                    icon="/icons/icon-192.png",
-                    badge="/icons/icon-192.png",
+                    icon=icon_url,
+                    badge=icon_url,
                 ),
-                fcm_options=messaging.WebpushFCMOptions(link="/student/review"),
+                fcm_options=fcm_options,
             )
+
+            # Ensure all values in data payload are strings (FCM requirement)
+            clean_data = {str(k): str(v) for k, v in (data or {}).items()}
+            if "link" not in clean_data:
+                clean_data["link"] = target_path
+
             message = messaging.MulticastMessage(
                 notification=messaging.Notification(
                     title=title,
                     body=body,
                 ),
                 webpush=webpush_config,
-                data=data or {},
+                data=clean_data,
                 tokens=batch_tokens,
             )
 

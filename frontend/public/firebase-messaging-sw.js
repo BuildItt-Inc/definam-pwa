@@ -34,7 +34,8 @@ messaging.onBackgroundMessage((payload) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = new URL('/student/review', self.location.origin).href;
+  const targetPath = event.notification.data?.link || '/student/review';
+  const urlToOpen = new URL(targetPath, self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
