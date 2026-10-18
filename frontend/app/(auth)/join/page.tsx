@@ -16,7 +16,6 @@ import Link from 'next/link';
 import { orgLoginSchema, type OrgLoginFormValues } from '@/lib/validations/auth';
 import { orgLogin, ApiError } from '@/lib/api/auth';
 import { InfoCard } from '@/components/ui/InfoCard';
-import LandingBrandMark from '@/components/landing/LandingBrandMark';
 
 export default function JoinPage() {
   const router = useRouter();
@@ -70,7 +69,7 @@ export default function JoinPage() {
               <ArrowLeft size={20} strokeWidth={2.2} />
             </button>
             <span className="text-[15px] font-bold text-ink tracking-tight flex items-center gap-2">
-              <LandingBrandMark size={20} />
+              <Building2 size={18} className="text-brand flex-shrink-0" strokeWidth={2.2} />
               School Student Access
             </span>
           </div>

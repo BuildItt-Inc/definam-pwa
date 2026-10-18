@@ -15,7 +15,6 @@ import {
   unregisterNotificationToken,
 } from '@/lib/api/notifications';
 import type { UserMe } from '@/types/auth';
-import { BottomNav } from '@/components/student/BottomNav';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
 
 const APP_VERSION = '0.1.0';
@@ -252,8 +251,6 @@ export default function SettingsPage() {
 
         <p className="mt-8 text-center text-[13px] text-muted">v{APP_VERSION}</p>
       </main>
-
-      <BottomNav />
 
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60" onClick={() => setShowLogoutConfirm(false)}>

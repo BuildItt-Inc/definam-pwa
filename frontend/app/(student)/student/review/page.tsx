@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpen, RefreshCw, Clock, BookMarked } from 'lucide-react';
+import { ArrowLeft, BookOpen, RefreshCw, Clock, BookMarked, Sparkles, CheckCircle2 } from 'lucide-react';
 import { getRecallQueue } from '@/lib/api/topics';
 import type { RecallItem } from '@/types/topics';
-import { BottomNav } from '@/components/student/BottomNav';
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
 
@@ -84,7 +83,7 @@ export default function RecallPage() {
   if (queue.length === 0) {
     return (
       <div className="page-with-nav bg-bg-0 page-enter">
-        <header className="flex items-center gap-3 border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <header className="flex items-center gap-3 border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
           <button
             onClick={() => router.push('/student')}
             className="flex items-center text-ink active:scale-95 transition-transform"
@@ -98,23 +97,57 @@ export default function RecallPage() {
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center px-6 pb-nav text-center">
-          <RefreshCw size={40} strokeWidth={2} className="mb-4 text-faint" />
-          <h2 className="mb-2 text-[17px] font-bold text-ink">
-            You&apos;re all caught up!
+        <main className="flex flex-1 flex-col items-center justify-center px-5 py-8 pb-nav text-center max-w-md mx-auto">
+          {/* Badge & Icon */}
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-dim border border-brand/20 shadow-xs">
+            <Sparkles size={30} strokeWidth={1.8} className="text-brand" />
+          </div>
+
+          <h2 className="text-[20px] font-bold text-ink tracking-tight mb-2">
+            No Reviews Scheduled Yet
           </h2>
-          <p className="mb-6 text-[15px] leading-relaxed text-muted">
-            Nothing to review today. Come back tomorrow to keep your streak going.
+          <p className="text-[14px] leading-relaxed text-muted mb-6">
+            Recall uses spaced repetition to bring back topics right before you forget them. Complete a lesson in Learn mode, and your review cards will appear here automatically.
           </p>
+
+          {/* Spaced repetition micro-guide */}
+          <div className="w-full text-left rounded-2xl border border-border bg-card p-4 mb-6 shadow-xs space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-faint">
+              How Spaced Repetition Works
+            </p>
+            <div className="flex items-start gap-3">
+              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white mt-0.5">
+                1
+              </span>
+              <p className="text-[13px] text-ink leading-snug">
+                <strong>Learn a topic:</strong> Master key concepts with step-by-step explanations and real-world examples.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white mt-0.5">
+                2
+              </span>
+              <p className="text-[13px] text-ink leading-snug">
+                <strong>Smart intervals:</strong> Quick 2-minute review cards are scheduled at Day 1, 3, and 7.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white mt-0.5">
+                3
+              </span>
+              <p className="text-[13px] text-ink leading-snug">
+                <strong>Lock in memory:</strong> Retain everything effortlessly for your WAEC, JAMB, or school exams.
+              </p>
+            </div>
+          </div>
+
           <button
             onClick={() => router.push('/student/learn')}
-            className="btn-secondary"
+            className="btn-primary w-full shadow-brand"
           >
-            Browse Topics
+            Start Learning Topics →
           </button>
         </main>
-
-        <BottomNav recallCount={0} />
       </div>
     );
   }
@@ -196,8 +229,6 @@ export default function RecallPage() {
         </button>
 
       </main>
-
-      <BottomNav recallCount={queue.length} />
     </div>
   );
 }

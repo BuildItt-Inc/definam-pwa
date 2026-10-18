@@ -158,13 +158,20 @@ function PaymentCelebration({
         <Particles />
         <CircleCheck size={30} strokeWidth={2} className="celebration-icon-pop text-white" />
       </div>
-      <p className="text-[18px] font-bold text-ink">Payment Successful</p>
+      <p className="text-[18px] font-bold text-ink">Payment Successful!</p>
       <p className="mt-1.5 text-[13px] text-muted leading-snug">
-        Check your email ({email}) for your access code.
+        Your access code is active and ready.
       </p>
-      <p className="mt-3 text-[12px] font-semibold text-ink/70">
-        Redirecting to signup in {countdown}s…
-      </p>
+      <button
+        type="button"
+        onClick={() => {
+          onDismiss();
+          onRedirect();
+        }}
+        className="mt-4 w-full py-2.5 px-4 rounded-xl bg-brand text-white font-bold text-sm shadow-brand active:scale-95 transition-transform"
+      >
+        Set Up Your Account →
+      </button>
     </CelebrationShell>
   );
 }

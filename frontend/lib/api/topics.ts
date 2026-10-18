@@ -29,19 +29,40 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+// ── In-memory curriculum cache (persists within session for instant transitions) ──
+const curriculumCache = {
+  subjects: null as Subject[] | null,
+  chaptersByName: new Map<string, Chapter[]>(),
+  topicsByChapter: new Map<string, Topic[]>(),
+  topicDetails: new Map<string, TopicDetail>(),
+};
+
+export function clearCurriculumCache() {
+  curriculumCache.subjects = null;
+  curriculumCache.chaptersByName.clear();
+  curriculumCache.topicsByChapter.clear();
+  curriculumCache.topicDetails.clear();
+}
+
 // ── getSubjects ────────────────────────────────────────────────────────────
 // Real: GET /api/v1/subjects
 
 export async function getSubjects(): Promise<Subject[]> {
+  if (curriculumCache.subjects) {
+    return curriculumCache.subjects;
+  }
   if (USE_MOCK) {
     await delay();
+    curriculumCache.subjects = mockSubjects;
     return mockSubjects;
   }
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects`, {
     headers: await getAuthHeaders(),
   });
-  return handleResponse<Subject[]>(res);
+  const data = await handleResponse<Subject[]>(res);
+  curriculumCache.subjects = data;
+  return data;
 }
 
 // ── getChaptersBySubjectName ─────────────────────────────────────────────────
@@ -50,12 +71,13 @@ export async function getSubjects(): Promise<Subject[]> {
 // each annotated with class_level so the caller can group them.
 
 export async function getChaptersBySubjectName(subjectName: string): Promise<Chapter[]> {
+  if (curriculumCache.chaptersByName.has(subjectName)) {
+    return curriculumCache.chaptersByName.get(subjectName)!;
+  }
   if (USE_MOCK) {
     await delay();
-    // Mock data only models one subject's chapters — grouping by name isn't
-    // meaningfully mockable, so just return them regardless of which
-    // subject was requested.
     void subjectName;
+    curriculumCache.chaptersByName.set(subjectName, mockChapters);
     return mockChapters;
   }
 
@@ -63,33 +85,46 @@ export async function getChaptersBySubjectName(subjectName: string): Promise<Cha
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects/by-name/${encodeURIComponent(subjectName)}/chapters`,
     { headers: await getAuthHeaders() },
   );
-  return handleResponse<Chapter[]>(res);
+  const data = await handleResponse<Chapter[]>(res);
+  curriculumCache.chaptersByName.set(subjectName, data);
+  return data;
 }
 
 // ── getTopics ──────────────────────────────────────────────────────────────
 // Real: GET /api/v1/chapters/:id/topics
 
 export async function getTopics(chapterId: string): Promise<Topic[]> {
+  if (curriculumCache.topicsByChapter.has(chapterId)) {
+    return curriculumCache.topicsByChapter.get(chapterId)!;
+  }
   if (USE_MOCK) {
     await delay();
-    return mockTopics.filter((t) => t.chapter_id === chapterId);
+    const data = mockTopics.filter((t) => t.chapter_id === chapterId);
+    curriculumCache.topicsByChapter.set(chapterId, data);
+    return data;
   }
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chapters/${chapterId}/topics`,
     { headers: await getAuthHeaders() },
   );
-  return handleResponse<Topic[]>(res);
+  const data = await handleResponse<Topic[]>(res);
+  curriculumCache.topicsByChapter.set(chapterId, data);
+  return data;
 }
 
 // ── getTopicDetail ─────────────────────────────────────────────────────────
 // Real: GET /api/v1/topics/:id
 
 export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
+  if (curriculumCache.topicDetails.has(topicId)) {
+    return curriculumCache.topicDetails.get(topicId)!;
+  }
   if (USE_MOCK) {
     await delay();
     const detail = mockTopicDetail[topicId];
     if (!detail) throw new ApiError(404, `Topic detail not found: ${topicId}`);
+    curriculumCache.topicDetails.set(topicId, detail);
     return detail;
   }
 
@@ -97,7 +132,9 @@ export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/topics/${topicId}`,
     { headers: await getAuthHeaders() },
   );
-  return handleResponse<TopicDetail>(res);
+  const data = await handleResponse<TopicDetail>(res);
+  curriculumCache.topicDetails.set(topicId, data);
+  return data;
 }
 
 // ── getHomeData ────────────────────────────────────────────────────────────
@@ -255,6 +292,10 @@ export async function submitTopicCompletion(
       headers: await getAuthHeaders(),
       body: JSON.stringify({ accuracy_score: accuracyScore }),
     });
+    if (res.ok) {
+      curriculumCache.topicDetails.delete(topicId);
+      curriculumCache.topicsByChapter.clear();
+    }
     return res.ok;
   } catch {
     // Best-effort — a failed completion ping shouldn't block the UI; the

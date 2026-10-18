@@ -8,7 +8,6 @@ import { getHomeData, getSubjects } from '@/lib/api/topics';
 import type { HomeData, RecentTopic, Subject } from '@/types/topics';
 import { RecallCard } from '@/components/student/RecallCard';
 import { CompletionRing } from '@/components/student/CompletionRing';
-import { BottomNav } from '@/components/student/BottomNav';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { SUBJECT_ICONS, subjectIcon, subjectColor } from '@/lib/utils/subjects';
@@ -153,6 +152,9 @@ export default function StudentHomePage() {
     getHomeData()
       .then((homeData) => {
         setData(homeData);
+        if (typeof window !== 'undefined' && homeData.recall_queue) {
+          window.dispatchEvent(new CustomEvent('recallQueueUpdated', { detail: homeData.recall_queue.length }));
+        }
         if (sessionStorage.getItem('celebrate_login') === '1') {
           sessionStorage.removeItem('celebrate_login');
           celebrate({ type: 'login', name: homeData.student_name });
@@ -311,8 +313,6 @@ export default function StudentHomePage() {
           </div>
         </section>
       </main>
-
-      <BottomNav recallCount={recall_queue.length} />
     </div>
   );
 }

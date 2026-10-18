@@ -11,9 +11,9 @@ import {
   pingTopicActivity,
   submitTopicCompletion,
 } from '@/lib/api/topics';
+import Link from 'next/link';
 import type { Chapter, Topic, TopicDetail } from '@/types/topics';
 import { TopicListItem } from '@/components/student/TopicListItem';
-import { BottomNav } from '@/components/student/BottomNav';
 import { LearningStep } from '@/components/student/LearningStep';
 import { PracticeQuestion } from '@/components/student/PracticeQuestion';
 import { MathContent } from '@/components/student/MathContent';
@@ -162,16 +162,13 @@ function ChaptersView({ subjectName }: { subjectName: string }) {
             {levelChapters.map((chapter) => {
               const inProgress = chapter.mastery_percent !== null;
               return (
-                <button
+                <Link
                   key={chapter.id}
-                  onClick={() =>
-                    router.push(
-                      `/student/learn/${chapter.id}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(
-                        chapter.title,
-                      )}&subject=${encodeURIComponent(subjectName)}`,
-                    )
-                  }
-                  className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 active:bg-bg-0 ${ inProgress ? 'bg-bg-0' : 'bg-card' }`}
+                  href={`/student/learn/${chapter.id}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(
+                    chapter.title,
+                  )}&subject=${encodeURIComponent(subjectName)}`}
+                  prefetch
+                  className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 active:bg-bg-2 ${ inProgress ? 'bg-bg-0' : 'bg-card' }`}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] font-bold text-ink">
@@ -182,8 +179,8 @@ function ChaptersView({ subjectName }: { subjectName: string }) {
                     </span>
                   </span>
                   <MasteryBadge mastery={chapter.mastery_percent} />
-                  <ChevronRight size={18} strokeWidth={1.5} className="text-gray-300" />
-                </button>
+                  <ChevronRight size={18} strokeWidth={1.5} className="text-faint" />
+                </Link>
               );
             })}
           </div>
@@ -198,7 +195,6 @@ function ChaptersView({ subjectName }: { subjectName: string }) {
 function TopicsView({ chapterId }: { chapterId: string }) {
   const [topics, setTopics] = useState<Topic[] | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     setTopics(null);
@@ -231,11 +227,7 @@ function TopicsView({ chapterId }: { chapterId: string }) {
           <TopicListItem
             key={topic.id}
             topic={topic}
-            onClick={() =>
-              router.push(
-                `/student/learn/${topic.id}?title=${encodeURIComponent(topic.title)}`,
-              )
-            }
+            href={`/student/learn/${topic.id}?title=${encodeURIComponent(topic.title)}`}
           />
         ))}
       </div>
@@ -598,41 +590,44 @@ function AITutorScaffold({
 
       {/* Chat area */}
       <main className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4 space-y-4">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : ''}`}
-          >
-            {msg.role !== 'user' && (
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
-                <Bot size={16} strokeWidth={1.5} className="text-ink" />
-              </div>
-            )}
+        {messages.map((msg, index) => {
+          const isLast = index === messages.length - 1;
+          const isStreamingThis = isLast && isLoading && msg.role === 'assistant';
+          const isThinking = isStreamingThis && !msg.content;
+
+          return (
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
-                msg.role === 'user'
-                  ? 'rounded-tr-sm bg-ink text-white'
-                  : 'rounded-tl-sm bg-bg-2 text-ink'
-              }`}
+              key={index}
+              className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : ''}`}
             >
-              {msg.role === 'user' ? (
-                <span>{msg.content}</span>
-              ) : (
-                <MathContent content={msg.content} className="text-[15px]" />
+              {msg.role !== 'user' && (
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-dim border border-brand/20">
+                  <Bot size={16} strokeWidth={1.8} className="text-brand" />
+                </div>
               )}
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed shadow-xs ${
+                  msg.role === 'user'
+                    ? 'rounded-tr-sm bg-ink text-white font-medium'
+                    : 'rounded-tl-sm border border-border bg-card text-ink'
+                }`}
+              >
+                {msg.role === 'user' ? (
+                  <span>{msg.content}</span>
+                ) : isThinking ? (
+                  <div className="flex items-center gap-1.5 py-1 text-xs text-muted">
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '0ms' }} />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '150ms' }} />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '300ms' }} />
+                    <span className="ml-1 text-[12px] font-semibold text-muted">Zikora is thinking…</span>
+                  </div>
+                ) : (
+                  <MathContent content={msg.content} isStreaming={isStreamingThis} className="text-[14.5px]" />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
-              <Bot size={16} strokeWidth={1.5} className="text-ink" />
-            </div>
-            <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-bg-2 px-4 py-3 text-[15px] leading-relaxed text-ink/60 animate-pulse">
-              Thinking...
-            </div>
-          </div>
-        )}
+          );
+        })}
         <div ref={messagesEndRef} />
       </main>
 
@@ -933,8 +928,6 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
           <TopicsView chapterId={chapterId!} />
         )}
       </main>
-
-      <BottomNav />
     </div>
   );
 }

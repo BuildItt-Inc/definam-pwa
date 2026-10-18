@@ -6,7 +6,6 @@ import { Search, BookOpen } from 'lucide-react';
 import { getSubjects } from '@/lib/api/topics';
 import type { Subject } from '@/types/topics';
 import { SubjectCard } from '@/components/student/SubjectCard';
-import { BottomNav } from '@/components/student/BottomNav';
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
 
@@ -112,18 +111,12 @@ export default function BrowsePage() {
               <SubjectCard
                 key={subject.name}
                 subject={subject}
-                onClick={() =>
-                  router.push(
-                    `/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`,
-                  )
-                }
+                href={`/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`}
               />
             ))}
           </div>
         )}
       </main>
-
-      <BottomNav />
     </div>
   );
 }

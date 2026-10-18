@@ -7,6 +7,8 @@ interface MathContentProps {
   className?: string;
   /** If true, $$...$$ renders as a centred display block. Default true. */
   allowBlock?: boolean;
+  /** If true, renders a blinking cursor at the end of streamed content */
+  isStreaming?: boolean;
 }
 
 interface KatexRenderer {
@@ -36,6 +38,7 @@ export function MathContent({
   content,
   className = '',
   allowBlock = true,
+  isStreaming = false,
 }: MathContentProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -50,16 +53,23 @@ export function MathContent({
         if (attempts++ < 30) setTimeout(render, 100);
         return;
       }
-      ref.current!.innerHTML = buildHtml(content, katex, allowBlock);
+      let html = buildHtml(content, katex, allowBlock);
+      if (isStreaming) {
+        html += '<span class="inline-block w-1.5 h-3.5 ml-1 rounded-[1px] bg-brand animate-pulse align-middle" aria-hidden="true"></span>';
+      }
+      ref.current!.innerHTML = html;
     };
 
     render();
-  }, [content, allowBlock]);
+  }, [content, allowBlock, isStreaming]);
 
   // Server-side / first-paint: show plain text, hydrate after KaTeX loads
   return (
     <div ref={ref} className={`math-content ${className}`} suppressHydrationWarning>
       {content}
+      {isStreaming && (
+        <span className="inline-block w-1.5 h-3.5 ml-1 rounded-[1px] bg-brand animate-pulse align-middle" aria-hidden="true" />
+      )}
     </div>
   );
 }

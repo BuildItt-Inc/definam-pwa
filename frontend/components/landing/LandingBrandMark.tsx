@@ -1,50 +1,40 @@
 /**
- * Landing-page-only brand mark: a green gradient badge with an R-shaped
- * monogram and a stylized brain "cap" sitting on top of it, per the
- * approved redesign preview. This is a placeholder direction, not final
- * production art — the team is doing real logo design separately — so this
- * intentionally isn't the same component as the shared LogoMark used
- * elsewhere in the app (login, register, mobile nav), which stays untouched.
+ * Official Recall brand mark emblem.
+ * Vector graphic matching the official brand identity in recall-logo.svg / recall-logo2.svg.
  */
-export default function LandingBrandMark({ size = 38 }: { size?: number }) {
+export default function LandingBrandMark({
+  size = 32,
+  theme = 'light',
+  className = '',
+}: {
+  size?: number;
+  theme?: 'light' | 'dark';
+  className?: string;
+}) {
+  const isDark = theme === 'dark';
   return (
     <div
-      style={{
-        width: size,
-        height: size,
-        background: 'linear-gradient(135deg, #4ADE80 0%, #16A34A 100%)',
-        boxShadow: '0 4px 14px rgba(74,222,128,0.25)',
-      }}
-      className="flex flex-shrink-0 items-center justify-center rounded-[11px]"
+      style={{ width: size, height: size }}
+      className={`inline-flex items-center justify-center flex-shrink-0 ${className}`}
     >
       <svg
-        width={Math.round(size * 0.63)}
-        height={Math.round(size * 0.63)}
-        viewBox="0 0 40 40"
+        viewBox="50 45 150 162"
+        width={size}
+        height={size}
         fill="none"
         aria-hidden="true"
+        className="w-full h-full"
       >
         <path
-          d="M13 34V14h6a5 5 0 0 1 0 9h-6"
-          stroke="#0F1F17"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          d="M79.67 171.61 L76.68 169.25 L73.81 166.73 L71.08 164.05 L68.50 161.21 L66.08 158.22 L63.83 155.10 L61.76 151.84 L59.88 148.46 L58.19 144.97 L56.70 141.39 L55.41 137.71 L54.34 133.96 L53.49 130.14 L52.85 126.27 L52.44 122.36 L52.25 118.42 L52.30 114.47 L52.57 110.52 L53.07 106.59 L53.80 102.67 L54.76 98.80 L55.95 94.98 L57.35 91.23 L58.98 87.56 L60.82 83.97 L62.87 80.49 L65.13 77.13 L67.58 73.90 L70.23 70.80 L73.05 67.86 L76.05 65.08 L79.21 62.47 L82.53 60.04 L85.99 57.80 L89.59 55.77 L93.31 53.94 L97.14 52.32 L101.06 50.93 L105.07 49.76 L109.15 48.83 L113.29 48.13 L117.47 47.68 L121.69 47.46 L125.92 47.50 L130.15 47.77 L134.37 48.30 L138.56 49.07 L142.72 50.09 L146.81 51.35 L150.84 52.85 L154.78 54.59 L158.63 56.55 L162.36 58.75 L165.97 61.16 L169.44 63.79 L172.77 66.62 L175.93 69.64 L178.91 72.86 L181.72 76.25 L184.33 79.81 L186.73 83.52 L188.92 87.37 L190.88 91.36 L192.62 95.47 L194.11 99.68 L195.37 103.98 L196.37 108.36 L197.12 112.80 L197.61 117.29 L197.84 121.81 L197.80 126.35 L197.50 130.89 L196.94 135.42 L196.11 139.92 L195.02 144.37 L193.67 148.77 L192.06 153.09 L190.19 157.32 L188.08 161.45 L185.72 165.45 L183.13 169.33 L180.31 173.05 L177.28 176.61 L174.03 180.00 L170.58 183.21 L166.94 186.21 L163.12 189.00 L159.13 191.58 L155.00 193.92 L150.72 196.03 L137.23 162.65 L139.77 161.77 L142.27 160.73 L144.71 159.55 L147.09 158.21 L149.40 156.74 L151.62 155.12 L153.76 153.37 L155.80 151.49 L157.73 149.48 L159.55 147.35 L161.25 145.12 L162.83 142.77 L164.27 140.33 L165.56 137.80 L166.72 135.18 L167.72 132.49 L168.56 129.73 L169.25 126.92 L169.77 124.06 L170.13 121.17 L170.31 118.24 L170.33 115.30 L170.17 112.35 L169.84 109.41 L169.33 106.47 L168.65 103.56 L167.80 100.69 L166.77 97.86 L165.58 95.08 L164.22 92.37 L162.70 89.73 L161.03 87.17 L159.19 84.71 L157.21 82.35 L155.09 80.10 L152.83 77.98 L150.45 75.98 L147.94 74.11 L145.31 72.40 L142.58 70.83 L139.75 69.42 L136.84 68.18 L133.85 67.10 L130.78 66.20 L127.66 65.47 L124.50 64.93 L121.29 64.57 L118.06 64.40 L114.81 64.42 L111.56 64.63 L108.32 65.04 L105.09 65.63 L101.90 66.41 L98.74 67.38 L95.64 68.54 L92.60 69.89 L89.64 71.41 L86.76 73.11 L83.98 74.98 L81.30 77.02 L78.74 79.22 L76.31 81.57 L74.01 84.07 L71.85 86.70 L69.85 89.47 L68.00 92.35 L66.33 95.35 L64.82 98.45 L63.50 101.64 L62.37 104.92 L61.42 108.26 L60.68 111.66 L60.13 115.11 L59.78 118.60 L59.64 122.11 L59.70 125.63 L59.98 129.15 L60.46 132.66 L61.14 136.14 L62.04 139.58 L63.13 142.98 L64.43 146.31 L65.93 149.56 L67.62 152.73 L69.50 155.80 L71.56 158.76 L73.80 161.60 L76.21 164.30 L78.78 166.86 L81.52 169.25 Z"
+          fill={isDark ? '#FFFFFF' : '#0B1F3A'}
         />
-        <path d="M15 23 24 34" stroke="#0F1F17" strokeWidth="3.2" strokeLinecap="round" />
-        <g transform="translate(8,0.5) scale(0.92)">
-          <path
-            d="M8 9c0-2 1.5-3.5 3.5-3.7-.2-1.8 1.2-3.3 3-3.3.9 0 1.7.4 2.2 1 .5-.6 1.3-1 2.2-1 1.8 0 3.2 1.5 3 3.3 2 .2 3.5 1.7 3.5 3.7 0 1.3-.7 2.4-1.7 3 .3.5.4 1.1.2 1.7-.3 1-1.2 1.6-2.2 1.6-.1.9-.8 1.6-1.7 1.6-.6 0-1.1-.3-1.5-.7-.4.4-.9.7-1.5.7s-1.1-.3-1.5-.7c-.4.4-.9.7-1.5.7-.9 0-1.6-.7-1.7-1.6-1 0-1.9-.6-2.2-1.6-.2-.6-.1-1.2.2-1.7C8.7 11.4 8 10.3 8 9z"
-            fill="#0F1F17"
-          />
-          <path
-            d="M14 5.5v9.5M10.5 7.5l1.7 1.2M10.5 11.5l1.7-1.2M18 7.5l-1.7 1.2M18 11.5l-1.7-1.2"
-            stroke="#4ADE80"
-            strokeWidth="0.55"
-            strokeLinecap="round"
-          />
-        </g>
+        <circle cx="143.97" cy="179.34" r="30" fill={isDark ? '#2FBF7F' : '#12945A'} />
+        <path d="M128.45 199.63 L85.38 205.17 L118.71 175.53 Z" fill={isDark ? '#2FBF7F' : '#12945A'} />
+        <circle cx="144.76" cy="191.96" r="6" fill={isDark ? '#0B1F3A' : '#FFFFFF'} />
       </svg>
     </div>
   );
 }
+
+export { LandingBrandMark as RecallMark };

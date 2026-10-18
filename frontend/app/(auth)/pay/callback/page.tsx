@@ -103,7 +103,10 @@ function CallbackContent() {
               type: 'payment',
               email: data.email,
               accessCode: data.access_code,
-              onRedirect: () => router.push('/register'),
+              onRedirect: () =>
+                router.push(
+                  `/register?code=${encodeURIComponent(data.access_code as string)}&email=${encodeURIComponent(data.email as string)}`
+                ),
             });
           } else {
             setState({
@@ -252,12 +255,12 @@ function CallbackContent() {
             </p>
             <ol className="space-y-3">
               {[
-                'Check your email inbox for your generated access code.',
-                'Copy the code from your email and paste it into the registration form to create your account.',
-                'Already have an account? Sign in — your code is active.',
+                'Your access code is active and attached to your session.',
+                'Click "Complete Account Setup" below to choose your username and password.',
+                'Your code will be automatically applied — no copy-pasting or OTP needed.',
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3 text-[13px] text-ink/80 leading-snug">
-                  <span className="w-5 h-5 bg-ink text-white rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="w-5 h-5 bg-brand text-white rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                     {i + 1}
                   </span>
                   {step}
@@ -271,11 +274,11 @@ function CallbackContent() {
         <motion.div variants={staggerItem} className="w-full space-y-3">
           <motion.div {...scaleTap}>
             <Link
-              href="/register"
-              className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 transition-colors shadow-sm"
+              href={`/register?code=${encodeURIComponent(state.accessCode)}&email=${encodeURIComponent(state.email)}`}
+              className="w-full min-h-[52px] bg-brand text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-brand-dark transition-colors shadow-brand"
             >
               <CheckCircle2 size={18} strokeWidth={2.2} aria-hidden />
-              Proceed to Registration
+              Complete Account Setup (Code Applied)
             </Link>
           </motion.div>
 

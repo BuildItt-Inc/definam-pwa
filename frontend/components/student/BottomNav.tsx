@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { House, BookOpen, RefreshCw, Activity, Settings } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { getRecallQueue } from '@/lib/api/topics';
 
 interface Tab {
   label: string;
@@ -21,37 +21,75 @@ const TABS: Tab[] = [
   { label: 'Settings', icon: Settings,   href: '/student/settings' },
 ];
 
-interface BottomNavProps {
+export interface BottomNavProps {
   recallCount?: number;
 }
 
-export function BottomNav({ recallCount = 0 }: BottomNavProps) {
+function BottomNavContent({ recallCount: initialRecallCount }: BottomNavProps) {
   const pathname = usePathname();
-  // Portal-mount guard: document.body doesn't exist during SSR, and
-  // createPortal needs a real DOM node, so render nothing until mounted.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const searchParams = useSearchParams();
+  const [recallCount, setRecallCount] = useState<number>(initialRecallCount ?? 0);
 
-  const nav = (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 w-full border-t border-border bg-card shadow-[0_-1px_0_rgba(0,0,0,0.06)]">
-      <div
-        className="flex w-full"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
+  // Fetch or sync recall queue count across persistent session
+  useEffect(() => {
+    let isSubscribed = true;
+    getRecallQueue()
+      .then((items) => {
+        if (isSubscribed && Array.isArray(items)) {
+          setRecallCount(items.length);
+        }
+      })
+      .catch(() => {
+        // Silently catch in layout nav
+      });
+
+    const handleQueueUpdate = (e: CustomEvent<number>) => {
+      setRecallCount(e.detail);
+    };
+    window.addEventListener('recallQueueUpdated', handleQueueUpdate as EventListener);
+
+    return () => {
+      isSubscribed = false;
+      window.removeEventListener('recallQueueUpdated', handleQueueUpdate as EventListener);
+    };
+  }, [pathname]);
+
+  if (!pathname) return null;
+
+  // Decide if BottomNav should be visible
+  const isReviewSession = pathname === '/student/review/session';
+  const isChatPage = pathname === '/student/chat';
+
+  // Topic detail vs chapters/topics browse
+  const isTopicRoute = pathname.startsWith('/student/learn/') && pathname !== '/student/learn';
+  const view = searchParams?.get('view');
+  const isInsideActiveLesson = isTopicRoute && !view;
+
+  if (isReviewSession || isChatPage || isInsideActiveLesson) {
+    return null;
+  }
+
+  return (
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 w-full border-t border-border bg-card shadow-[0_-1px_0_rgba(0,0,0,0.06)]"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      aria-label="Student Navigation"
+    >
+      <div className="flex w-full">
         {TABS.map(({ label, icon: Icon, href }) => {
-          const isActive = pathname
-            ? href === '/student'
+          const isActive =
+            href === '/student'
               ? pathname === '/student'
-              : pathname.startsWith(href)
-            : false;
+              : pathname.startsWith(href);
           const showBadge = label === 'Review' && recallCount > 0;
 
           return (
             <Link
               key={href}
               href={href}
+              prefetch
               className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors duration-150 ${
-                isActive ? 'text-brand' : 'text-faint'
+                isActive ? 'text-brand' : 'text-faint hover:text-ink active:text-brand'
               }`}
             >
               <span className="relative">
@@ -61,7 +99,7 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
                   className={isActive ? 'text-brand' : 'text-faint'}
                 />
                 {showBadge && (
-                  <span className="absolute -right-2 -top-1 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold text-white ring-2 ring-card">
+                  <span className="absolute -right-2 -top-1 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold text-white ring-2 ring-card animate-in fade-in zoom-in duration-200">
                     {recallCount}
                   </span>
                 )}
@@ -73,17 +111,12 @@ export function BottomNav({ recallCount = 0 }: BottomNavProps) {
       </div>
     </nav>
   );
+}
 
-  if (!mounted) return null;
-
-  // Rendered via a portal straight to <body>, regardless of where in the
-  // component tree this is called from. Several student pages wrap their
-  // content in a `page-enter`-animated div whose keyframes always specify a
-  // `transform` (even the resting translateY(0) state) — any ancestor with
-  // a `transform` becomes the containing block for a `position: fixed`
-  // descendant, so a nav nested inside that wrapper ends up anchored to it
-  // instead of the real viewport and scrolls out of place. Portaling to
-  // `document.body` sidesteps the containing-block problem entirely, for
-  // every caller, without needing each page to restructure its own JSX.
-  return createPortal(nav, document.body);
+export function BottomNav(props: BottomNavProps) {
+  return (
+    <Suspense fallback={null}>
+      <BottomNavContent {...props} />
+    </Suspense>
+  );
 }

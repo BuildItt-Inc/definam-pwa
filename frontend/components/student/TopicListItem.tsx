@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { Topic } from '@/types/topics';
 
 // ── Last-studied formatter ─────────────────────────────────────────────────
@@ -16,10 +17,11 @@ function formatLastStudied(iso: string): string {
 
 interface TopicListItemProps {
   topic: Topic;
-  onClick: () => void;
+  href?: string;
+  onClick?: () => void;
 }
 
-export function TopicListItem({ topic, onClick }: TopicListItemProps) {
+export function TopicListItem({ topic, href, onClick }: TopicListItemProps) {
   const studied = topic.mastery_percent !== null;
 
   const subtitle = studied
@@ -30,14 +32,11 @@ export function TopicListItem({ topic, onClick }: TopicListItemProps) {
       }`
     : 'Not yet studied';
 
-  return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-center gap-3 border-b border-border px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-1"
-    >
+  const inner = (
+    <div className="flex w-full items-center gap-3 border-b border-border bg-card px-4 py-3.5 text-left transition-colors active:bg-bg-2">
       {/* Title + subtitle */}
       <span className="min-w-0 flex-1">
-        <span className="block text-[16px] font-bold text-ink">
+        <span className="block text-[15px] font-bold text-ink">
           {topic.title}
         </span>
         <span className="mt-0.5 block text-[13px] font-medium text-muted">
@@ -47,14 +46,28 @@ export function TopicListItem({ topic, onClick }: TopicListItemProps) {
 
       {/* Action badge */}
       {studied ? (
-        <span className="flex-shrink-0 rounded-[4px] bg-brand px-2 py-0.5 text-[12px] font-bold text-white shadow-brand-sm">
+        <span className="flex-shrink-0 rounded-[6px] bg-brand-dim border border-brand/20 px-2.5 py-1 text-[12px] font-bold text-brand">
           Study →
         </span>
       ) : (
-        <span className="flex-shrink-0 rounded-md bg-brand px-3 py-1 text-[12px] font-bold text-white shadow-sm hover:bg-brand-dark transition-colors">
+        <span className="flex-shrink-0 rounded-[6px] bg-brand px-3 py-1 text-[12px] font-bold text-white shadow-xs">
           Start →
         </span>
       )}
+    </div>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} prefetch className="block">
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className="block w-full">
+      {inner}
     </button>
   );
 }

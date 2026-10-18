@@ -1,18 +1,20 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
 
 import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth';
 import { registerUser, ApiError } from '@/lib/api/auth';
-import LandingBrandMark from '@/components/landing/LandingBrandMark';
 
 function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const codeParam = searchParams.get('code') || searchParams.get('access_code') || '';
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
@@ -21,13 +23,20 @@ function RegisterForm() {
     register,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
-    defaultValues: { access_code: '' },
+    defaultValues: { access_code: codeParam },
   });
+
+  useEffect(() => {
+    if (codeParam) {
+      setValue('access_code', codeParam);
+    }
+  }, [codeParam, setValue]);
 
   async function onSubmit(values: RegisterFormValues) {
     setBannerError(null);
@@ -84,8 +93,14 @@ function RegisterForm() {
 
       {/* Logo */}
       <Link href="/" className="relative z-10 flex items-center gap-2 mb-8">
-        <LandingBrandMark size={28} />
-        <span className="font-bold text-lg text-ink tracking-tight">Recall</span>
+        <Image
+          src="/recall-logo2.svg"
+          alt="Recall"
+          width={512}
+          height={166}
+          priority
+          className="h-8 w-auto"
+        />
       </Link>
 
       {/* Card */}
@@ -95,33 +110,62 @@ function RegisterForm() {
           Create your account
         </h1>
         <p className="text-sm text-muted mb-6">
-          You need an access code to register. Check your email for it.
+          {codeParam
+            ? 'Your access code is active. Choose your username and password to begin.'
+            : 'You need an access code to register. Check your email or purchase code.'}
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
 
           {/* Access Code */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="access_code" className="text-sm font-semibold text-ink-2">
-              Access code
-            </label>
-            <input
-              id="access_code"
-              type="text"
-              autoCapitalize="characters"
-              spellCheck={false}
-              placeholder="e.g. IND-A1B2-C3"
-              className={`input-field font-mono tracking-wider ${errors.access_code ? 'error' : ''}`}
-              {...register('access_code')}
-            />
-            {errors.access_code ? (
-              <p className="text-xs text-danger">{errors.access_code.message}</p>
-            ) : (
-              <p className="text-xs text-faint">
-                This was sent to your email when you purchased Recall
-              </p>
-            )}
-          </div>
+          {codeParam ? (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted">
+                  License Key
+                </label>
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-brand bg-brand-dim border border-brand/25 px-2 py-0.5 rounded-md">
+                  Active &amp; Verified
+                </span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-2 border border-border-2">
+                <div className="w-9 h-9 rounded-lg bg-ink text-brand-light flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <KeyRound size={17} strokeWidth={2.2} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium text-muted leading-none mb-1">
+                    Student Activation Code
+                  </p>
+                  <p className="text-[13px] font-mono font-bold tracking-wider text-ink truncate">
+                    {codeParam}
+                  </p>
+                </div>
+                <input type="hidden" {...register('access_code')} value={codeParam} />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="access_code" className="text-sm font-semibold text-ink-2">
+                Access code
+              </label>
+              <input
+                id="access_code"
+                type="text"
+                autoCapitalize="characters"
+                spellCheck={false}
+                placeholder="e.g. IND-A1B2-C3"
+                className={`input-field font-mono tracking-wider ${errors.access_code ? 'error' : ''}`}
+                {...register('access_code')}
+              />
+              {errors.access_code ? (
+                <p className="text-xs text-danger">{errors.access_code.message}</p>
+              ) : (
+                <p className="text-xs text-faint">
+                  Enter the access code from your purchase or receipt
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Username */}
           <div className="flex flex-col gap-1.5">

@@ -304,6 +304,7 @@ function FloatingChatPanel({
                       <MathContent
                         content={msg.content}
                         allowBlock={false}
+                        isStreaming={msg.role === 'assistant' && isLastBubble && isLoading && msg.content !== ''}
                         className={`text-[14px] leading-relaxed [&_.math-para]:mb-0 [&_.math-para]:text-[14px] ${
                           msg.role === 'user' ? 'text-white [&_.math-para]:text-white' : 'text-ink'
                         }`}

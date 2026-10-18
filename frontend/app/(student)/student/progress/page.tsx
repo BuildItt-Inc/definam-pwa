@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { Flame } from 'lucide-react';
 import { getProgressData } from '@/lib/api/topics';
 import type { ProgressData } from '@/types/topics';
-import { BottomNav } from '@/components/student/BottomNav';
 
 const HEATMAP_COLORS = ['#EEEEEE', '#9FE1CB', '#5DCAA5', '#1B6B4A', '#085041'] as const;
 
@@ -297,8 +296,6 @@ export default function ProgressPage() {
         <HeatmapSection data={data.heatmap_data} />
         <UpcomingSection data={data.upcoming_reviews} />
       </main>
-
-      <BottomNav />
     </div>
   );
 }
