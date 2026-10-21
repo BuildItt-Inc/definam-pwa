@@ -21,21 +21,16 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message:', payload);
 
-  // If the message already has a notification object, the browser and Firebase SDK
-  // automatically display it. Calling showNotification() here causes a duplicate.
-  // We only display manually if the incoming payload is data-only.
-  if (!payload.notification) {
-    const title = payload.data?.title || 'Recall Reminder';
-    const options = {
-      body: payload.data?.body || 'You have pending learning tasks.',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      tag: payload.data?.type || 'recall-notification',
-      data: payload.data || {},
-    };
+  const title = payload.notification?.title || payload.data?.title || 'Recall Reminder';
+  const options = {
+    body: payload.notification?.body || payload.data?.body || 'You have pending learning tasks.',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    tag: payload.data?.type || 'recall-notification',
+    data: payload.data || {},
+  };
 
-    self.registration.showNotification(title, options);
-  }
+  self.registration.showNotification(title, options);
 });
 
 self.addEventListener('notificationclick', (event) => {

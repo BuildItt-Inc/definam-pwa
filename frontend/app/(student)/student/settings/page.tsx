@@ -13,7 +13,9 @@ import {
 import {
   registerNotificationToken,
   unregisterNotificationToken,
+  sendTestNotification,
 } from '@/lib/api/notifications';
+import { toast } from '@/lib/toast';
 import type { UserMe } from '@/types/auth';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
 
@@ -51,6 +53,7 @@ export default function SettingsPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
+  const [testNotifLoading, setTestNotifLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -68,15 +71,37 @@ export default function SettingsPage() {
           clearStoredFcmToken();
         }
         setNotifEnabled(false);
+        toast.info('Notifications disabled');
       } else {
         const token = await requestNotificationPermissionAndGetToken();
         if (token) {
           await registerNotificationToken(token, 'web');
           setNotifEnabled(true);
+          toast.success('Notifications enabled');
+        } else {
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'denied') {
+            toast.error('Notifications blocked by browser. Please enable permissions in site settings.');
+          } else {
+            toast.error('Could not enable notifications. Please grant permission.');
+          }
         }
       }
-    } catch { /* best effort */ } finally {
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update notifications');
+    } finally {
       setNotifLoading(false);
+    }
+  }
+
+  async function handleSendTestNotification() {
+    setTestNotifLoading(true);
+    try {
+      await sendTestNotification();
+      toast.success('Test notification sent. Check your device.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send test notification');
+    } finally {
+      setTestNotifLoading(false);
     }
   }
 
@@ -217,6 +242,21 @@ export default function SettingsPage() {
               {notifLoading ? 'Updating...' : notifEnabled ? 'Enabled' : 'Enable'}
             </button>
           </div>
+          {notifEnabled && (
+            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-2.5 flex items-center justify-between gap-3">
+              <span className="text-[12px] text-muted truncate">
+                Verify notifications on this device
+              </span>
+              <button
+                type="button"
+                onClick={handleSendTestNotification}
+                disabled={testNotifLoading}
+                className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {testNotifLoading ? 'Sending…' : 'Send Test Notification'}
+              </button>
+            </div>
+          )}
         </div>
 
         {isIndividual && (

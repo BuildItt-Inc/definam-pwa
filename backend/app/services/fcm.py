@@ -114,6 +114,16 @@ async def register_token(
             )
             session.add(new_token)
 
+        # Prune older stale tokens for this user on the same device_type to prevent duplicate deliveries
+        if device_type:
+            await session.execute(
+                delete(UserNotificationToken).where(
+                    UserNotificationToken.user_id == user_id,
+                    UserNotificationToken.device_type == device_type,
+                    UserNotificationToken.fcm_token != fcm_token,
+                )
+            )
+
         await session.commit()
         logger.info("FCM token registered/updated for user %s.", user_id)
 

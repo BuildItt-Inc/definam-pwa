@@ -75,8 +75,19 @@ export async function requestNotificationPermissionAndGetToken(): Promise<string
     const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || DEFAULT_VAPID_KEY;
     let serviceWorkerRegistration: ServiceWorkerRegistration | undefined;
     if ('serviceWorker' in navigator) {
-      serviceWorkerRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      await navigator.serviceWorker.ready;
+      try {
+        serviceWorkerRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      } catch (e) {
+        console.warn('SW register notice:', e);
+      }
+      try {
+        const readyReg = await navigator.serviceWorker.ready;
+        if (readyReg) {
+          serviceWorkerRegistration = readyReg;
+        }
+      } catch (e) {
+        console.warn('SW ready notice:', e);
+      }
     }
 
     const token = await getToken(msg, {
