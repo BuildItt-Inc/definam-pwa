@@ -45,6 +45,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preload" href="/recall-logo2.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="/recall-logo.svg" as="image" type="image/svg+xml" />
         <script dangerouslySetInnerHTML={{ __html: typographyPlatformScript }} />
       </head>
       <body

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import RecallLogo from '@/components/ui/RecallLogo';
 import MobileNav from '@/components/landing/MobileNav';
 
 import { NAV_LINKS } from '@/components/landing/navLinks';
@@ -46,15 +46,9 @@ export default function LandingNav() {
         <Link
           href="/"
           className="flex items-center gap-2"
+          aria-label="Recall home"
         >
-          <Image
-            src="/recall-logo.svg"
-            alt="Recall"
-            width={512}
-            height={166}
-            priority
-            className="h-8 w-auto"
-          />
+          <RecallLogo variant="light" className="h-8 w-auto" />
         </Link>
 
         {/* Center — nav links, desktop only */}

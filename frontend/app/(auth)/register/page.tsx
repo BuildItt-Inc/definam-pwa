@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import RecallLogo from '@/components/ui/RecallLogo';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
@@ -91,16 +91,9 @@ function RegisterForm() {
         style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.10) 0%, transparent 70%)' }}
       />
 
-      {/* Logo */}
-      <Link href="/" className="relative z-10 flex items-center gap-2 mb-8">
-        <Image
-          src="/recall-logo2.svg"
-          alt="Recall"
-          width={512}
-          height={166}
-          priority
-          className="h-8 w-auto"
-        />
+      {/* Logo — inline vector graphic for instant 0ms first-paint */}
+      <Link href="/" className="relative z-10 flex items-center gap-2 mb-8" aria-label="Recall home">
+        <RecallLogo variant="dark" className="h-8 w-auto" />
       </Link>
 
       {/* Card */}

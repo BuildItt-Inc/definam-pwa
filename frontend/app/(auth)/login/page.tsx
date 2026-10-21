@@ -9,7 +9,7 @@ import { Eye, EyeOff, Loader2, School, User } from 'lucide-react';
 import Link from 'next/link';
 import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
 import { loginUser, logout, ApiError } from '@/lib/api/auth';
-import Image from 'next/image';
+import RecallLogo from '@/components/ui/RecallLogo';
 // ── Reset success banner (shown after /reset-password redirects here) ──────
 function ResetSuccessBanner() {
   const searchParams = useSearchParams();
@@ -86,16 +86,9 @@ function LoginContent() {
         style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.10) 0%, transparent 70%)' }}
       />
 
-      {/* Logo */}
-      <Link href="/" className="relative z-10 flex items-center gap-2 mb-8">
-        <Image
-          src="/recall-logo2.svg"
-          alt="Recall"
-          width={512}
-          height={166}
-          priority
-          className="h-8 w-auto"
-        />
+      {/* Logo — inline vector graphic for instant 0ms first-paint */}
+      <Link href="/" className="relative z-10 flex items-center gap-2 mb-8" aria-label="Recall home">
+        <RecallLogo variant="dark" className="h-8 w-auto" />
       </Link>
 
       {/* Card — solid white, no backdrop-filter, works on all Android devices */}

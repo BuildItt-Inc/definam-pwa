@@ -17,6 +17,7 @@ import {
 import { logout } from '@/lib/api/auth';
 import { motion } from 'framer-motion';
 import { scaleTap } from '@/lib/motion';
+import RecallLogo from '@/components/ui/RecallLogo';
 
 interface AdminSidebarProps {
   schoolName: string;
@@ -110,9 +111,7 @@ function SidebarBody({
     <div className="flex flex-col h-full bg-bg-0">
       {/* Logo row */}
       <div className="flex items-center justify-between px-4 py-[14px] border-b border-border-2">
-        <span className="font-bold text-[15px] text-ink tracking-tight">
-          Recall
-        </span>
+        <RecallLogo variant="dark" className="h-5 w-auto" />
         {onClose && (
           <button
             onClick={onClose}

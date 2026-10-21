@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import Image from 'next/image';
+import RecallLogo from '@/components/ui/RecallLogo';
 import { Menu, X } from 'lucide-react';
 import { NAV_LINKS } from './navLinks';
 
@@ -65,7 +65,7 @@ export default function MobileNav() {
         >
           <div className="flex min-h-full flex-col">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-3">
-              <Link href="/" onClick={close} aria-label="Recall home"><Image src="/recall-logo.svg" alt="Recall" width={512} height={166} className="h-8 w-auto" /></Link>
+              <Link href="/" onClick={close} aria-label="Recall home"><RecallLogo variant="light" className="h-8 w-auto" /></Link>
               <button ref={closeRef} type="button" onClick={close} aria-label="Close menu" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white/80 hover:bg-white/10"><X size={22} aria-hidden /></button>
             </div>
             <div className="flex flex-col gap-2 px-5 py-6">
