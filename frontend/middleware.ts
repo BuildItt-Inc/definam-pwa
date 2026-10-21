@@ -12,36 +12,19 @@
  * /admin/*         → role must be "admin"   → else → /admin/login
  * /student/*       → role must be student_* → else → /login
  *
- * STRATEGY
+ * FAST EDGE VERIFICATION
  * ─────────────────────────────────────────────────────────────────
- * The app uses an in-memory access token + HttpOnly refresh cookie.
- * The middleware cannot read the in-memory token (it lives in the
- * browser), so we forward the refresh cookie to the backend's
- * /auth/refresh endpoint and inspect the role claim in the returned
- * access token (JWT is a plain HS256 token — we decode its payload
- * on the edge without a full verify, trusting the backend already
- * validated the refresh cookie before issuing it).
- *
- * WHY NOT FULL VERIFY ON THE EDGE?
- * The JWT secret would need to be an env var accessible to the Edge
- * Runtime.  That's viable but adds coupling.  Instead, we treat a
- * successful /refresh response (200 + access_token) as proof of a
- * valid session, and read the unverified payload only for the role
- * claim.  This is safe because:
- *   • The backend already validated the refresh cookie.
- *   • Even if an attacker forged the JWT payload client-side, the
- *     actual API calls in the admin pages hit backend endpoints
- *     that re-verify the token with AdminDep.
- *
- * TL;DR: Middleware prevents casual URL-guessing; backend enforces
- * real security on every request.
+ * The refresh_token cookie is an HS256 JWT issued by the backend containing
+ * { sub, role, exp, type: "refresh" }. The Edge runtime decodes the unverified
+ * payload to extract the role and expiration in 0ms (no blocking network calls).
+ * Actual API endpoints re-verify signatures server-side.
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
 
 const REFRESH_COOKIE = 'refresh_token';
 
-// ── JWT payload decoder (no signature verify — see comment above) ──────────
+// ── JWT payload decoder ───────────────────────────────────────────────────
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
@@ -59,7 +42,34 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-// ── Refresh helper ─────────────────────────────────────────────────────────
+// ── In-memory Edge Session Check (0ms latency) ────────────────────────────
+
+function getSessionRoleFast(request: NextRequest): {
+  role: string | null;
+  isExpired: boolean;
+  hasCookie: boolean;
+} {
+  const refreshCookie = request.cookies.get(REFRESH_COOKIE)?.value;
+  if (!refreshCookie) {
+    return { role: null, isExpired: false, hasCookie: false };
+  }
+
+  const payload = decodeJwtPayload(refreshCookie);
+  if (!payload) {
+    return { role: null, isExpired: true, hasCookie: true };
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const exp = typeof payload.exp === 'number' ? payload.exp : 0;
+  if (exp && exp < nowSec) {
+    return { role: null, isExpired: true, hasCookie: true };
+  }
+
+  const role = typeof payload.role === 'string' ? payload.role : null;
+  return { role, isExpired: false, hasCookie: true };
+}
+
+// ── Fallback network refresh (only if JWT payload has no role claim) ──────
 
 interface RefreshResult {
   role: string | null;
@@ -69,19 +79,14 @@ interface RefreshResult {
 async function tryRefresh(request: NextRequest): Promise<RefreshResult> {
   const refreshCookie = request.cookies.get(REFRESH_COOKIE)?.value;
   if (!refreshCookie) {
-    // No cookie on the frontend domain — session definitely not established
     return { role: null, error: false };
   }
 
   try {
-    // Call the same-domain Next.js proxy rather than the backend directly.
-    // The proxy reads the frontend-domain refresh_token cookie and forwards
-    // it to the backend — this is what makes cross-domain deployments work.
     const proxyUrl = new URL('/api/auth/refresh', request.url);
     const res = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
-        // Forward the cookie so the proxy route can read it server-side
         Cookie: `${REFRESH_COOKIE}=${refreshCookie}`,
       },
     });
@@ -90,7 +95,6 @@ async function tryRefresh(request: NextRequest): Promise<RefreshResult> {
 
     const body = (await res.json()) as { access_token?: string; role?: string };
 
-    // Backend returns role in the response body — prefer that, fall back to JWT
     if (body.role) return { role: body.role, error: false };
 
     if (body.access_token) {
@@ -101,7 +105,6 @@ async function tryRefresh(request: NextRequest): Promise<RefreshResult> {
 
     return { role: null, error: true };
   } catch {
-    // Network error — fail open; the page's own API calls will 401 them.
     return { role: null, error: true };
   }
 }
@@ -111,59 +114,72 @@ async function tryRefresh(request: NextRequest): Promise<RefreshResult> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Guard: /admin/* (except the login page itself) ─────────────────────
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    const { role, error } = await tryRefresh(request);
+  // 1. Fast in-memory Edge decode (0ms latency, eliminates blocking subrequests on every route change)
+  const session = getSessionRoleFast(request);
 
-    if (!role && !error) {
-      // No frontend-domain cookie at all → send to login
+  if (!session.hasCookie || session.isExpired) {
+    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('next', pathname);
       return NextResponse.redirect(loginUrl);
     }
-
-    if (error) {
-      // Backend unreachable — fail open; the page's API calls will 401 if invalid.
-      return NextResponse.next();
+    if (pathname.startsWith('/student')) {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
-
-    if (role !== 'admin') {
-      // Authenticated, but wrong role (e.g. a student guessing the URL)
-      const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('hint', 'not_admin');
-      return NextResponse.redirect(loginUrl);
-    }
-
-    // Authenticated admin — let the request through
     return NextResponse.next();
   }
 
-  // ── Guard: /student/* ───────────────────────────────────────────────────
-  if (pathname.startsWith('/student')) {
-    const { role, error } = await tryRefresh(request);
-
-    if (!role && !error) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    if (error) {
-      // Backend down — pass through; the page's own fetch will 401
+  // 2. Fast-path: role verified directly from the active session JWT
+  if (session.role) {
+    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+      if (session.role !== 'admin') {
+        const loginUrl = new URL('/admin/login', request.url);
+        loginUrl.searchParams.set('hint', 'not_admin');
+        return NextResponse.redirect(loginUrl);
+      }
       return NextResponse.next();
     }
 
-    if (!role || !role.startsWith('student')) {
+    if (pathname.startsWith('/student')) {
+      if (!session.role.startsWith('student')) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+      return NextResponse.next();
+    }
+  }
+
+  // 3. Fallback: network refresh only if role claim was missing in the payload
+  const { role, error } = await tryRefresh(request);
+
+  if (!role && !error) {
+    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+      const loginUrl = new URL('/admin/login', request.url);
+      loginUrl.searchParams.set('next', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (pathname.startsWith('/student')) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
+  }
 
+  if (error) {
     return NextResponse.next();
+  }
+
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && role !== 'admin') {
+    const loginUrl = new URL('/admin/login', request.url);
+    loginUrl.searchParams.set('hint', 'not_admin');
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (pathname.startsWith('/student') && (!role || !role.startsWith('student'))) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return NextResponse.next();
 }
 
 // ── Matcher ────────────────────────────────────────────────────────────────
-// Only run middleware on pages that need protection.
-// Exclude static assets, _next internals, and public files.
 
 export const config = {
   matcher: [

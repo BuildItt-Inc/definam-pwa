@@ -554,12 +554,12 @@ function AITutorScaffold({
       () => {
         setIsLoading(false);
       },
-      () => {
+      (err) => {
         setMessages((prev) => {
           const next = [...prev];
           if (next[assistantIndex]) {
             next[assistantIndex].content =
-              responseAccumulator || "Sorry, I couldn't reach the server. Please try again.";
+              responseAccumulator || (err?.message || "Sorry, I couldn't reach the AI tutor. Please try again.");
           }
           return next;
         });

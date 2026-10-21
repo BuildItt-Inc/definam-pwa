@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, BookOpen, RefreshCw, Clock, BookMarked, Sparkles, CheckCircle2 } from 'lucide-react';
-import { getRecallQueue } from '@/lib/api/topics';
+import { getRecallQueue, getCachedRecallQueue } from '@/lib/api/topics';
 import type { RecallItem } from '@/types/topics';
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ function todayLabel(): string {
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function RecallPage() {
-  const [queue, setQueue] = useState<RecallItem[] | null>(null);
+  const [queue, setQueue] = useState<RecallItem[] | null>(() => getCachedRecallQueue());
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [dateLabel, setDateLabel] = useState('');
   const router = useRouter();
@@ -62,7 +62,7 @@ export default function RecallPage() {
       });
   }, []);
 
-  if (fetchError) {
+  if (fetchError && !queue) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
         <p className="text-center text-sm text-muted">{fetchError}</p>

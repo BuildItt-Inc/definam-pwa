@@ -18,18 +18,22 @@ export class ChatError extends Error {
 // topicId omitted (or undefined) -> the general floating-chat history
 // (topic_id IS NULL server-side), separate from any topic's own history.
 export async function getChatHistory(topicId?: string): Promise<ChatMessage[]> {
-  const headers = await getAuthHeaders();
-  const query = topicId ? `?topic_id=${topicId}` : '';
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/history${query}`,
-    {
-      headers,
+  try {
+    const headers = await getAuthHeaders();
+    const query = topicId ? `?topic_id=${topicId}` : '';
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/history${query}`,
+      {
+        headers,
+      }
+    );
+    if (!res.ok) {
+      return [];
     }
-  );
-  if (!res.ok) {
-    throw new Error('Failed to load chat history');
+    return res.json();
+  } catch {
+    return [];
   }
-  return res.json();
 }
 
 // Clears the same conversation getChatHistory(topicId) would return —
@@ -58,21 +62,39 @@ export async function sendChatMessageStream(
   onError: (err: Error) => void
 ): Promise<void> {
   try {
-    const headers = await getAuthHeaders();
+    const authHeaders = await getAuthHeaders();
+    // For SSE stream GET requests, do NOT send Content-Type: application/json.
+    // Instead, specify Accept: text/event-stream so proxies stream without buffering.
+    const streamHeaders: Record<string, string> = {
+      Accept: 'text/event-stream',
+    };
+    if (typeof authHeaders === 'object' && authHeaders !== null) {
+      for (const [key, val] of Object.entries(authHeaders)) {
+        if (key.toLowerCase() !== 'content-type') {
+          streamHeaders[key] = val as string;
+        }
+      }
+    }
+
     const params = new URLSearchParams({ question });
     if (topicId) params.set('topic_id', topicId);
     const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chat/stream?${params.toString()}`;
 
     const res = await fetch(url, {
-      headers,
+      method: 'GET',
+      headers: streamHeaders,
     });
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({ detail: '' }));
-      throw new ChatError(
-        res.status,
-        body.detail || `Chat stream error: ${res.statusText}`,
-      );
+      const detail = body.detail || '';
+      let userFriendlyMessage = detail;
+      if (res.status >= 500) {
+        userFriendlyMessage = detail || 'The AI tutor server is temporarily busy or reconnecting. Please try again shortly.';
+      } else if (res.status === 429) {
+        userFriendlyMessage = detail || 'Daily AI tutor message limit reached. Please check back tomorrow.';
+      }
+      throw new ChatError(res.status, userFriendlyMessage);
     }
 
     if (!res.body) {
@@ -115,6 +137,7 @@ export async function sendChatMessageStream(
         }
       }
     }
+    onDone();
   } catch (err) {
     onError(err instanceof Error ? err : new Error(String(err)));
   }

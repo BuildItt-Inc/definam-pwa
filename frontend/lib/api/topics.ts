@@ -29,6 +29,27 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+// ── SessionStorage Cache Helpers ──────────────────────────────────────────
+
+function getSession<T>(key: string): T | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(`recall:${key}`);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setSession<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(`recall:${key}`, JSON.stringify(value));
+  } catch {
+    // Ignore quota errors in private browsing
+  }
+}
+
 // ── In-memory curriculum cache (persists within session for instant transitions) ──
 const curriculumCache = {
   subjects: null as Subject[] | null,
@@ -42,6 +63,29 @@ export function clearCurriculumCache() {
   curriculumCache.chaptersByName.clear();
   curriculumCache.topicsByChapter.clear();
   curriculumCache.topicDetails.clear();
+  if (typeof window !== 'undefined') {
+    try {
+      Object.keys(sessionStorage).forEach((k) => {
+        if (k.startsWith('recall:')) sessionStorage.removeItem(k);
+      });
+    } catch {}
+  }
+}
+
+export function getCachedHomeData(): HomeData | null {
+  return getSession<HomeData>('homeData');
+}
+
+export function getCachedSubjects(): Subject[] | null {
+  return curriculumCache.subjects || getSession<Subject[]>('subjects');
+}
+
+export function getCachedRecallQueue(): RecallItem[] | null {
+  return getSession<RecallItem[]>('recallQueue');
+}
+
+export function getCachedProgressData(): ProgressData | null {
+  return getSession<ProgressData>('progressData');
 }
 
 // ── getSubjects ────────────────────────────────────────────────────────────
@@ -51,6 +95,22 @@ export async function getSubjects(): Promise<Subject[]> {
   if (curriculumCache.subjects) {
     return curriculumCache.subjects;
   }
+  const fromSession = getSession<Subject[]>('subjects');
+  if (fromSession && fromSession.length > 0) {
+    curriculumCache.subjects = fromSession;
+    // Silent background revalidation
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects`, {
+      headers: await getAuthHeaders().catch(() => ({})),
+    })
+      .then(handleResponse<Subject[]>)
+      .then((data) => {
+        curriculumCache.subjects = data;
+        setSession('subjects', data);
+      })
+      .catch(() => {});
+    return fromSession;
+  }
+
   if (USE_MOCK) {
     await delay();
     curriculumCache.subjects = mockSubjects;
@@ -62,6 +122,7 @@ export async function getSubjects(): Promise<Subject[]> {
   });
   const data = await handleResponse<Subject[]>(res);
   curriculumCache.subjects = data;
+  setSession('subjects', data);
   return data;
 }
 
@@ -74,6 +135,12 @@ export async function getChaptersBySubjectName(subjectName: string): Promise<Cha
   if (curriculumCache.chaptersByName.has(subjectName)) {
     return curriculumCache.chaptersByName.get(subjectName)!;
   }
+  const fromSession = getSession<Chapter[]>(`chapters:${subjectName}`);
+  if (fromSession && fromSession.length > 0) {
+    curriculumCache.chaptersByName.set(subjectName, fromSession);
+    return fromSession;
+  }
+
   if (USE_MOCK) {
     await delay();
     void subjectName;
@@ -87,6 +154,7 @@ export async function getChaptersBySubjectName(subjectName: string): Promise<Cha
   );
   const data = await handleResponse<Chapter[]>(res);
   curriculumCache.chaptersByName.set(subjectName, data);
+  setSession(`chapters:${subjectName}`, data);
   return data;
 }
 
@@ -97,6 +165,12 @@ export async function getTopics(chapterId: string): Promise<Topic[]> {
   if (curriculumCache.topicsByChapter.has(chapterId)) {
     return curriculumCache.topicsByChapter.get(chapterId)!;
   }
+  const fromSession = getSession<Topic[]>(`topics:${chapterId}`);
+  if (fromSession && fromSession.length > 0) {
+    curriculumCache.topicsByChapter.set(chapterId, fromSession);
+    return fromSession;
+  }
+
   if (USE_MOCK) {
     await delay();
     const data = mockTopics.filter((t) => t.chapter_id === chapterId);
@@ -110,6 +184,7 @@ export async function getTopics(chapterId: string): Promise<Topic[]> {
   );
   const data = await handleResponse<Topic[]>(res);
   curriculumCache.topicsByChapter.set(chapterId, data);
+  setSession(`topics:${chapterId}`, data);
   return data;
 }
 
@@ -120,6 +195,12 @@ export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
   if (curriculumCache.topicDetails.has(topicId)) {
     return curriculumCache.topicDetails.get(topicId)!;
   }
+  const fromSession = getSession<TopicDetail>(`topicDetail:${topicId}`);
+  if (fromSession) {
+    curriculumCache.topicDetails.set(topicId, fromSession);
+    return fromSession;
+  }
+
   if (USE_MOCK) {
     await delay();
     const detail = mockTopicDetail[topicId];
@@ -134,6 +215,7 @@ export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
   );
   const data = await handleResponse<TopicDetail>(res);
   curriculumCache.topicDetails.set(topicId, data);
+  setSession(`topicDetail:${topicId}`, data);
   return data;
 }
 
@@ -150,7 +232,9 @@ export async function getHomeData(): Promise<HomeData> {
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/students/dashboard`,
     { headers: await getAuthHeaders() },
   );
-  return handleResponse<HomeData>(res);
+  const data = await handleResponse<HomeData>(res);
+  setSession('homeData', data);
+  return data;
 }
 
 // ── getRecallQueue ─────────────────────────────────────────────────────────
@@ -183,7 +267,7 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
       ? (raw as { data: RawItem[] }).data
       : [];
 
-  return items
+  const result = items
     .filter((item) => item.question && item.model_answer)
     .map((item) => ({
       id: item.topic_id,
@@ -193,6 +277,8 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
       question: item.question!,
       model_answer: item.model_answer!,
     }));
+  setSession('recallQueue', result);
+  return result;
 }
 
 // ── getProgressData ────────────────────────────────────────────────────────
@@ -225,7 +311,7 @@ export async function getProgressData(): Promise<ProgressData> {
       ? (raw as { data: RawProgress }).data
       : raw) ?? {};
 
-  return {
+  const result: ProgressData = {
     streak_days: d.streak_days ?? 0,
     topics_studied: d.topics_studied ?? 0,
     avg_accuracy: d.avg_accuracy ?? 0,
@@ -243,6 +329,8 @@ export async function getProgressData(): Promise<ProgressData> {
       : [],
     heatmap_data: Array.isArray(d.heatmap_data) ? d.heatmap_data : [],
   };
+  setSession('progressData', result);
+  return result;
 }
 
 // ── pingTopicActivity ──────────────────────────────────────────────────────
@@ -295,6 +383,11 @@ export async function submitTopicCompletion(
     if (res.ok) {
       curriculumCache.topicDetails.delete(topicId);
       curriculumCache.topicsByChapter.clear();
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.removeItem(`recall:topicDetail:${topicId}`);
+        } catch {}
+      }
     }
     return res.ok;
   } catch {

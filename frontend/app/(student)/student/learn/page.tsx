@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, BookOpen } from 'lucide-react';
-import { getSubjects } from '@/lib/api/topics';
+import { getSubjects, getCachedSubjects } from '@/lib/api/topics';
 import type { Subject } from '@/types/topics';
 import { SubjectCard } from '@/components/student/SubjectCard';
 
@@ -39,7 +39,7 @@ function BrowseSkeleton() {
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function BrowsePage() {
-  const [subjects, setSubjects] = useState<Subject[] | null>(null);
+  const [subjects, setSubjects] = useState<Subject[] | null>(() => getCachedSubjects());
   const [query, setQuery] = useState('');
   const [fetchError, setFetchError] = useState<string | null>(null);
   const router = useRouter();
@@ -53,7 +53,7 @@ export default function BrowsePage() {
   }, []);
 
   /* Error state */
-  if (fetchError) {
+  if (fetchError && !subjects) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
         <p className="text-center text-sm text-muted">{fetchError}</p>

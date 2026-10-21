@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Flame } from 'lucide-react';
-import { getProgressData } from '@/lib/api/topics';
+import { getProgressData, getCachedProgressData } from '@/lib/api/topics';
 import type { ProgressData } from '@/types/topics';
 
 const HEATMAP_COLORS = ['#EEEEEE', '#9FE1CB', '#5DCAA5', '#1B6B4A', '#085041'] as const;
@@ -241,7 +241,7 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
 }
 
 export default function ProgressPage() {
-  const [data, setData] = useState<ProgressData | null>(null);
+  const [data, setData] = useState<ProgressData | null>(() => getCachedProgressData());
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -252,7 +252,7 @@ export default function ProgressPage() {
       });
   }, []);
 
-  if (fetchError) {
+  if (fetchError && !data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-0 px-6">
         <p className="text-center text-sm text-muted">{fetchError}</p>

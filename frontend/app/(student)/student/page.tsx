@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Flame, Download } from 'lucide-react';
-import { getHomeData, getSubjects } from '@/lib/api/topics';
+import { getHomeData, getSubjects, getCachedHomeData, getCachedSubjects } from '@/lib/api/topics';
 import type { HomeData, RecentTopic, Subject } from '@/types/topics';
 import { RecallCard } from '@/components/student/RecallCard';
 import { CompletionRing } from '@/components/student/CompletionRing';
@@ -133,8 +133,8 @@ function SubjectStrip({ subjects }: { subjects: Subject[] }) {
 // ── Page ──────────────────────────────────────────────────────────────────
 
 export default function StudentHomePage() {
-  const [data, setData] = useState<HomeData | null>(null);
-  const [subjects, setSubjects] = useState<Subject[] | null>(null);
+  const [data, setData] = useState<HomeData | null>(() => getCachedHomeData());
+  const [subjects, setSubjects] = useState<Subject[] | null>(() => getCachedSubjects());
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [greeting, setGreeting] = useState('Good morning');
   const router = useRouter();
@@ -175,7 +175,7 @@ export default function StudentHomePage() {
       .catch(() => setSubjects([]));
   }, [router, celebrate]);
 
-  if (fetchError) {
+  if (fetchError && !data) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6 bg-bg-0">
         <div className="text-center">

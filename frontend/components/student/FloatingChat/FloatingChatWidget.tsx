@@ -175,8 +175,10 @@ function FloatingChatPanel({
         setIsLoading(false);
         if (err instanceof ChatError && err.status === 429) {
           toast.error('Daily chat limit reached', err.message);
+        } else if (err instanceof ChatError && err.status >= 500) {
+          toast.error('AI Tutor Temporarily Busy', err.message);
         } else {
-          toast.error('Message failed to send', 'Check your connection and try again.');
+          toast.error('Message failed to send', err?.message || 'Check your connection and try again.');
         }
       },
     );
