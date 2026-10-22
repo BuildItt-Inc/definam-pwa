@@ -3,50 +3,58 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import RecallLogo from '@/components/ui/RecallLogo';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
-
-import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth';
+import { ChevronLeft, Check, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { registerUser, ApiError } from '@/lib/api/auth';
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const codeParam = searchParams.get('code') || searchParams.get('access_code') || '';
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [bannerError, setBannerError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    setError,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    mode: 'onSubmit',
-    reValidateMode: 'onSubmit',
-    defaultValues: { access_code: codeParam },
-  });
+  const [accessCode, setAccessCode] = useState(codeParam.toUpperCase());
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [bannerError, setBannerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (codeParam) {
-      setValue('access_code', codeParam);
+      setAccessCode(codeParam.toUpperCase());
     }
-  }, [codeParam, setValue]);
+  }, [codeParam]);
 
-  async function onSubmit(values: RegisterFormValues) {
+  // Validation criteria
+  const isAccessCodeValid =
+    /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/i.test(accessCode.trim()) ||
+    accessCode.trim().length >= 8;
+
+  const isUsernameValid =
+    username.trim().length >= 3 &&
+    username.trim().length <= 20 &&
+    /^[a-zA-Z0-9_]+$/.test(username.trim());
+
+  const hasMinLength = password.length >= 8;
+  const hasNumber = /[0-9]/.test(password);
+  const isPasswordValid = hasMinLength && hasNumber;
+
+  const isFormComplete = isAccessCodeValid && isUsernameValid && isPasswordValid;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!isFormComplete || isSubmitting) return;
+
     setBannerError(null);
+    setIsSubmitting(true);
+
     try {
       await registerUser({
-        username: values.username,
-        password: values.password,
-        confirm_password: values.confirm_password,
-        access_code: values.access_code,
+        username: username.trim(),
+        password,
+        confirm_password: password,
+        access_code: accessCode.trim().toUpperCase(),
       });
+      sessionStorage.setItem('celebrate_login', '1');
       router.push('/student');
     } catch (err) {
       if (err instanceof ApiError) {
@@ -54,238 +62,236 @@ function RegisterForm() {
           err.status === 409 ||
           (err.status === 400 && err.message.toLowerCase().includes('username'))
         ) {
-          setError('username', {
-            type: 'server',
-            message: err.message || 'That username is already taken',
-          });
+          setBannerError(err.message || 'That username is already taken. Try another.');
         } else if (
           err.status === 400 &&
           (err.message.toLowerCase().includes('access code') ||
             err.message.toLowerCase().includes('code') ||
             err.message.toLowerCase().includes('join'))
         ) {
-          setError('access_code', { type: 'server', message: err.message });
-        } else if (err.status === 400) {
-          setBannerError(err.message || 'Check your details and try again.');
+          setBannerError(err.message || 'Invalid or expired access code.');
         } else {
-          setBannerError('Something went wrong. Please try again.');
+          setBannerError(err.message || 'Check your details and try again.');
         }
       } else {
-        setBannerError('Something went wrong. Please try again.');
+        setBannerError('Something went wrong. Please check your connection.');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="relative min-h-screen bg-bg-0 flex flex-col items-center justify-center px-4 py-10 overflow-hidden">
+    <div className="min-h-screen bg-[#fafbfa] flex flex-col justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-[390px] mx-auto">
+        {/* Back navigation button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push('/');
+            }
+          }}
+          aria-label="Go back"
+          className="text-ink -ml-1 mb-3 p-1.5 text-ink/80 hover:text-ink active:scale-95 transition-all inline-flex items-center"
+        >
+          <ChevronLeft size={24} strokeWidth={2} />
+        </button>
 
-      {/* Decorative blobs — CSS only, Android-safe */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 -right-16 w-72 h-72 rounded-full opacity-40"
-        style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.14) 0%, transparent 70%)' }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full opacity-30"
-        style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.10) 0%, transparent 70%)' }}
-      />
-
-      {/* Logo — inline vector graphic for instant 0ms first-paint */}
-      <Link href="/" className="relative z-10 flex items-center gap-2 mb-8" aria-label="Recall home">
-        <RecallLogo variant="dark" className="h-8 w-auto" />
-      </Link>
-
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-[400px] bg-white rounded-2xl shadow-premium border border-border p-7">
-
-        <h1 className="text-[22px] font-bold text-ink tracking-tight mb-1">
+        {/* Page header */}
+        <h1 className="text-[28px] sm:text-[30px] font-bold text-ink tracking-tight mb-1.5 leading-tight">
           Create your account
         </h1>
-        <p className="text-sm text-muted mb-6">
-          {codeParam
-            ? 'Your access code is active. Choose your username and password to begin.'
-            : 'You need an access code to register. Check your email or purchase code.'}
+        <p className="text-[14.5px] text-muted mb-6 leading-relaxed">
+          Enter the access code from your email, receipt or school.
         </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+        {/* Server error banner */}
+        {bannerError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] text-red-700 font-medium"
+          >
+            {bannerError}
+          </div>
+        )}
 
-          {/* Access Code */}
-          {codeParam ? (
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted">
-                  License Key
-                </label>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-brand bg-brand-dim border border-brand/25 px-2 py-0.5 rounded-md">
-                  Active &amp; Verified
-                </span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-2 border border-border-2">
-                <div className="w-9 h-9 rounded-lg bg-ink text-brand-light flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <KeyRound size={17} strokeWidth={2.2} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-muted leading-none mb-1">
-                    Student Activation Code
-                  </p>
-                  <p className="text-[13px] font-mono font-bold tracking-wider text-ink truncate">
-                    {codeParam}
-                  </p>
-                </div>
-                <input type="hidden" {...register('access_code')} value={codeParam} />
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="access_code" className="text-sm font-semibold text-ink-2">
-                Access code
-              </label>
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          {/* Access code */}
+          <div>
+            <label htmlFor="access_code" className="block text-[14px] font-bold text-ink mb-1.5">
+              Access code
+            </label>
+            <div className="relative">
               <input
                 id="access_code"
                 type="text"
                 autoCapitalize="characters"
                 spellCheck={false}
-                placeholder="e.g. IND-A1B2-C3"
-                className={`input-field font-mono tracking-wider ${errors.access_code ? 'error' : ''}`}
-                {...register('access_code')}
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                placeholder="e.g. IND-7K2M-Q9"
+                className={`w-full rounded-xl border ${
+                  isAccessCodeValid
+                    ? 'border-[#15803d] border-2 ring-1 ring-[#15803d]/20'
+                    : 'border-gray-300'
+                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[15px] font-mono font-bold tracking-wider text-ink placeholder:text-gray-400 placeholder:font-sans placeholder:font-normal placeholder:tracking-normal focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
               />
-              {errors.access_code ? (
-                <p className="text-xs text-danger">{errors.access_code.message}</p>
-              ) : (
-                <p className="text-xs text-faint">
-                  Enter the access code from your purchase or receipt
-                </p>
+              {isAccessCodeValid && (
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Check size={18} className="text-[#15803d] stroke-[2.8]" />
+                </div>
               )}
             </div>
-          )}
-
-          {/* Username */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="username" className="text-sm font-semibold text-ink-2">
-              Choose a username
-            </label>
-            <input
-              id="username"
-              type="text"
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              placeholder="e.g. chisom123"
-              className={`input-field ${errors.username ? 'error' : ''}`}
-              {...register('username')}
-            />
-            {errors.username ? (
-              <p className="text-xs text-danger">{errors.username.message}</p>
-            ) : (
-              <p className="text-xs text-faint">This is what you&apos;ll use to sign in</p>
+            {isAccessCodeValid && (
+              <div className="mt-2 rounded-xl bg-[#ecfdf5] border border-emerald-200/70 px-3.5 py-2.5 text-[13px] font-medium text-emerald-900 leading-snug">
+                Code valid · 1 term (120 days). Access starts when you finish signing up.
+              </div>
             )}
           </div>
 
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-[14px] font-bold text-ink mb-1.5">
+              Username
+            </label>
+            <div className="relative">
+              <input
+                id="username"
+                type="text"
+                autoCapitalize="none"
+                spellCheck={false}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="francisnaga"
+                className={`w-full rounded-xl border ${
+                  isUsernameValid
+                    ? 'border-[#15803d] border-2 ring-1 ring-[#15803d]/20'
+                    : 'border-gray-300'
+                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+              />
+              {isUsernameValid && (
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Check size={18} className="text-[#15803d] stroke-[2.8]" />
+                </div>
+              )}
+            </div>
+            <p className="mt-1.5 text-[12.5px] text-gray-500 leading-relaxed">
+              Available. You&apos;ll use this to sign in. Letters and numbers only.
+            </p>
+          </div>
+
           {/* Password */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-semibold text-ink-2">
+          <div>
+            <label htmlFor="password" className="block text-[14px] font-bold text-ink mb-1.5">
               Password
             </label>
             <div className="relative">
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
-                className={`input-field pr-12 ${errors.password ? 'error' : ''}`}
-                {...register('password')}
+                className={`w-full rounded-xl border ${
+                  isPasswordValid
+                    ? 'border-[#15803d] border-2 ring-1 ring-[#15803d]/20'
+                    : 'border-gray-300'
+                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-faint active:text-muted transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-ink transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword
-                  ? <EyeOff size={17} strokeWidth={2} />
-                  : <Eye size={17} strokeWidth={2} />}
+                {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
               </button>
             </div>
-            {errors.password && (
-              <p className="text-xs text-danger">{errors.password.message}</p>
-            )}
-          </div>
 
-          {/* Confirm Password */}
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="confirm_password" className="text-sm font-semibold text-ink-2">
-              Confirm password
-            </label>
-            <div className="relative">
-              <input
-                id="confirm_password"
-                type={showConfirmPassword ? 'text' : 'password'}
-                autoComplete="new-password"
-                placeholder="Repeat your password"
-                className={`input-field pr-12 ${errors.confirm_password ? 'error' : ''}`}
-                {...register('confirm_password')}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-faint active:text-muted transition-colors"
-                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+            {/* Criteria checklist */}
+            <div className="flex items-center gap-4 mt-2.5">
+              <div
+                className={`flex items-center gap-1.5 text-[12.5px] transition-colors ${
+                  hasMinLength ? 'text-[#15803d] font-semibold' : 'text-gray-500'
+                }`}
               >
-                {showConfirmPassword
-                  ? <EyeOff size={17} strokeWidth={2} />
-                  : <Eye size={17} strokeWidth={2} />}
-              </button>
+                <span
+                  className={`flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                    hasMinLength
+                      ? 'border-[#15803d] bg-[#15803d] text-white'
+                      : 'border-gray-400 bg-transparent'
+                  }`}
+                >
+                  {hasMinLength && <Check size={11} strokeWidth={3} />}
+                </span>
+                <span>8 or more characters</span>
+              </div>
+
+              <div
+                className={`flex items-center gap-1.5 text-[12.5px] transition-colors ${
+                  hasNumber ? 'text-[#15803d] font-semibold' : 'text-gray-500'
+                }`}
+              >
+                <span
+                  className={`flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
+                    hasNumber
+                      ? 'border-[#15803d] bg-[#15803d] text-white'
+                      : 'border-gray-400 bg-transparent'
+                  }`}
+                >
+                  {hasNumber && <Check size={11} strokeWidth={3} />}
+                </span>
+                <span>One number</span>
+              </div>
             </div>
-            {errors.confirm_password && (
-              <p className="text-xs text-danger">{errors.confirm_password.message}</p>
-            )}
           </div>
 
-          {/* Error banner */}
-          {bannerError && (
-            <div
-              role="alert"
-              className="rounded-xl border border-danger/25 bg-danger-bg px-4 py-3 text-sm text-danger"
+          {/* Submit CTA */}
+          {isFormComplete ? (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full mt-6 rounded-xl bg-brand py-3.5 text-[15.5px] font-bold text-white shadow-md hover:bg-brand-dark active:scale-[0.99] transition-all flex items-center justify-center"
             >
-              {bannerError}
-            </div>
+              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'Create account'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="w-full mt-6 rounded-xl bg-[#dce7dd] py-3.5 text-[15.5px] font-bold text-[#5c7060] cursor-not-allowed flex items-center justify-center transition-colors"
+            >
+              Create account
+            </button>
           )}
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="btn-primary w-full mt-1"
-          >
-            {isSubmitting
-              ? <Loader2 size={18} className="animate-spin" />
-              : 'Create account'}
-          </button>
+          <p className="text-[12.5px] text-gray-500 text-center mt-2.5">
+            The button turns green when everything above is filled in.
+          </p>
         </form>
 
-        <p className="mt-5 text-center text-xs text-muted">
-          Already have an account?{' '}
-          <Link
-            href="/login"
-            className="font-semibold text-ink hover:text-brand transition-colors"
-          >
-            Sign in
-          </Link>
-        </p>
-
-        <p className="mt-3 text-center text-xs text-muted">
-          School gave you a code?{' '}
-          <Link
-            href="/join"
-            className="font-semibold text-brand hover:text-brand-dark transition-colors"
-          >
-            Use it here
-          </Link>
-        </p>
+        {/* Footer links */}
+        <div className="mt-8 text-center space-y-3">
+          <p className="text-[14px] text-gray-600">
+            Already have an account?{' '}
+            <Link href="/login" className="font-bold text-brand hover:underline">
+              Sign in
+            </Link>
+          </p>
+          <p className="text-[14px] text-gray-600">
+            No code yet?{' '}
+            <Link
+              href="/pay/individual"
+              className="font-bold text-brand hover:underline underline-offset-4"
+            >
+              Get access
+            </Link>
+          </p>
+        </div>
       </div>
-
-      <p className="relative z-10 mt-6 text-xs text-faint">© Recall 2026</p>
     </div>
   );
 }

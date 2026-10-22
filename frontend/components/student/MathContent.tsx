@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface MathContentProps {
   content: string;
@@ -18,7 +18,7 @@ interface KatexRenderer {
 /**
  * MathContent
  * -----------
- * Renders mixed prose + LaTeX math content.
+ * Renders mixed prose + LaTeX math content safely without React virtual DOM reconciliation bugs.
  *
  * Delimiters:
  *   $$...$$  →  display (block) math, centred
@@ -40,38 +40,78 @@ export function MathContent({
   allowBlock = true,
   isStreaming = false,
 }: MathContentProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const [katexLoaded, setKatexLoaded] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && !!(window as unknown as { katex?: KatexRenderer }).katex;
+  });
 
   useEffect(() => {
-    if (!ref.current || !content) return;
-
-    let attempts = 0;
-    const render = () => {
-      const globalWindow = window as unknown as { katex?: KatexRenderer };
-      const katex = globalWindow.katex;
-      if (!katex) {
-        if (attempts++ < 30) setTimeout(render, 100);
-        return;
+    if (katexLoaded) return;
+    const checkKatex = () => {
+      if (typeof window !== 'undefined' && (window as unknown as { katex?: KatexRenderer }).katex) {
+        setKatexLoaded(true);
+        return true;
       }
-      let html = buildHtml(content, katex, allowBlock);
-      if (isStreaming) {
-        html += '<span class="inline-block w-1.5 h-3.5 ml-1 rounded-[1px] bg-brand animate-pulse align-middle" aria-hidden="true"></span>';
-      }
-      ref.current!.innerHTML = html;
+      return false;
     };
 
-    render();
-  }, [content, allowBlock, isStreaming]);
+    if (checkKatex()) return;
 
-  // Server-side / first-paint: show plain text, hydrate after KaTeX loads
+    const interval = setInterval(() => {
+      if (checkKatex()) clearInterval(interval);
+    }, 150);
+
+    const onKatexReady = () => setKatexLoaded(true);
+    window.addEventListener('katex-ready', onKatexReady);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('katex-ready', onKatexReady);
+    };
+  }, [katexLoaded]);
+
+  const html = useMemo(() => {
+    if (!content) return '';
+    const katex = typeof window !== 'undefined'
+      ? (window as unknown as { katex?: KatexRenderer }).katex
+      : undefined;
+
+    if (katexLoaded && katex) {
+      try {
+        return buildHtml(content, katex, allowBlock);
+      } catch (e) {
+        return formatPlainText(content);
+      }
+    }
+    return formatPlainText(content);
+  }, [content, allowBlock, katexLoaded]);
+
+  const cursorHtml = isStreaming
+    ? '<span class="inline-block w-1.5 h-3.5 ml-1 rounded-[1px] bg-brand animate-pulse align-middle" aria-hidden="true"></span>'
+    : '';
+
+  // Use dangerouslySetInnerHTML exclusively so React never diffs child text nodes against KaTeX-injected DOM
   return (
-    <div ref={ref} className={`math-content ${className}`} suppressHydrationWarning>
-      {content}
-      {isStreaming && (
-        <span className="inline-block w-1.5 h-3.5 ml-1 rounded-[1px] bg-brand animate-pulse align-middle" aria-hidden="true" />
-      )}
-    </div>
+    <div
+      className={`math-content ${className}`}
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: html + cursorHtml }}
+    />
   );
+}
+
+// ── Plain text fallback formatter ──────────────────────────────────────────
+
+function formatPlainText(text: string): string {
+  if (!text) return '';
+  const normalized = text.replace(/\r\n/g, '\n');
+  const paragraphs = normalized.split(/\n{2,}/);
+  return paragraphs
+    .map((para) => {
+      const trimmed = para.trim();
+      if (!trimmed) return '';
+      return `<p class="math-para mb-3 text-[14.5px] leading-relaxed text-ink/90">${renderTextMarkdown(trimmed.replace(/\n/g, '<br />'))}</p>`;
+    })
+    .join('');
 }
 
 // ── HTML builder ───────────────────────────────────────────────────────────
@@ -86,44 +126,50 @@ function buildHtml(
   katex: KatexRenderer,
   allowBlock: boolean,
 ): string {
-  // Normalize newlines
-  let normalizedText = text.replace(/\r\n/g, '\n');
+  if (!text) return '';
+  try {
+    // Normalize newlines
+    let normalizedText = text.replace(/\r\n/g, '\n');
 
-  // Protect \$ (literal dollar sign) before any math-delimiter matching runs
-  normalizedText = normalizedText.replace(/\\\$/g, ESCAPED_DOLLAR);
+    // Protect \$ (literal dollar sign) before any math-delimiter matching runs
+    normalizedText = normalizedText.replace(/\\\$/g, ESCAPED_DOLLAR);
 
-  // Insert double newlines before any step markers to start a new paragraph
-  normalizedText = normalizedText.replace(/\n(?:\*\*|)?Step\s+(\d+)/gi, '\n\nStep $1');
+    // Insert double newlines before any step markers to start a new paragraph
+    normalizedText = normalizedText.replace(/\n(?:\*\*|)?Step\s+(\d+)/gi, '\n\nStep $1');
 
-  // Insert double newlines between the step header line and the following explanation text
-  normalizedText = normalizedText.replace(/(^|\n)((?:\*\*|)?Step\s+\d+[:.]?.*?)(\n)(?!\n)/gi, '$2\n\n');
+    // Insert double newlines between the step header line and the following explanation text
+    normalizedText = normalizedText.replace(/(^|\n)((?:\*\*|)?Step\s+\d+[:.]?.*?)(\n)(?!\n)/gi, '$2\n\n');
 
-  // Split into paragraphs on double newlines
-  const paragraphs = normalizedText.split(/\n{2,}/);
+    // Split into paragraphs on double newlines
+    const paragraphs = normalizedText.split(/\n{2,}/);
 
-  const html = paragraphs
-    .map((para) => {
-      const trimmed = para.trim();
-      if (!trimmed) return '';
+    const html = paragraphs
+      .map((para) => {
+        const trimmed = para.trim();
+        if (!trimmed) return '';
 
-      // Check if this paragraph is a Step header line
-      const stepHeaderMatch = trimmed.match(/^(?:\*\*|)?(Step\s+\d+[:.]?)(?:\*\*|)?\s*(.*)$/i);
-      if (stepHeaderMatch) {
-        const stepNum = stepHeaderMatch[1].trim();
-        const stepTitle = stepHeaderMatch[2].trim();
-        const renderedTitle = renderInline(stepTitle, katex, allowBlock);
+        // Check if this paragraph is a Step header line
+        const stepHeaderMatch = trimmed.match(/^(?:\*\*|)?(Step\s+\d+[:.]?)(?:\*\*|)?\s*(.*)$/i);
+        if (stepHeaderMatch) {
+          const stepNum = stepHeaderMatch[1].trim();
+          const stepTitle = stepHeaderMatch[2].trim();
+          const renderedTitle = renderInline(stepTitle, katex, allowBlock);
 
-        return `<div class="mt-6 mb-2">
-          <h4 class="text-[15px] font-bold text-brand uppercase tracking-wider mb-1">${stepNum} ${renderedTitle}</h4>
-        </div>`;
-      }
+          return `<div class="mt-4 mb-2">
+            <h4 class="text-[14px] font-bold text-brand uppercase tracking-wider mb-1">${stepNum} ${renderedTitle}</h4>
+          </div>`;
+        }
 
-      return renderParagraph(trimmed, katex, allowBlock);
-    })
-    .filter(Boolean)
-    .join('');
+        return renderParagraph(trimmed, katex, allowBlock);
+      })
+      .filter(Boolean)
+      .join('');
 
-  return html.replace(new RegExp(ESCAPED_DOLLAR, 'g'), '$');
+    return html.replace(new RegExp(ESCAPED_DOLLAR, 'g'), '$');
+  } catch (err) {
+    console.error('KaTeX buildHtml fallback:', err);
+    return formatPlainText(text);
+  }
 }
 
 // ── List-aware paragraph renderer ──────────────────────────────────────────
@@ -131,9 +177,6 @@ function buildHtml(
 const BULLET_RE = /^[-*•]\s+(.*)$/;
 const NUMBERED_RE = /^(\d+)[.)]\s+(.*)$/;
 
-// A paragraph may mix prose lines with bullet/numbered list lines (single
-// newlines within a blank-line-delimited block). Walk it line by line,
-// grouping consecutive lines of the same kind into <p>/<ul>/<ol> blocks.
 function renderParagraph(
   trimmed: string,
   katex: KatexRenderer,
@@ -144,7 +187,7 @@ function renderParagraph(
 
   if (!hasListLine) {
     const inner = renderInline(trimmed, katex, allowBlock);
-    return `<p class="math-para mb-3 text-[15px] leading-relaxed text-ink/90">${inner}</p>`;
+    return `<p class="math-para mb-3 text-[14.5px] leading-relaxed text-ink/90">${inner}</p>`;
   }
 
   const blocks: string[] = [];
@@ -164,7 +207,7 @@ function renderParagraph(
         `<ul class="math-list mb-3 list-none pl-0 space-y-1">${items
           .map(
             (item) =>
-              `<li class="flex gap-2"><span class="flex-shrink-0 text-ink/40">•</span><span class="flex-1 text-[15px] leading-relaxed text-ink/90">${renderInline(item, katex, allowBlock)}</span></li>`,
+              `<li class="flex gap-2"><span class="flex-shrink-0 text-ink/40">•</span><span class="flex-1 text-[14.5px] leading-relaxed text-ink/90">${renderInline(item, katex, allowBlock)}</span></li>`,
           )
           .join('')}</ul>`,
       );
@@ -184,7 +227,7 @@ function renderParagraph(
         `<ol class="math-list mb-3 list-none pl-0 space-y-1">${items
           .map(
             ({ num, text }) =>
-              `<li class="flex gap-2"><span class="flex-shrink-0 font-semibold text-ink/40">${num}.</span><span class="flex-1 text-[15px] leading-relaxed text-ink/90">${renderInline(text, katex, allowBlock)}</span></li>`,
+              `<li class="flex gap-2"><span class="flex-shrink-0 font-semibold text-ink/40">${num}.</span><span class="flex-1 text-[14.5px] leading-relaxed text-ink/90">${renderInline(text, katex, allowBlock)}</span></li>`,
           )
           .join('')}</ol>`,
       );
@@ -197,12 +240,11 @@ function renderParagraph(
       i++;
     }
     const inner = renderInline(textLines.join('\n'), katex, allowBlock);
-    blocks.push(`<p class="math-para mb-3 text-[15px] leading-relaxed text-ink/90">${inner}</p>`);
+    blocks.push(`<p class="math-para mb-3 text-[14.5px] leading-relaxed text-ink/90">${inner}</p>`);
   }
 
   return blocks.join('');
 }
-
 
 function renderInline(
   text: string,
@@ -234,13 +276,17 @@ function renderInline(
         .join('<br />');
 
       // Auto-convert standard plain-text fractions (e.g. 1/3, 3/4) to KaTeX, avoiding dates and URLs
-      escapedLines = escapedLines.replace(/(?<!\/)\b(\d+)\/(\d+)\b(?!\/)/g, (match, num, den) => {
-        try {
-          return `<span class="math-inline">${katex.renderToString(`\\frac{${num}}{${den}}`, { displayMode: false, throwOnError: false })}</span>`;
-        } catch {
-          return match;
-        }
-      });
+      try {
+        escapedLines = escapedLines.replace(/(?<!\/)\b(\d+)\/(\d+)\b(?!\/)/g, (match, num, den) => {
+          try {
+            return `<span class="math-inline">${katex.renderToString(`\\frac{${num}}{${den}}`, { displayMode: false, throwOnError: false })}</span>`;
+          } catch {
+            return match;
+          }
+        });
+      } catch {
+        // Fallback safely
+      }
 
       return escapedLines;
     })
@@ -283,12 +329,6 @@ function splitMath(text: string, allowBlock: boolean): Segment[] {
   return segments;
 }
 
-// Narrow markdown support: **bold** and *italic* only. Bold is matched first
-// so `**text**` never gets misread as `*` + text + `*` + text + `*`.
-// Bullet/numbered list markers are stripped out (see renderParagraph) before
-// this ever runs on a line, so a leading list `*` never reaches here as the
-// start of a spurious italic run.
-// Escapes everything else so no other markdown/HTML sneaks through.
 const MARKDOWN_RE = /(\*\*[^*]+?\*\*|\*[^*]+?\*)/g;
 
 function renderTextMarkdown(str: string): string {

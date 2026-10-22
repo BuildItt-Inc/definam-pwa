@@ -1,15 +1,15 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2, School, User } from 'lucide-react';
+import { ChevronLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
 import { loginUser, logout, ApiError } from '@/lib/api/auth';
 import RecallLogo from '@/components/ui/RecallLogo';
+
 // ── Reset success banner (shown after /reset-password redirects here) ──────
 function ResetSuccessBanner() {
   const searchParams = useSearchParams();
@@ -17,20 +17,16 @@ function ResetSuccessBanner() {
   return (
     <div
       role="status"
-      className="mb-5 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-brand-tint border border-brand/20 text-brand text-sm font-medium"
+      className="mb-5 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium"
     >
-      <span aria-hidden>✓</span>
+      <span aria-hidden className="text-emerald-600 font-bold">✓</span>
       Password updated. Sign in with your new password.
     </div>
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────
-type Step = 'choose' | 'login';
-
 function LoginContent() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('choose');
   const [showPassword, setShowPassword] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,209 +68,164 @@ function LoginContent() {
   }
 
   return (
-    <div className="relative min-h-screen bg-bg-0 flex flex-col items-center justify-center px-4 py-10 overflow-hidden">
+    <div className="min-h-screen bg-[#fafbfa] flex flex-col justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-[390px] mx-auto">
+        {/* Back navigation button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push('/');
+            }
+          }}
+          aria-label="Go back"
+          className="text-ink -ml-1 mb-2 p-1.5 text-ink/80 hover:text-ink active:scale-95 transition-all inline-flex items-center"
+        >
+          <ChevronLeft size={24} strokeWidth={2} />
+        </button>
 
-      {/* Ambient decorative blobs — pure CSS divs, no filter, works everywhere */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-24 -left-24 w-72 h-72 rounded-full opacity-50"
-        style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.14) 0%, transparent 70%)' }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -bottom-16 -right-16 w-56 h-56 rounded-full opacity-40"
-        style={{ background: 'radial-gradient(circle, rgba(22,163,74,0.10) 0%, transparent 70%)' }}
-      />
+        {/* Brand logo mark */}
+        <div className="mb-3">
+          <RecallLogo markOnly className="h-10 w-10 text-brand" />
+        </div>
 
-      {/* Logo — inline vector graphic for instant 0ms first-paint */}
-      <Link href="/" className="relative z-10 flex items-center gap-2 mb-8" aria-label="Recall home">
-        <RecallLogo variant="dark" className="h-8 w-auto" />
-      </Link>
+        {/* Page header */}
+        <h1 className="text-[28px] sm:text-[30px] font-bold text-ink tracking-tight mb-1.5 leading-tight">
+          Welcome back
+        </h1>
+        <p className="text-[14.5px] text-muted mb-6">
+          Sign in to keep your streak going.
+        </p>
 
-      {/* Card — solid white, no backdrop-filter, works on all Android devices */}
-      <div className="relative z-10 w-full max-w-[400px] bg-white rounded-2xl shadow-premium border border-border p-7">
-
-        {/* Reset success banner */}
+        {/* Reset success notification */}
         <Suspense fallback={null}>
           <ResetSuccessBanner />
         </Suspense>
 
-        {step === 'choose' ? (
-          /* ── Step 1: Role chooser ── */
-          <div>
-            <h1 className="text-[22px] font-bold text-ink tracking-tight mb-1">
-              Sign in to Recall
-            </h1>
-            <p className="text-sm text-muted mb-6">
-              How are you accessing Recall?
-            </p>
-
-            {/* Option 1 — School student */}
-            <button
-              type="button"
-              onClick={() => router.push('/join')}
-              className="w-full flex items-center gap-4 rounded-xl border-2 border-border-2 bg-bg-0 px-4 py-4 mb-3 text-left active:scale-[0.98] active:bg-bg-2 transition-transform"
-            >
-              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint">
-                <School size={20} className="text-brand" strokeWidth={2} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-bold text-ink leading-tight">
-                  My school signed me up
-                </span>
-                <span className="block text-[13px] text-muted mt-0.5">
-                  Enter the code your school gave you
-                </span>
-              </span>
-              <span className="text-faint text-lg flex-shrink-0" aria-hidden>›</span>
-            </button>
-
-            {/* Option 2 — Individual student */}
-            <button
-              type="button"
-              onClick={() => setStep('login')}
-              className="w-full flex items-center gap-4 rounded-xl border-2 border-border-2 bg-bg-0 px-4 py-4 text-left active:scale-[0.98] active:bg-bg-2 transition-transform"
-            >
-              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-ink/6">
-                <User size={20} className="text-ink" strokeWidth={2} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-bold text-ink leading-tight">
-                  I have my own account
-                </span>
-                <span className="block text-[13px] text-muted mt-0.5">
-                  Sign in with username and password
-                </span>
-              </span>
-              <span className="text-faint text-lg flex-shrink-0" aria-hidden>›</span>
-            </button>
-
-            {/* Admin — subtle link, not a primary option */}
-            <p className="mt-6 text-center text-xs text-faint">
-              School administrator?{' '}
-              <Link
-                href="/admin/login"
-                className="font-semibold text-muted hover:text-ink transition-colors underline underline-offset-2"
-              >
-                Go to admin portal
-              </Link>
-            </p>
-          </div>
-        ) : (
-          /* ── Step 2: Login form ── */
-          <div>
-            {/* Back button */}
-            <button
-              type="button"
-              onClick={() => { setStep('choose'); setBannerError(null); }}
-              className="flex items-center gap-1 text-sm text-muted mb-5 -ml-0.5 active:opacity-60 transition-opacity"
-            >
-              <span aria-hidden>‹</span> Back
-            </button>
-
-            <h1 className="text-[22px] font-bold text-ink tracking-tight mb-1">
-              Welcome back
-            </h1>
-            <p className="text-sm text-muted mb-6">
-              Sign in to your Recall account
-            </p>
-
-            <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
-
-              {/* Username */}
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="username" className="text-sm font-semibold text-ink-2">
-                  Username
-                </label>
-                <input
-                  id="username"
-                  type="text"
-                  autoComplete="username"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  placeholder="e.g. chisom123"
-                  className={`input-field ${errors.username ? 'error' : ''}`}
-                  {...register('username')}
-                />
-                {errors.username && (
-                  <p className="text-xs text-danger">{errors.username.message}</p>
-                )}
-              </div>
-
-              {/* Password */}
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="text-sm font-semibold text-ink-2">
-                    Password
-                  </label>
-                  <Link
-                    href="/forgot-password"
-                    className="text-xs font-semibold text-brand hover:text-brand-dark transition-colors"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    className={`input-field pr-12 ${errors.password ? 'error' : ''}`}
-                    {...register('password')}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-faint active:text-muted transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword
-                      ? <EyeOff size={17} strokeWidth={2} />
-                      : <Eye size={17} strokeWidth={2} />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-xs text-danger">{errors.password.message}</p>
-                )}
-              </div>
-
-              {/* Error banner */}
-              {bannerError && (
-                <div
-                  role="alert"
-                  className="rounded-xl border border-danger/25 bg-danger-bg px-4 py-3 text-sm text-danger"
-                >
-                  {bannerError}
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="btn-primary w-full mt-1"
-              >
-                {isSubmitting
-                  ? <Loader2 size={18} className="animate-spin" />
-                  : 'Sign in'}
-              </button>
-            </form>
-
-            <p className="mt-5 text-center text-xs text-muted">
-              Need an account?{' '}
-              <Link
-                href="/register"
-                className="font-semibold text-ink hover:text-brand transition-colors"
-              >
-                Register with your access code
-              </Link>
-            </p>
+        {/* Global error banner */}
+        {bannerError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] text-red-700 font-medium"
+          >
+            {bannerError}
           </div>
         )}
-      </div>
 
-      <p className="relative z-10 mt-6 text-xs text-faint">© Recall 2026</p>
+        {/* Sign in form */}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-[14px] font-bold text-ink mb-1.5">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="e.g. chisom123"
+              className={`w-full rounded-xl border ${
+                errors.username ? 'border-red-500' : 'border-gray-300'
+              } bg-white px-4 py-3 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+              {...register('username')}
+            />
+            {errors.username && (
+              <p className="mt-1 text-xs text-red-600 font-medium">{errors.username.message}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="password" className="text-[14px] font-bold text-ink">
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-[13px] font-bold text-brand hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="Your password"
+                className={`w-full rounded-xl border ${
+                  errors.password ? 'border-red-500' : 'border-gray-300'
+                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-ink transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="mt-1 text-xs text-red-600 font-medium">{errors.password.message}</p>
+            )}
+          </div>
+
+          {/* Submit CTA */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full mt-2 rounded-xl bg-brand py-3.5 text-[15.5px] font-bold text-white shadow-sm hover:bg-brand-dark active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-70"
+          >
+            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'Sign in'}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="relative my-7">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-[12.5px]">
+            <span className="bg-[#fafbfa] px-3 font-medium text-gray-500">
+              New to Recall?
+            </span>
+          </div>
+        </div>
+
+        {/* Access code CTA */}
+        <Link
+          href="/register"
+          className="w-full rounded-xl border border-gray-300 bg-white py-3.5 text-[15px] font-bold text-ink shadow-xs hover:bg-gray-50 active:scale-[0.99] transition-all text-center block"
+        >
+          I have an access code
+        </Link>
+
+        {/* Get access link */}
+        <div className="text-center mt-5">
+          <Link
+            href="/pay/individual"
+            className="text-[14.5px] font-bold text-brand underline underline-offset-4 hover:text-brand-dark transition-colors"
+          >
+            Get access
+          </Link>
+        </div>
+
+        {/* Admin link */}
+        <div className="text-center mt-8">
+          <Link
+            href="/admin/login"
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            School administrator portal
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

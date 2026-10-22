@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send, Check } from 'lucide-react';
+import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send, Check, ChevronDown } from 'lucide-react';
 import {
   getChaptersBySubjectName,
   getTopics,
@@ -17,7 +17,14 @@ import { TopicListItem } from '@/components/student/TopicListItem';
 import { LearningStep } from '@/components/student/LearningStep';
 import { PracticeQuestion } from '@/components/student/PracticeQuestion';
 import { MathContent } from '@/components/student/MathContent';
-import { getChatHistory, sendChatMessageStream, type ChatMessage } from '@/lib/api/chat';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import {
+  getChatHistory,
+  getCachedChatHistory,
+  setCachedChatHistory,
+  sendChatMessageStream,
+  type ChatMessage,
+} from '@/lib/api/chat';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { useFloatingChat } from '@/components/student/FloatingChat/FloatingChatContext';
@@ -466,11 +473,23 @@ function AITutorScaffold({
   onBrowse: () => void;
   onHome: () => void;
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const cached = getCachedChatHistory(topicId);
+    if (cached && cached.length > 0) return cached;
+    return [
+      {
+        role: 'assistant',
+        content: `Good work on the practice questions! What part of ${topicTitle} is still confusing you? Let's discuss it!`,
+      },
+    ];
+  });
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
+
+  const scrollContainerRef = useRef<HTMLElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isUserScrolledUpRef = useRef(false);
   const { setSuppressed } = useFloatingChat();
 
   // Suppress floating AI widget while at the full-screen AI chat page
@@ -481,40 +500,53 @@ function AITutorScaffold({
     };
   }, [setSuppressed]);
 
-  // Load chat history on mount
+  // Load chat history in background on mount
   useEffect(() => {
-    setIsHistoryLoading(true);
+    let isCurrent = true;
     getChatHistory(topicId)
       .then((history) => {
+        if (!isCurrent) return;
         if (history && history.length > 0) {
           setMessages(history);
-        } else {
-          // Initialize with default welcoming message
-          setMessages([
-            {
-              role: 'assistant',
-              content: `Good work on the practice questions! What part of ${topicTitle} is still confusing you? Let's discuss it!`,
-            },
-          ]);
+          setCachedChatHistory(topicId, history);
         }
       })
       .catch(() => {
-        // Fallback welcoming message if history load fails
-        setMessages([
-          {
-            role: 'assistant',
-            content: `Good work on the practice questions! What part of ${topicTitle} is still confusing you? Let's discuss it!`,
-          },
-        ]);
-      })
-      .finally(() => {
-        setIsHistoryLoading(false);
+        // Fallback welcoming message already displayed
       });
+
+    return () => {
+      isCurrent = false;
+    };
   }, [topicId, topicTitle]);
 
-  // Scroll to bottom on new messages
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const isScrolledUp = distanceFromBottom > 60;
+    isUserScrolledUpRef.current = isScrolledUp;
+    setShowScrollBottomBtn(isScrolledUp && distanceFromBottom > 120);
+  }, []);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior });
+    }
+    isUserScrolledUpRef.current = false;
+    setShowScrollBottomBtn(false);
+  }, []);
+
+  // Smart scroll: Never snatch user down if they have scrolled up to read!
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isUserScrolledUpRef.current) return;
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [messages, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -525,53 +557,71 @@ function AITutorScaffold({
     setInputMessage('');
     setIsLoading(true);
 
-    // Append user message
-    const updatedMessages: ChatMessage[] = [
-      ...messages,
-      { role: 'user', content: query },
-    ];
-    setMessages(updatedMessages);
+    // Append user message + placeholder assistant bubble atomically
+    setMessages((prev) => {
+      const next: ChatMessage[] = [
+        ...prev,
+        { role: 'user', content: query },
+        { role: 'assistant', content: '' },
+      ];
+      setCachedChatHistory(topicId, next);
+      return next;
+    });
 
-    // Append temporary typing assistant bubble
-    const assistantIndex = updatedMessages.length;
-    setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+    isUserScrolledUpRef.current = false;
+    setShowScrollBottomBtn(false);
+    setTimeout(() => scrollToBottom('smooth'), 50);
 
     let responseAccumulator = '';
 
-    await sendChatMessageStream(
-      topicId,
-      query,
-      (chunk) => {
-        responseAccumulator += chunk;
-        setMessages((prev) => {
-          const next = [...prev];
-          if (next[assistantIndex]) {
-            next[assistantIndex].content = responseAccumulator;
-          }
-          return next;
-        });
-      },
-      () => {
-        setIsLoading(false);
-      },
-      (err) => {
-        setMessages((prev) => {
-          const next = [...prev];
-          if (next[assistantIndex]) {
-            next[assistantIndex].content =
-              responseAccumulator || (err?.message || "Sorry, I couldn't reach the AI tutor. Please try again.");
-          }
-          return next;
-        });
-        setIsLoading(false);
-      }
-    );
+    try {
+      await sendChatMessageStream(
+        topicId,
+        query,
+        (chunk) => {
+          responseAccumulator += chunk;
+          setMessages((prev) => {
+            if (prev.length === 0) return prev;
+            const next = [...prev];
+            const lastIdx = next.length - 1;
+            if (next[lastIdx]?.role === 'assistant') {
+              next[lastIdx] = {
+                ...next[lastIdx],
+                content: responseAccumulator,
+              };
+            }
+            setCachedChatHistory(topicId, next);
+            return next;
+          });
+        },
+        () => {
+          setIsLoading(false);
+        },
+        (err) => {
+          setIsLoading(false);
+          setMessages((prev) => {
+            if (prev.length === 0) return prev;
+            const next = [...prev];
+            const lastIdx = next.length - 1;
+            if (next[lastIdx]?.role === 'assistant') {
+              next[lastIdx] = {
+                ...next[lastIdx],
+                content:
+                  responseAccumulator || (err?.message || "Sorry, I couldn't reach the AI tutor. Please try again."),
+              };
+            }
+            setCachedChatHistory(topicId, next);
+            return next;
+          });
+        }
+      );
+    } catch {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg-0">
-      {/* Appbar — restyled to match the redesign's gradient header
-          treatment for visual consistency; chat logic below is untouched. */}
+    <div className="flex min-h-screen flex-col bg-bg-0 relative">
       <header
         className="flex items-center gap-3 px-4 py-3.5"
         style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 160%)' }}
@@ -589,7 +639,11 @@ function AITutorScaffold({
       </header>
 
       {/* Chat area */}
-      <main className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4 space-y-4">
+      <main
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4 space-y-4"
+      >
         {messages.map((msg, index) => {
           const isLast = index === messages.length - 1;
           const isStreamingThis = isLast && isLoading && msg.role === 'assistant';
@@ -622,7 +676,15 @@ function AITutorScaffold({
                     <span className="ml-1 text-[12px] font-semibold text-muted">Zikora is thinking…</span>
                   </div>
                 ) : (
-                  <MathContent content={msg.content} isStreaming={isStreamingThis} className="text-[14.5px]" />
+                  <ErrorBoundary
+                    fallback={
+                      <div className="text-[13px] text-red-500">
+                        Failed to render message content.
+                      </div>
+                    }
+                  >
+                    <MathContent content={msg.content} isStreaming={isStreamingThis} className="text-[14.5px]" />
+                  </ErrorBoundary>
                 )}
               </div>
             </div>
@@ -630,6 +692,19 @@ function AITutorScaffold({
         })}
         <div ref={messagesEndRef} />
       </main>
+
+      {/* Floating scroll to bottom button */}
+      {showScrollBottomBtn && (
+        <button
+          type="button"
+          onClick={() => scrollToBottom('smooth')}
+          aria-label="Scroll to latest messages"
+          className="absolute bottom-20 right-4 z-10 flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold text-white shadow-lg border border-white/20 transition-all hover:bg-ink/90 active:scale-95"
+        >
+          <ChevronDown size={14} strokeWidth={2.5} />
+          <span>Latest</span>
+        </button>
+      )}
 
       {/* Bottom control CTAs if inactive */}
       {!isLoading && messages.length > 2 && (

@@ -1,24 +1,26 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, usePathname } from 'next/navigation';
-import { Bot, MessageCircle, Send, Trash2, X } from 'lucide-react';
+import { Bot, MessageCircle, Send, Trash2, X, ChevronDown } from 'lucide-react';
 import { useFloatingChat } from './FloatingChatContext';
 import {
   getChatHistory,
+  getCachedChatHistory,
+  setCachedChatHistory,
   sendChatMessageStream,
   clearChatHistory,
   ChatError,
   type ChatMessage,
 } from '@/lib/api/chat';
 import { MathContent } from '@/components/student/MathContent';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { toast } from '@/lib/toast';
 
 /**
  * Global floating chat bubble + panel. Rendered once in the (student)
  * layout so it persists across navigation. Button always visible; panel
- * content resets each time it's opened for a given topic context (no
- * cross-session persistence yet — reactive only, per this iteration's scope).
+ * content opens immediately with background history sync.
  */
 export function FloatingChatWidget() {
   const {
@@ -30,16 +32,10 @@ export function FloatingChatWidget() {
     consumeSeedMessage,
     isSuppressed,
   } = useFloatingChat();
-  // On a topic page, default the launcher button to that topic's context
-  // so tapping it "just works" without needing an explicit openChat() call
-  // from the page itself.
   const params = useParams<{ topicId?: string }>();
   const currentPageTopicId = params?.topicId;
   const pathname = usePathname();
 
-  // On the dedicated /student/chat page the full-screen Zikora interface
-  // is already open — rendering the floating launcher there would give
-  // the student two simultaneous chat surfaces, which is confusing.
   const isOnChatPage = pathname === '/student/chat';
 
   return (
@@ -49,15 +45,7 @@ export function FloatingChatWidget() {
           type="button"
           onClick={() => openChat(currentPageTopicId ? { topicId: currentPageTopicId } : undefined)}
           aria-label="Open Zikora AI tutor"
-          // z-[60], not z-50: BottomNav portals directly to document.body,
-          // which places it later in DOM order than this button's normal
-          // (non-portaled) position. Equal z-index falls back to DOM order
-          // for stacking, so at z-50 the nav — despite being visually
-          // "lower" on the page — would render on top of and hide this
-          // button. An explicit higher z-index makes the stacking
-          // unambiguous regardless of DOM order or future rendering changes
-          // to either element.
-          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6 hover:bg-ink/90"
         >
           <MessageCircle size={24} strokeWidth={2} />
         </button>
@@ -75,17 +63,12 @@ export function FloatingChatWidget() {
   );
 }
 
-// Classic three-dot "typing" indicator. Rendered *inside* the same bubble
-// that will hold the streamed response (see the empty-content check in the
-// message loop below) — never a separate element — so there's exactly one
-// bubble per turn at all times, and it visually morphs from dots to text
-// as chunks arrive instead of two elements swapping.
 function ThinkingDots() {
   return (
-    <div className="flex items-center gap-1 py-1">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink/40" style={{ animationDelay: '0ms' }} />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink/40" style={{ animationDelay: '150ms' }} />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink/40" style={{ animationDelay: '300ms' }} />
+    <div className="flex items-center gap-1.5 py-1">
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '0ms' }} />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '150ms' }} />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '300ms' }} />
     </div>
   );
 }
@@ -101,13 +84,19 @@ function FloatingChatPanel({
   onSeedConsumed: () => void;
   onClose: () => void;
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Initialize with cached messages if available so the window opens instantly with 0ms delay
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    return getCachedChatHistory(topicId) || [];
+  });
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
+
+  const scrollContainerRef = useRef<HTMLElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isUserScrolledUpRef = useRef(false);
   const seedSentRef = useRef(false);
   const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -116,6 +105,62 @@ function FloatingChatPanel({
       if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
     };
   }, []);
+
+  // Fetch history in background silently without blocking the UI
+  useEffect(() => {
+    seedSentRef.current = false;
+    let isCurrent = true;
+
+    getChatHistory(topicId)
+      .then((history) => {
+        if (!isCurrent) return;
+        if (history && history.length > 0) {
+          setMessages(history);
+          setCachedChatHistory(topicId, history);
+        }
+      })
+      .catch(() => {
+        // Keep whatever cached messages or empty state we have
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [topicId]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    // If user is more than 60px from bottom, they have scrolled up to read
+    const isScrolledUp = distanceFromBottom > 60;
+    isUserScrolledUpRef.current = isScrolledUp;
+    setShowScrollBottomBtn(isScrolledUp && distanceFromBottom > 120);
+  }, []);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior });
+    }
+    isUserScrolledUpRef.current = false;
+    setShowScrollBottomBtn(false);
+  }, []);
+
+  // Smart scroll effect: DO NOT snatch user's scroll down during streaming if they scrolled up!
+  useEffect(() => {
+    if (isUserScrolledUpRef.current) {
+      // User is reading earlier content — leave viewport exactly where it is!
+      return;
+    }
+    const el = scrollContainerRef.current;
+    if (el) {
+      // Direct scroll assignment keeps up with rapid SSE streaming without jitter
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
   const handleClearClick = () => {
     if (!confirmingClear) {
@@ -127,71 +172,94 @@ function FloatingChatPanel({
     setConfirmingClear(false);
     setIsClearing(true);
     clearChatHistory(topicId)
-      .then(() => setMessages([]))
+      .then(() => {
+        setMessages([]);
+        setCachedChatHistory(topicId, []);
+      })
       .catch(() => toast.error('Could not clear chat', 'Please try again.'))
       .finally(() => setIsClearing(false));
   };
-
-  useEffect(() => {
-    setIsHistoryLoading(true);
-    seedSentRef.current = false;
-    getChatHistory(topicId)
-      .then((history) => setMessages(history))
-      .catch(() => setMessages([]))
-      .finally(() => setIsHistoryLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topicId]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
 
   const submitMessage = async (query: string) => {
     if (!query.trim() || isLoading) return;
     setIsLoading(true);
 
-    const updatedMessages: ChatMessage[] = [...messages, { role: 'user', content: query }];
-    setMessages(updatedMessages);
-    const assistantIndex = updatedMessages.length;
-    setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
+    // Atomically append user message and placeholder assistant bubble
+    setMessages((prev) => {
+      const next: ChatMessage[] = [
+        ...prev,
+        { role: 'user', content: query },
+        { role: 'assistant', content: '' },
+      ];
+      setCachedChatHistory(topicId, next);
+      return next;
+    });
+
+    // Reset user scroll so they see their question and the start of the response
+    isUserScrolledUpRef.current = false;
+    setShowScrollBottomBtn(false);
+    setTimeout(() => scrollToBottom('smooth'), 50);
 
     let responseAccumulator = '';
 
-    await sendChatMessageStream(
-      topicId,
-      query,
-      (chunk) => {
-        responseAccumulator += chunk;
-        setMessages((prev) => {
-          const next = [...prev];
-          if (next[assistantIndex]) next[assistantIndex].content = responseAccumulator;
-          return next;
-        });
-      },
-      () => setIsLoading(false),
-      (err) => {
-        // Drop the empty assistant placeholder — nothing came back.
-        setMessages((prev) => prev.slice(0, assistantIndex));
-        setIsLoading(false);
-        if (err instanceof ChatError && err.status === 429) {
-          toast.error('Daily chat limit reached', err.message);
-        } else if (err instanceof ChatError && err.status >= 500) {
-          toast.error('AI Tutor Temporarily Busy', err.message);
-        } else {
-          toast.error('Message failed to send', err?.message || 'Check your connection and try again.');
-        }
-      },
-    );
+    try {
+      await sendChatMessageStream(
+        topicId,
+        query,
+        (chunk) => {
+          responseAccumulator += chunk;
+          setMessages((prev) => {
+            if (prev.length === 0) return prev;
+            const next = [...prev];
+            const lastIdx = next.length - 1;
+            if (next[lastIdx]?.role === 'assistant') {
+              next[lastIdx] = {
+                ...next[lastIdx],
+                content: responseAccumulator,
+              };
+            }
+            setCachedChatHistory(topicId, next);
+            return next;
+          });
+        },
+        () => {
+          setIsLoading(false);
+        },
+        (err) => {
+          setIsLoading(false);
+          setMessages((prev) => {
+            if (prev.length === 0) return prev;
+            const last = prev[prev.length - 1];
+            // If the assistant message is still completely empty, drop it
+            if (last?.role === 'assistant' && !last.content) {
+              const pruned = prev.slice(0, -1);
+              setCachedChatHistory(topicId, pruned);
+              return pruned;
+            }
+            return prev;
+          });
+          if (err instanceof ChatError && err.status === 429) {
+            toast.error('Daily chat limit reached', err.message);
+          } else if (err instanceof ChatError && err.status >= 500) {
+            toast.error('AI Tutor Temporarily Busy', err.message);
+          } else {
+            toast.error('Message failed to send', err?.message || 'Check your connection and try again.');
+          }
+        },
+      );
+    } catch {
+      setIsLoading(false);
+    }
   };
 
-  // Auto-send the pre-seeded message once, after history has loaded.
+  // Auto-send pre-seeded message immediately without waiting for background fetch
   useEffect(() => {
-    if (!seedMessage || isHistoryLoading || seedSentRef.current) return;
+    if (!seedMessage || seedSentRef.current) return;
     seedSentRef.current = true;
     onSeedConsumed();
     void submitMessage(seedMessage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seedMessage, isHistoryLoading]);
+  }, [seedMessage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,16 +270,13 @@ function FloatingChatPanel({
   };
 
   return (
-    // z-[60], same reasoning as the launcher button above: BottomNav's
-    // portal to document.body would otherwise render on top of this panel's
-    // bottom edge (input box, send button) at equal z-index.
     <div
       className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 sm:items-end sm:justify-end sm:bg-transparent sm:p-6 overflow-hidden overscroll-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="page-enter flex h-[min(85dvh,640px)] max-h-[100dvh] w-full max-w-full sm:max-w-md flex-col overflow-hidden rounded-t-2xl border-t border-x sm:border border-border-2 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
+      <div className="page-enter relative flex h-[min(85dvh,640px)] max-h-[100dvh] w-full max-w-full sm:max-w-md flex-col overflow-hidden rounded-t-2xl border-t border-x sm:border border-border-2 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
         {/* Header */}
         <header
           className="flex items-center gap-3 px-4 py-3.5"
@@ -258,33 +323,28 @@ function FloatingChatPanel({
         </header>
 
         {/* Messages */}
-        <main className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4 space-y-4">
-          {isHistoryLoading ? (
-            <p className="text-center text-[13px] text-muted">Loading…</p>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-              <Bot size={28} strokeWidth={1.5} className="text-ink/30" />
-              <p className="text-[13px] font-semibold text-ink/50">Zikora</p>
-              <p className="text-[12px] text-muted">
-                {topicId
-                  ? 'Ask me anything about this topic.'
-                  : "Ask me anything — study tips, a topic you're stuck on, anything."}
-              </p>
+        <main
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4 space-y-4"
+        >
+          {messages.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center my-auto py-10 px-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-dim border border-brand/20">
+                <Bot size={24} strokeWidth={1.8} className="text-brand" />
+              </div>
+              <div>
+                <p className="text-[15px] font-bold text-ink">Hi, I&apos;m Zikora</p>
+                <p className="text-[13px] text-muted mt-1 max-w-[260px] leading-relaxed">
+                  {topicId
+                    ? 'Ask me anything about this topic — explanations, definitions, or exam questions.'
+                    : "Ask me anything — study tips, tricky concepts, or questions you're stuck on."}
+                </p>
+              </div>
             </div>
           ) : (
             messages.map((msg, index) => {
               const isLastBubble = index === messages.length - 1;
-              // The assistant's placeholder bubble is inserted empty the
-              // moment a question is sent, then filled in as chunks stream
-              // in. While it's still empty and a request is in flight, show
-              // the dots inside this exact bubble instead of a separate
-              // "Thinking…" element — that separate element used to stay
-              // mounted for the entire stream (isLoading only cleared on
-              // completion), so the dots and the growing response text were
-              // both visible at once. Tying the dots to "this bubble has no
-              // content yet" instead of "a request is in flight" means
-              // there's only ever one bubble in this position, and it can
-              // never show both states at the same time.
               const showThinking =
                 msg.role === 'assistant' && isLastBubble && isLoading && msg.content === '';
 
@@ -299,7 +359,7 @@ function FloatingChatPanel({
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 ${
+                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 ${
                       msg.role === 'user'
                         ? 'rounded-br-sm bg-ink text-white'
                         : 'rounded-bl-sm border border-border-2 bg-card text-ink'
@@ -308,14 +368,22 @@ function FloatingChatPanel({
                     {showThinking ? (
                       <ThinkingDots />
                     ) : (
-                      <MathContent
-                        content={msg.content}
-                        allowBlock={false}
-                        isStreaming={msg.role === 'assistant' && isLastBubble && isLoading && msg.content !== ''}
-                        className={`text-[14px] leading-relaxed [&_.math-para]:mb-0 [&_.math-para]:text-[14px] ${
-                          msg.role === 'user' ? 'text-white [&_.math-para]:text-white' : 'text-ink'
-                        }`}
-                      />
+                      <ErrorBoundary
+                        fallback={
+                          <div className="text-[13px] text-red-500">
+                            Failed to render message content.
+                          </div>
+                        }
+                      >
+                        <MathContent
+                          content={msg.content}
+                          allowBlock={false}
+                          isStreaming={msg.role === 'assistant' && isLastBubble && isLoading && msg.content !== ''}
+                          className={`text-[14px] leading-relaxed [&_.math-para]:mb-0 [&_.math-para]:text-[14px] ${
+                            msg.role === 'user' ? 'text-white [&_.math-para]:text-white' : 'text-ink'
+                          }`}
+                        />
+                      </ErrorBoundary>
                     )}
                   </div>
                 </div>
@@ -325,12 +393,25 @@ function FloatingChatPanel({
           <div ref={messagesEndRef} />
         </main>
 
+        {/* Floating "Scroll to bottom" button if user scrolled up to read while stream arrives */}
+        {showScrollBottomBtn && (
+          <button
+            type="button"
+            onClick={() => scrollToBottom('smooth')}
+            aria-label="Scroll to latest messages"
+            className="absolute bottom-16 right-4 z-10 flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold text-white shadow-lg border border-white/20 transition-all hover:bg-ink/90 active:scale-95"
+          >
+            <ChevronDown size={14} strokeWidth={2.5} />
+            <span>Latest</span>
+          </button>
+        )}
+
         {/* Input */}
         <form
           onSubmit={handleSubmit}
           className="border-t border-border px-3 py-2.5 sm:px-4 sm:py-3 w-full max-w-full box-border bg-card shrink-0"
         >
-          <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-3 py-2 sm:px-4 sm:py-2.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-green-600/20 transition-all w-full max-w-full box-border">
+          <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-3 py-2 sm:px-4 sm:py-2.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all w-full max-w-full box-border">
             <input
               type="text"
               value={inputMessage}

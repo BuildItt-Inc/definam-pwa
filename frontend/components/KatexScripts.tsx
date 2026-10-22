@@ -15,7 +15,12 @@ export function KatexScripts() {
         src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
         crossOrigin="anonymous"
         strategy="afterInteractive"
-        onReady={() => setKatexLoaded(true)}
+        onReady={() => {
+          setKatexLoaded(true);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('katex-ready'));
+          }
+        }}
       />
       {katexLoaded && (
         <Script

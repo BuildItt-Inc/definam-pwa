@@ -15,6 +15,17 @@ export class ChatError extends Error {
   }
 }
 
+// In-memory instant cache per topic (or '__global__' for general floating chat)
+const historyCache = new Map<string, ChatMessage[]>();
+
+export function getCachedChatHistory(topicId?: string): ChatMessage[] | null {
+  return historyCache.get(topicId || '__global__') || null;
+}
+
+export function setCachedChatHistory(topicId: string | undefined, messages: ChatMessage[]): void {
+  historyCache.set(topicId || '__global__', messages);
+}
+
 // topicId omitted (or undefined) -> the general floating-chat history
 // (topic_id IS NULL server-side), separate from any topic's own history.
 export async function getChatHistory(topicId?: string): Promise<ChatMessage[]> {
@@ -28,11 +39,13 @@ export async function getChatHistory(topicId?: string): Promise<ChatMessage[]> {
       }
     );
     if (!res.ok) {
-      return [];
+      return historyCache.get(topicId || '__global__') || [];
     }
-    return res.json();
+    const data: ChatMessage[] = await res.json();
+    historyCache.set(topicId || '__global__', data);
+    return data;
   } catch {
-    return [];
+    return historyCache.get(topicId || '__global__') || [];
   }
 }
 
@@ -40,6 +53,7 @@ export async function getChatHistory(topicId?: string): Promise<ChatMessage[]> {
 // the general floating-chat history when topicId is omitted, or that
 // specific topic's history when provided.
 export async function clearChatHistory(topicId?: string): Promise<void> {
+  historyCache.delete(topicId || '__global__');
   const headers = await getAuthHeaders();
   const query = topicId ? `?topic_id=${topicId}` : '';
   const res = await fetch(
@@ -128,7 +142,7 @@ export async function sendChatMessageStream(
 
           try {
             const parsed = JSON.parse(dataStr);
-            if (parsed && parsed.chunk) {
+            if (parsed && typeof parsed.chunk === 'string') {
               onChunk(parsed.chunk);
             }
           } catch {

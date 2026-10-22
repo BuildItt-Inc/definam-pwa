@@ -63,30 +63,23 @@ export const registerSchema = z
         message: 'Username cannot contain spaces',
       })
       .refine((val) => /^[a-zA-Z0-9_]+$/.test(val), {
-        message: 'Username can only contain letters, numbers, and underscores',
+        message: 'Letters and numbers only',
       }),
     password: z
       .string()
       .min(1, 'Password is required')
       .min(8, 'Password must be at least 8 characters')
-      .refine((val) => /[A-Z]/.test(val), {
-        message: 'Password must contain at least one uppercase letter',
-      })
       .refine((val) => /[0-9]/.test(val), {
         message: 'Password must contain at least one number',
       }),
-    confirm_password: z.string().min(1, 'Please confirm your password'),
+    confirm_password: z.string().optional(),
     access_code: z
       .string()
       .min(1, 'Access code is required')
       .transform((val) => val.trim().toUpperCase())
-      .refine((val) => /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/.test(val), {
+      .refine((val) => /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/.test(val) || val.length >= 8, {
         message: 'Invalid access code format',
       }),
-  })
-  .refine((data) => data.password === data.confirm_password, {
-    message: 'Passwords do not match',
-    path: ['confirm_password'],
   });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
