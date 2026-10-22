@@ -5,6 +5,7 @@ import { typographyPlatformScript } from '@/lib/typography';
 import { AppToaster } from '@/components/ui/AppToaster';
 import { CelebrationProvider } from '@/components/ui/celebration/CelebrationContext';
 import AuthSyncListener from '@/components/AuthSyncListener';
+import PWARegistration from '@/components/PWARegistration';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -30,12 +31,23 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Recall PWA',
-  description: 'AI-powered learning for secondary school students',
+  title: 'Recall — Study Smarter',
+  description: 'AI-powered spaced-repetition learning for secondary school students',
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Recall',
+  },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png' },
+      { url: '/icons/icon-192.png' },
+    ],
   },
 };
 
@@ -45,6 +57,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Recall" />
         <link rel="preload" href="/recall-logo2.svg" as="image" type="image/svg+xml" />
         <link rel="preload" href="/recall-logo.svg" as="image" type="image/svg+xml" />
         <script dangerouslySetInnerHTML={{ __html: typographyPlatformScript }} />
@@ -57,6 +74,7 @@ export default function RootLayout({
           <AppToaster />
         </CelebrationProvider>
         <AuthSyncListener />
+        <PWARegistration />
       </body>
     </html>
   );

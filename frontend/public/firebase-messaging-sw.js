@@ -51,3 +51,8 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+// Ensure service worker satisfies PWA installability fetch handler requirement
+self.addEventListener('fetch', () => {
+  // Pass-through to network
+});
