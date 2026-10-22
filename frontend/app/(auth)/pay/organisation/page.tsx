@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   Building2,
   CreditCard,
+  Lock,
   GraduationCap,
   Loader2,
   Mail,
@@ -181,7 +182,7 @@ export default function OrgPayPage() {
                 spellCheck={false}
                 autoCapitalize="none"
                 placeholder="admin@kingsschool.edu.ng"
-                className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
+                className="w-full px-3.5 pt-1.5 pb-3.5 text-[16px] sm:text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
                 {...register('school_email')}
               />
             </div>
@@ -208,7 +209,7 @@ export default function OrgPayPage() {
                 autoComplete="organization"
                 spellCheck={false}
                 placeholder="Kings Secondary School, Lagos"
-                className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
+                className="w-full px-3.5 pt-1.5 pb-3.5 text-[16px] sm:text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
                 {...register('school_name')}
               />
             </div>
@@ -235,7 +236,7 @@ export default function OrgPayPage() {
                 inputMode="numeric"
                 autoComplete="off"
                 placeholder="850"
-                className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
+                className="w-full px-3.5 pt-1.5 pb-3.5 text-[16px] sm:text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
                 {...register('student_count')}
               />
             </div>
@@ -283,20 +284,37 @@ export default function OrgPayPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
+            className="w-full h-[50px] bg-brand hover:bg-brand-dark text-white rounded-xl font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[0.99] transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm mb-3.5 cursor-pointer"
           >
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin" aria-hidden />
-                Redirecting…
+                Initialising payment…
               </>
             ) : (
               <>
-                <CreditCard size={18} strokeWidth={2.2} aria-hidden />
-                Proceed to Payment
+                <Lock size={16} strokeWidth={2.4} aria-hidden />
+                Pay {formatNaira(total)} securely
               </>
             )}
           </button>
+
+          {/* Payment method pills */}
+          <div className="flex items-center justify-center gap-2 mb-3.5">
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+              Card
+            </span>
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+              Bank transfer
+            </span>
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+              USSD
+            </span>
+          </div>
+
+          <p className="text-center text-[11px] text-muted leading-relaxed mb-6 max-w-xs mx-auto">
+            Access codes and admin credentials are delivered immediately to your school email after payment.
+          </p>
 
         </form>
       </main>

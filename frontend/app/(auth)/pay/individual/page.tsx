@@ -2,21 +2,19 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   AlertCircle,
   ArrowLeft,
-  CreditCard,
+  Check,
   Loader2,
-  Mail,
-  Sparkles,
-  User,
+  Lock,
 } from 'lucide-react';
 
 import { initializeIndividualPayment, PaymentError } from '@/lib/api/payment';
-import { InfoCard } from '@/components/ui/InfoCard';
 
 const individualPaySchema = z.object({
   email: z
@@ -68,113 +66,157 @@ function IndividualPayContent() {
 
   const isThreeTerms = selectedTerms === 3;
   const priceDisplay = isThreeTerms ? '₦5,100' : '₦2,000';
-  const termLabel = isThreeTerms ? '3 terms' : '1 term';
-  const durationDesc = isThreeTerms
-    ? 'Full access for 3 terms (360 days) · Save 15%'
-    : 'Full access for 1 term (120 days)';
 
   return (
-    <div className="min-h-screen bg-bg-0">
-      {/* App bar */}
-      <header className="flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0">
+    <div className="min-h-screen bg-bg-0 text-ink">
+      {/* ── App bar ────────────────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-20 flex items-center gap-3 px-4 h-[56px] border-b border-border-2 bg-bg-0 max-w-md mx-auto w-full">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push('/');
+            }
+          }}
           aria-label="Go back"
-          className="flex items-center justify-center w-10 h-10 -ml-1 rounded-lg text-ink hover:bg-ink/6 active:bg-ink/10 transition-colors"
+          className="flex items-center justify-center w-9 h-9 -ml-1 rounded-lg text-ink hover:bg-ink/5 active:bg-ink/10 transition-colors"
         >
-          <ArrowLeft size={20} strokeWidth={2.2} />
+          <ArrowLeft size={19} strokeWidth={2.2} />
         </button>
-        <span className="text-[15px] font-bold text-ink tracking-tight">
-          Individual Student Access
+        <span className="text-[17px] font-bold text-ink tracking-tight">
+          Get access
         </span>
       </header>
 
-      <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
-
-        {/* Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink text-white text-[10px] font-bold uppercase tracking-widest mb-4">
-          <User size={10} strokeWidth={3} aria-hidden />
-          Individual Student License
-        </div>
-
-        <h1 className="font-black text-[26px] text-ink tracking-tight leading-tight mb-1.5">
-          Single-Student Access
+      {/* ── Main content ───────────────────────────────────────────────────── */}
+      <main className="px-5 pt-6 pb-12 max-w-md mx-auto w-full">
+        <h1 className="text-[28px] font-extrabold text-ink tracking-tight leading-tight mb-1.5">
+          Choose your plan
         </h1>
-        <p className="text-[13px] text-ink/50 mb-5">
-          Your personal access code unlocks all subjects &amp; AI tutor on one device.
+        <p className="text-[14px] text-muted mb-6 leading-snug">
+          Pay once. No auto-renew, no surprise charges.
         </p>
 
-        {/* What you get */}
-        <InfoCard
-          icon={User}
-          iconStyle="pill"
-          title="What you get"
-          body="1 access code · Valid on 1 device · Your code is delivered instantly to your email · Use it to register or log in"
-          className="mb-5"
-        />
-
-        {/* Term selector toggle */}
-        <div className="grid grid-cols-2 gap-2.5 p-1 bg-bg-2 border border-border-2 rounded-2xl mb-5">
-          <button
-            type="button"
+        {/* ── Plan options ─────────────────────────────────────────────────── */}
+        <div className="space-y-3 mb-6" role="radiogroup" aria-label="Subscription plan">
+          {/* 1 Term */}
+          <div
             onClick={() => setSelectedTerms(1)}
-            className={[
-              'flex flex-col items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-150 cursor-pointer',
-              !isThreeTerms
-                ? 'bg-ink text-white font-bold shadow-xs'
-                : 'text-ink/60 font-medium',
-            ].join(' ')}
+            role="radio"
+            aria-checked={selectedTerms === 1}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') setSelectedTerms(1);
+            }}
+            className={`relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+              selectedTerms === 1
+                ? 'border-brand bg-white shadow-xs ring-1 ring-brand/20'
+                : 'border-border-2 bg-white hover:border-border'
+            }`}
           >
-            <span className="text-[13px]">Single Term</span>
-            <span className={['text-[11px]', !isThreeTerms ? 'text-white/70' : 'text-ink/40'].join(' ')}>
-              ₦2,000 / term
-            </span>
-          </button>
+            <div className="flex items-center gap-3.5">
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                  selectedTerms === 1
+                    ? 'bg-brand text-white'
+                    : 'border-2 border-border-2'
+                }`}
+              >
+                {selectedTerms === 1 && <Check size={12} strokeWidth={3} />}
+              </div>
+              <div>
+                <span className="block text-[16px] font-bold text-ink leading-tight">
+                  1 term
+                </span>
+                <span className="block text-[13px] text-muted mt-0.5">
+                  120 days of full access
+                </span>
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <span className="block text-[20px] font-black text-ink leading-tight">
+                ₦2,000
+              </span>
+              <span className="block text-[11px] text-muted mt-0.5">
+                about ₦17 a day
+              </span>
+            </div>
+          </div>
 
-          <button
-            type="button"
+          {/* 3 Terms */}
+          <div
             onClick={() => setSelectedTerms(3)}
-            className={[
-              'relative flex flex-col items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-150 cursor-pointer',
-              isThreeTerms
-                ? 'bg-ink text-white font-bold shadow-xs'
-                : 'text-ink/60 font-medium',
-            ].join(' ')}
+            role="radio"
+            aria-checked={selectedTerms === 3}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') setSelectedTerms(3);
+            }}
+            className={`relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+              selectedTerms === 3
+                ? 'border-brand bg-white shadow-xs ring-1 ring-brand/20'
+                : 'border-border-2 bg-white hover:border-border'
+            }`}
           >
-            <span className="absolute -top-2.5 right-2 px-2 py-0.5 bg-brand text-white text-[9px] font-black uppercase tracking-wider rounded-full shadow-xs flex items-center gap-0.5">
-              <Sparkles size={10} strokeWidth={2.5} /> Save 15%
-            </span>
-            <span className="text-[13px]">3 Terms</span>
-            <span className={['text-[11px]', isThreeTerms ? 'text-white/70' : 'text-ink/40'].join(' ')}>
-              ₦5,100 / 3 terms
-            </span>
-          </button>
+            <div className="flex items-center gap-3.5">
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                  selectedTerms === 3
+                    ? 'bg-brand text-white'
+                    : 'border-2 border-border-2'
+                }`}
+              >
+                {selectedTerms === 3 && <Check size={12} strokeWidth={3} />}
+              </div>
+              <div>
+                <span className="block text-[16px] font-bold text-ink leading-tight">
+                  3 terms
+                </span>
+                <span className="inline-block mt-1 px-2.5 py-0.5 rounded-md bg-[#FEF3C7] text-[#92400E] text-[11px] font-bold tracking-tight">
+                  Best value · Save ₦900
+                </span>
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <span className="block text-[20px] font-black text-ink leading-tight">
+                ₦5,100
+              </span>
+              <span className="block text-[11px] text-muted mt-0.5">
+                ₦1,700 a term
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Price card */}
-        <div className="bg-ink rounded-xl px-5 py-7 text-center mb-5">
-          <p className="text-[11px] font-medium text-white/40 mb-2 uppercase tracking-wide">
-            Amount to pay ({termLabel})
-          </p>
-          <p className="font-bold text-[42px] font-black text-white tracking-tight leading-none">
-            {priceDisplay}
-          </p>
-          <p className="text-[11px] text-white/40 mt-2.5">
-            {durationDesc}
-          </p>
-          <p className="mt-3 text-sm leading-relaxed text-white/80">Access starts when your code is activated. Activate your unused code before its expiry date. One payment, no recurring charge; buy another access period to continue after expiry.</p>
-          {isThreeTerms && (
-            <p className="text-[11px] text-jade font-semibold mt-1">
-              ₦6,000 value · You save ₦900
-            </p>
-          )}
+        {/* ── Included features ─────────────────────────────────────────────── */}
+        <div className="mb-6">
+          <p className="text-[13px] font-bold text-ink mb-3">Included</p>
+          <ul className="space-y-2.5">
+            <li className="flex items-center gap-2.5 text-[14px] text-ink font-medium">
+              <Check size={16} strokeWidth={2.5} className="text-brand flex-shrink-0" />
+              All 22 subjects, SS1 to SS3
+            </li>
+            <li className="flex items-center gap-2.5 text-[14px] text-ink font-medium">
+              <Check size={16} strokeWidth={2.5} className="text-brand flex-shrink-0" />
+              Zikora, your AI tutor
+            </li>
+            <li className="flex items-center gap-2.5 text-[14px] text-ink font-medium">
+              <Check size={16} strokeWidth={2.5} className="text-brand flex-shrink-0" />
+              Daily review reminders (Day 1, 3, 7)
+            </li>
+            <li className="flex items-center gap-2.5 text-[14px] text-ink font-medium">
+              <Check size={16} strokeWidth={2.5} className="text-brand flex-shrink-0" />
+              One phone per access code
+            </li>
+          </ul>
         </div>
 
+        {/* ── Payment form ─────────────────────────────────────────────────── */}
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-sm font-semibold text-ink-2">
+          <div className="mb-5">
+            <label htmlFor="email" className="block text-[13px] font-bold text-ink mb-1.5">
               Email address
             </label>
             <input
@@ -184,52 +226,86 @@ function IndividualPayContent() {
               spellCheck={false}
               autoCapitalize="none"
               placeholder="you@example.com"
-              className={`input-field ${errors.email ? 'error' : ''}`}
+              className={`w-full h-[48px] rounded-xl border bg-white px-3.5 text-[16px] sm:text-[14px] text-ink placeholder:text-muted focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition-all ${
+                errors.email ? 'border-danger focus:border-danger focus:ring-danger/20' : 'border-border-2'
+              }`}
               {...register('email')}
             />
-            {errors.email && (
-              <p className="text-xs text-danger">{errors.email.message}</p>
+            {errors.email ? (
+              <p className="text-xs text-danger mt-1.5 font-medium">{errors.email.message}</p>
+            ) : (
+              <p className="text-[12px] text-muted mt-1.5 leading-snug">
+                Your access code is sent here. If you don&apos;t see it, check spam.
+              </p>
             )}
           </div>
 
-          {/* Error banner */}
           {bannerError && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug mb-4"
+              className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug mb-5"
             >
               <AlertCircle size={16} strokeWidth={2} className="flex-shrink-0 mt-0.5" aria-hidden />
               {bannerError}
             </div>
           )}
 
+          {/* Divider */}
+          <div className="border-t border-border-2 my-5" />
+
+          {/* Total row */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[15px] font-semibold text-muted">Total</span>
+            <span className="text-[22px] font-black text-ink tracking-tight">
+              {priceDisplay}
+            </span>
+          </div>
+
           {/* CTA button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-4 cursor-pointer"
+            className="w-full h-[50px] rounded-xl bg-brand hover:bg-brand-dark text-white font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm mb-3.5 cursor-pointer"
           >
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin" aria-hidden />
-                Redirecting…
+                Initialising payment…
               </>
             ) : (
               <>
-                <CreditCard size={18} strokeWidth={2.2} aria-hidden />
-                Proceed to Payment ({priceDisplay})
+                <Lock size={16} strokeWidth={2.4} aria-hidden />
+                Pay {priceDisplay} securely
               </>
             )}
           </button>
 
-          {/* Email note */}
-          <div className="flex items-center justify-center gap-1.5">
-            <Mail size={13} strokeWidth={2} className="text-ink flex-shrink-0" aria-hidden />
-            <p className="text-[12px] text-ink/40">
-              Your access code will be sent to this email after payment
-            </p>
+          {/* Payment method pills */}
+          <div className="flex items-center justify-center gap-2 mb-3.5">
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+              Card
+            </span>
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+              Bank transfer
+            </span>
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+              USSD
+            </span>
           </div>
 
+          <p className="text-center text-[11px] text-muted leading-relaxed mb-6 max-w-xs mx-auto">
+            Access starts when you activate your code, not when you pay.
+          </p>
+
+          <div className="text-center text-[13px] text-muted pt-2 pb-6">
+            Already have a code?{' '}
+            <Link
+              href="/register"
+              className="font-bold text-brand hover:underline underline-offset-2"
+            >
+              Create your account
+            </Link>
+          </div>
         </form>
       </main>
     </div>
