@@ -205,8 +205,13 @@ function FloatingChatPanel({
     // z-[60], same reasoning as the launcher button above: BottomNav's
     // portal to document.body would otherwise render on top of this panel's
     // bottom edge (input box, send button) at equal z-index.
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 sm:items-end sm:justify-end sm:bg-transparent sm:p-6">
-      <div className="page-enter flex h-[min(85vh,640px)] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border border-border-2 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 sm:items-end sm:justify-end sm:bg-transparent sm:p-6 overflow-hidden overscroll-none"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="page-enter flex h-[min(85dvh,640px)] max-h-[100dvh] w-full max-w-full sm:max-w-md flex-col overflow-hidden rounded-t-2xl border-t border-x sm:border border-border-2 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
         {/* Header */}
         <header
           className="flex items-center gap-3 px-4 py-3.5"
@@ -321,21 +326,24 @@ function FloatingChatPanel({
         </main>
 
         {/* Input */}
-        <form onSubmit={handleSubmit} className="border-t border-border px-4 py-3">
-          <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-4 py-2.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-green-600/20 transition-all">
+        <form
+          onSubmit={handleSubmit}
+          className="border-t border-border px-3 py-2.5 sm:px-4 sm:py-3 w-full max-w-full box-border bg-card shrink-0"
+        >
+          <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-3 py-2 sm:px-4 sm:py-2.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-green-600/20 transition-all w-full max-w-full box-border">
             <input
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               disabled={isLoading}
               placeholder="Type your question..."
-              className="flex-1 bg-transparent text-[14px] placeholder:text-faint focus:outline-none text-ink disabled:opacity-50"
+              className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
             />
             <button
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
               aria-label="Send message"
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-dark disabled:bg-bg-2 disabled:text-faint"
+              className="flex h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-dark disabled:bg-bg-2 disabled:text-faint active:scale-95"
             >
               <Send size={15} strokeWidth={2} />
             </button>

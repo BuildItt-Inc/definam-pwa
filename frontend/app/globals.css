@@ -102,6 +102,8 @@
   body {
     --font-ui: var(--font-inter, Inter), system-ui, sans-serif;
     overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
+    overflow-x: hidden;
+    max-width: 100vw;
     margin: 0;
     min-height: 100dvh; /* dvh = dynamic viewport height — fixes mobile chrome bar */
     font-family: var(--font-ui);
@@ -111,7 +113,16 @@
     @apply bg-bg-0 text-ink antialiased;
   }
 
-  input, select, textarea { font-family: inherit; font-size: 1rem; }
+  input, select, textarea {
+    font-family: inherit;
+    font-size: 16px; /* Prevents mobile browser auto-zooming on focus */
+    touch-action: manipulation;
+  }
+  @media (min-width: 640px) {
+    input, select, textarea {
+      font-size: 0.875rem;
+    }
+  }
 
   /* ── Mobile safe area (bottom nav never overlaps OS bar) ─────────────────── */
   .pb-safe {

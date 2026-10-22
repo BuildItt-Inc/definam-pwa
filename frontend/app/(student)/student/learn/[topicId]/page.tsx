@@ -650,23 +650,26 @@ function AITutorScaffold({
       )}
 
       {/* Active chat input */}
-      <form onSubmit={handleSubmit} className="border-t border-border px-4 py-3 bg-bg-0">
-        <div className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-0 px-3 py-2.5 focus-within:border-brand transition-colors">
+      <form
+        onSubmit={handleSubmit}
+        className="border-t border-border px-3 py-2.5 sm:px-4 sm:py-3 bg-bg-0 w-full max-w-full box-border shrink-0"
+      >
+        <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-3 py-2 sm:px-4 sm:py-2.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all w-full max-w-full box-border">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             disabled={isLoading}
             placeholder="Type your question about this topic..."
-            className="flex-1 bg-transparent text-[15px] placeholder:text-gray-400 focus:outline-none text-ink disabled:opacity-50"
+            className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
           />
           <button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
-            className="flex-shrink-0 text-brand disabled:text-gray-300 hover:opacity-80 transition-opacity"
+            className="flex h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white hover:bg-brand-dark disabled:bg-bg-2 disabled:text-faint transition-colors active:scale-95"
             aria-label="Send message"
           >
-            <MessageSquare size={18} strokeWidth={1.5} />
+            <Send size={15} strokeWidth={2} />
           </button>
         </div>
       </form>
