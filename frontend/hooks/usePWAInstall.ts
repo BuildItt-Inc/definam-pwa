@@ -7,10 +7,17 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+declare global {
+  interface Window {
+    __pwaPrompt?: BeforeInstallPromptEvent | null;
+  }
+}
+
 /**
- * Robust PWA installation hook supporting Android Chrome, Samsung Internet, and iOS Safari.
- * - Always provides actionable install flow (`canInstall = true` on mobile when not standalone).
- * - Triggers native prompt when available; falls back to tailored step-by-step instructions.
+ * Universal PWA installation hook.
+ * - Captures native install prompts across Android Chrome and Samsung Internet.
+ * - Handles early `beforeinstallprompt` events captured by layout script.
+ * - Supports manual iOS Safari home screen installation instructions.
  */
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -42,22 +49,46 @@ export function usePWAInstall() {
       return;
     }
 
-    // On mobile devices that are not yet installed, user CAN install
-    if (isIOSDevice || isAndroidDevice) {
+    // 1. Check if early layout script already captured beforeinstallprompt
+    if (window.__pwaPrompt) {
+      setDeferredPrompt(window.__pwaPrompt);
       setCanInstall(true);
     }
 
+    // 2. Listen for future beforeinstallprompt event
     const promptHandler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      window.__pwaPrompt = promptEvent;
+      setDeferredPrompt(promptEvent);
       setCanInstall(true);
     };
 
     window.addEventListener('beforeinstallprompt', promptHandler);
+    window.addEventListener('pwa-prompt-ready', () => {
+      if (window.__pwaPrompt) {
+        setDeferredPrompt(window.__pwaPrompt);
+        setCanInstall(true);
+      }
+    });
+
+    // 3. On iOS, manual installation is always possible
+    if (isIOSDevice) {
+      setCanInstall(true);
+    }
+
+    // 4. On Android devices, if beforeinstallprompt hasn't fired after 2 seconds,
+    // ensure install option is still visible via fallback modal
+    const androidTimer = setTimeout(() => {
+      if (isAndroidDevice && !isStandalone) {
+        setCanInstall(true);
+      }
+    }, 2000);
 
     const installedHandler = () => {
       setCanInstall(false);
       setDeferredPrompt(null);
+      window.__pwaPrompt = null;
       setIsInstalled(true);
       setShowInstallModal(false);
     };
@@ -65,27 +96,31 @@ export function usePWAInstall() {
     window.addEventListener('appinstalled', installedHandler);
 
     return () => {
+      clearTimeout(androidTimer);
       window.removeEventListener('beforeinstallprompt', promptHandler);
       window.removeEventListener('appinstalled', installedHandler);
     };
   }, []);
 
   const promptInstall = async () => {
-    if (deferredPrompt) {
+    const activePrompt = deferredPrompt || window.__pwaPrompt;
+
+    if (activePrompt) {
       try {
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
+        await activePrompt.prompt();
+        const choice = await activePrompt.userChoice;
         if (choice.outcome === 'accepted') {
           setCanInstall(false);
           setDeferredPrompt(null);
+          window.__pwaPrompt = null;
           return;
         }
       } catch (err) {
-        console.warn('Native install prompt failed, falling back to instructions:', err);
+        console.warn('Native prompt failed, showing install instructions:', err);
       }
     }
 
-    // If native prompt is unavailable or deferredPrompt wasn't captured, show device instructions
+    // If native prompt unavailable or on iOS, open tailored instructions
     setShowInstallModal(true);
   };
 

@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import LandingPage from '@/components/landing/LandingPage';
 
 // `export const metadata` requires a Server Component — the actual page body
@@ -28,8 +28,6 @@ export const metadata: Metadata = {
     type: 'website',
   },
 };
-
-export const viewport: Viewport = {};
 
 export default function Page() {
   return <LandingPage />;

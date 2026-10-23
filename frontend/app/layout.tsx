@@ -69,6 +69,18 @@ export default function RootLayout({
         <link rel="preload" href="/recall-logo2.svg" as="image" type="image/svg+xml" />
         <link rel="preload" href="/recall-logo.svg" as="image" type="image/svg+xml" />
         <script dangerouslySetInnerHTML={{ __html: typographyPlatformScript }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.__pwaPrompt = null;
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.__pwaPrompt = e;
+                window.dispatchEvent(new Event('pwa-prompt-ready'));
+              });
+            `,
+          }}
+        />
       </head>
       <body
         className={`${inter.variable} ${roboto.variable} min-h-screen bg-bg-0 font-sans text-ink antialiased`}

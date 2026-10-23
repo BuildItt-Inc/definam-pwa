@@ -67,10 +67,9 @@ export default function LandingPage() {
       const isStandalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-      const isPwaParam = window.location.search.includes('source=pwa');
 
-      if (isStandalone || isPwaParam) {
-        // If student has already logged in or completed setup, open their workspace directly
+      // When launched from Home Screen as an installed app, open the student workspace
+      if (isStandalone) {
         const hasProfile = !!localStorage.getItem('recall_student_profile');
         if (hasProfile) {
           router.replace('/student');

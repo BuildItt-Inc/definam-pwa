@@ -6,6 +6,7 @@ import Link from 'next/link';
 import RecallLogo from '@/components/ui/RecallLogo';
 import { Menu, X } from 'lucide-react';
 import { NAV_LINKS } from './navLinks';
+import { InstallAppButton } from '@/components/ui/InstallAppButton';
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -72,6 +73,7 @@ export default function MobileNav() {
               {NAV_LINKS.map((link) => <a key={link.href} href={link.href} onClick={close} className="rounded-lg px-3 py-3 text-base font-medium hover:bg-white/10">{link.label}</a>)}
             </div>
             <div className="mt-auto flex flex-col gap-3 border-t border-white/10 px-5 py-6">
+              <InstallAppButton variant="solid" className="w-full justify-center py-3 bg-white text-ink hover:bg-white/90 text-[14px]" />
               <Link href="/join" onClick={close} className="rounded-xl border border-white/25 px-4 py-3 text-center font-semibold">Enter school code</Link>
               <Link href="/pay/individual" onClick={close} className="rounded-xl bg-brand-dark px-4 py-3 text-center font-semibold hover:bg-green-900">Get individual access</Link>
               <Link href="/login" onClick={close} className="rounded-lg px-4 py-3 text-center font-medium text-white/85 hover:bg-white/10">Log in</Link>

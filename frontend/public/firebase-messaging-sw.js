@@ -96,8 +96,3 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
-
-// Pass-through fetch handler for service worker lifecycle
-self.addEventListener('fetch', () => {
-  // Handled by workbox or network
-});
