@@ -13,7 +13,7 @@ import { useSpotlight } from '@/hooks/useSpotlight';
 import { SUBJECT_ICONS, subjectIcon, subjectColor } from '@/lib/utils/subjects';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { getStudentProfile, getSelectedSubjectNames } from '@/lib/utils/studentProfile';
-import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
+import { AppInstallModal } from '@/components/ui/AppInstallModal';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -144,8 +144,8 @@ export default function StudentHomePage() {
   const {
     canInstall,
     promptInstall,
-    showIOSInstructions,
-    setShowIOSInstructions,
+    showInstallModal,
+    setShowInstallModal,
   } = usePWAInstall();
 
   useEffect(() => {
@@ -274,9 +274,9 @@ export default function StudentHomePage() {
           </div>
         )}
 
-        <IOSInstallModal
-          isOpen={showIOSInstructions}
-          onClose={() => setShowIOSInstructions(false)}
+        <AppInstallModal
+          isOpen={showInstallModal}
+          onClose={() => setShowInstallModal(false)}
         />
 
         {/* Stats row — removed duplicate streak; shows subjects + top topic mastery */}

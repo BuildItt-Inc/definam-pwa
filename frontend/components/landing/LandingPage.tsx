@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, MotionConfig } from 'framer-motion';
 import LandingNav from '@/components/landing/LandingNav';
 import LandingHero from '@/components/landing/LandingHero';
@@ -58,6 +60,24 @@ const INCLUDED = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+      const isPwaParam = window.location.search.includes('source=pwa');
+
+      if (isStandalone || isPwaParam) {
+        // If student has already logged in or completed setup, open their workspace directly
+        const hasProfile = !!localStorage.getItem('recall_student_profile');
+        if (hasProfile) {
+          router.replace('/student');
+        }
+      }
+    }
+  }, [router]);
   return (
     <MotionConfig reducedMotion="user">
     <div className="landing-page bg-white text-ink">

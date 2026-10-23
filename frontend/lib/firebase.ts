@@ -63,6 +63,7 @@ export async function requestNotificationPermissionAndGetToken(): Promise<string
     return null;
   }
 
+  // Must be called directly within user gesture (critical for iOS)
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
     return null;
@@ -74,23 +75,27 @@ export async function requestNotificationPermissionAndGetToken(): Promise<string
   try {
     const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || DEFAULT_VAPID_KEY;
     let serviceWorkerRegistration: ServiceWorkerRegistration | undefined;
+
     if ('serviceWorker' in navigator) {
-      try {
-        serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js');
-      } catch {
-        try {
-          serviceWorkerRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        } catch (e) {
-          console.warn('SW register notice:', e);
-        }
-      }
       try {
         const readyReg = await navigator.serviceWorker.ready;
         if (readyReg) {
           serviceWorkerRegistration = readyReg;
         }
       } catch (e) {
-        console.warn('SW ready notice:', e);
+        console.warn('SW ready check notice:', e);
+      }
+
+      if (!serviceWorkerRegistration) {
+        try {
+          serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js');
+        } catch {
+          try {
+            serviceWorkerRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          } catch (e) {
+            console.warn('SW register notice:', e);
+          }
+        }
       }
     }
 
@@ -98,6 +103,7 @@ export async function requestNotificationPermissionAndGetToken(): Promise<string
       vapidKey,
       serviceWorkerRegistration,
     });
+
     if (token) {
       setStoredFcmToken(token);
       return token;
@@ -120,4 +126,46 @@ export function onForegroundMessage(
     const data = (payload.data as Record<string, string>) || {};
     callback({ title, body, data });
   });
+}
+
+/**
+ * Fires a local test notification directly via the Service Worker.
+ * Ensures the device hardware/OS notification pipeline triggers immediately.
+ */
+export async function showLocalNotification(
+  title: string,
+  options?: NotificationOptions
+): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+
+  if (!('Notification' in window) || Notification.permission !== 'granted') {
+    return false;
+  }
+
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && 'showNotification' in reg) {
+        await reg.showNotification(title, {
+          icon: '/icons/icon-192.png',
+          badge: '/icons/icon-192.png',
+          ...options,
+        });
+        return true;
+      }
+    }
+  } catch (e) {
+    console.warn('Local service worker notification failed:', e);
+  }
+
+  // Fallback to constructor on platforms that permit it
+  try {
+    new Notification(title, {
+      icon: '/icons/icon-192.png',
+      ...options,
+    });
+    return true;
+  } catch (_) {
+    return false;
+  }
 }

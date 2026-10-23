@@ -9,6 +9,7 @@ import {
   requestNotificationPermissionAndGetToken,
   getStoredFcmToken,
   clearStoredFcmToken,
+  showLocalNotification,
 } from '@/lib/firebase';
 import {
   registerNotificationToken,
@@ -18,6 +19,8 @@ import {
 import { toast } from '@/lib/toast';
 import type { UserMe } from '@/types/auth';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { AppInstallModal } from '@/components/ui/AppInstallModal';
 
 const APP_VERSION = '0.1.0';
 
@@ -38,6 +41,7 @@ function SettingsSkeleton() {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { isIOS, isInstalled, showInstallModal, setShowInstallModal } = usePWAInstall();
   const [me, setMe] = useState<UserMe | null>(null);
   const [schoolName, setSchoolName] = useState('');
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -73,14 +77,25 @@ export default function SettingsPage() {
         setNotifEnabled(false);
         toast.info('Notifications disabled');
       } else {
+        // On iOS, Web Push is only supported if added to the Home Screen
+        if (isIOS && !isInstalled) {
+          setShowInstallModal(true);
+          toast.info('On iPhone, please add Recall to your Home Screen first to enable notifications.');
+          setNotifLoading(false);
+          return;
+        }
+
         const token = await requestNotificationPermissionAndGetToken();
         if (token) {
-          await registerNotificationToken(token, 'web');
+          await registerNotificationToken(token, isIOS ? 'ios_web' : 'web');
           setNotifEnabled(true);
           toast.success('Notifications enabled');
         } else {
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'denied') {
             toast.error('Notifications blocked by browser. Please enable permissions in site settings.');
+          } else if (isIOS && !isInstalled) {
+            setShowInstallModal(true);
+            toast.info('Please add Recall to your Home Screen first.');
           } else {
             toast.error('Could not enable notifications. Please grant permission.');
           }
@@ -93,11 +108,28 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSendTestNotification() {
+  async function handleSendTestNotification(delaySec: number = 0) {
     setTestNotifLoading(true);
     try {
-      await sendTestNotification();
-      toast.success('Test notification sent. Check your device.');
+      if (delaySec > 0) {
+        toast.info(`Test notification will fire in ${delaySec}s! Lock your phone or switch apps now.`);
+        await new Promise((resolve) => setTimeout(resolve, delaySec * 1000));
+      }
+
+      // 1. Direct on-device notification via Service Worker
+      const localDelivered = await showLocalNotification('Recall Test Notification', {
+        body: 'Push notifications are working on this device! 🎯',
+        tag: 'recall-test-alert',
+      });
+
+      // 2. Also trigger cloud backend push delivery
+      await sendTestNotification().catch(() => {});
+
+      if (localDelivered) {
+        toast.success('Test notification delivered to your device!');
+      } else {
+        toast.success('Test notification sent. Check your notification center.');
+      }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to send test notification');
     } finally {
@@ -242,19 +274,49 @@ export default function SettingsPage() {
               {notifLoading ? 'Updating...' : notifEnabled ? 'Enabled' : 'Enable'}
             </button>
           </div>
-          {notifEnabled && (
-            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-2.5 flex items-center justify-between gap-3">
-              <span className="text-[12px] text-muted truncate">
-                Verify notifications on this device
-              </span>
+          {isIOS && !isInstalled && (
+            <div className="border-t border-border-2 bg-amber-50/70 px-4 py-3">
+              <p className="text-[12px] font-semibold text-amber-900 leading-snug">
+                iPhone Requirement: Apple requires adding Recall to your Home Screen before notifications can be delivered.
+              </p>
               <button
                 type="button"
-                onClick={handleSendTestNotification}
-                disabled={testNotifLoading}
-                className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
+                onClick={() => setShowInstallModal(true)}
+                className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] font-bold text-ink underline"
               >
-                {testNotifLoading ? 'Sending…' : 'Send Test Notification'}
+                View iPhone Home Screen Guide →
               </button>
+            </div>
+          )}
+          {notifEnabled && (
+            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[12px] text-muted truncate">
+                  Test instant alert
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleSendTestNotification(0)}
+                  disabled={testNotifLoading}
+                  className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {testNotifLoading ? 'Testing…' : 'Send Test Now'}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 border-t border-border/50 pt-2">
+                <span className="text-[12px] text-muted truncate">
+                  Test lock screen banner (5s delay)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleSendTestNotification(5)}
+                  disabled={testNotifLoading}
+                  className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {testNotifLoading ? 'Scheduling…' : 'Test Lock Screen'}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -311,6 +373,11 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      <AppInstallModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+      />
     </div>
   );
 }

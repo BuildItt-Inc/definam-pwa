@@ -2,31 +2,34 @@
 
 import { Download } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
+import { AppInstallModal } from '@/components/ui/AppInstallModal';
 
 interface InstallAppButtonProps {
   /** Visual variant */
   variant?: 'solid' | 'outline' | 'ghost';
   className?: string;
+  label?: string;
 }
 
 /**
- * Shows a native "Add to Home Screen" button when the browser supports
- * the Web App install prompt AND the app hasn't been installed yet.
- * Renders nothing when already running in standalone mode or the browser
- * doesn't fire `beforeinstallprompt` (e.g. Safari iOS — prompt there is
- * manual via the Share sheet, so we keep the button hidden rather than
- * show a non-functional one).
+ * Universal Install App Button for Android (Chrome, Samsung Internet) and iOS (Safari).
+ * Always accessible when the user is on mobile and hasn't yet installed Recall.
  */
-export function InstallAppButton({ variant = 'solid', className = '' }: InstallAppButtonProps) {
-  const { 
-    canInstall, 
-    promptInstall, 
-    showIOSInstructions, 
-    setShowIOSInstructions 
+export function InstallAppButton({
+  variant = 'solid',
+  className = '',
+  label = 'Install App',
+}: InstallAppButtonProps) {
+  const {
+    canInstall,
+    isInstalled,
+    promptInstall,
+    showInstallModal,
+    setShowInstallModal,
   } = usePWAInstall();
 
-  if (!canInstall) return null;
+  // If already installed, hide the button
+  if (isInstalled || !canInstall) return null;
 
   const base =
     'inline-flex items-center gap-2 rounded-[16px] px-4 py-2 text-[13px] font-bold transition-all active:scale-95';
@@ -46,12 +49,12 @@ export function InstallAppButton({ variant = 'solid', className = '' }: InstallA
         aria-label="Install Recall as an app"
       >
         <Download size={15} strokeWidth={2} />
-        Install App
+        {label}
       </button>
 
-      <IOSInstallModal 
-        isOpen={showIOSInstructions}
-        onClose={() => setShowIOSInstructions(false)}
+      <AppInstallModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
       />
     </>
   );

@@ -3,7 +3,7 @@
   "short_name": "Recall",
   "description": "AI-powered spaced-repetition learning for secondary school students",
   "id": "/",
-  "start_url": "/student",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
