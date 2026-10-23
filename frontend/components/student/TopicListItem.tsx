@@ -44,13 +44,13 @@ export function TopicListItem({ topic, href, onClick }: TopicListItemProps) {
         </span>
       </span>
 
-      {/* Action badge */}
+      {/* Action badge — sleek executive monochrome to prevent visual color clutter */}
       {studied ? (
-        <span className="flex-shrink-0 rounded-[6px] bg-brand-dim border border-brand/20 px-2.5 py-1 text-[12px] font-bold text-brand">
-          Study →
+        <span className="flex-shrink-0 rounded-[7px] border border-border-2 bg-bg-1 px-2.5 py-1 text-[12px] font-bold text-ink">
+          Review →
         </span>
       ) : (
-        <span className="flex-shrink-0 rounded-[6px] bg-brand px-3 py-1 text-[12px] font-bold text-white shadow-xs">
+        <span className="flex-shrink-0 rounded-[7px] bg-ink px-3 py-1 text-[12px] font-bold text-white shadow-xs">
           Start →
         </span>
       )}

@@ -55,7 +55,7 @@ function RegisterForm() {
         access_code: accessCode.trim().toUpperCase(),
       });
       sessionStorage.setItem('celebrate_login', '1');
-      router.push('/student');
+      router.push('/onboarding');
     } catch (err) {
       if (err instanceof ApiError) {
         if (

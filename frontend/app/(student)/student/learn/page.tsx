@@ -6,6 +6,8 @@ import { Search, BookOpen } from 'lucide-react';
 import { getSubjects, getCachedSubjects } from '@/lib/api/topics';
 import type { Subject } from '@/types/topics';
 import { SubjectCard } from '@/components/student/SubjectCard';
+import Link from 'next/link';
+import { getSelectedSubjectNames } from '@/lib/utils/studentProfile';
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
 

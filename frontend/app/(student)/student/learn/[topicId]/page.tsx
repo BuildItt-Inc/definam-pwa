@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send, Check, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send, Check, ChevronDown, ArrowUp } from 'lucide-react';
 import {
   getChaptersBySubjectName,
   getTopics,
@@ -18,6 +18,7 @@ import { LearningStep } from '@/components/student/LearningStep';
 import { PracticeQuestion } from '@/components/student/PracticeQuestion';
 import { MathContent } from '@/components/student/MathContent';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { getFollowUpSuggestions } from '@/lib/utils/chatFollowUps';
 import {
   getChatHistory,
   getCachedChatHistory,
@@ -479,7 +480,7 @@ function AITutorScaffold({
     return [
       {
         role: 'assistant',
-        content: `Good work on the practice questions! What part of ${topicTitle} is still confusing you? Let's discuss it!`,
+        content: `Hi Francis. Ask me anything about this topic, or tell me the part you're stuck on.`,
       },
     ];
   });
@@ -549,10 +550,8 @@ function AITutorScaffold({
     }
   }, [messages, isLoading]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const query = inputMessage.trim();
-    if (!query || isLoading) return;
+  const submitMessage = async (query: string) => {
+    if (!query.trim() || isLoading) return;
 
     setInputMessage('');
     setIsLoading(true);
@@ -620,29 +619,40 @@ function AITutorScaffold({
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void submitMessage(inputMessage);
+  };
+
+  const followUpSuggestions = !isLoading ? getFollowUpSuggestions(messages, topicTitle) : [];
+
   return (
-    <div className="flex min-h-screen flex-col bg-bg-0 relative">
-      <header
-        className="flex items-center gap-3 px-4 py-3.5"
-        style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 160%)' }}
-      >
-        <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-white/70 hover:text-white">
-          <ArrowLeft size={20} strokeWidth={1.5} />
+    <div className="flex min-h-screen flex-col bg-[#fafbfa] relative">
+      {/* Appbar matching Image 1 */}
+      <header className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200">
+        <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-ink/70 hover:text-ink -ml-1 p-1">
+          <ArrowLeft size={20} strokeWidth={2} />
         </button>
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
-          <Bot size={18} strokeWidth={1.5} className="text-white" />
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#15803d] text-white font-bold text-base shadow-xs">
+          Z
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-[16px] text-white">Zikora</p>
-          <p className="truncate text-[13px] text-white/50">{topicTitle}</p>
+          <p className="font-bold text-[15.5px] text-ink leading-tight">Zikora</p>
+          <p className="text-[12px] text-muted">Your AI tutor</p>
         </div>
       </header>
+
+      {/* Context pill banner matching Image 1 */}
+      <div className="mx-4 mt-3 mb-1 flex items-center gap-2 rounded-xl bg-[#eff4ff] border border-blue-100 px-3.5 py-2.5 text-[13px] font-semibold text-[#1e40af]">
+        <BookOpen size={15} className="text-blue-600 flex-shrink-0" />
+        <span className="truncate">Helping with: {topicTitle}</span>
+      </div>
 
       {/* Chat area */}
       <main
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4 space-y-4"
+        className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-3 space-y-4"
       >
         {messages.map((msg, index) => {
           const isLast = index === messages.length - 1;
@@ -650,43 +660,55 @@ function AITutorScaffold({
           const isThinking = isStreamingThis && !msg.content;
 
           return (
-            <div
-              key={index}
-              className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : ''}`}
-            >
-              {msg.role !== 'user' && (
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-dim border border-brand/20">
-                  <Bot size={16} strokeWidth={1.8} className="text-brand" />
+            <div key={index} className="space-y-2">
+              <div
+                className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : ''}`}
+              >
+                <div
+                  className={`max-w-[88%] rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed shadow-xs ${
+                    msg.role === 'user'
+                      ? 'bg-[#15803d] text-white font-medium rounded-tr-sm'
+                      : 'border border-gray-200 bg-white text-ink rounded-tl-sm'
+                  }`}
+                >
+                  {msg.role === 'user' ? (
+                    <span>{msg.content}</span>
+                  ) : isThinking ? (
+                    <div className="flex items-center gap-1.5 py-1 text-xs text-muted">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#15803d]" style={{ animationDelay: '0ms' }} />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#15803d]" style={{ animationDelay: '150ms' }} />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#15803d]" style={{ animationDelay: '300ms' }} />
+                      <span className="ml-1 text-[12px] font-semibold text-muted">Zikora is thinking…</span>
+                    </div>
+                  ) : (
+                    <ErrorBoundary
+                      fallback={
+                        <div className="text-[13px] text-red-500">
+                          Failed to render message content.
+                        </div>
+                      }
+                    >
+                      <MathContent content={msg.content} isStreaming={isStreamingThis} className="text-[14.5px]" />
+                    </ErrorBoundary>
+                  )}
+                </div>
+              </div>
+
+              {/* Auto follow-up question pills directly beneath assistant reply (Image 1) */}
+              {isLast && msg.role === 'assistant' && !isLoading && followUpSuggestions.length > 0 && (
+                <div className="flex flex-col items-start gap-2 pt-1 pl-1">
+                  {followUpSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => void submitMessage(suggestion)}
+                      className="rounded-full border border-[#15803d] bg-white px-4 py-2 text-[13.5px] font-semibold text-[#15803d] shadow-2xs hover:bg-[#ecfdf5] active:scale-95 transition-all text-left"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
                 </div>
               )}
-              <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed shadow-xs ${
-                  msg.role === 'user'
-                    ? 'rounded-tr-sm bg-ink text-white font-medium'
-                    : 'rounded-tl-sm border border-border bg-card text-ink'
-                }`}
-              >
-                {msg.role === 'user' ? (
-                  <span>{msg.content}</span>
-                ) : isThinking ? (
-                  <div className="flex items-center gap-1.5 py-1 text-xs text-muted">
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '0ms' }} />
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '150ms' }} />
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '300ms' }} />
-                    <span className="ml-1 text-[12px] font-semibold text-muted">Zikora is thinking…</span>
-                  </div>
-                ) : (
-                  <ErrorBoundary
-                    fallback={
-                      <div className="text-[13px] text-red-500">
-                        Failed to render message content.
-                      </div>
-                    }
-                  >
-                    <MathContent content={msg.content} isStreaming={isStreamingThis} className="text-[14.5px]" />
-                  </ErrorBoundary>
-                )}
-              </div>
             </div>
           );
         })}
@@ -708,43 +730,43 @@ function AITutorScaffold({
 
       {/* Bottom control CTAs if inactive */}
       {!isLoading && messages.length > 2 && (
-        <div className="flex gap-2 justify-center bg-bg-0 border-t border-border px-4 py-3 pb-safe">
+        <div className="flex gap-2 justify-center bg-white border-t border-border px-4 py-2.5 pb-safe">
           <button
             onClick={onBrowse}
-            className="btn-primary flex-1 shadow-brand-sm"
+            className="flex-1 rounded-xl bg-ink text-white py-2.5 text-xs font-bold hover:bg-ink/90 active:scale-95 transition-all"
           >
             Browse Topics
           </button>
           <button
             onClick={onHome}
-            className="btn-secondary flex-1"
+            className="flex-1 rounded-xl border border-gray-300 bg-white text-ink py-2.5 text-xs font-bold hover:bg-gray-50 active:scale-95 transition-all"
           >
             Back Home
           </button>
         </div>
       )}
 
-      {/* Active chat input */}
+      {/* Input bar matching Image 1 */}
       <form
         onSubmit={handleSubmit}
-        className="border-t border-border px-3 py-2.5 sm:px-4 sm:py-3 bg-bg-0 w-full max-w-full box-border shrink-0"
+        className="border-t border-border px-4 py-3 bg-white w-full max-w-full box-border shrink-0"
       >
-        <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-3 py-2 sm:px-4 sm:py-2.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all w-full max-w-full box-border">
+        <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-1.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all w-full max-w-full box-border">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             disabled={isLoading}
-            placeholder="Type your question about this topic..."
-            className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
+            placeholder="Ask Zikora"
+            className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14.5px] leading-normal placeholder:text-gray-400 focus:outline-none text-ink disabled:opacity-50 touch-manipulation py-1.5"
           />
           <button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
-            className="flex h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white hover:bg-brand-dark disabled:bg-bg-2 disabled:text-faint transition-colors active:scale-95"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#15803d] text-white hover:bg-[#166534] disabled:bg-gray-200 disabled:text-gray-400 transition-colors active:scale-95"
             aria-label="Send message"
           >
-            <Send size={15} strokeWidth={2} />
+            <ArrowUp size={18} strokeWidth={2.5} />
           </button>
         </div>
       </form>

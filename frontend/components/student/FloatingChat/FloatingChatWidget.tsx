@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, usePathname } from 'next/navigation';
-import { Bot, MessageCircle, Send, Trash2, X, ChevronDown } from 'lucide-react';
+import { Bot, MessageCircle, ArrowUp, Trash2, X, ChevronDown } from 'lucide-react';
 import { useFloatingChat } from './FloatingChatContext';
 import {
   getChatHistory,
@@ -14,6 +14,7 @@ import {
   type ChatMessage,
 } from '@/lib/api/chat';
 import { MathContent } from '@/components/student/MathContent';
+import { getFollowUpSuggestions } from '@/lib/utils/chatFollowUps';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { toast } from '@/lib/toast';
 
@@ -417,7 +418,7 @@ function FloatingChatPanel({
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               disabled={isLoading}
-              placeholder="Type your question..."
+              placeholder="Ask Zikora"
               className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
             />
             <button
@@ -426,7 +427,7 @@ function FloatingChatPanel({
               aria-label="Send message"
               className="flex h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-dark disabled:bg-bg-2 disabled:text-faint active:scale-95"
             >
-              <Send size={15} strokeWidth={2} />
+              <ArrowUp size={16} strokeWidth={2.5} />
             </button>
           </div>
         </form>

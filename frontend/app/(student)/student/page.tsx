@@ -12,6 +12,7 @@ import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { SUBJECT_ICONS, subjectIcon, subjectColor } from '@/lib/utils/subjects';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { getStudentProfile, getSelectedSubjectNames } from '@/lib/utils/studentProfile';
 import { IOSInstallModal } from '@/components/ui/IOSInstallModal';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -193,7 +194,9 @@ export default function StudentHomePage() {
 
   if (!data) return <HomeSkeleton />;
 
+  const profile = getStudentProfile();
   const { student_name, school_name, streak_days, completion_percent, recall_queue, recent_topics } = data;
+  const displayName = profile?.name || student_name;
   const hasStarted = recent_topics.some((t) => (t.mastery_percent ?? 0) > 0);
 
   return (
@@ -263,7 +266,7 @@ export default function StudentHomePage() {
             </div>
             <button
               onClick={promptInstall}
-              className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white active:scale-95 transition-transform"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-white active:scale-95 transition-transform"
             >
               <Download size={13} strokeWidth={2.5} />
               Install
