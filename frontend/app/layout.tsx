@@ -72,6 +72,23 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              if (window.location.pathname === '/') {
+                try {
+                  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                  var hasProfile = !!localStorage.getItem('recall_student_profile');
+                  if (isStandalone || hasProfile) {
+                    document.documentElement.style.visibility = 'hidden';
+                    document.documentElement.style.background = '#111827';
+                    window.location.replace('/student');
+                  }
+                } catch(e) {}
+              }
+            `,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
               window.__pwaPrompt = null;
               window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
