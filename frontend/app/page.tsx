@@ -30,5 +30,27 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <LandingPage />;
+  return (
+    <>
+      {/* Zero-latency early redirect for installed PWA / returning students.
+          Runs before React mounts or DOM paints to guarantee no landing page flash. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+                var hasProfile = !!localStorage.getItem('recall_student_profile');
+                if (isStandalone && hasProfile) {
+                  document.documentElement.style.display = 'none';
+                  window.location.replace('/student');
+                }
+              } catch(e) {}
+            })();
+          `,
+        }}
+      />
+      <LandingPage />
+    </>
+  );
 }

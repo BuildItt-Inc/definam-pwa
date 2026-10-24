@@ -243,7 +243,20 @@ function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
 
 export default function ProgressPage() {
   const [data, setData] = useState<ProgressData | null>(() => getCachedProgressData());
+  const [profile, setProfile] = useState(() => getStudentProfile());
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setProfile(getStudentProfile());
+    };
+    window.addEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
+    window.addEventListener('focus', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
+      window.removeEventListener('focus', handleProfileUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     getProgressData()
@@ -263,7 +276,6 @@ export default function ProgressPage() {
 
   if (!data) return <ProgressSkeleton />;
 
-  const profile = getStudentProfile();
   const filteredMastery = filterTopicsByProfile(data.subject_mastery, profile);
   const displayMastery = filteredMastery.length > 0 ? filteredMastery : data.subject_mastery;
 

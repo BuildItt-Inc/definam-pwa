@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, BookOpen } from 'lucide-react';
+import { Search, BookOpen, Plus } from 'lucide-react';
 import { getSubjects, getCachedSubjects } from '@/lib/api/topics';
 import type { Subject } from '@/types/topics';
 import { SubjectCard } from '@/components/student/SubjectCard';
@@ -10,6 +10,7 @@ import Link from 'next/link';
 import {
   getStudentProfile,
   filterSubjectsByProfile,
+  type StudentProfile,
 } from '@/lib/utils/studentProfile';
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
@@ -45,12 +46,24 @@ function BrowseSkeleton() {
 
 export default function BrowsePage() {
   const [subjects, setSubjects] = useState<Subject[] | null>(() => getCachedSubjects());
+  const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
   const [query, setQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'my' | 'all'>('my');
   const [fetchError, setFetchError] = useState<string | null>(null);
   const router = useRouter();
 
-  const profile = getStudentProfile();
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setProfile(getStudentProfile());
+    };
+    window.addEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
+    window.addEventListener('focus', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
+      window.removeEventListener('focus', handleProfileUpdate);
+    };
+  }, []);
+
   const hasSelectedSubjects = !!(profile?.selectedSubjects && profile.selectedSubjects.length > 0);
 
   useEffect(() => {
@@ -88,40 +101,62 @@ export default function BrowsePage() {
     <div className="page-with-nav bg-card page-enter">
 
       {/* ── SCR-05a · Appbar ─────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <div>
-          <h1 className="text-[17px] font-bold text-ink">Browse Subjects</h1>
-          {hasSelectedSubjects && filterMode === 'my' && (
-            <p className="text-xs text-muted">Filtered to your selected subjects</p>
-          )}
+      <header className="flex flex-col gap-2.5 border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-[17px] font-bold text-ink">Browse Subjects</h1>
+            <p className="text-xs text-muted">
+              {hasSelectedSubjects && filterMode === 'my'
+                ? `Showing your ${profile?.selectedSubjects?.length || baseSubjects.length} active subjects`
+                : `All ${subjects.length} curriculum subjects`}
+            </p>
+          </div>
+
+          <Link
+            href="/student/subjects"
+            className="flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-bold text-ink shadow-2xs hover:bg-bg-1 active:scale-95 transition-all sm:hidden"
+          >
+            <Plus size={13} strokeWidth={2.5} />
+            <span>Add / Remove</span>
+          </Link>
         </div>
 
-        {hasSelectedSubjects && (
-          <div className="flex items-center gap-1 rounded-xl bg-bg-2 p-1 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setFilterMode('my')}
-              className={`rounded-lg px-2.5 py-1 transition-all ${
-                filterMode === 'my'
-                  ? 'bg-white text-ink shadow-2xs font-bold'
-                  : 'text-muted hover:text-ink'
-              }`}
-            >
-              My Subjects ({profile?.selectedSubjects?.length || baseSubjects.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterMode('all')}
-              className={`rounded-lg px-2.5 py-1 transition-all ${
-                filterMode === 'all'
-                  ? 'bg-white text-ink shadow-2xs font-bold'
-                  : 'text-muted hover:text-ink'
-              }`}
-            >
-              All ({subjects.length})
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {hasSelectedSubjects && (
+            <div className="flex items-center gap-1 rounded-xl bg-bg-2 p-1 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setFilterMode('my')}
+                className={`rounded-lg px-2.5 py-1 transition-all ${
+                  filterMode === 'my'
+                    ? 'bg-white text-ink shadow-2xs font-bold'
+                    : 'text-muted hover:text-ink'
+                }`}
+              >
+                My Subjects ({profile?.selectedSubjects?.length || baseSubjects.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterMode('all')}
+                className={`rounded-lg px-2.5 py-1 transition-all ${
+                  filterMode === 'all'
+                    ? 'bg-white text-ink shadow-2xs font-bold'
+                    : 'text-muted hover:text-ink'
+                }`}
+              >
+                All ({subjects.length})
+              </button>
+            </div>
+          )}
+
+          <Link
+            href="/student/subjects"
+            className="hidden sm:inline-flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-bold text-ink shadow-2xs hover:bg-bg-1 active:scale-95 transition-all"
+          >
+            <Plus size={13} strokeWidth={2.5} />
+            <span>Add / Remove</span>
+          </Link>
+        </div>
       </header>
 
       {/* ── Search bar ───────────────────────────────────────────────────── */}
@@ -150,15 +185,23 @@ export default function BrowsePage() {
             <p className="text-base text-muted">
               No subjects found
             </p>
-            {hasSelectedSubjects && filterMode === 'my' && (
-              <button
-                type="button"
-                onClick={() => setFilterMode('all')}
-                className="mt-3 text-xs font-bold text-brand underline underline-offset-4"
+            <div className="mt-3 flex items-center gap-3">
+              {hasSelectedSubjects && filterMode === 'my' && (
+                <button
+                  type="button"
+                  onClick={() => setFilterMode('all')}
+                  className="text-xs font-bold text-brand underline underline-offset-4"
+                >
+                  View all subjects ({subjects.length})
+                </button>
+              )}
+              <Link
+                href="/student/subjects"
+                className="text-xs font-bold text-ink underline underline-offset-4"
               >
-                View all subjects ({subjects.length})
-              </button>
-            )}
+                Manage your subjects
+              </Link>
+            </div>
           </div>
         ) : (
           <div>

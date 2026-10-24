@@ -117,6 +117,29 @@ export async function middleware(request: NextRequest) {
   // 1. Fast in-memory Edge decode (0ms latency, eliminates blocking subrequests on every route change)
   const session = getSessionRoleFast(request);
 
+  // Instant redirect for authenticated sessions on root route ('/')
+  // Ensures returning students and installed PWAs open directly to the workspace with 0ms latency
+  if (pathname === '/') {
+    if (session.hasCookie && !session.isExpired && session.role) {
+      if (session.role.startsWith('student')) {
+        return NextResponse.redirect(new URL('/student', request.url));
+      }
+      if (session.role === 'admin') {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+    }
+    if (session.hasCookie && !session.isExpired && !session.role) {
+      const { role } = await tryRefresh(request);
+      if (role?.startsWith('student')) {
+        return NextResponse.redirect(new URL('/student', request.url));
+      }
+      if (role === 'admin') {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+    }
+    return NextResponse.next();
+  }
+
   if (!session.hasCookie || session.isExpired) {
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
       const loginUrl = new URL('/admin/login', request.url);
@@ -183,6 +206,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/admin/:path*',
     '/student/:path*',
   ],

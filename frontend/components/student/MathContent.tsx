@@ -101,10 +101,30 @@ export function MathContent({
 
 // ── Plain text fallback formatter ──────────────────────────────────────────
 
+function cleanMathPlainText(tex: string): string {
+  return escapeHtml(tex)
+    .replace(/\\text\{([^}]+)\}/g, '$1')
+    .replace(/\\(?:rightarrow|to)\b/g, '→')
+    .replace(/\\leftarrow\b/g, '←')
+    .replace(/\\leftrightarrow\b/g, '↔')
+    .replace(/\\(?:times|cdot)\b/g, '×')
+    .replace(/\\div\b/g, '÷')
+    .replace(/\\pm\b/g, '±')
+    .replace(/\\(?:le|leq)\b/g, '≤')
+    .replace(/\\(?:ge|geq)\b/g, '≥')
+    .replace(/\\neq\b/g, '≠')
+    .replace(/\\approx\b/g, '≈')
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1/$2')
+    .replace(/\\ce\{([^}]+)\}/g, '$1')
+    .replace(/\\[a-zA-Z]+/g, '')
+    .replace(/[{}]/g, '')
+    .trim();
+}
+
 function formatPlainText(text: string): string {
   if (!text) return '';
   try {
-    return buildHtml(text, undefined, false);
+    return buildHtml(text, undefined, true);
   } catch {
     const normalized = text.replace(/\r\n/g, '\n');
     return normalized
@@ -145,6 +165,13 @@ function buildHtml(
       return `\n\n\u0001CODE_BLOCK_${codeBlocks.length - 1}\u0001\n\n`;
     });
 
+    // Extract display math blocks (\[...\] or $$...$$) so multi-line equations aren't split by \n{2,}
+    const mathBlocks: string[] = [];
+    normalizedText = normalizedText.replace(/(\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$)/g, (match) => {
+      mathBlocks.push(match);
+      return `\n\n\u0001MATH_BLOCK_${mathBlocks.length - 1}\u0001\n\n`;
+    });
+
     // Normalize bold wrapped around headings e.g. **### Heading** -> ### Heading
     normalizedText = normalizedText.replace(/(^|\n)\s*\*\*(#{1,6}\s+[^\n*]+)\*\*/g, '$1$2');
 
@@ -167,6 +194,27 @@ function buildHtml(
       .map((para) => {
         const trimmed = para.trim();
         if (!trimmed) return '';
+
+        // Check if this paragraph is a display math block
+        const mathBlockMatch = trimmed.match(/^\u0001MATH_BLOCK_(\d+)\u0001$/);
+        if (mathBlockMatch) {
+          const rawMath = mathBlocks[Number(mathBlockMatch[1])] || '';
+          const mathContent = rawMath.startsWith('$$')
+            ? rawMath.slice(2, -2).trim()
+            : rawMath.startsWith('\\[')
+              ? rawMath.slice(2, -2).trim()
+              : rawMath;
+
+          if (katex) {
+            try {
+              const rendered = katex.renderToString(mathContent, { displayMode: true, throwOnError: false });
+              return `<div class="my-2.5 overflow-x-auto text-center"><span class="math-block inline-block max-w-full">${rendered}</span></div>`;
+            } catch {
+              return `<div class="my-2 text-center font-mono text-[13.5px] text-ink bg-bg-2 py-2 px-3 rounded-xl border border-border">${cleanMathPlainText(mathContent)}</div>`;
+            }
+          }
+          return `<div class="my-2 text-center font-mono text-[13.5px] text-ink bg-bg-2 py-2 px-3 rounded-xl border border-border">${cleanMathPlainText(mathContent)}</div>`;
+        }
 
         // Check if this paragraph is a fenced code block
         const codeBlockMatch = trimmed.match(/^\u0001CODE_BLOCK_(\d+)\u0001$/);
@@ -319,22 +367,22 @@ function renderInline(
       if (part.type === 'block') {
         if (katex) {
           try {
-            return `<span class="math-block">${katex.renderToString(part.math, { displayMode: true, throwOnError: false })}</span>`;
+            return `<div class="my-2.5 overflow-x-auto text-center"><span class="math-block inline-block max-w-full">${katex.renderToString(part.math, { displayMode: true, throwOnError: false })}</span></div>`;
           } catch {
-            return `<code class="math-err">${escapeHtml(part.math)}</code>`;
+            return `<div class="my-2 text-center font-mono text-[13.5px] text-ink bg-bg-2 py-1.5 px-3 rounded-xl border border-border">${cleanMathPlainText(part.math)}</div>`;
           }
         }
-        return `<code class="math-err">${escapeHtml(part.math)}</code>`;
+        return `<div class="my-2 text-center font-mono text-[13.5px] text-ink bg-bg-2 py-1.5 px-3 rounded-xl border border-border">${cleanMathPlainText(part.math)}</div>`;
       }
       if (part.type === 'inline') {
         if (katex) {
           try {
             return `<span class="math-inline">${katex.renderToString(part.math, { displayMode: false, throwOnError: false })}</span>`;
           } catch {
-            return `<code class="math-err">${escapeHtml(part.math)}</code>`;
+            return `<span class="math-inline font-mono text-[13.5px] text-ink">${cleanMathPlainText(part.math)}</span>`;
           }
         }
-        return `<code class="math-err">${escapeHtml(part.math)}</code>`;
+        return `<span class="math-inline font-mono text-[13.5px] text-ink">${cleanMathPlainText(part.math)}</span>`;
       }
       // Plain text — single newlines become <br>
       let escapedLines = part.text
@@ -371,9 +419,10 @@ type Segment =
 
 function splitMath(text: string, allowBlock: boolean): Segment[] {
   const segments: Segment[] = [];
+  // Supports $...$, \(...\), \ce{...}, and display blocks $$...$$, \[...\]
   const pattern = allowBlock
-    ? /(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/g
-    : /(\$[^$]+?\$)/g;
+    ? /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\ce\{[\s\S]*?\}|\\\([\s\S]*?\\\)|\$[^$\n]+?\$)/g
+    : /(\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$|\\ce\{[\s\S]*?\}|\\\([\s\S]*?\\\)|\$[^$\n]+?\$)/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -383,10 +432,17 @@ function splitMath(text: string, allowBlock: boolean): Segment[] {
       segments.push({ type: 'text', text: text.slice(lastIndex, match.index) });
     }
     const raw = match[1];
-    if (allowBlock && raw.startsWith('$$')) {
-      segments.push({ type: 'block', math: raw.slice(2, -2).trim() });
-    } else {
-      segments.push({ type: 'inline', math: raw.slice(1, -1).trim() });
+    if (raw.startsWith('$$') || raw.startsWith('\\[')) {
+      const math = raw.slice(2, -2).trim();
+      segments.push({ type: 'block', math });
+    } else if (raw.startsWith('\\(')) {
+      const math = raw.slice(2, -2).trim();
+      segments.push({ type: 'inline', math });
+    } else if (raw.startsWith('$')) {
+      const math = raw.slice(1, -1).trim();
+      segments.push({ type: 'inline', math });
+    } else if (raw.startsWith('\\ce{')) {
+      segments.push({ type: 'inline', math: raw });
     }
     lastIndex = match.index + raw.length;
   }

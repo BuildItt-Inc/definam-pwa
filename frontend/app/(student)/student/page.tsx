@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Flame, Download } from 'lucide-react';
+import { Flame, Download, Plus, ChevronRight } from 'lucide-react';
 import { getHomeData, getSubjects, getCachedHomeData, getCachedSubjects } from '@/lib/api/topics';
 import type { HomeData, RecentTopic, Subject } from '@/types/topics';
 import { RecallCard } from '@/components/student/RecallCard';
@@ -17,6 +17,7 @@ import {
   getSelectedSubjectNames,
   filterSubjectsByProfile,
   filterTopicsByProfile,
+  type StudentProfile,
 } from '@/lib/utils/studentProfile';
 import { AppInstallModal } from '@/components/ui/AppInstallModal';
 
@@ -114,10 +115,10 @@ function TopicRow({ topic }: { topic: RecentTopic }) {
 // ── Subject strip ───────────────────────────────────────────────────────────
 
 function SubjectStrip({ subjects }: { subjects: Subject[] }) {
-  const mappedSubjects = subjects.filter((s) => s.name in SUBJECT_ICONS).slice(0, 5);
+  const mappedSubjects = subjects.filter((s) => s.name in SUBJECT_ICONS).slice(0, 6);
 
   return (
-    <div className="relative z-10 mt-3.5 flex gap-2">
+    <div className="relative z-10 mt-3.5 flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
       {mappedSubjects.map((subject) => {
         const Icon = subjectIcon(subject.name);
         return (
@@ -132,6 +133,15 @@ function SubjectStrip({ subjects }: { subjects: Subject[] }) {
           </Link>
         );
       })}
+      <Link
+        href="/student/subjects"
+        aria-label="Add or remove subjects"
+        title="Add or remove subjects"
+        className="flex h-[34px] flex-shrink-0 items-center gap-1 rounded-[10px] border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white active:bg-white/20 transition-colors"
+      >
+        <Plus size={14} strokeWidth={2.5} />
+        <span>Edit</span>
+      </Link>
     </div>
   );
 }
@@ -141,6 +151,7 @@ function SubjectStrip({ subjects }: { subjects: Subject[] }) {
 export default function StudentHomePage() {
   const [data, setData] = useState<HomeData | null>(() => getCachedHomeData());
   const [subjects, setSubjects] = useState<Subject[] | null>(() => getCachedSubjects());
+  const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [greeting, setGreeting] = useState('Good morning');
   const router = useRouter();
@@ -152,6 +163,18 @@ export default function StudentHomePage() {
     showInstallModal,
     setShowInstallModal,
   } = usePWAInstall();
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setProfile(getStudentProfile());
+    };
+    window.addEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
+    window.addEventListener('focus', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
+      window.removeEventListener('focus', handleProfileUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     setGreeting(getGreeting());
@@ -199,7 +222,6 @@ export default function StudentHomePage() {
 
   if (!data) return <HomeSkeleton />;
 
-  const profile = getStudentProfile();
   const { student_name, school_name, streak_days, completion_percent, recall_queue, recent_topics } = data;
   const displayName = profile?.name || student_name;
 
@@ -296,12 +318,17 @@ export default function StudentHomePage() {
 
         {/* Stats row — displays filtered subjects count */}
         <div className="mb-5 grid grid-cols-2 gap-2">
-          <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
-            <div className="text-xl font-extrabold text-ink">
-              {displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}
+          <Link
+            href="/student/subjects"
+            aria-label="Manage your subjects"
+            className="group rounded-[14px] border border-border bg-white px-3 py-3.5 text-center transition-all hover:border-ink/20 active:scale-[0.98]"
+          >
+            <div className="flex items-center justify-center gap-1 text-xl font-extrabold text-ink">
+              <span>{displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}</span>
+              <ChevronRight size={14} className="text-muted group-hover:text-ink transition-colors" />
             </div>
-            <div className="mt-0.5 text-xs text-muted">my subjects</div>
-          </div>
+            <div className="mt-0.5 text-xs text-muted">my subjects · edit</div>
+          </Link>
           <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
             <div className="text-xl font-extrabold text-ink">
               {completion_percent}%
