@@ -131,19 +131,27 @@ export default function SettingsPage() {
         await new Promise((resolve) => setTimeout(resolve, delaySec * 1000));
       }
 
-      // 1. Direct on-device notification via Service Worker
-      const localDelivered = await showLocalNotification('Recall Test Notification', {
-        body: 'Push notifications are working on this device! 🎯',
-        tag: 'recall-test-alert',
-      });
+      const token = getStoredFcmToken();
+      let sentViaCloud = false;
 
-      // 2. Also trigger cloud backend push delivery
-      await sendTestNotification().catch(() => {});
+      // 1. If notification token is active, send exactly one test notification via cloud push
+      if (token) {
+        try {
+          await sendTestNotification();
+          sentViaCloud = true;
+          toast.success('Test notification sent to your device!');
+        } catch {
+          sentViaCloud = false;
+        }
+      }
 
-      if (localDelivered) {
-        toast.success('Test notification delivered to your device!');
-      } else {
-        toast.success('Test notification sent. Check your notification center.');
+      // 2. Only if cloud delivery was not possible (e.g. offline, local test), deliver one local notification
+      if (!sentViaCloud) {
+        await showLocalNotification('Recall Test Notification', {
+          body: 'Push notifications are working on this device! 🎯',
+          tag: 'recall-test-alert',
+        });
+        toast.success('Test notification delivered locally!');
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to send test notification');

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, MotionConfig } from 'framer-motion';
 import LandingNav from '@/components/landing/LandingNav';
@@ -61,22 +61,41 @@ const INCLUDED = [
 
 export default function LandingPage() {
   const router = useRouter();
+  const [isStudent, setIsStudent] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const isStandalone =
+          window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+        const hasProfile = !!localStorage.getItem('recall_student_profile');
+        return isStandalone || hasProfile;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const isStandalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+      const hasProfile = !!localStorage.getItem('recall_student_profile');
 
-      // When launched from Home Screen as an installed app, open the student workspace
-      if (isStandalone) {
-        const hasProfile = !!localStorage.getItem('recall_student_profile');
-        if (hasProfile) {
-          router.replace('/student');
-        }
+      if (isStandalone || hasProfile) {
+        setIsStudent(true);
+        router.replace('/student');
       }
     }
   }, [router]);
+
+  // If returning student or running in installed PWA standalone mode, render a neutral dark surface
+  // to guarantee zero landing page content is ever painted on screen before redirecting to workspace.
+  if (isStudent) {
+    return <div className="min-h-screen bg-[#111827]" />;
+  }
+
   return (
     <MotionConfig reducedMotion="user">
     <div className="landing-page bg-white text-ink">

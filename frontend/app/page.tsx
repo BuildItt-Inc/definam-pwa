@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import LandingPage from '@/components/landing/LandingPage';
 
-// `export const metadata` requires a Server Component — the actual page body
-// is interactive (cursor-tracked spotlight hover, mobile menu) so it lives in
-// a separate 'use client' component.
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ||
@@ -29,28 +28,36 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
-  return (
-    <>
-      {/* Zero-latency early redirect for installed PWA / returning students.
-          Runs before React mounts or DOM paints to guarantee no landing page flash. */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              try {
-                var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-                var hasProfile = !!localStorage.getItem('recall_student_profile');
-                if (isStandalone && hasProfile) {
-                  document.documentElement.style.display = 'none';
-                  window.location.replace('/student');
-                }
-              } catch(e) {}
-            })();
-          `,
-        }}
-      />
-      <LandingPage />
-    </>
-  );
+export default async function Page() {
+  // Edge / Server-side instant redirect: authenticated users never receive landing page HTML
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get('refresh_token')?.value;
+
+  if (refreshToken) {
+    try {
+      const [, payloadB64] = refreshToken.split('.');
+      if (payloadB64) {
+        const json = Buffer.from(payloadB64, 'base64').toString('utf-8');
+        const payload = JSON.parse(json) as Record<string, unknown>;
+        const now = Math.floor(Date.now() / 1000);
+        const exp = typeof payload.exp === 'number' ? payload.exp : 0;
+        if (!exp || exp > now) {
+          const role = typeof payload.role === 'string' ? payload.role : '';
+          if (role.startsWith('student')) {
+            redirect('/student');
+          }
+          if (role === 'admin') {
+            redirect('/admin');
+          }
+        }
+      }
+    } catch (err: unknown) {
+      // In Next.js, redirect() throws a NEXT_REDIRECT error which must be re-thrown
+      if (err && typeof err === 'object' && 'digest' in err && typeof (err as { digest?: unknown }).digest === 'string' && (err as { digest: string }).digest.startsWith('NEXT_REDIRECT')) {
+        throw err;
+      }
+    }
+  }
+
+  return <LandingPage />;
 }
