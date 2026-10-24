@@ -1,4 +1,31 @@
 /* Firebase Messaging Service Worker for background push notifications */
+
+// Notification deduplication cache (prevents duplicate alerts within 10 seconds)
+const seenNotificationKeys = new Map();
+
+function safeShowNotification(title, options) {
+  const dedupKey = (options.tag || title) + '::' + (options.body || '');
+  const now = Date.now();
+
+  // Prune entries older than 30 seconds
+  for (const [key, time] of seenNotificationKeys.entries()) {
+    if (now - time > 30000) {
+      seenNotificationKeys.delete(key);
+    }
+  }
+
+  // Deduplicate: if this exact notification was processed recently, suppress it
+  if (seenNotificationKeys.has(dedupKey) && now - seenNotificationKeys.get(dedupKey) < 10000) {
+    console.log('[firebase-messaging-sw.js] Duplicate notification suppressed:', dedupKey);
+    return Promise.resolve();
+  }
+
+  seenNotificationKeys.set(dedupKey, now);
+  return self.registration.showNotification(title, options);
+}
+
+let firebaseMessagingActive = false;
+
 try {
   importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
   importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
@@ -19,6 +46,7 @@ try {
 
   if (typeof firebase !== 'undefined' && typeof firebase.messaging === 'function') {
     const messaging = firebase.messaging();
+    firebaseMessagingActive = true;
 
     messaging.onBackgroundMessage((payload) => {
       console.log('[firebase-messaging-sw.js] Received background message:', payload);
@@ -28,19 +56,24 @@ try {
         body: payload.notification?.body || payload.data?.body || 'You have pending learning tasks.',
         icon: '/icons/icon-192.png',
         badge: '/icons/icon-192.png',
-        tag: payload.data?.type || 'recall-notification',
+        tag: payload.data?.type || payload.data?.tag || 'recall-notification',
         data: payload.data || {},
       };
 
-      self.registration.showNotification(title, options);
+      safeShowNotification(title, options);
     });
   }
 } catch (e) {
   console.warn('[firebase-messaging-sw.js] Firebase SDK init notice:', e);
 }
 
-// Fallback native push event listener (vital for iOS WebKit Web Push compliance)
+// Fallback native push event listener (ONLY runs if Firebase messaging failed to initialize)
 self.addEventListener('push', (event) => {
+  // If Firebase Messaging SDK is already handling background push, skip to prevent double notifications
+  if (firebaseMessagingActive) {
+    return;
+  }
+
   if (!event.data) return;
 
   try {
@@ -58,19 +91,20 @@ self.addEventListener('push', (event) => {
       body,
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
-      tag: rawData.data?.type || 'recall-notification',
+      tag: rawData.data?.type || rawData.data?.tag || 'recall-notification',
       data: rawData.data || {},
     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(safeShowNotification(title, options));
   } catch (err) {
     try {
       const text = event.data.text();
       if (text) {
         event.waitUntil(
-          self.registration.showNotification('Recall', {
+          safeShowNotification('Recall', {
             body: text,
             icon: '/icons/icon-192.png',
+            tag: 'recall-plain',
           })
         );
       }

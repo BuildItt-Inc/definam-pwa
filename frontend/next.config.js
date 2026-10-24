@@ -35,6 +35,8 @@ try {
       disable: process.env.NODE_ENV === 'development',
       register: true,
       skipWaiting: true,
+      cacheStartUrl: false,
+      dynamicStartUrl: false,
       importScripts: ['/firebase-messaging-sw.js'],
     })(baseConfig);
   }
