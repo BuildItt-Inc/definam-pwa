@@ -7,7 +7,10 @@ import { getSubjects, getCachedSubjects } from '@/lib/api/topics';
 import type { Subject } from '@/types/topics';
 import { SubjectCard } from '@/components/student/SubjectCard';
 import Link from 'next/link';
-import { getSelectedSubjectNames } from '@/lib/utils/studentProfile';
+import {
+  getStudentProfile,
+  filterSubjectsByProfile,
+} from '@/lib/utils/studentProfile';
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
 
@@ -43,8 +46,12 @@ function BrowseSkeleton() {
 export default function BrowsePage() {
   const [subjects, setSubjects] = useState<Subject[] | null>(() => getCachedSubjects());
   const [query, setQuery] = useState('');
+  const [filterMode, setFilterMode] = useState<'my' | 'all'>('my');
   const [fetchError, setFetchError] = useState<string | null>(null);
   const router = useRouter();
+
+  const profile = getStudentProfile();
+  const hasSelectedSubjects = !!(profile?.selectedSubjects && profile.selectedSubjects.length > 0);
 
   useEffect(() => {
     getSubjects()
@@ -66,18 +73,55 @@ export default function BrowsePage() {
   /* Loading skeleton */
   if (!subjects) return <BrowseSkeleton />;
 
+  // Default to student's selected subjects
+  const baseSubjects = (filterMode === 'my' && hasSelectedSubjects)
+    ? filterSubjectsByProfile(subjects, profile)
+    : subjects;
+
   /* Client-side filter */
   const needle = query.toLowerCase().trim();
   const filtered = needle
-    ? subjects.filter((s) => s.name.toLowerCase().includes(needle))
-    : subjects;
+    ? baseSubjects.filter((s) => s.name.toLowerCase().includes(needle))
+    : baseSubjects;
 
   return (
     <div className="page-with-nav bg-card page-enter">
 
       {/* ── SCR-05a · Appbar ─────────────────────────────────────────────── */}
-      <header className="flex items-center border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <h1 className="text-[17px] font-bold text-ink">Browse</h1>
+      <header className="flex items-center justify-between border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <div>
+          <h1 className="text-[17px] font-bold text-ink">Browse Subjects</h1>
+          {hasSelectedSubjects && filterMode === 'my' && (
+            <p className="text-xs text-muted">Filtered to your selected subjects</p>
+          )}
+        </div>
+
+        {hasSelectedSubjects && (
+          <div className="flex items-center gap-1 rounded-xl bg-bg-2 p-1 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setFilterMode('my')}
+              className={`rounded-lg px-2.5 py-1 transition-all ${
+                filterMode === 'my'
+                  ? 'bg-white text-ink shadow-2xs font-bold'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              My Subjects ({profile?.selectedSubjects?.length || baseSubjects.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterMode('all')}
+              className={`rounded-lg px-2.5 py-1 transition-all ${
+                filterMode === 'all'
+                  ? 'bg-white text-ink shadow-2xs font-bold'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              All ({subjects.length})
+            </button>
+          </div>
+        )}
       </header>
 
       {/* ── Search bar ───────────────────────────────────────────────────── */}
@@ -97,7 +141,7 @@ export default function BrowsePage() {
       {/* ── Subject list ─────────────────────────────────────────────────── */}
       <main className="flex-1 pb-nav">
         {filtered.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+          <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
             <BookOpen
               size={32}
               strokeWidth={1.5}
@@ -106,6 +150,15 @@ export default function BrowsePage() {
             <p className="text-base text-muted">
               No subjects found
             </p>
+            {hasSelectedSubjects && filterMode === 'my' && (
+              <button
+                type="button"
+                onClick={() => setFilterMode('all')}
+                className="mt-3 text-xs font-bold text-brand underline underline-offset-4"
+              >
+                View all subjects ({subjects.length})
+              </button>
+            )}
           </div>
         ) : (
           <div>

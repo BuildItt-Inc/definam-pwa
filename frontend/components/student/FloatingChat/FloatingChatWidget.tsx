@@ -277,7 +277,7 @@ function FloatingChatPanel({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="page-enter relative flex h-[min(85dvh,640px)] max-h-[100dvh] w-full max-w-full sm:max-w-md flex-col overflow-hidden rounded-t-2xl border-t border-x sm:border border-border-2 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
+      <div className="page-enter relative flex h-[min(85dvh,640px)] max-h-[100dvh] w-full max-w-full sm:max-w-md flex-col overflow-hidden rounded-t-2xl border-0 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
         {/* Header */}
         <header
           className="flex items-center gap-3 px-4 py-3.5"
@@ -352,15 +352,10 @@ function FloatingChatPanel({
               return (
                 <div
                   key={index}
-                  className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}
+                  className={`flex items-end ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {msg.role !== 'user' && (
-                    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-ink/10">
-                      <Bot size={14} strokeWidth={1.5} className="text-ink" />
-                    </div>
-                  )}
                   <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 ${
+                    className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 ${
                       msg.role === 'user'
                         ? 'rounded-br-sm bg-ink text-white'
                         : 'rounded-bl-sm border border-border-2 bg-card text-ink'

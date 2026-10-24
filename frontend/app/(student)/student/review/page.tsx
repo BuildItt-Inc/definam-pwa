@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, BookOpen, RefreshCw, Clock, BookMarked, Sparkles, CheckCircle2 } from 'lucide-react';
 import { getRecallQueue, getCachedRecallQueue } from '@/lib/api/topics';
 import type { RecallItem } from '@/types/topics';
+import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentProfile';
 
 // ── Loading skeleton ───────────────────────────────────────────────────────
 
@@ -72,15 +73,17 @@ export default function RecallPage() {
 
   if (!queue) return <RecallSkeleton />;
 
-  const minuteEstimate = Math.ceil(queue.length * 2.5);
+  const profile = getStudentProfile();
+  const effectiveQueue = filterTopicsByProfile(queue, profile);
+  const minuteEstimate = Math.ceil(effectiveQueue.length * 2.5);
 
   function handleStartAll() {
-    sessionStorage.setItem('recall_queue', JSON.stringify(queue));
+    sessionStorage.setItem('recall_queue', JSON.stringify(effectiveQueue));
     router.push('/student/review/session');
   }
 
   // ── Empty state ────────────────────────────────────────────────────────
-  if (queue.length === 0) {
+  if (effectiveQueue.length === 0) {
     return (
       <div className="page-with-nav bg-bg-0 page-enter">
         <header className="flex items-center gap-3 border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
@@ -178,7 +181,7 @@ export default function RecallPage() {
           <BookMarked size={22} strokeWidth={2} className="flex-shrink-0 text-brand" />
           <div className="flex-1">
             <p className="text-[15px] font-bold text-ink">
-              {queue.length} {queue.length === 1 ? 'topic' : 'topics'} due today
+              {effectiveQueue.length} {effectiveQueue.length === 1 ? 'topic' : 'topics'} due today
             </p>
             <p className="flex items-center gap-1 text-[13px] text-muted">
               <Clock size={10} strokeWidth={2} />
@@ -187,7 +190,7 @@ export default function RecallPage() {
           </div>
           <div className="flex-shrink-0 text-center">
             <p className="text-[16px] font-black text-ink">
-              0/{queue.length}
+              0/{effectiveQueue.length}
             </p>
             <p className="text-[9px] font-semibold text-muted">done</p>
           </div>
@@ -200,7 +203,7 @@ export default function RecallPage() {
 
         {/* Topic list */}
         <div className="mb-6 flex flex-col gap-2">
-          {queue.map((item) => (
+          {effectiveQueue.map((item) => (
             <div
               key={item.topic_id}
               className="card flex items-center gap-3 px-3.5 py-3"

@@ -12,7 +12,12 @@ import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import { SUBJECT_ICONS, subjectIcon, subjectColor } from '@/lib/utils/subjects';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { getStudentProfile, getSelectedSubjectNames } from '@/lib/utils/studentProfile';
+import {
+  getStudentProfile,
+  getSelectedSubjectNames,
+  filterSubjectsByProfile,
+  filterTopicsByProfile,
+} from '@/lib/utils/studentProfile';
 import { AppInstallModal } from '@/components/ui/AppInstallModal';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -197,7 +202,11 @@ export default function StudentHomePage() {
   const profile = getStudentProfile();
   const { student_name, school_name, streak_days, completion_percent, recall_queue, recent_topics } = data;
   const displayName = profile?.name || student_name;
-  const hasStarted = recent_topics.some((t) => (t.mastery_percent ?? 0) > 0);
+
+  // Filter subjects and topics to the student's selected curriculum
+  const displaySubjects = subjects ? filterSubjectsByProfile(subjects, profile) : null;
+  const displayTopics = filterTopicsByProfile(recent_topics, profile);
+  const hasStarted = displayTopics.some((t) => (t.mastery_percent ?? 0) > 0);
 
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
@@ -220,10 +229,16 @@ export default function StudentHomePage() {
           {greeting}
         </p>
         <h1 className="relative z-10 mb-0.5 text-[26px] font-bold leading-tight text-white tracking-tight">
-          {student_name}
+          {displayName}
         </h1>
-        {school_name && (
+        {profile?.class_level ? (
+          <p className="relative z-10 mb-5 text-sm text-white/50">
+            {profile.class_level}{profile.targets?.length ? ` · ${profile.targets.join(', ')}` : ''}{school_name ? ` · ${school_name}` : ''}
+          </p>
+        ) : school_name ? (
           <p className="relative z-10 mb-5 text-sm text-white/40">{school_name}</p>
+        ) : (
+          <div className="mb-4" />
         )}
 
         {/* Streak pill + completion ring — streak shown once only here */}
@@ -241,7 +256,7 @@ export default function StudentHomePage() {
         </div>
 
         {/* Subject shortcut strip */}
-        {subjects && subjects.length > 0 && <SubjectStrip subjects={subjects} />}
+        {displaySubjects && displaySubjects.length > 0 && <SubjectStrip subjects={displaySubjects} />}
       </div>
 
       {/* ── 2. Main scroll area ── */}
@@ -279,13 +294,13 @@ export default function StudentHomePage() {
           onClose={() => setShowInstallModal(false)}
         />
 
-        {/* Stats row — removed duplicate streak; shows subjects + top topic mastery */}
+        {/* Stats row — displays filtered subjects count */}
         <div className="mb-5 grid grid-cols-2 gap-2">
           <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
             <div className="text-xl font-extrabold text-ink">
-              {subjects ? subjects.length : '—'}
+              {displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}
             </div>
-            <div className="mt-0.5 text-xs text-muted">subjects</div>
+            <div className="mt-0.5 text-xs text-muted">my subjects</div>
           </div>
           <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
             <div className="text-xl font-extrabold text-ink">
@@ -309,11 +324,26 @@ export default function StudentHomePage() {
             </Link>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {recent_topics.map((topic) => (
-              <TopicRow key={topic.topic_id} topic={topic} />
-            ))}
-          </div>
+          {displayTopics.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {displayTopics.map((topic) => (
+                <TopicRow key={topic.topic_id} topic={topic} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[14px] border border-border bg-white p-5 text-center">
+              <p className="text-sm font-semibold text-ink">Ready to begin?</p>
+              <p className="text-xs text-muted mt-1 max-w-[280px] mx-auto">
+                Explore your selected subjects and start your first topic to build your recall streak.
+              </p>
+              <Link
+                href="/student/learn"
+                className="mt-3.5 inline-flex items-center justify-center rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-brand-dark transition-colors"
+              >
+                Open My Subjects
+              </Link>
+            </div>
+          )}
         </section>
       </main>
     </div>

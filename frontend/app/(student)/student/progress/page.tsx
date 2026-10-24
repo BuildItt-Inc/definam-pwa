@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Flame } from 'lucide-react';
 import { getProgressData, getCachedProgressData } from '@/lib/api/topics';
 import type { ProgressData } from '@/types/topics';
+import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentProfile';
 
 const HEATMAP_COLORS = ['#EEEEEE', '#9FE1CB', '#5DCAA5', '#1B6B4A', '#085041'] as const;
 
@@ -262,6 +263,10 @@ export default function ProgressPage() {
 
   if (!data) return <ProgressSkeleton />;
 
+  const profile = getStudentProfile();
+  const filteredMastery = filterTopicsByProfile(data.subject_mastery, profile);
+  const displayMastery = filteredMastery.length > 0 ? filteredMastery : data.subject_mastery;
+
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
       <header className="border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
@@ -292,7 +297,7 @@ export default function ProgressPage() {
           />
         </div>
 
-        <MasterySection data={data.subject_mastery} />
+        <MasterySection data={displayMastery} />
         <HeatmapSection data={data.heatmap_data} />
         <UpcomingSection data={data.upcoming_reviews} />
       </main>

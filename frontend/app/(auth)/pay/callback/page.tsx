@@ -11,8 +11,6 @@ import {
   ArrowRight,
   Building2,
   CheckCircle2,
-  ClipboardCopy,
-  ClipboardCheck,
   Loader2,
   Mail,
   RefreshCw,
@@ -47,7 +45,6 @@ function CallbackContent() {
   const router = useRouter();
   const { celebrate } = useCelebration();
   const [state, setState] = useState<VerifyState>({ status: 'loading' });
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const reference = searchParams.get('reference');
@@ -141,13 +138,6 @@ function CallbackContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    toast.success('Access code copied to clipboard');
-    setTimeout(() => setCopied(false), 2500);
-  };
-
   // ── Loading ──────────────────────────────────────────────────────────────
   if (state.status === 'loading') {
     return (
@@ -192,59 +182,14 @@ function CallbackContent() {
         {/* Heading */}
         <motion.div variants={staggerItem} className="mb-5">
           <h1 className="font-black text-[28px] text-ink tracking-tight leading-none mb-2">
-            Thank You!
+            Payment Confirmed!
           </h1>
           <p className="text-[13px] text-muted leading-snug max-w-[280px] mx-auto">
-            Payment confirmed. Your access code has been generated and sent to:
+            Your access has been activated and your receipt sent to:
           </p>
           <p className="mt-2 text-[13px] font-bold text-ink break-all bg-bg-2 border border-border px-3 py-1.5 rounded-xl inline-block max-w-full">
             {state.email}
           </p>
-        </motion.div>
-
-        {/* Access Code Card */}
-        <motion.div variants={staggerItem} className="w-full mb-5">
-          <div className="w-full bg-ink rounded-2xl overflow-hidden shadow-sm">
-            {/* Header strip */}
-            <div className="px-5 pt-4 pb-3 border-b border-white/10">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">
-                Your Access Code
-              </p>
-            </div>
-            {/* Code display */}
-            <div className="px-5 py-5 flex flex-col items-center gap-4">
-              <div
-                className="font-mono text-[26px] sm:text-[30px] font-black tracking-[0.18em] text-success select-all leading-none"
-                aria-label={`Access code: ${state.accessCode}`}
-              >
-                {state.accessCode}
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-white/40 font-medium">
-                <CheckCircle2 size={12} strokeWidth={2} aria-hidden />
-                Valid for term duration from activation
-              </div>
-              <motion.button
-                type="button"
-                onClick={() => handleCopyCode(state.accessCode)}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.12, ease: standardEasing }}
-                className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/[0.16] text-white text-[12px] font-semibold rounded-xl transition-colors"
-                aria-label="Copy access code to clipboard"
-              >
-                {copied ? (
-                  <>
-                    <ClipboardCheck size={14} strokeWidth={2} aria-hidden />
-                    Copied to Clipboard
-                  </>
-                ) : (
-                  <>
-                    <ClipboardCopy size={14} strokeWidth={2} aria-hidden />
-                    Copy Access Code
-                  </>
-                )}
-              </motion.button>
-            </div>
-          </div>
         </motion.div>
 
         {/* Next steps */}
@@ -255,9 +200,9 @@ function CallbackContent() {
             </p>
             <ol className="space-y-3">
               {[
-                'Your access code is active and attached to your session.',
+                'Your subscription is active and attached to this session.',
                 'Click "Complete Account Setup" below to choose your username and password.',
-                'Your code will be automatically applied — no copy-pasting or OTP needed.',
+                'Your account will be automatically activated — no code typing needed.',
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3 text-[13px] text-ink/80 leading-snug">
                   <span className="w-5 h-5 bg-brand text-white rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -278,7 +223,7 @@ function CallbackContent() {
               className="w-full min-h-[52px] bg-brand text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-brand-dark transition-colors shadow-brand"
             >
               <CheckCircle2 size={18} strokeWidth={2.2} aria-hidden />
-              Complete Account Setup (Code Applied)
+              Complete Account Setup →
             </Link>
           </motion.div>
 

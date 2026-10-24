@@ -74,6 +74,16 @@ export default function OnboardingPage() {
 
   // Load existing profile or current user details if available
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const stepParam = urlParams.get('step');
+      if (stepParam === '2') {
+        setStep(2);
+      } else if (stepParam === '3') {
+        setStep(3);
+      }
+    }
+
     const existing = getStudentProfile();
     if (existing) {
       if (existing.name) setName(existing.name);
