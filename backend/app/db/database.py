@@ -207,6 +207,7 @@ async def get_user_by_id(user_id: str) -> dict[str, Any] | None:
             "username": row.username,
             "role": row.role,
             "org_id": row.org_id,
+            "password_hash": row.password_hash,
             "force_password_change": row.force_password_change,
             "name": row.name,
             "email": row.email,
@@ -241,6 +242,14 @@ async def update_user_session_id(user_id: str, session_id: str | None) -> None:
     async with db_session() as session:
         await session.execute(
             update(User).where(User.id == user_id).values(current_session_id=session_id)
+        )
+
+
+async def update_user_last_seen(user_id: str, last_seen: datetime) -> None:
+    """Update a user's last_seen_at timestamp."""
+    async with db_session() as session:
+        await session.execute(
+            update(User).where(User.id == user_id).values(last_seen_at=last_seen)
         )
 
 
@@ -472,7 +481,8 @@ async def get_topics_by_chapter(
                 )
                 .outerjoin(
                     TopicReview,
-                    (TopicReview.topic_id == Topic.id) & (TopicReview.user_id == user_id),
+                    (TopicReview.topic_id == Topic.id)
+                    & (TopicReview.user_id == user_id),
                 )
                 .where(Topic.chapter_id == chapter_id)
             )
@@ -484,7 +494,9 @@ async def get_topics_by_chapter(
         stmt = stmt.order_by(Topic.created_at)
         result = await session.execute(stmt)
 
-        rows = result.all() if user_id else [(row, None, None) for row in result.scalars()]
+        rows = (
+            result.all() if user_id else [(row, None, None) for row in result.scalars()]
+        )
         return [
             {
                 "id": row.id,
@@ -492,11 +504,12 @@ async def get_topics_by_chapter(
                 "title": row.title,
                 "status": row.status,
                 "mastery_percent": int(mastery) if mastery is not None else None,
-                "last_studied_at": last_studied.isoformat() if last_studied is not None else None,
+                "last_studied_at": last_studied.isoformat()
+                if last_studied is not None
+                else None,
             }
             for row, mastery, last_studied in rows
         ]
-
 
 
 async def get_topic_by_id(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import os
 import uuid
@@ -20,6 +21,7 @@ from app.db.database import (
     get_user_by_email,
     get_user_by_id,
     get_user_by_username,
+    update_user_last_seen,
     update_user_password,
     update_user_session_id,
 )
@@ -34,6 +36,7 @@ from app.schemas.auth import (
     UserMeResponse,
 )
 from app.services import auth_service
+from app.services.redis_client import get_redis
 
 router = APIRouter()
 
@@ -250,6 +253,34 @@ async def get_me(current_user: CurrentUserDep) -> UserMeResponse:
         name=user.get("name"),
         email=user.get("email"),
     )
+
+
+@router.post(
+    "/heartbeat",
+    summary="User Presence Heartbeat",
+    description="Update user's last_seen_at timestamp. Throttled via Redis to once per minute.",
+)
+async def heartbeat(current_user: CurrentUserDep) -> dict:
+    """Record user activity and update last_seen_at timestamp.
+
+    Throttled via Redis: at most once every 60 seconds per user to prevent DB write spam.
+    """
+    user_id: str = current_user["sub"]
+    now = datetime.now(UTC)
+    cache_key = f"heartbeat:{user_id}"
+
+    try:
+        redis = get_redis()
+        is_throttled = await asyncio.to_thread(redis.get, cache_key)
+        if is_throttled:
+            return {"status": "throttled", "last_seen_at": now.isoformat()}
+        await asyncio.to_thread(redis.setex, cache_key, 60, "1")
+    except Exception:
+        # Best effort Redis throttle; proceed to update DB on error
+        pass
+
+    await update_user_last_seen(user_id, now)
+    return {"status": "ok", "last_seen_at": now.isoformat()}
 
 
 # ── Forgot / Reset Password ────────────────────────────────────────────

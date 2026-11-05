@@ -94,9 +94,19 @@ async def get_current_user(token: str = Depends(get_bearer_token)) -> dict:
 
 
 def get_current_admin(claims: dict = Depends(get_current_user)) -> dict:
-    """Assert that the authenticated user has the admin role."""
-    if claims.get("role") != "admin":
+    """Assert that the authenticated user has the admin or super_admin role."""
+    if claims.get("role") not in ("admin", "super_admin"):
         raise ForbiddenError("Admin access only.")
+    return claims
+
+
+# ── Super Admin-only dependency ───────────────────────────────────────────
+
+
+def get_current_super_admin(claims: dict = Depends(get_current_user)) -> dict:
+    """Assert that the authenticated user has the super_admin role."""
+    if claims.get("role") != "super_admin":
+        raise ForbiddenError("Super admin access only.")
     return claims
 
 
@@ -105,4 +115,5 @@ def get_current_admin(claims: dict = Depends(get_current_user)) -> dict:
 OrgStudentDep = Annotated[dict, Depends(get_current_org_student)]
 CurrentUserDep = Annotated[dict, Depends(get_current_user)]
 AdminDep = Annotated[dict, Depends(get_current_admin)]
+SuperAdminDep = Annotated[dict, Depends(get_current_super_admin)]
 BearerTokenDep = Annotated[str, Depends(get_bearer_token)]

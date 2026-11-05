@@ -120,6 +120,9 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
+    last_seen_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
 
     school: Mapped[School | None] = relationship("School", back_populates="users")
     school_class: Mapped[SchoolClass | None] = relationship(

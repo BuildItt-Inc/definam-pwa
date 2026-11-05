@@ -123,14 +123,9 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSendTestNotification(delaySec: number = 0) {
+  async function handleSendTestNotification() {
     setTestNotifLoading(true);
     try {
-      if (delaySec > 0) {
-        toast.info(`Test notification will fire in ${delaySec}s! Lock your phone or switch apps now.`);
-        await new Promise((resolve) => setTimeout(resolve, delaySec * 1000));
-      }
-
       const token = getStoredFcmToken();
       let sentViaCloud = false;
 
@@ -366,32 +361,18 @@ export default function SettingsPage() {
             </div>
           )}
           {notifEnabled && (
-            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-3 space-y-2">
+            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-3">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[12px] text-muted truncate">
-                  Test instant alert
+                  Test notification on this device
                 </span>
                 <button
                   type="button"
-                  onClick={() => handleSendTestNotification(0)}
+                  onClick={() => handleSendTestNotification()}
                   disabled={testNotifLoading}
                   className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
                 >
-                  {testNotifLoading ? 'Testing…' : 'Send Test Now'}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between gap-2 border-t border-border/50 pt-2">
-                <span className="text-[12px] text-muted truncate">
-                  Test lock screen banner (5s delay)
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSendTestNotification(5)}
-                  disabled={testNotifLoading}
-                  className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {testNotifLoading ? 'Scheduling…' : 'Test Lock Screen'}
+                  {testNotifLoading ? 'Testing…' : 'Send Test Notification'}
                 </button>
               </div>
             </div>

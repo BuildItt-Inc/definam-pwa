@@ -77,24 +77,25 @@ export async function requestNotificationPermissionAndGetToken(): Promise<string
     let serviceWorkerRegistration: ServiceWorkerRegistration | undefined;
 
     if ('serviceWorker' in navigator) {
+      // Use navigator.serviceWorker.ready to get the active controlling SW (sw.js).
+      // sw.js already importScripts('/firebase-messaging-sw.js') so Firebase messaging
+      // is active within that single SW scope.
+      //
+      // IMPORTANT: Do NOT fall back to registering /firebase-messaging-sw.js as a
+      // separate SW — that would create two independent SWs both receiving the same
+      // push event, causing duplicate OS notifications.
       try {
-        const readyReg = await navigator.serviceWorker.ready;
-        if (readyReg) {
-          serviceWorkerRegistration = readyReg;
-        }
+        serviceWorkerRegistration = await navigator.serviceWorker.ready;
       } catch (e) {
-        console.warn('SW ready check notice:', e);
+        console.warn('[firebase.ts] SW ready check failed:', e);
       }
 
       if (!serviceWorkerRegistration) {
+        // Only register sw.js (Workbox PWA SW that includes firebase-messaging-sw.js).
         try {
-          serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js');
-        } catch {
-          try {
-            serviceWorkerRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          } catch (e) {
-            console.warn('SW register notice:', e);
-          }
+          serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        } catch (e) {
+          console.warn('[firebase.ts] SW registration failed:', e);
         }
       }
     }
