@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, Check, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { registerUser, ApiError } from '@/lib/api/auth';
+import { AnalyticsEvents } from '@/lib/analytics';
 
 function RegisterForm() {
   const router = useRouter();
@@ -55,6 +56,8 @@ function RegisterForm() {
         access_code: accessCode.trim().toUpperCase(),
       });
       sessionStorage.setItem('celebrate_login', '1');
+      AnalyticsEvents.signup({ role: 'student_individual', source: 'register' });
+      AnalyticsEvents.codeRedeemed({ code_type: 'individual', code_prefix: accessCode.trim().slice(0, 4) });
       router.push('/onboarding');
     } catch (err) {
       if (err instanceof ApiError) {

@@ -124,7 +124,7 @@ export async function middleware(request: NextRequest) {
       if (session.role.startsWith('student')) {
         return NextResponse.redirect(new URL('/student', request.url));
       }
-      if (session.role === 'admin') {
+      if (session.role === 'admin' || session.role === 'super_admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
       }
     }
@@ -133,7 +133,7 @@ export async function middleware(request: NextRequest) {
       if (role?.startsWith('student')) {
         return NextResponse.redirect(new URL('/student', request.url));
       }
-      if (role === 'admin') {
+      if (role === 'admin' || role === 'super_admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
       }
     }
@@ -155,7 +155,7 @@ export async function middleware(request: NextRequest) {
   // 2. Fast-path: role verified directly from the active session JWT
   if (session.role) {
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-      if (session.role !== 'admin') {
+      if (session.role !== 'admin' && session.role !== 'super_admin') {
         const loginUrl = new URL('/admin/login', request.url);
         loginUrl.searchParams.set('hint', 'not_admin');
         return NextResponse.redirect(loginUrl);
@@ -189,7 +189,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && role !== 'admin') {
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && role !== 'admin' && role !== 'super_admin') {
     const loginUrl = new URL('/admin/login', request.url);
     loginUrl.searchParams.set('hint', 'not_admin');
     return NextResponse.redirect(loginUrl);

@@ -14,6 +14,7 @@ import {
 import Link from 'next/link';
 import type { Chapter, Topic, TopicDetail } from '@/types/topics';
 import { TopicListItem } from '@/components/student/TopicListItem';
+import { AnalyticsEvents } from '@/lib/analytics';
 import { LearningStep } from '@/components/student/LearningStep';
 import { PracticeQuestion } from '@/components/student/PracticeQuestion';
 import { MathContent } from '@/components/student/MathContent';
@@ -801,6 +802,7 @@ function LearningFlow({
     getTopicDetail(topicId)
       .then((data) => {
         setDetail(data);
+        AnalyticsEvents.topicOpened({ topic_id: topicId, title: topicTitle });
         // Engagement signal for the streak — fires once per topic open,
         // independent of whether the student finishes it. The response
         // itself is the trigger for the streak celebration — this is the
@@ -865,6 +867,7 @@ function LearningFlow({
     } else {
       // Finished practice — this is what makes the topic eligible for the
       // recall queue (creates its first TopicReview row server-side).
+      AnalyticsEvents.practiceFinished({ topic_id: topicId, score: nextScore, total, passed: total > 0 && nextScore / total >= 0.5 });
       submitTopicCompletion(topicId, Math.round((nextScore / total) * 100)).then((ok) => {
         if (ok) {
           toast.success('Topic completed', `${nextScore}/${total} correct`);

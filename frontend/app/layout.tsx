@@ -6,6 +6,7 @@ import { AppToaster } from '@/components/ui/AppToaster';
 import { CelebrationProvider } from '@/components/ui/celebration/CelebrationContext';
 import AuthSyncListener from '@/components/AuthSyncListener';
 import PWARegistration from '@/components/PWARegistration';
+import { AnalyticsInit } from '@/components/AnalyticsInit';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -108,6 +109,7 @@ export default function RootLayout({
         </CelebrationProvider>
         <AuthSyncListener />
         <PWARegistration />
+        <AnalyticsInit />
       </body>
     </html>
   );

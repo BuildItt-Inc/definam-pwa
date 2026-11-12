@@ -249,6 +249,20 @@ export async function getMe(): Promise<UserMe> {
   return res.json() as Promise<UserMe>;
 }
 
+export async function sendHeartbeat(): Promise<{ status: string; last_seen_at: string } | null> {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/heartbeat`, {
+      method: 'POST',
+      headers,
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as { status: string; last_seen_at: string };
+  } catch {
+    return null;
+  }
+}
+
 export async function getAuthHeaders(): Promise<HeadersInit> {
   if (!accessToken) {
     // First attempt
