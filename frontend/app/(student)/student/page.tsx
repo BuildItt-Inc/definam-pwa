@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Flame, Download, Plus, ChevronRight } from 'lucide-react';
+import { handleAuthError } from '@/lib/api/auth';
 import { getHomeData, getSubjects, getCachedHomeData, getCachedSubjects } from '@/lib/api/topics';
 import type { HomeData, RecentTopic, Subject } from '@/types/topics';
 import { RecallCard } from '@/components/student/RecallCard';
@@ -190,12 +191,7 @@ export default function StudentHomePage() {
         }
       })
       .catch((err: unknown) => {
-        const is401 =
-          err instanceof Error &&
-          (err.message === 'Not authenticated' || (err as { status?: number }).status === 401);
-        if (is401) {
-          router.replace('/login');
-        } else {
+        if (!handleAuthError(err, router)) {
           setFetchError(err instanceof Error ? err.message : 'Failed to load');
         }
       });

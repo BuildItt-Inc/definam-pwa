@@ -21,6 +21,40 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Handles 401 session expiration, specifically distinguishing single-session logouts
+ * ("Session expired or logged in elsewhere.") from normal unauthenticated errors.
+ */
+export function handleAuthError(
+  err: unknown,
+  router?: { replace: (url: string) => void },
+): boolean {
+  const is401 =
+    (err instanceof ApiError && err.status === 401) ||
+    (typeof err === 'object' && err !== null && (err as { status?: number }).status === 401) ||
+    (err instanceof Error && err.message === 'Not authenticated');
+
+  if (is401) {
+    const msg = err instanceof Error ? err.message : '';
+    const isElsewhere =
+      msg.toLowerCase().includes('elsewhere') ||
+      msg.toLowerCase().includes('other device') ||
+      msg.toLowerCase().includes('session expired');
+
+    const targetUrl = isElsewhere
+      ? '/login?reason=logged_in_elsewhere'
+      : '/login?reason=session_expired';
+
+    if (router) {
+      router.replace(targetUrl);
+    } else if (typeof window !== 'undefined') {
+      window.location.replace(targetUrl);
+    }
+    return true;
+  }
+  return false;
+}
+
 // In-memory only. Never written to localStorage or sessionStorage.
 let accessToken: string | null = null;
 

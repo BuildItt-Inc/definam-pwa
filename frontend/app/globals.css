@@ -89,11 +89,9 @@
   }
 
   html {
-    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
-    overflow-x: hidden; /* Prevent page horizontal scroll */
-    /* Prevent layout shift from scrollbar appearance */
-    overflow-y: scroll;
-    /* Smooth scrolling everywhere */
+    /* Prevent page horizontal scroll while preserving native vertical scroll */
+    overflow-x: clip;
+    /* Smooth scrolling for anchor links */
     scroll-behavior: smooth;
     /* Prevent text size inflate on mobile orientation change */
     -webkit-text-size-adjust: 100%;
@@ -101,11 +99,10 @@
 
   body {
     --font-ui: var(--font-inter, Inter), system-ui, sans-serif;
-    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
-    overflow-x: hidden;
-    max-width: 100vw;
     margin: 0;
     min-height: 100dvh; /* dvh = dynamic viewport height — fixes mobile chrome bar */
+    width: 100%;
+    overflow-x: clip;
     font-family: var(--font-ui);
     font-size: var(--reading-size);
     line-height: 1.6;
@@ -172,9 +169,8 @@
   /* Full screen page that accounts for bottom nav */
   .page-with-nav {
     @apply flex flex-col;
-    height: 100dvh;
-    overflow-y: auto;
-    overscroll-behavior-y: none; /* Prevent iOS rubber-banding */
+    min-height: 100dvh;
+    width: 100%;
   }
 
   /* Standard card */

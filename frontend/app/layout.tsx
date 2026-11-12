@@ -76,7 +76,7 @@ export default function RootLayout({
                 try {
                   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
                   var hasProfile = !!localStorage.getItem('recall_student_profile');
-                  if (isStandalone || hasProfile) {
+                  if (isStandalone && hasProfile) {
                     document.documentElement.style.visibility = 'hidden';
                     document.documentElement.style.background = '#111827';
                     window.location.replace('/student');

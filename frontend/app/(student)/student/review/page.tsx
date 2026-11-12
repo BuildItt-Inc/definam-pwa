@@ -107,11 +107,22 @@ export default function RecallPage() {
           </div>
 
           <h2 className="text-[20px] font-bold text-ink tracking-tight mb-2">
-            No Reviews Scheduled Yet
+            No Reviews Due Right Now
           </h2>
-          <p className="text-[14px] leading-relaxed text-muted mb-6">
-            Recall uses spaced repetition to bring back topics right before you forget them. Complete a lesson in Learn mode, and your review cards will appear here automatically.
+          <p className="text-[14px] leading-relaxed text-muted mb-4">
+            Recall uses spaced repetition to resurface topics right as your brain begins to forget them. 
           </p>
+
+          {/* Day 1 tester notice */}
+          <div className="mb-6 w-full rounded-2xl border border-brand/20 bg-brand-dim p-3.5 text-left">
+            <p className="text-xs font-bold text-ink flex items-center gap-1.5 mb-1">
+              <Sparkles size={14} className="text-brand shrink-0" />
+              <span>Finished a topic today?</span>
+            </p>
+            <p className="text-[12.5px] text-ink/80 leading-snug">
+              Reviews unlock <strong>24 hours after completion</strong>. If you completed a lesson today, your first 2-minute review card will automatically appear here tomorrow!
+            </p>
+          </div>
 
           {/* Spaced repetition micro-guide */}
           <div className="w-full text-left rounded-2xl border border-border bg-card p-4 mb-6 shadow-xs space-y-3">
