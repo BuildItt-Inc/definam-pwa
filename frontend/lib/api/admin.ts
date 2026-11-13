@@ -17,7 +17,7 @@ export async function getAdminDashboard(classId?: string): Promise<AdminDashboar
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new Error(body.detail ?? 'Failed to fetch admin dashboard');
+    throw new ApiError(res.status, body.detail ?? 'Failed to fetch admin dashboard');
   }
 
   return res.json() as Promise<AdminDashboardData>;

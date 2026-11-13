@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { getAdminDashboard } from '@/lib/api/admin';
+import { ApiError } from '@/lib/api/auth';
 
 interface SidebarInfo {
   school_name: string;
@@ -21,6 +23,7 @@ const FALLBACK: SidebarInfo = {
 export default function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const router = useRouter();
   const [info, setInfo] = useState<SidebarInfo>(FALLBACK);
 
   useEffect(() => {
@@ -33,10 +36,12 @@ export default function AdminLayout({
           location: data.location,
         });
       })
-      .catch(() => {
-        // Non-fatal — sidebar shows fallback values
+      .catch((err: unknown) => {
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          router.replace('/admin/login');
+        }
       });
-  }, []);
+  }, [router]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-0">

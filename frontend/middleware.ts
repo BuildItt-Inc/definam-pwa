@@ -186,6 +186,14 @@ export async function middleware(request: NextRequest) {
   }
 
   if (error) {
+    if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+      const loginUrl = new URL('/admin/login', request.url);
+      loginUrl.searchParams.set('hint', 'session_error');
+      return NextResponse.redirect(loginUrl);
+    }
+    if (pathname.startsWith('/student')) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
     return NextResponse.next();
   }
 

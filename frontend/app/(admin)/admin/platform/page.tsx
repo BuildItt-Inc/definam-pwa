@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ApiError } from '@/lib/api/auth';
 import {
   Activity,
   Users,
@@ -39,6 +41,7 @@ import { toast } from '@/lib/toast';
 type ActiveTab = 'overview' | 'users' | 'codes' | 'funnel';
 
 export default function SuperAdminPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +93,10 @@ export default function SuperAdminPage() {
       const data = await getSuperAdminOverview();
       setOverview(data);
     } catch (err: unknown) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        router.replace('/admin/login?hint=not_admin');
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Could not load super admin overview');
     } finally {
       setLoading(false);
