@@ -33,6 +33,7 @@ import {
   reactivateAccessCode,
   resetSuperAdminUser,
   deleteSuperAdminUser,
+  updateSuperAdminUserRole,
   type SuperAdminOverviewResponse,
   type SuperAdminUserItem,
   type FunnelStepItem,
@@ -168,6 +169,17 @@ export default function SuperAdminPage() {
     if (activeTab === 'codes') void loadCodes();
     if (activeTab === 'funnel') void loadFunnel();
   }, [activeTab, userPage, userRoleFilter, userOnlineFilter, codePage, codeTypeFilter, codeStatusFilter]);
+
+  async function handleRoleChange(user: SuperAdminUserItem, newRole: string) {
+    try {
+      await updateSuperAdminUserRole(user.id, newRole);
+      toast.success('Role Updated', `User @${user.username} is now ${newRole}.`);
+      void loadUsers();
+      if (overview) void loadOverview();
+    } catch (err: unknown) {
+      toast.error('Role Update Failed', err instanceof Error ? err.message : 'Error updating role');
+    }
+  }
 
   async function handleDeleteUser(user: SuperAdminUserItem) {
     setIsDeleting(true);

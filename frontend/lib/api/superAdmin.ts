@@ -254,3 +254,17 @@ export async function deleteSuperAdminUser(userId: string): Promise<{ message: s
   }
   return res.json();
 }
+
+export async function updateSuperAdminUserRole(userId: string, role: string): Promise<{ message: string; role: string }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${BASE_URL}/api/v1/super-admin/users/${userId}/role`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ role }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: 'Failed to update user role' }));
+    throw new ApiError(res.status, body.detail || 'Failed to update user role');
+  }
+  return res.json();
+}

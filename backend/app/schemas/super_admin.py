@@ -109,3 +109,6 @@ class AccessCodeListResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+class UpdateUserRoleRequest(BaseModel):
+    role: str = Field(pattern="^(student_individual|student_org|admin|super_admin)$")

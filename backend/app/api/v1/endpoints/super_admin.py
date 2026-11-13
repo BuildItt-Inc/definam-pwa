@@ -36,6 +36,7 @@ from app.schemas.super_admin import (
     SuperAdminSignupAnalyticsResponse,
     SuperAdminUserItem,
     SuperAdminUsersListResponse,
+    UpdateUserRoleRequest,
 )
 
 router = APIRouter(prefix="/super-admin", tags=["super-admin"])
@@ -431,6 +432,31 @@ async def reset_user(
             message=msg,
             temporary_password=temp_password,
         )
+
+
+@router.patch("/users/{user_id}/role")
+async def update_user_role(
+    user_id: str,
+    payload: UpdateUserRoleRequest,
+    admin_claims: SuperAdminDep,
+) -> dict:
+    """Update a user's role (e.g. promote to super_admin or admin)."""
+    async with db_session() as session:
+        user_res = await session.execute(select(User).where(User.id == user_id))
+        user = user_res.scalar_one_or_none()
+        if not user:
+            raise NotFoundError("User not found.")
+
+        old_role = user.role
+        user.role = payload.role
+        await session.commit()
+
+        return {
+            "message": f"User {user.username} role updated from {old_role} to {user.role}.",
+            "user_id": user.id,
+            "username": user.username,
+            "role": user.role,
+        }
 
 
 @router.delete("/users/{user_id}")
