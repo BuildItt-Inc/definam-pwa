@@ -6,6 +6,7 @@ import { ArrowLeft, Sparkles, Zap } from 'lucide-react';
 import type { RecallItem } from '@/types/topics';
 import { QualityRating } from '@/components/student/QualityRating';
 import { submitRecallRating } from '@/lib/api/topics';
+import { AnalyticsEvents } from '@/lib/analytics';
 import { getHomeData } from '@/lib/api/topics';
 import { toast } from '@/lib/toast';
 
@@ -55,6 +56,7 @@ export default function RecallSessionPage() {
     // as completed and advances SM-2 scheduling, which is what the streak query counts.
     try {
       await submitRecallRating(currentItem.topic_id, rating);
+      AnalyticsEvents.reviewCompleted({ topic_id: currentItem.topic_id, quality: rating, repetitions: 1 });
     } catch {
       // Still advance the UI, but the student should know this rating
       // didn't actually get recorded server-side.

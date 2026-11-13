@@ -10,19 +10,51 @@ import { loginSchema, type LoginFormValues } from '@/lib/validations/auth';
 import { loginUser, logout, ApiError } from '@/lib/api/auth';
 import RecallLogo from '@/components/ui/RecallLogo';
 
-// ── Reset success banner (shown after /reset-password redirects here) ──────
-function ResetSuccessBanner() {
+// ── Status banner (password reset or single-session logout notice) ────────
+function AuthNoticeBanner() {
   const searchParams = useSearchParams();
-  if (searchParams.get('reset') !== '1') return null;
-  return (
-    <div
-      role="status"
-      className="mb-5 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium"
-    >
-      <span aria-hidden className="text-emerald-600 font-bold">✓</span>
-      Password updated. Sign in with your new password.
-    </div>
-  );
+  const reset = searchParams.get('reset');
+  const reason = searchParams.get('reason');
+
+  if (reset === '1') {
+    return (
+      <div
+        role="status"
+        className="mb-5 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium"
+      >
+        <span aria-hidden className="text-emerald-600 font-bold">✓</span>
+        Password updated. Sign in with your new password.
+      </div>
+    );
+  }
+
+  if (reason === 'logged_in_elsewhere') {
+    return (
+      <div
+        role="alert"
+        className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-medium leading-snug"
+      >
+        <span aria-hidden className="text-amber-600 font-bold mt-0.5">ℹ</span>
+        <span>
+          <strong>You were signed in on another device.</strong> For security, only one session can be active at a time. Sign in below to continue studying on this device.
+        </span>
+      </div>
+    );
+  }
+
+  if (reason === 'session_expired') {
+    return (
+      <div
+        role="alert"
+        className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-medium leading-snug"
+      >
+        <span aria-hidden className="text-amber-600 font-bold mt-0.5">ℹ</span>
+        <span>Your session expired. Please sign in again to continue your study streak.</span>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function LoginContent() {
@@ -99,9 +131,9 @@ function LoginContent() {
           Sign in to keep your streak going.
         </p>
 
-        {/* Reset success notification */}
+        {/* Status / reset success / logout notice */}
         <Suspense fallback={null}>
-          <ResetSuccessBanner />
+          <AuthNoticeBanner />
         </Suspense>
 
         {/* Global error banner */}

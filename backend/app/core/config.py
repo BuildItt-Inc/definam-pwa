@@ -65,6 +65,11 @@ class Settings(BaseSettings):
     onesignal_app_id: str = ""
     onesignal_api_key: str = ""
 
+    # ── Observability (Sentry) ─────────────────────────────────
+    sentry_dsn: str = ""
+    sentry_environment: str = "development"
+    sentry_traces_sample_rate: float = 0.2
+
     @field_validator("database_url", mode="before")
     @classmethod
     def normalise_database_url(cls, v: str) -> str:

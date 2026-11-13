@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     payments,
     recall,
     students,
+    super_admin,
     webhooks,
 )
 
@@ -26,6 +27,7 @@ api_router.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"]
 api_router.include_router(learning.router, tags=["learning"])
 api_router.include_router(internal.router, prefix="/internal", tags=["internal"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(super_admin.router, tags=["super-admin"])
 api_router.include_router(chat.router, tags=["chat"])
 api_router.include_router(recall.router, tags=["recall"])
 api_router.include_router(students.router, prefix="/students", tags=["students"])

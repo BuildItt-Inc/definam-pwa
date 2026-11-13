@@ -11,6 +11,7 @@ import {
   School,
   Settings,
   LogOut,
+  ShieldCheck,
   Menu,
   X,
 } from 'lucide-react';
@@ -88,6 +89,18 @@ const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
         icon: Settings,
         href: '/admin/settings',
         activePath: '/admin/settings',
+        exact: false,
+      },
+    ],
+  },
+  {
+    label: 'Platform',
+    items: [
+      {
+        label: 'Super Admin',
+        icon: ShieldCheck,
+        href: '/admin/platform',
+        activePath: '/admin/platform',
         exact: false,
       },
     ],

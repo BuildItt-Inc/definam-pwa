@@ -10,8 +10,10 @@ from app.core.exceptions import (
     AccessCodeNotFoundError,
     AccessCodeRevokedError,
     AccessCodeWrongTypeError,
+    BadRequestError,
     InvalidCredentialsError,
     InvalidTokenError,
+    NotFoundError,
     PasswordMismatchError,
     UserAlreadyRegisteredError,
 )
@@ -194,9 +196,10 @@ async def org_login(body: OrgLoginRequest, client_ip: str = "0.0.0.0") -> dict:
 
 
 async def change_password(token: str, body: ChangePasswordRequest) -> dict:
-    """
-    Change password for an admin on first login.
-    Clears the force_password_change flag after success.
+    """Change user password.
+
+    Requires old_password verification unless force_password_change is active
+    (e.g., admin or user's first login with a temporary password).
     """
     if body.new_password != body.confirm_password:
         raise PasswordMismatchError()
@@ -207,6 +210,19 @@ async def change_password(token: str, body: ChangePasswordRequest) -> dict:
         raise InvalidTokenError() from exc
 
     user_id: str = claims["sub"]
+    user_row = await get_user_by_id(user_id)
+    if not user_row:
+        raise NotFoundError("User not found.")
+
+    stored_hash = user_row.get("password_hash")
+    # If the user is NOT forced to change password and already has a password hash,
+    # require and verify the old password.
+    if not user_row.get("force_password_change") and stored_hash:
+        if not body.old_password:
+            raise BadRequestError("Current password is required.")
+        if not await verify_password(body.old_password, stored_hash):
+            raise InvalidCredentialsError("Current password is incorrect.")
+
     await update_user_password(user_id, await hash_password(body.new_password))
     await set_force_password_change(user_id, False)
 

@@ -29,6 +29,7 @@ dependencies = [
     "pdfplumber>=0.11.0",
     "firebase-admin>=6.5.0",
     "arq>=0.26.0",
+    "sentry-sdk[fastapi]>=2.0.0",
 ]
 
 [project.optional-dependencies]

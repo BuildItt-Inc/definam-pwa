@@ -3,8 +3,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { LogOut, Pencil, Check, X, Bell } from 'lucide-react';
-import { changePassword, getMe, logout, ApiError, getAuthHeaders } from '@/lib/api/auth';
+import { LogOut, Pencil, Check, X, Bell, MessageSquarePlus, HelpCircle, ChevronRight } from 'lucide-react';
+import { changePassword, getMe, logout, ApiError, getAuthHeaders, handleAuthError } from '@/lib/api/auth';
 import { getHomeData } from '@/lib/api/topics';
 import { getStudentProfile, type StudentProfile } from '@/lib/utils/studentProfile';
 import {
@@ -123,14 +123,9 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSendTestNotification(delaySec: number = 0) {
+  async function handleSendTestNotification() {
     setTestNotifLoading(true);
     try {
-      if (delaySec > 0) {
-        toast.info(`Test notification will fire in ${delaySec}s! Lock your phone or switch apps now.`);
-        await new Promise((resolve) => setTimeout(resolve, delaySec * 1000));
-      }
-
       const token = getStoredFcmToken();
       let sentViaCloud = false;
 
@@ -169,8 +164,9 @@ export default function SettingsPage() {
         setSchoolName(homeData.school_name);
         setNameInput(meData.name || meData.username);
       } catch (err: unknown) {
-        const is401 = err instanceof Error && (err.message === 'Not authenticated' || (err as { status?: number }).status === 401);
-        if (is401) { router.replace('/login'); } else { setFetchError(err instanceof Error ? err.message : 'Failed to load'); }
+        if (!handleAuthError(err, router)) {
+          setFetchError(err instanceof Error ? err.message : 'Failed to load');
+        }
       }
     }
     void load();
@@ -366,32 +362,18 @@ export default function SettingsPage() {
             </div>
           )}
           {notifEnabled && (
-            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-3 space-y-2">
+            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-3">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[12px] text-muted truncate">
-                  Test instant alert
+                  Test notification on this device
                 </span>
                 <button
                   type="button"
-                  onClick={() => handleSendTestNotification(0)}
+                  onClick={() => handleSendTestNotification()}
                   disabled={testNotifLoading}
                   className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
                 >
-                  {testNotifLoading ? 'Testing…' : 'Send Test Now'}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between gap-2 border-t border-border/50 pt-2">
-                <span className="text-[12px] text-muted truncate">
-                  Test lock screen banner (5s delay)
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSendTestNotification(5)}
-                  disabled={testNotifLoading}
-                  className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {testNotifLoading ? 'Scheduling…' : 'Test Lock Screen'}
+                  {testNotifLoading ? 'Testing…' : 'Send Test Notification'}
                 </button>
               </div>
             </div>
@@ -422,6 +404,57 @@ export default function SettingsPage() {
             </form>
           </div>
         )}
+
+        {/* Help & Feedback */}
+        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
+          <div className="border-b border-border bg-bg-0 px-4 py-2.5">
+            <span className="text-[13px] font-bold text-ink">Help &amp; Feedback</span>
+          </div>
+          <div className="divide-y divide-border">
+            <a
+              href="mailto:support@definam.ng?subject=Recall%20App%20Feedback"
+              className="flex items-center justify-between px-4 py-3 text-ink hover:bg-bg-1 active:bg-bg-2 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-dim text-brand">
+                  <MessageSquarePlus size={16} strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="text-[14px] font-semibold text-ink leading-tight">Send Feedback</p>
+                  <p className="text-[12px] text-muted">Suggest improvements or report an issue</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted" />
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setShowInstallModal(true)}
+              className="flex w-full items-center justify-between px-4 py-3 text-left text-ink hover:bg-bg-1 active:bg-bg-2 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-bg-2 text-ink">
+                  <HelpCircle size={16} strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="text-[14px] font-semibold text-ink leading-tight">Install App Guide</p>
+                  <p className="text-[12px] text-muted">How to install Recall on iPhone or Android</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted" />
+            </button>
+
+            <div className="flex items-center justify-between px-4 py-2.5 text-xs text-muted">
+              <Link href="/terms" className="hover:text-ink hover:underline">
+                Terms of Service
+              </Link>
+              <span>·</span>
+              <Link href="/privacy" className="hover:text-ink hover:underline">
+                Privacy Policy
+              </Link>
+            </div>
+          </div>
+        </div>
 
         <button type="button" onClick={() => setShowLogoutConfirm(true)}
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-border-2 bg-card py-3.5 text-[16px] font-bold text-danger active:bg-bg-1 transition-colors">

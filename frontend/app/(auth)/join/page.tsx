@@ -15,6 +15,7 @@ import Link from 'next/link';
 
 import { orgLoginSchema, type OrgLoginFormValues } from '@/lib/validations/auth';
 import { orgLogin, ApiError } from '@/lib/api/auth';
+import { AnalyticsEvents } from '@/lib/analytics';
 import { InfoCard } from '@/components/ui/InfoCard';
 
 export default function JoinPage() {
@@ -42,6 +43,8 @@ export default function JoinPage() {
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
       });
       sessionStorage.setItem('celebrate_login', '1');
+      AnalyticsEvents.signup({ role: 'student_org', source: 'join' });
+      AnalyticsEvents.codeRedeemed({ code_type: 'org', code_prefix: values.access_code.slice(0, 4) });
       router.push('/student');
     } catch (err) {
       if (err instanceof ApiError && err.status >= 400 && err.status < 500) {

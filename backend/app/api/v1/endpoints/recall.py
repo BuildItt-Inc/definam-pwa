@@ -108,7 +108,7 @@ async def record_step4_attempt(
         await touch_daily_activity(session, user_id)
         await session.commit()
 
-        return {
+        response_data = {
             "topic_id": topic_id,
             "repetitions": review.repetitions,
             "last_reviewed_at": review.last_reviewed_at.isoformat(),
@@ -116,6 +116,11 @@ async def record_step4_attempt(
             "interval_days": review.interval_days,
             "accuracy_score": review.accuracy_score,
         }
+
+    # Refresh Redis recall queue cache after commit (best-effort)
+    await _refresh_recall_queue(user_id)
+
+    return response_data
 
 
 # ── SM-2 recall endpoint ───────────────────────────────────────────────────

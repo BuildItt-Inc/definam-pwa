@@ -81,7 +81,7 @@ function AdminLoginForm() {
         password: values.password,
       });
       // Reject non-admin accounts immediately — don't let students land here
-      if (data.role !== 'admin') {
+      if (data.role !== 'admin' && data.role !== 'super_admin') {
         setLoginBannerError('This page is for administrators only.');
         try {
           await logout();

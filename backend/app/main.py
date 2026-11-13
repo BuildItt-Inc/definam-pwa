@@ -17,6 +17,23 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
+if settings.sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.sentry_environment,
+        traces_sample_rate=settings.sentry_traces_sample_rate,
+        send_default_pii=False,
+        integrations=[
+            FastApiIntegration(transaction_style="endpoint"),
+            SqlalchemyIntegration(),
+        ],
+    )
+    logger.info("Sentry initialized for environment: %s", settings.sentry_environment)
+
 if not settings.cookie_secure:
     logger.warning(
         "COOKIE_SECURE is false — the refresh-token cookie is being set with "

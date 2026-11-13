@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import firebase_admin
@@ -114,7 +114,8 @@ async def register_token(
             )
             session.add(new_token)
 
-        # Prune older stale tokens for this user on the same device_type to prevent duplicate deliveries
+        # Prune older tokens for this user on the same device_type (e.g. user re-subscribed
+        # on the same browser — keep only the new token to prevent 2× delivery).
         if device_type:
             await session.execute(
                 delete(UserNotificationToken).where(
@@ -123,6 +124,16 @@ async def register_token(
                     UserNotificationToken.fcm_token != fcm_token,
                 )
             )
+
+        # Always prune tokens that haven't been used in 90 days (stale browsers / reinstalls)
+        ninety_days_ago = now - timedelta(days=90)
+        await session.execute(
+            delete(UserNotificationToken).where(
+                UserNotificationToken.user_id == user_id,
+                UserNotificationToken.fcm_token != fcm_token,
+                UserNotificationToken.last_used_at < ninety_days_ago,
+            )
+        )
 
         await session.commit()
         logger.info("FCM token registered/updated for user %s.", user_id)
@@ -170,7 +181,9 @@ async def send_multicast_fcm(
     for r in tokens_result:
         if r.fcm_token not in seen_tokens:
             seen_tokens.add(r.fcm_token)
-            token_records.append({"id": r.id, "token": r.fcm_token, "user_id": r.user_id})
+            token_records.append(
+                {"id": r.id, "token": r.fcm_token, "user_id": r.user_id}
+            )
 
     tokens = [r["token"] for r in token_records]
 
@@ -210,7 +223,9 @@ async def send_multicast_fcm(
             elif frontend_url.startswith("https://"):
                 fcm_link = f"{frontend_url}{target_path}"
 
-            fcm_options = messaging.WebpushFCMOptions(link=fcm_link) if fcm_link else None
+            fcm_options = (
+                messaging.WebpushFCMOptions(link=fcm_link) if fcm_link else None
+            )
 
             # Prepare message with WebpushConfig for browser notifications
             icon_url = (

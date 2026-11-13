@@ -61,14 +61,14 @@ const INCLUDED = [
 
 export default function LandingPage() {
   const router = useRouter();
-  const [isStudent, setIsStudent] = useState(() => {
+  const [isStandaloneApp, setIsStandaloneApp] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
         const isStandalone =
           window.matchMedia('(display-mode: standalone)').matches ||
           (window.navigator as unknown as { standalone?: boolean }).standalone === true;
         const hasProfile = !!localStorage.getItem('recall_student_profile');
-        return isStandalone || hasProfile;
+        return isStandalone && hasProfile;
       } catch {
         return false;
       }
@@ -83,16 +83,16 @@ export default function LandingPage() {
         (window.navigator as unknown as { standalone?: boolean }).standalone === true;
       const hasProfile = !!localStorage.getItem('recall_student_profile');
 
-      if (isStandalone || hasProfile) {
-        setIsStudent(true);
+      if (isStandalone && hasProfile) {
+        setIsStandaloneApp(true);
         router.replace('/student');
       }
     }
   }, [router]);
 
-  // If returning student or running in installed PWA standalone mode, render a neutral dark surface
-  // to guarantee zero landing page content is ever painted on screen before redirecting to workspace.
-  if (isStudent) {
+  // If launched strictly in installed PWA standalone mode with a profile, render neutral dark surface
+  // while router redirect to workspace completes
+  if (isStandaloneApp) {
     return <div className="min-h-screen bg-[#111827]" />;
   }
 

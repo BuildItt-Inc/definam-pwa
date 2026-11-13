@@ -42,7 +42,9 @@ async def get_chapter_topics(
 ) -> list[dict[str, Any]]:
     """List all topics for a given chapter. Only returns published topics."""
     user_id: str = claims["sub"]
-    return await database.get_topics_by_chapter(str(chapter_id), published_only=True, user_id=user_id)
+    return await database.get_topics_by_chapter(
+        str(chapter_id), published_only=True, user_id=user_id
+    )
 
 
 @router.get("/topics/{topic_id}")
