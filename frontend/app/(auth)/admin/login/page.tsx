@@ -6,14 +6,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertTriangle,
+  ChevronLeft,
   Eye,
   EyeOff,
   Loader2,
-  Lock,
-  LogIn,
-  Mail,
   ShieldCheck,
 } from 'lucide-react';
+import Link from 'next/link';
 
 import {
   adminLoginSchema,
@@ -23,6 +22,7 @@ import {
 } from '@/lib/validations/auth';
 import { loginUser, logout, changePassword, ApiError } from '@/lib/api/auth';
 import { InfoCard } from '@/components/ui/InfoCard';
+import RecallLogo from '@/components/ui/RecallLogo';
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -30,7 +30,10 @@ function AdminLoginForm() {
 
   const hint = searchParams.get('hint');
   const nextParam = searchParams.get('next');
-  const nextPath = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/admin';
+  const nextPath =
+    nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')
+      ? nextParam
+      : '/admin';
 
   const middlewareBanner =
     hint === 'not_admin'
@@ -41,12 +44,10 @@ function AdminLoginForm() {
 
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
 
-  // Per-form show/hide password state
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Per-form banner error state
   const [loginBannerError, setLoginBannerError] = useState<string | null>(null);
   const [changeBannerError, setChangeBannerError] = useState<string | null>(null);
 
@@ -80,13 +81,12 @@ function AdminLoginForm() {
         username_or_email: values.username,
         password: values.password,
       });
-      // Reject non-admin accounts immediately — don't let students land here
       if (data.role !== 'admin' && data.role !== 'super_admin') {
         setLoginBannerError('This page is for administrators only.');
         try {
           await logout();
         } catch {
-          // Ignore logout failures to preserve the specific banner error
+          // Ignore logout failures
         }
         return;
       }
@@ -97,13 +97,12 @@ function AdminLoginForm() {
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        setLoginBannerError('Invalid username or password');
+        setLoginBannerError('Invalid username or password.');
       } else {
         setLoginBannerError('Something went wrong. Please try again.');
       }
     }
   }
-
 
   // ── Submit: change password ────────────────────────────────────────────
   async function onChangePasswordSubmit(values: ChangePasswordFormValues) {
@@ -123,277 +122,266 @@ function AdminLoginForm() {
     }
   }
 
-  // ── Shared field wrapper classes ──────────────────────────────────────
-  function fieldBorder(hasError: boolean) {
-    return [
-      'border rounded-xl transition-colors',
-      hasError
-        ? 'border-danger'
-        : 'border-border-2 focus-within:border-ink',
-    ].join(' ');
-  }
-
   // ═════════════════════════════════════════════════════════════════════
   //  RENDER
   // ═════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-bg-0">
-      {/* App bar */}
-      <header className="flex items-center px-4 h-[56px] border-b border-border-2 bg-bg-0">
-        <span className="text-[15px] font-bold text-ink tracking-tight">
-          School Admin Portal
-        </span>
-      </header>
+    <div className="min-h-screen bg-[#fafbfa] flex flex-col justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-[390px] mx-auto">
 
-      <main className="px-5 pt-8 pb-12 md:max-w-md md:mx-auto md:pt-12">
+        {/* Back navigation */}
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push('/');
+            }
+          }}
+          aria-label="Go back"
+          className="-ml-1 mb-2 p-1.5 text-ink/80 hover:text-ink active:scale-95 transition-all inline-flex items-center"
+        >
+          <ChevronLeft size={24} strokeWidth={2} />
+        </button>
 
-        {/* ── LOGIN FORM (hidden once force password change is active) ── */}
+        {/* Brand logo */}
+        <div className="mb-3">
+          <RecallLogo markOnly className="h-10 w-10 text-brand" />
+        </div>
+
+        {/* ── LOGIN FORM ── */}
         {!forcePasswordChange && (
           <>
-            <h1 className="font-bold text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
-              School Admin Login
+            <h1 className="text-[28px] sm:text-[30px] font-bold text-ink tracking-tight mb-1.5 leading-tight">
+              Administrator Sign In
             </h1>
-            <p className="text-[13px] text-ink/50 mb-8">
-              Login to your Recall admin dashboard
+            <p className="text-[14.5px] text-muted mb-6">
+              Sign in to manage classes, access codes, and platform analytics.
             </p>
 
             {/* Middleware redirect banner */}
             {middlewareBanner && (
               <div
                 role="alert"
-                className="mb-6 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug"
+                className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] text-red-700 font-medium"
               >
                 {middlewareBanner}
               </div>
             )}
 
-            <form onSubmit={handleLoginSubmit(onLoginSubmit)} noValidate>
+            {/* Login error banner */}
+            {loginBannerError && (
+              <div
+                role="alert"
+                className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] text-red-700 font-medium"
+              >
+                {loginBannerError}
+              </div>
+            )}
 
+            <form onSubmit={handleLoginSubmit(onLoginSubmit)} noValidate className="space-y-4">
               {/* Username / email */}
-              <div className="mb-4">
-                <div className={fieldBorder(!!loginErrors.username)}>
-                  <label
-                    htmlFor="admin-username"
-                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
-                  >
-                    <Mail size={11} strokeWidth={2.5} aria-hidden />
-                    Username (your school email)
-                  </label>
-                  <input
-                    id="admin-username"
-                    type="email"
-                    autoComplete="email"
-                    spellCheck={false}
-                    autoCapitalize="none"
-                    placeholder="admin@yourschool.edu"
-                    className="w-full px-3.5 pt-1.5 pb-3.5 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
-                    {...registerLogin('username')}
-                  />
-                </div>
+              <div>
+                <label htmlFor="admin-username" className="block text-[14px] font-bold text-ink mb-1.5">
+                  Username or Email
+                </label>
+                <input
+                  id="admin-username"
+                  type="text"
+                  autoComplete="username"
+                  spellCheck={false}
+                  autoCapitalize="none"
+                  placeholder="admin@yourschool.edu"
+                  className={`w-full rounded-xl border ${
+                    loginErrors.username ? 'border-red-500' : 'border-gray-300'
+                  } bg-white px-4 py-3 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                  {...registerLogin('username')}
+                />
                 {loginErrors.username && (
-                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
+                  <p className="mt-1 text-xs text-red-600 font-medium">
                     {loginErrors.username.message}
                   </p>
                 )}
               </div>
 
               {/* Password */}
-              <div className="mb-7">
-                <div className={fieldBorder(!!loginErrors.password)}>
-                  <label
-                    htmlFor="admin-password"
-                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
+              <div>
+                <label htmlFor="admin-password" className="block text-[14px] font-bold text-ink mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="admin-password"
+                    type={showLoginPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="Your password"
+                    className={`w-full rounded-xl border ${
+                      loginErrors.password ? 'border-red-500' : 'border-gray-300'
+                    } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                    {...registerLogin('password')}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowLoginPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-ink transition-colors"
                   >
-                    <Lock size={11} strokeWidth={2.5} aria-hidden />
-                    Password
-                  </label>
-                  <div className="flex items-center px-3.5 pt-1.5 pb-3.5 gap-2">
-                    <input
-                      id="admin-password"
-                      type={showLoginPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      className="flex-1 min-w-0 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
-                      {...registerLogin('password')}
-                    />
-                    <button
-                      type="button"
-                      aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
-                      onClick={() => setShowLoginPassword((v) => !v)}
-                      className="flex-shrink-0 text-ink/30 hover:text-ink/60 transition-colors p-0.5"
-                    >
-                      {showLoginPassword ? (
-                        <EyeOff size={16} strokeWidth={2} />
-                      ) : (
-                        <Eye size={16} strokeWidth={2} />
-                      )}
-                    </button>
-                  </div>
+                    {showLoginPassword ? (
+                      <EyeOff size={18} strokeWidth={2} />
+                    ) : (
+                      <Eye size={18} strokeWidth={2} />
+                    )}
+                  </button>
                 </div>
                 {loginErrors.password && (
-                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
+                  <p className="mt-1 text-xs text-red-600 font-medium">
                     {loginErrors.password.message}
                   </p>
                 )}
               </div>
 
-              {/* Login error banner */}
-              {loginBannerError && (
-                <div
-                  role="alert"
-                  className="mb-4 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug"
-                >
-                  {loginBannerError}
-                </div>
-              )}
-
               {/* Submit */}
               <button
                 type="submit"
                 disabled={isLoginSubmitting}
-                className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
+                className="w-full mt-2 rounded-xl bg-brand py-3.5 text-[15.5px] font-bold text-white shadow-sm hover:bg-brand-dark active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoginSubmitting ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" aria-hidden />
-                    Logging in…
-                  </>
+                  <Loader2 size={18} className="animate-spin" aria-hidden />
                 ) : (
-                  <>
-                    <LogIn size={18} strokeWidth={2.2} aria-hidden />
-                    Login to Dashboard
-                  </>
+                  'Sign in'
                 )}
               </button>
             </form>
+
+            {/* Footer link */}
+            <p className="mt-8 text-center text-[13px] text-muted">
+              Not an administrator?{' '}
+              <Link
+                href="/login"
+                className="font-semibold text-brand hover:text-brand-dark transition-colors"
+              >
+                Student Sign In
+              </Link>
+            </p>
           </>
         )}
 
         {/* ── FORCE PASSWORD CHANGE BLOCK ─────────────────────────────── */}
         {forcePasswordChange && (
           <>
-            <h1 className="font-bold text-[28px] font-black text-ink tracking-tight leading-none mb-1.5">
-              Change Your Password
+            <h1 className="text-[28px] sm:text-[30px] font-bold text-ink tracking-tight mb-1.5 leading-tight">
+              Set Your Password
             </h1>
-            <p className="text-[13px] text-ink/50 mb-6">
+            <p className="text-[14.5px] text-muted mb-6">
               Set a permanent password before you continue.
             </p>
 
-            {/* warn warning banner */}
             <InfoCard
               tone="gold"
               icon={AlertTriangle}
               iconStyle="bare"
               title="First Login — Change Your Password"
               body="You're using a temporary password. Set a permanent one before you continue."
-              className="mb-7"
+              className="mb-6"
             />
+
+            {/* Change password error banner */}
+            {changeBannerError && (
+              <div
+                role="alert"
+                className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] text-red-700 font-medium"
+              >
+                {changeBannerError}
+              </div>
+            )}
 
             <form
               onSubmit={handleChangeSubmit(onChangePasswordSubmit)}
               noValidate
+              className="space-y-4"
             >
               {/* New password */}
-              <div className="mb-4">
-                <div className={fieldBorder(!!changeErrors.new_password)}>
-                  <label
-                    htmlFor="new-password"
-                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
+              <div>
+                <label htmlFor="new-password" className="block text-[14px] font-bold text-ink mb-1.5">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="new-password"
+                    type={showNewPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Min 8 chars, 1 uppercase, 1 number"
+                    className={`w-full rounded-xl border ${
+                      changeErrors.new_password ? 'border-red-500' : 'border-gray-300'
+                    } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                    {...registerChange('new_password')}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowNewPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-ink transition-colors"
                   >
-                    <Lock size={11} strokeWidth={2.5} aria-hidden />
-                    New Password
-                  </label>
-                  <div className="flex items-center px-3.5 pt-1.5 pb-3.5 gap-2">
-                    <input
-                      id="new-password"
-                      type={showNewPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      placeholder="••••••••"
-                      className="flex-1 min-w-0 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
-                      {...registerChange('new_password')}
-                    />
-                    <button
-                      type="button"
-                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
-                      onClick={() => setShowNewPassword((v) => !v)}
-                      className="flex-shrink-0 text-ink/30 hover:text-ink/60 transition-colors p-0.5"
-                    >
-                      {showNewPassword ? (
-                        <EyeOff size={16} strokeWidth={2} />
-                      ) : (
-                        <Eye size={16} strokeWidth={2} />
-                      )}
-                    </button>
-                  </div>
+                    {showNewPassword ? (
+                      <EyeOff size={18} strokeWidth={2} />
+                    ) : (
+                      <Eye size={18} strokeWidth={2} />
+                    )}
+                  </button>
                 </div>
                 {changeErrors.new_password && (
-                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
+                  <p className="mt-1 text-xs text-red-600 font-medium">
                     {changeErrors.new_password.message}
                   </p>
                 )}
               </div>
 
               {/* Confirm password */}
-              <div className="mb-7">
-                <div className={fieldBorder(!!changeErrors.confirm_password)}>
-                  <label
-                    htmlFor="confirm-password"
-                    className="flex items-center gap-1.5 px-3.5 pt-3 pb-0 text-[11px] font-bold uppercase tracking-wide text-ink cursor-pointer"
+              <div>
+                <label htmlFor="confirm-password" className="block text-[14px] font-bold text-ink mb-1.5">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirm-password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Repeat your new password"
+                    className={`w-full rounded-xl border ${
+                      changeErrors.confirm_password ? 'border-red-500' : 'border-gray-300'
+                    } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                    {...registerChange('confirm_password')}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-ink transition-colors"
                   >
-                    <Lock size={11} strokeWidth={2.5} aria-hidden />
-                    Confirm New Password
-                  </label>
-                  <div className="flex items-center px-3.5 pt-1.5 pb-3.5 gap-2">
-                    <input
-                      id="confirm-password"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      placeholder="••••••••"
-                      className="flex-1 min-w-0 text-[14px] text-ink bg-transparent outline-none placeholder:text-ink/25"
-                      {...registerChange('confirm_password')}
-                    />
-                    <button
-                      type="button"
-                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                      onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="flex-shrink-0 text-ink/30 hover:text-ink/60 transition-colors p-0.5"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={16} strokeWidth={2} />
-                      ) : (
-                        <Eye size={16} strokeWidth={2} />
-                      )}
-                    </button>
-                  </div>
+                    {showConfirmPassword ? (
+                      <EyeOff size={18} strokeWidth={2} />
+                    ) : (
+                      <Eye size={18} strokeWidth={2} />
+                    )}
+                  </button>
                 </div>
                 {changeErrors.confirm_password && (
-                  <p className="mt-1.5 ml-0.5 text-[11px] leading-none text-danger">
+                  <p className="mt-1 text-xs text-red-600 font-medium">
                     {changeErrors.confirm_password.message}
                   </p>
                 )}
               </div>
 
-              {/* Change password error banner */}
-              {changeBannerError && (
-                <div
-                  role="alert"
-                  className="mb-4 px-4 py-3.5 rounded-xl bg-danger-bg border border-danger/25 text-danger text-[13px] font-medium leading-snug"
-                >
-                  {changeBannerError}
-                </div>
-              )}
-
               {/* Submit */}
               <button
                 type="submit"
                 disabled={isChangeSubmitting}
-                className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm"
+                className="w-full mt-2 rounded-xl bg-brand py-3.5 text-[15.5px] font-bold text-white shadow-sm hover:bg-brand-dark active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isChangeSubmitting ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" aria-hidden />
-                    Saving…
-                  </>
+                  <Loader2 size={18} className="animate-spin" aria-hidden />
                 ) : (
                   <>
                     <ShieldCheck size={18} strokeWidth={2.2} aria-hidden />
@@ -404,16 +392,7 @@ function AdminLoginForm() {
             </form>
           </>
         )}
-          <p className="mt-8 text-center text-[12px] text-ink/40">
-            Not a school admin?{' '}
-            <a
-              href="/login"
-              className="font-semibold text-ink/60 hover:text-ink transition-colors"
-            >
-              Student Sign In
-            </a>
-          </p>
-      </main>
+      </div>
     </div>
   );
 }
