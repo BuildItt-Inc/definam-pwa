@@ -124,7 +124,10 @@ export async function middleware(request: NextRequest) {
       if (session.role.startsWith('student')) {
         return NextResponse.redirect(new URL('/student', request.url));
       }
-      if (session.role === 'admin' || session.role === 'super_admin') {
+      if (session.role === 'super_admin') {
+        return NextResponse.redirect(new URL('/admin/platform', request.url));
+      }
+      if (session.role === 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
       }
     }
@@ -133,7 +136,10 @@ export async function middleware(request: NextRequest) {
       if (role?.startsWith('student')) {
         return NextResponse.redirect(new URL('/student', request.url));
       }
-      if (role === 'admin' || role === 'super_admin') {
+      if (role === 'super_admin') {
+        return NextResponse.redirect(new URL('/admin/platform', request.url));
+      }
+      if (role === 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
       }
     }

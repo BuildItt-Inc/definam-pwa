@@ -43,6 +43,7 @@ function AdminLoginForm() {
         : null;
 
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
+  const [authenticatedRole, setAuthenticatedRole] = useState<string | null>(null);
 
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -90,10 +91,16 @@ function AdminLoginForm() {
         }
         return;
       }
+      setAuthenticatedRole(data.role);
       if (data.force_password_change) {
         setForcePasswordChange(true);
       } else {
-        router.push(nextPath);
+        if (data.role === 'super_admin') {
+          const destination = nextParam && nextParam !== '/admin' ? nextPath : '/admin/platform';
+          router.push(destination);
+        } else {
+          router.push(nextPath);
+        }
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -112,7 +119,12 @@ function AdminLoginForm() {
         new_password: values.new_password,
         confirm_password: values.confirm_password,
       });
-      router.push(nextPath);
+      if (authenticatedRole === 'super_admin') {
+        const destination = nextParam && nextParam !== '/admin' ? nextPath : '/admin/platform';
+        router.push(destination);
+      } else {
+        router.push(nextPath);
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         setChangeBannerError(err.message || 'Something went wrong. Please try again.');
@@ -157,7 +169,7 @@ function AdminLoginForm() {
               Administrator Sign In
             </h1>
             <p className="text-[14.5px] text-muted mb-6">
-              Sign in to manage classes, access codes, and platform analytics.
+              Sign in with your school admin or platform credentials.
             </p>
 
             {/* Middleware redirect banner */}
