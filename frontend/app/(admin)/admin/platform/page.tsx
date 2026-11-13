@@ -162,12 +162,14 @@ export default function SuperAdminPage() {
 
   useEffect(() => {
     void loadOverview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (activeTab === 'users') void loadUsers();
     if (activeTab === 'codes') void loadCodes();
     if (activeTab === 'funnel') void loadFunnel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, userPage, userRoleFilter, userOnlineFilter, codePage, codeTypeFilter, codeStatusFilter]);
 
   async function handleRoleChange(user: SuperAdminUserItem, newRole: string) {
