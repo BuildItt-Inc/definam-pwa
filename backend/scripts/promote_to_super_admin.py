@@ -17,17 +17,18 @@ import asyncio
 
 from sqlalchemy import select
 
+from app.core.security import hash_password
 from app.db.database import db_session
 from app.db.models import User
 
 
-async def promote_user(username: str, new_password: str | None = None):
+async def promote_user(username: str, new_password: str | None = None) -> None:
     async with db_session() as session:
         result = await session.execute(select(User).where(User.username == username))
         user = result.scalar_one_or_none()
 
         if not user:
-            print(f"❌  User '{username}' not found in the database.")
+            print(f"[ERROR] User '{username}' not found in the database.")
             return
 
         old_role = user.role
@@ -35,17 +36,16 @@ async def promote_user(username: str, new_password: str | None = None):
         user.force_password_change = False
 
         if new_password:
-            from app.core.security import hash_password
             user.password_hash = await hash_password(new_password)
-            print(f"   Password also updated.")
+            print("   Password also updated.")
 
         await session.commit()
-        print(f"✅  User '{username}' promoted: {old_role} → super_admin")
-        print(f"   User ID : {user.id}")
-        print(f"   Email   : {user.email or '(none)'}")
+        print(f"[OK] User '{username}' promoted: {old_role} -> super_admin")
+        print(f"     User ID : {user.id}")
+        print(f"     Email   : {user.email or '(none)'}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Promote a user to super_admin.")
     parser.add_argument("--username", required=True, help="The username to promote")
     parser.add_argument("--new-password", default=None, help="Optional: reset their password too")
