@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  Trash2,
 } from 'lucide-react';
 import {
   getSuperAdminOverview,
@@ -31,6 +32,7 @@ import {
   revokeAccessCode,
   reactivateAccessCode,
   resetSuperAdminUser,
+  deleteSuperAdminUser,
   type SuperAdminOverviewResponse,
   type SuperAdminUserItem,
   type FunnelStepItem,
@@ -62,6 +64,8 @@ export default function SuperAdminPage() {
   const [selectedUserForReset, setSelectedUserForReset] = useState<SuperAdminUserItem | null>(null);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<SuperAdminUserItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Codes data
   const [codes, setCodes] = useState<AccessCodeItem[]>([]);
@@ -164,6 +168,21 @@ export default function SuperAdminPage() {
     if (activeTab === 'codes') void loadCodes();
     if (activeTab === 'funnel') void loadFunnel();
   }, [activeTab, userPage, userRoleFilter, userOnlineFilter, codePage, codeTypeFilter, codeStatusFilter]);
+
+  async function handleDeleteUser(user: SuperAdminUserItem) {
+    setIsDeleting(true);
+    try {
+      await deleteSuperAdminUser(user.id);
+      toast.success('User Deleted', `Account @${user.username} was permanently deleted.`);
+      setUserToDelete(null);
+      void loadUsers();
+      if (overview) void loadOverview();
+    } catch (err: unknown) {
+      toast.error('Deletion Failed', err instanceof Error ? err.message : 'Could not delete user');
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   async function handleResetUser(user: SuperAdminUserItem) {
     setIsResetting(true);
@@ -855,6 +874,43 @@ export default function SuperAdminPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: DELETE USER ──────────────────────────────────────────── */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl space-y-4">
+            <div className="flex items-center gap-2.5 text-red-600">
+              <span className="p-2 rounded-xl bg-red-100">
+                <Trash2 size={18} />
+              </span>
+              <h3 className="text-base font-bold text-gray-900">Delete User Account</h3>
+            </div>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Are you sure you want to permanently delete <strong>@{userToDelete.username}</strong> ({userToDelete.name || userToDelete.role})?
+            </p>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-[11.5px] text-red-800 font-medium">
+              ⚠️ Warning: This will permanently remove their learning history, reviews, and active sessions. This action cannot be undone.
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setUserToDelete(null)}
+                className="px-3.5 py-2 text-xs font-bold text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => void handleDeleteUser(userToDelete)}
+                className="px-3.5 py-2 text-xs font-bold bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting…' : 'Delete Account'}
+              </button>
+            </div>
           </div>
         </div>
       )}

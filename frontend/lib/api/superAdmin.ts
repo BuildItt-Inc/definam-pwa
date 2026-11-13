@@ -241,3 +241,16 @@ export async function resetSuperAdminUser(userId: string, data: ResetUserRequest
   }
   return res.json();
 }
+
+export async function deleteSuperAdminUser(userId: string): Promise<{ message: string }> {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${BASE_URL}/api/v1/super-admin/users/${userId}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: 'Failed to delete user' }));
+    throw new ApiError(res.status, body.detail || 'Failed to delete user');
+  }
+  return res.json();
+}
