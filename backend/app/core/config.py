@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # ── App ───────────────────────────────────────────────
+    environment: str = "development"
     app_url: str = "http://localhost:8000"
     frontend_url: str = "http://localhost:3000"
     # Stored as str so pydantic-settings won't JSON-parse it before our
@@ -69,6 +70,10 @@ class Settings(BaseSettings):
     sentry_dsn: str = ""
     sentry_environment: str = "development"
     sentry_traces_sample_rate: float = 0.2
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment.lower() == "production"
 
     @field_validator("database_url", mode="before")
     @classmethod

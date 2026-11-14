@@ -566,3 +566,36 @@ class UserNotificationToken(Base):
     )
 
     user: Mapped[User] = relationship("User")
+
+
+# ── Audit Logs ─────────────────────────────────────────────────────────────
+
+
+class AuditLog(Base):
+    """Append-only audit log of administrative and security events."""
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    actor_user_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    actor_username: Mapped[str] = mapped_column(String(255), nullable=False)
+    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    target_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    target_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(tz=UTC),
+        index=True,
+    )
+
+    actor: Mapped[User | None] = relationship("User")

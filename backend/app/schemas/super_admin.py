@@ -110,5 +110,26 @@ class AccessCodeListResponse(BaseModel):
     page_size: int
     total_pages: int
 
+
 class UpdateUserRoleRequest(BaseModel):
     role: str = Field(pattern="^(student_individual|student_org|admin|super_admin)$")
+
+
+class AuditLogItem(BaseModel):
+    id: str
+    actor_user_id: str | None = None
+    actor_username: str
+    action: str
+    target_type: str | None = None
+    target_id: str | None = None
+    details: dict | None = None
+    ip: str | None = None
+    created_at: datetime
+
+
+class AuditLogListResponse(BaseModel):
+    items: list[AuditLogItem]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

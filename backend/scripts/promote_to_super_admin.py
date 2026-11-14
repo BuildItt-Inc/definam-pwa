@@ -48,7 +48,9 @@ async def promote_user(username: str, new_password: str | None = None) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Promote a user to super_admin.")
     parser.add_argument("--username", required=True, help="The username to promote")
-    parser.add_argument("--new-password", default=None, help="Optional: reset their password too")
+    parser.add_argument(
+        "--new-password", default=None, help="Optional: reset their password too"
+    )
     args = parser.parse_args()
     asyncio.run(promote_user(args.username, args.new_password))
 
