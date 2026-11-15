@@ -118,6 +118,55 @@ def create_super_admin_refresh_jwt(
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
+def create_super_admin_jwt(
+    subject: str, extra_claims: dict[str, Any] | None = None
+) -> str:
+    """Issue a short-lived access token specifically for super admins (90 mins, scope=super_admin)."""
+    settings = get_settings()
+    now = datetime.now(tz=UTC)
+    expire = now + timedelta(minutes=90)
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "iat": now,
+        "exp": expire,
+        "scope": "super_admin",
+        **(extra_claims or {}),
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def create_super_admin_refresh_jwt(
+    subject: str,
+    extra_claims: dict[str, Any] | None = None,
+    orig_iat: datetime | int | float | None = None,
+) -> str:
+    """Issue a rotating refresh token for super admin with an absolute maximum lifetime of 12 hours."""
+    settings = get_settings()
+    now = datetime.now(tz=UTC)
+    if orig_iat is None:
+        initial_ts = int(now.timestamp())
+        initial_dt = now
+    elif isinstance(orig_iat, (int, float)):
+        initial_ts = int(orig_iat)
+        initial_dt = datetime.fromtimestamp(orig_iat, tz=UTC)
+    else:
+        initial_ts = int(orig_iat.timestamp())
+        initial_dt = orig_iat
+
+    max_expire = initial_dt + timedelta(hours=12)
+
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "iat": now,
+        "exp": max_expire,
+        "type": "refresh",
+        "scope": "super_admin",
+        "orig_iat": initial_ts,
+        **(extra_claims or {}),
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
 def decode_jwt(token: str) -> dict[str, Any]:
     """
     Decode and verify a JWT. Raises ValueError on invalid/expired tokens
