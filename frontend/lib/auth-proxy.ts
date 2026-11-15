@@ -20,6 +20,7 @@ export const BACKEND =
   process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export const REFRESH_COOKIE = 'refresh_token';
+export const SUPER_ADMIN_REFRESH_COOKIE = 'recall_super_admin_refresh_token';
 
 /**
  * Copy the refresh_token Set-Cookie from the backend response onto the
@@ -43,10 +44,44 @@ export function transplantRefreshCookie(
 }
 
 /**
+ * Copy the recall_super_admin_refresh_token Set-Cookie from the backend response
+ * onto the proxy response, re-issuing it under the frontend domain with 12h max age.
+ */
+export function transplantSuperAdminRefreshCookie(
+  backendSetCookie: string | null,
+  response: NextResponse,
+): void {
+  if (!backendSetCookie) return;
+  const valueMatch = backendSetCookie.match(/recall_super_admin_refresh_token=([^;]+)/);
+  if (!valueMatch) return;
+  const maxAgeMatch = backendSetCookie.match(/[Mm]ax-[Aa]ge=(\d+)/);
+  response.cookies.set(SUPER_ADMIN_REFRESH_COOKIE, valueMatch[1], {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: maxAgeMatch ? parseInt(maxAgeMatch[1], 10) : 12 * 60 * 60,
+    path: '/',
+  });
+}
+
+/**
  * Clear the refresh_token cookie from the frontend domain.
  */
 export function clearRefreshCookie(response: NextResponse): void {
   response.cookies.set(REFRESH_COOKIE, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  });
+}
+
+/**
+ * Clear the recall_super_admin_refresh_token cookie from the frontend domain.
+ */
+export function clearSuperAdminRefreshCookie(response: NextResponse): void {
+  response.cookies.set(SUPER_ADMIN_REFRESH_COOKIE, '', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
