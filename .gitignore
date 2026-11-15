@@ -32,3 +32,4 @@ __pycache__/
 backend/.env
 branch_structure.json
 *.tsbuildinfo
+config.bat
