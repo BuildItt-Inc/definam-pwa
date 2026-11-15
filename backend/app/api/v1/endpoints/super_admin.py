@@ -5,15 +5,17 @@ import string
 import uuid
 from datetime import UTC, datetime, time, timedelta
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from sqlalchemy import and_, distinct, func, or_, select
 
 from app.api.deps import SuperAdminDep
+from app.core.enums import AuditAction
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.security import hash_password
 from app.db.database import db_session
 from app.db.models import (
     AccessCode,
+    AuditLog,
     ChatMessage,
     DailyActivity,
     DailyRecallQueue,
@@ -25,6 +27,8 @@ from app.db.models import (
 from app.schemas.super_admin import (
     AccessCodeItem,
     AccessCodeListResponse,
+    AuditLogItem,
+    AuditLogListResponse,
     FunnelStepItem,
     GenerateCodesRequest,
     GenerateCodesResponse,
@@ -38,6 +42,7 @@ from app.schemas.super_admin import (
     SuperAdminUsersListResponse,
     UpdateUserRoleRequest,
 )
+from app.services.audit import get_client_ip, write_audit_log
 
 router = APIRouter(prefix="/super-admin", tags=["super-admin"])
 
@@ -386,7 +391,8 @@ async def get_beta_funnel(_: SuperAdminDep) -> SuperAdminFunnelResponse:
 async def reset_user(
     user_id: str,
     payload: ResetUserRequest,
-    _: SuperAdminDep,
+    admin_claims: SuperAdminDep,
+    request: Request,
 ) -> ResetUserResponse:
     """Reset a user's session, device fingerprint, or password (support action)."""
     async with db_session() as session:
@@ -411,6 +417,26 @@ async def reset_user(
             temp_password = "".join(secrets.choice(alphabet) for _ in range(10))
             user.password_hash = await hash_password(temp_password)
             user.force_password_change = True
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.USER_RESET,
+            target_type="user",
+            target_id=user.id,
+            details={
+                "username": user.username,
+                "reset_session": payload.reset_session,
+                "clear_device_fingerprint": payload.clear_device_fingerprint,
+                "password_reset": bool(payload.new_password or temp_password),
+                "force_password_change": payload.force_password_change,
+            },
+            ip=get_client_ip(request),
+        )
 
         await session.commit()
 
@@ -439,8 +465,16 @@ async def update_user_role(
     user_id: str,
     payload: UpdateUserRoleRequest,
     admin_claims: SuperAdminDep,
+    request: Request,
 ) -> dict:
-    """Update a user's role (e.g. promote to super_admin or admin)."""
+    """Update a user's role (disallows granting super_admin or modifying own role)."""
+    if payload.role == "super_admin":
+        raise BadRequestError(
+            "Cannot grant super_admin role via this endpoint; use super admin invite or seed."
+        )
+    if user_id == admin_claims["sub"]:
+        raise BadRequestError("Cannot change your own role.")
+
     async with db_session() as session:
         user_res = await session.execute(select(User).where(User.id == user_id))
         user = user_res.scalar_one_or_none()
@@ -449,6 +483,25 @@ async def update_user_role(
 
         old_role = user.role
         user.role = payload.role
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.USER_ROLE_CHANGE,
+            target_type="user",
+            target_id=user.id,
+            details={
+                "username": user.username,
+                "old_role": old_role,
+                "new_role": payload.role,
+            },
+            ip=get_client_ip(request),
+        )
+
         await session.commit()
 
         return {
@@ -463,6 +516,7 @@ async def update_user_role(
 async def remove_user(
     user_id: str,
     admin_claims: SuperAdminDep,
+    request: Request,
 ) -> dict:
     """Permanently delete a user account (cannot delete own super admin account)."""
     if user_id == admin_claims["sub"]:
@@ -474,10 +528,32 @@ async def remove_user(
         if not user:
             raise NotFoundError("User not found.")
 
+        target_username = user.username
+        target_email = user.email
+        target_role = user.role
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.USER_DELETE,
+            target_type="user",
+            target_id=user_id,
+            details={
+                "username": target_username,
+                "email": target_email,
+                "role": target_role,
+            },
+            ip=get_client_ip(request),
+        )
+
         await session.delete(user)
         await session.commit()
 
-    return {"message": f"User {user.username} successfully deleted."}
+    return {"message": f"User {target_username} successfully deleted."}
 
 
 @router.get("/codes", response_model=AccessCodeListResponse)
@@ -553,7 +629,8 @@ async def list_access_codes(
 @router.post("/codes/generate", response_model=GenerateCodesResponse)
 async def generate_codes(
     payload: GenerateCodesRequest,
-    _: SuperAdminDep,
+    admin_claims: SuperAdminDep,
+    request: Request,
 ) -> GenerateCodesResponse:
     """Generate free bulk access codes (e.g. for beta testers or schools)."""
     if payload.type == "org" and not payload.school_id:
@@ -592,6 +669,27 @@ async def generate_codes(
             )
 
         session.add_all(codes_to_add)
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.CODE_GENERATE,
+            target_type="access_code",
+            target_id=None,
+            details={
+                "count": len(generated_strings),
+                "type": payload.type,
+                "school_id": payload.school_id,
+                "prefix": prefix,
+                "duration_months": payload.duration_months,
+            },
+            ip=get_client_ip(request),
+        )
+
         await session.commit()
 
     return GenerateCodesResponse(
@@ -604,7 +702,8 @@ async def generate_codes(
 @router.post("/codes/{code_id}/revoke")
 async def revoke_code(
     code_id: str,
-    _: SuperAdminDep,
+    admin_claims: SuperAdminDep,
+    request: Request,
 ) -> dict:
     """Revoke any access code platform-wide."""
     async with db_session() as session:
@@ -613,7 +712,23 @@ async def revoke_code(
         if not code:
             raise NotFoundError("Access code not found.")
 
+        prev_status = code.status
         code.status = "revoked"
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.CODE_REVOKE,
+            target_type="access_code",
+            target_id=code.id,
+            details={"code": code.code, "previous_status": prev_status},
+            ip=get_client_ip(request),
+        )
+
         await session.commit()
 
     return {"message": f"Access code {code.code} has been revoked."}
@@ -622,7 +737,8 @@ async def revoke_code(
 @router.post("/codes/{code_id}/reactivate")
 async def reactivate_code(
     code_id: str,
-    _: SuperAdminDep,
+    admin_claims: SuperAdminDep,
+    request: Request,
 ) -> dict:
     """Reactivate a revoked access code platform-wide."""
     async with db_session() as session:
@@ -631,10 +747,93 @@ async def reactivate_code(
         if not code:
             raise NotFoundError("Access code not found.")
 
+        prev_status = code.status
         # If it was previously activated by a user, restore to active, else pending
         code.status = "active" if code.activated_by else "pending"
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.CODE_REACTIVATE,
+            target_type="access_code",
+            target_id=code.id,
+            details={
+                "code": code.code,
+                "previous_status": prev_status,
+                "restored_status": code.status,
+            },
+            ip=get_client_ip(request),
+        )
+
         await session.commit()
 
     return {
         "message": f"Access code {code.code} has been reactivated to {code.status}."
     }
+
+
+# ── Audit Logs ─────────────────────────────────────────────────────────────
+
+
+@router.get("/audit-logs", response_model=AuditLogListResponse)
+async def list_audit_logs(
+    _: SuperAdminDep,
+    actor_user_id: str | None = Query(default=None),
+    action: str | None = Query(default=None),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+) -> AuditLogListResponse:
+    """List audit log records with filtering and pagination."""
+    async with db_session() as session:
+        query = select(AuditLog)
+        conditions = []
+        if actor_user_id:
+            conditions.append(AuditLog.actor_user_id == actor_user_id)
+        if action:
+            conditions.append(AuditLog.action == action)
+        if date_from:
+            conditions.append(AuditLog.created_at >= date_from)
+        if date_to:
+            conditions.append(AuditLog.created_at <= date_to)
+
+        if conditions:
+            query = query.where(and_(*conditions))
+
+        count_query = select(func.count()).select_from(query.subquery())
+        total = (await session.execute(count_query)).scalar_one()
+
+        offset = (page - 1) * page_size
+        query = (
+            query.order_by(AuditLog.created_at.desc()).offset(offset).limit(page_size)
+        )
+        res = await session.execute(query)
+        logs = res.scalars().all()
+
+        items = [
+            AuditLogItem(
+                id=log_entry.id,
+                actor_user_id=log_entry.actor_user_id,
+                actor_username=log_entry.actor_username,
+                action=log_entry.action,
+                target_type=log_entry.target_type,
+                target_id=log_entry.target_id,
+                details=log_entry.details,
+                ip=log_entry.ip,
+                created_at=log_entry.created_at,
+            )
+            for log_entry in logs
+        ]
+        total_pages = max(1, (total + page_size - 1) // page_size)
+        return AuditLogListResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
