@@ -3,6 +3,19 @@ from __future__ import annotations
 from enum import StrEnum
 
 
+class InviteStatus(StrEnum):
+    """Status of a super admin invite.
+
+    ``expired`` is a computed display state derived from ``expires_at``; the
+    stored status column only holds pending / accepted / revoked.
+    """
+
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REVOKED = "revoked"
+    EXPIRED = "expired"  # computed — never written to DB
+
+
 class AuditAction(StrEnum):
     # User management
     USER_DELETE = "user.delete"

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Query, Request
 from sqlalchemy import and_, distinct, func, or_, select
 
 from app.api.deps import SuperAdminDep
+from app.api.v1.endpoints import super_admin_invites
 from app.core.enums import AuditAction
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.security import hash_password
@@ -45,6 +46,7 @@ from app.schemas.super_admin import (
 from app.services.audit import get_client_ip, write_audit_log
 
 router = APIRouter(prefix="/super-admin", tags=["super-admin"])
+router.include_router(super_admin_invites.router)
 
 
 @router.get("/overview", response_model=SuperAdminOverviewResponse)

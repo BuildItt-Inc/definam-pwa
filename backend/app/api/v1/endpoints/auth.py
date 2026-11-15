@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import hmac
 import os
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -9,13 +10,21 @@ from datetime import UTC, datetime, timedelta
 import httpx
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import select
 
 from app.api.deps import BearerTokenDep, CurrentUserDep, get_bearer_token
 from app.core.config import get_settings
-from app.core.enums import AuditAction
+from app.core.enums import AuditAction, InviteStatus
 from app.core.exceptions import BadRequestError, InvalidTokenError
 from app.core.limiter import limiter
-from app.core.security import create_jwt, create_refresh_jwt, decode_jwt, hash_password
+from app.core.security import (
+    create_jwt,
+    create_refresh_jwt,
+    create_super_admin_jwt,
+    create_super_admin_refresh_jwt,
+    decode_jwt,
+    hash_password,
+)
 from app.db.database import (
     consume_password_reset_token,
     create_password_reset_token,
@@ -27,6 +36,7 @@ from app.db.database import (
     update_user_password,
     update_user_session_id,
 )
+from app.db.models import SuperAdminInvite, User
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
@@ -38,8 +48,9 @@ from app.schemas.auth import (
     SuperAdminLoginResponse,
     UserMeResponse,
 )
+from app.schemas.super_admin import AcceptInviteRequest
 from app.services import auth_service
-from app.services.audit import write_audit_log
+from app.services.audit import get_client_ip, write_audit_log
 from app.services.redis_client import get_redis
 
 router = APIRouter()
@@ -241,6 +252,134 @@ async def super_admin_login(
         access_token=result["access_token"],
         role=result["role"],
         force_password_change=result["force_password_change"],
+        requires_2fa=False,
+    )
+
+
+@router.post(
+    "/super-admin/accept-invite",
+    response_model=SuperAdminLoginResponse,
+    status_code=200,
+    summary="Accept Super Admin Invite",
+)
+@limiter.limit("5/minute")
+async def accept_super_admin_invite(
+    body: AcceptInviteRequest,
+    request: Request,
+    response: Response,
+) -> SuperAdminLoginResponse:
+    """Public endpoint: validate a single-use invite token and promote or create a super admin account."""
+    token_hash = hashlib.sha256(body.token.encode()).hexdigest()
+    client_ip = get_client_ip(request)
+
+    async with db_session() as session:
+        result = await session.execute(
+            select(SuperAdminInvite).where(
+                SuperAdminInvite.status == InviteStatus.PENDING
+            )
+        )
+        candidates = result.scalars().all()
+        invite: SuperAdminInvite | None = None
+        for candidate in candidates:
+            if hmac.compare_digest(candidate.token_hash, token_hash):
+                invite = candidate
+                break
+
+        now = datetime.now(tz=UTC)
+        if invite is None or invite.expires_at < now:
+            raise BadRequestError("Invalid or expired invite token.")
+
+        existing_user_res = await session.execute(
+            select(User).where(User.email == invite.email)
+        )
+        existing_user = existing_user_res.scalar_one_or_none()
+        session_id = str(uuid.uuid4())
+
+        if existing_user is not None:
+            # Promote existing user; store their current role for safe demotion.
+            previous_role = existing_user.role
+            existing_user.role = "super_admin"
+            existing_user.previous_role = previous_role
+            existing_user.current_session_id = session_id
+            existing_user.last_seen_at = now
+            if body.name and not existing_user.name:
+                existing_user.name = body.name
+
+            invite.previous_role = previous_role
+            invite.created_via_invite = False
+            invite.accepted_by = existing_user.id
+            user_id = existing_user.id
+            username = existing_user.username
+            force_password_change = existing_user.force_password_change
+        else:
+            # Create a brand-new account.
+            if not body.username or not body.password or not body.name:
+                raise BadRequestError(
+                    "username, name and password are required when creating a new account."
+                )
+            taken = await session.execute(
+                select(User.id).where(User.username == body.username)
+            )
+            if taken.scalar_one_or_none() is not None:
+                raise BadRequestError("Username is already taken.")
+
+            pw_hash = await hash_password(body.password)
+            new_user = User(
+                id=str(uuid.uuid4()),
+                username=body.username,
+                email=invite.email,
+                name=body.name,
+                password_hash=pw_hash,
+                role="super_admin",
+                current_session_id=session_id,
+                force_password_change=False,
+                last_seen_at=now,
+            )
+            session.add(new_user)
+            await session.flush()
+            invite.accepted_by = new_user.id
+            invite.created_via_invite = True
+            user_id = new_user.id
+            username = new_user.username
+            force_password_change = False
+
+        invite.status = InviteStatus.ACCEPTED
+        invite.accepted_at = now
+        invite.token_hash = f"accepted:{invite.id}"
+
+        await write_audit_log(
+            session,
+            actor_user_id=user_id,
+            actor_username=username,
+            action=AuditAction.SUPERADMIN_INVITE_ACCEPT,
+            target_type="invite",
+            target_id=invite.id,
+            details={"email": invite.email},
+            ip=client_ip,
+        )
+        await session.commit()
+
+    access_token = create_super_admin_jwt(
+        user_id,
+        extra_claims={
+            "role": "super_admin",
+            "session_id": session_id,
+            "username": username,
+        },
+    )
+    refresh_token = create_super_admin_refresh_jwt(
+        user_id,
+        extra_claims={
+            "role": "super_admin",
+            "session_id": session_id,
+        },
+    )
+    _set_super_admin_refresh_cookie(response, refresh_token)
+
+    return SuperAdminLoginResponse(
+        access_token=access_token,
+        role="super_admin",
+        force_password_change=force_password_change,
         requires_2fa=False,
     )
 

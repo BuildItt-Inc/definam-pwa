@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class SuperAdminOverviewResponse(BaseModel):
@@ -133,3 +133,69 @@ class AuditLogListResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+# ── Super Admin Invite Schemas ─────────────────────────────────────────────
+
+
+class SuperAdminInviteRequest(BaseModel):
+    """Body for POST /super-admin/admins/invite."""
+
+    email: EmailStr
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalise_email(cls, v: str) -> str:
+        return v.strip().lower()
+
+
+class SuperAdminInviteItem(BaseModel):
+    """Single invite row returned by list and revoke endpoints."""
+
+    id: str
+    email: str
+    status: str  # pending | accepted | revoked | expired (computed)
+    invited_by_username: str | None = None
+    created_at: datetime
+    expires_at: datetime
+    accepted_at: datetime | None = None
+    is_expired: bool
+
+
+class SuperAdminInviteListResponse(BaseModel):
+    items: list[SuperAdminInviteItem]
+    total: int
+
+
+# ── Super Admin User Schemas ───────────────────────────────────────────────
+
+
+class SuperAdminItem(BaseModel):
+    """A current super admin as shown in the platform admin list."""
+
+    id: str
+    username: str
+    email: str | None = None
+    name: str | None = None
+    created_at: datetime
+    last_seen_at: datetime | None = None
+
+
+class SuperAdminListResponse(BaseModel):
+    items: list[SuperAdminItem]
+    total: int
+
+
+# ── Accept Invite Schema ───────────────────────────────────────────────────
+
+
+class AcceptInviteRequest(BaseModel):
+    """Body for POST /auth/super-admin/accept-invite (public endpoint)."""
+
+    token: str = Field(
+        min_length=43, max_length=44
+    )  # urlsafe_b64 of 32 bytes ≈ 43 chars
+    # Required only when creating a brand-new account (not when promoting an existing user).
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    username: str | None = Field(default=None, min_length=3, max_length=50)
+    password: str | None = Field(default=None, min_length=8, max_length=128)
