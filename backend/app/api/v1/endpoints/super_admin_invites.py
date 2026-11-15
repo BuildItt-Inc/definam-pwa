@@ -87,7 +87,7 @@ async def list_super_admins(_: SuperAdminDep) -> SuperAdminListResponse:
             items=[
                 SuperAdminItem(
                     id=a.id,
-                    username=a.username,
+                    username=a.email or a.username,
                     email=a.email,
                     name=a.name,
                     created_at=a.created_at,
@@ -116,7 +116,7 @@ async def invite_super_admin(
     valid token is left in the database.
     """
     actor_id: str = claims["sub"]
-    actor_username: str = claims.get("username", actor_id)
+    actor_username: str = claims.get("email") or claims.get("username", actor_id)
 
     raw_token = secrets.token_urlsafe(32)
     token_hash = _hash_token(raw_token)
@@ -210,7 +210,7 @@ async def revoke_super_admin_invite(
 ) -> dict:
     """Revoke a pending invite. Accepted or already-revoked invites cannot be revoked."""
     actor_id: str = claims["sub"]
-    actor_username: str = claims.get("username", actor_id)
+    actor_username: str = claims.get("email") or claims.get("username", actor_id)
 
     async with db_session() as session:
         invite = await session.get(SuperAdminInvite, invite_id)
@@ -262,7 +262,7 @@ async def remove_super_admin(
     - Invalidates all sessions by rotating current_session_id.
     """
     actor_id: str = claims["sub"]
-    actor_username: str = claims.get("username", actor_id)
+    actor_username: str = claims.get("email") or claims.get("username", actor_id)
 
     if user_id == actor_id:
         raise BadRequestError("You cannot remove your own super admin account.")

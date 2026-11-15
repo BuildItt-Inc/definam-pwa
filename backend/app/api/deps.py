@@ -119,6 +119,7 @@ async def get_current_super_admin(claims: dict = Depends(get_current_user)) -> d
             raise ForbiddenError("Super admin access only.")
         if jwt_session_id and user.current_session_id != jwt_session_id:
             raise InvalidTokenError("Session expired or logged in elsewhere.")
+        claims["email"] = user.email or user.username
 
     return claims
 

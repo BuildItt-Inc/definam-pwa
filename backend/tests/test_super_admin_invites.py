@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
@@ -226,8 +227,6 @@ async def test_accept_invite_new_user():
             "/api/v1/auth/super-admin/accept-invite",
             json={
                 "token": raw_token,
-                "name": "Invited Admin",
-                "username": f"invited_{uuid.uuid4().hex[:6]}",
                 "password": "SecurePassword123!",
             },
         )
@@ -237,7 +236,7 @@ async def test_accept_invite_new_user():
         assert "access_token" in data
         assert "recall_super_admin_refresh_token" in res.cookies
 
-    # Verify user created with role super_admin and invite marked accepted
+    # Verify user created with role super_admin and username set to normalized email
     async with db_session() as session:
         inv = await session.get(SuperAdminInvite, invite_id)
         assert inv.status == InviteStatus.ACCEPTED
@@ -247,6 +246,43 @@ async def test_accept_invite_new_user():
         assert user is not None
         assert user.role == "super_admin"
         assert user.email == email
+        assert user.username == email.strip().lower()
+
+
+@pytest.mark.anyio
+async def test_accept_invite_clash_rejected():
+    """Verify case-insensitive username or email clash rejects invite with generic error."""
+    raw_token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+    invite_id = str(uuid.uuid4())
+    clash_email = f"clash_{uuid.uuid4().hex[:6]}@example.com"
+
+    # Pre-create an account whose username clashes case-insensitively with clash_email
+    async with db_session() as session:
+        existing = User(
+            id=str(uuid.uuid4()),
+            username=clash_email.upper(),  # case clash
+            email=f"other_{uuid.uuid4().hex[:6]}@example.com",
+            role="student_individual",
+        )
+        invite = SuperAdminInvite(
+            id=invite_id,
+            email=clash_email,
+            token_hash=token_hash,
+            status=InviteStatus.PENDING,
+            expires_at=datetime.now(tz=UTC) + timedelta(days=2),
+        )
+        session.add_all([existing, invite])
+        await session.commit()
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.post(
+            "/api/v1/auth/super-admin/accept-invite",
+            json={"token": raw_token, "password": "SecurePassword123!"},
+        )
+        assert res.status_code == 400
+        assert "invalid or expired" in res.json()["detail"].lower()
 
 
 @pytest.mark.anyio
@@ -483,13 +519,17 @@ async def test_concurrent_last_admin_removal_protection_real_postgres():
 
 @pytest.mark.anyio
 async def test_seed_super_admin_script(monkeypatch):
-    test_email = f"seed_{uuid.uuid4().hex[:6]}@example.com"
-    test_user = f"seed_{uuid.uuid4().hex[:6]}"
+    test_email = f"Seed_{uuid.uuid4().hex[:6]}@Example.COM"
     test_pw = "SeedPassword123!"
 
+    # No username provided — seed script sets username to normalized email.
+    # DATABASE_URL must be passed because the seed script builds its own engine.
+    from app.core.config import get_settings
+
     monkeypatch.setenv("SUPER_ADMIN_EMAIL", test_email)
-    monkeypatch.setenv("SUPER_ADMIN_USERNAME", test_user)
+    monkeypatch.delenv("SUPER_ADMIN_USERNAME", raising=False)
     monkeypatch.setenv("SUPER_ADMIN_INITIAL_PASSWORD", test_pw)
+    monkeypatch.setenv("DATABASE_URL", get_settings().database_url)
 
     # 1. Clean super admins so seed runs
     async with db_session() as session:
@@ -501,12 +541,15 @@ async def test_seed_super_admin_script(monkeypatch):
     # 2. Run seed
     await seed_super_admin()
 
-    # 3. Verify created
+    # 3. Verify created with username = normalized email
     async with db_session() as session:
-        res = await session.execute(select(User).where(User.email == test_email))
+        res = await session.execute(
+            select(User).where(User.email == test_email.strip().lower())
+        )
         created = res.scalar_one_or_none()
         assert created is not None
         assert created.role == "super_admin"
+        assert created.username == test_email.strip().lower()
         assert created.force_password_change is True
 
     # 4. Run seed again -> idempotent no-op
