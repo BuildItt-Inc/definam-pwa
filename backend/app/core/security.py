@@ -30,7 +30,11 @@ async def verify_password(plain: str, hashed: str) -> bool:
 # ── JWT ────────────────────────────────────────────────────────────────────
 
 
-def create_jwt(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
+def create_jwt(
+    subject: str,
+    extra_claims: dict[str, Any] | None = None,
+    scope: str | None = None,
+) -> str:
     settings = get_settings()
     now = datetime.now(tz=UTC)
     expire = now + timedelta(minutes=settings.jwt_expire_minutes)
@@ -40,10 +44,16 @@ def create_jwt(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
         "exp": expire,
         **(extra_claims or {}),
     }
+    if scope:
+        payload["scope"] = scope
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
-def create_refresh_jwt(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
+def create_refresh_jwt(
+    subject: str,
+    extra_claims: dict[str, Any] | None = None,
+    scope: str | None = None,
+) -> str:
     settings = get_settings()
     now = datetime.now(tz=UTC)
     expire = now + timedelta(days=settings.jwt_refresh_expire_days)
@@ -54,6 +64,8 @@ def create_refresh_jwt(subject: str, extra_claims: dict[str, Any] | None = None)
         "type": "refresh",
         **(extra_claims or {}),
     }
+    if scope:
+        payload["scope"] = scope
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 

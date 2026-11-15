@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import hmac
 import os
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -9,13 +10,22 @@ from datetime import UTC, datetime, timedelta
 import httpx
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import BearerTokenDep, CurrentUserDep, get_bearer_token
 from app.core.config import get_settings
-from app.core.enums import AuditAction
+from app.core.enums import AuditAction, InviteStatus
 from app.core.exceptions import BadRequestError, InvalidTokenError
 from app.core.limiter import limiter
-from app.core.security import create_jwt, create_refresh_jwt, decode_jwt, hash_password
+from app.core.security import (
+    create_jwt,
+    create_refresh_jwt,
+    create_super_admin_jwt,
+    create_super_admin_refresh_jwt,
+    decode_jwt,
+    hash_password,
+)
 from app.db.database import (
     consume_password_reset_token,
     create_password_reset_token,
@@ -27,6 +37,7 @@ from app.db.database import (
     update_user_password,
     update_user_session_id,
 )
+from app.db.models import SuperAdminInvite, User
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
@@ -38,8 +49,9 @@ from app.schemas.auth import (
     SuperAdminLoginResponse,
     UserMeResponse,
 )
+from app.schemas.super_admin import AcceptInviteRequest
 from app.services import auth_service
-from app.services.audit import write_audit_log
+from app.services.audit import get_client_ip, write_audit_log
 from app.services.redis_client import get_redis
 
 router = APIRouter()
@@ -241,6 +253,160 @@ async def super_admin_login(
         access_token=result["access_token"],
         role=result["role"],
         force_password_change=result["force_password_change"],
+        requires_2fa=False,
+    )
+
+
+@router.post(
+    "/super-admin/accept-invite",
+    response_model=SuperAdminLoginResponse,
+    status_code=200,
+    summary="Accept Super Admin Invite",
+)
+@limiter.limit("5/minute")
+async def accept_super_admin_invite(
+    body: AcceptInviteRequest,
+    request: Request,
+    response: Response,
+) -> SuperAdminLoginResponse:
+    """Public endpoint: validate a single-use invite token and promote or create a super admin account."""
+    client_ip = get_client_ip(request)
+
+    # 1. Validate token format up front
+    if not body.token or len(body.token) < 32:
+        raise BadRequestError("Invalid or expired invite token.")
+    token_hash = hashlib.sha256(body.token.encode()).hexdigest()
+
+    # 2. Validate password requirement up front
+    if body.password is not None and len(body.password) < 8:
+        raise BadRequestError("Invalid or expired invite token.")
+
+    async with db_session() as session:
+        # 3. Validate token against pending invites using constant-time comparison
+        result = await session.execute(
+            select(SuperAdminInvite).where(
+                SuperAdminInvite.status == InviteStatus.PENDING
+            )
+        )
+        candidates = result.scalars().all()
+        invite: SuperAdminInvite | None = None
+        for candidate in candidates:
+            if hmac.compare_digest(candidate.token_hash, token_hash):
+                invite = candidate
+                break
+
+        now = datetime.now(tz=UTC)
+        if invite is None or invite.expires_at < now:
+            raise BadRequestError("Invalid or expired invite token.")
+
+        # Normalized email for super admin account
+        norm_email = invite.email.strip().lower()
+
+        # Check existing user matching normalized email
+        existing_user_res = await session.execute(
+            select(User).where(func.lower(User.email) == norm_email)
+        )
+        existing_user = existing_user_res.scalar_one_or_none()
+
+        if existing_user is not None:
+            # If user is already super_admin, reject with generic error
+            if existing_user.role == "super_admin":
+                raise BadRequestError("Invalid or expired invite token.")
+        else:
+            # For new accounts, password must be provided
+            if not body.password:
+                raise BadRequestError("Invalid or expired invite token.")
+
+            # Case-insensitive clash check on email AND username against all existing accounts
+            clash_res = await session.execute(
+                select(User.id).where(
+                    or_(
+                        func.lower(User.email) == norm_email,
+                        func.lower(User.username) == norm_email,
+                    )
+                )
+            )
+            if clash_res.scalar_one_or_none() is not None:
+                raise BadRequestError("Invalid or expired invite token.")
+
+        # Validation passed: now construct or promote user inside try/except IntegrityError
+        session_id = str(uuid.uuid4())
+        try:
+            if existing_user is not None:
+                previous_role = existing_user.role
+                existing_user.role = "super_admin"
+                existing_user.previous_role = previous_role
+                existing_user.current_session_id = session_id
+                existing_user.last_seen_at = now
+                if body.name and not existing_user.name:
+                    existing_user.name = body.name
+
+                invite.previous_role = previous_role
+                invite.created_via_invite = False
+                invite.accepted_by = existing_user.id
+                user_id = existing_user.id
+                force_password_change = existing_user.force_password_change
+            else:
+                pw_hash = await hash_password(body.password)
+                new_user = User(
+                    id=str(uuid.uuid4()),
+                    username=norm_email,  # Set username to normalized email
+                    email=norm_email,
+                    name=body.name or norm_email.split("@")[0],
+                    password_hash=pw_hash,
+                    role="super_admin",
+                    current_session_id=session_id,
+                    force_password_change=False,
+                    last_seen_at=now,
+                )
+                session.add(new_user)
+                await session.flush()
+                invite.accepted_by = new_user.id
+                invite.created_via_invite = True
+                user_id = new_user.id
+                force_password_change = False
+
+            invite.status = InviteStatus.ACCEPTED
+            invite.accepted_at = now
+            invite.token_hash = f"accepted:{invite.id}"
+
+            # Audit log actor snapshot uses the email
+            await write_audit_log(
+                session,
+                actor_user_id=user_id,
+                actor_username=norm_email,
+                action=AuditAction.SUPERADMIN_INVITE_ACCEPT,
+                target_type="invite",
+                target_id=invite.id,
+                details={"email": norm_email},
+                ip=client_ip,
+            )
+            await session.commit()
+        except IntegrityError as err:
+            await session.rollback()
+            raise BadRequestError("Invalid or expired invite token.") from err
+
+    access_token = create_super_admin_jwt(
+        user_id,
+        extra_claims={
+            "role": "super_admin",
+            "session_id": session_id,
+            "email": norm_email,
+        },
+    )
+    refresh_token = create_super_admin_refresh_jwt(
+        user_id,
+        extra_claims={
+            "role": "super_admin",
+            "session_id": session_id,
+        },
+    )
+    _set_super_admin_refresh_cookie(response, refresh_token)
+
+    return SuperAdminLoginResponse(
+        access_token=access_token,
+        role="super_admin",
+        force_password_change=force_password_change,
         requires_2fa=False,
     )
 

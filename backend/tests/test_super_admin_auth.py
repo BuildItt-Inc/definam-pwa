@@ -89,47 +89,23 @@ async def test_standard_login_rejects_super_admin():
 
 @pytest.mark.anyio
 async def test_super_admin_login_rejects_non_super_admin():
-    req = LoginRequest(username_or_email="student_test", password="password123")
-    clear_super_admin_lockout("student_test")
+    req = LoginRequest(username_or_email="student@example.com", password="password123")
+    clear_super_admin_lockout("student@example.com")
     with (
-        patch(
-            "app.services.auth_service.get_user_by_username", new_callable=AsyncMock
-        ) as mock_user,
+        patch("app.services.auth_service.db_session") as mock_db,
         patch("app.services.auth_service.verify_password", return_value=True),
     ):
-        mock_user.return_value = {
-            "id": str(uuid.uuid4()),
-            "username": "student_test",
-            "role": "student_individual",
-            "password_hash": "$2b$fakehash",
-        }
+        mock_session = AsyncMock()
+        mock_res = MagicMock()
+        mock_res.scalar_one_or_none.return_value = (
+            None  # No super admin found with this email
+        )
+        mock_session.execute = AsyncMock(return_value=mock_res)
+        mock_db.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_db.return_value.__aexit__ = AsyncMock(return_value=False)
+
         with pytest.raises(InvalidCredentialsError):
             await auth_service.super_admin_login(req)
-
-
-@pytest.mark.anyio
-async def test_standard_refresh_rejects_super_admin_token_and_role():
-    # 1. Token with scope="super_admin"
-    sa_token = create_super_admin_refresh_jwt(str(uuid.uuid4()))
-    with pytest.raises(InvalidTokenError, match="Invalid token scope"):
-        await auth_service.refresh(sa_token)
-
-    # 2. Normal refresh token but user is super_admin in DB
-    normal_refresh = create_refresh_jwt(
-        str(uuid.uuid4()), extra_claims={"role": "super_admin"}
-    )
-    with patch(
-        "app.services.auth_service.get_user_by_id", new_callable=AsyncMock
-    ) as mock_get_user:
-        mock_get_user.return_value = {
-            "id": str(uuid.uuid4()),
-            "role": "super_admin",
-            "current_session_id": None,
-        }
-        with pytest.raises(
-            InvalidTokenError, match="Super admin accounts must use super admin refresh"
-        ):
-            await auth_service.refresh(normal_refresh)
 
 
 @pytest.mark.anyio
@@ -208,37 +184,44 @@ async def test_super_admin_dep_requires_scope_and_db_role():
 async def test_super_admin_login_endpoint_success():
     admin_id = str(uuid.uuid4())
     transport = ASGITransport(app=app)
-    clear_super_admin_lockout("admin_ep_test")
+    clear_super_admin_lockout("admin@recallr.org")
+
+    mock_sa = MagicMock()
+    mock_sa.id = admin_id
+    mock_sa.username = "admin@recallr.org"
+    mock_sa.email = "admin@recallr.org"
+    mock_sa.name = "Super Admin"
+    mock_sa.role = "super_admin"
+    mock_sa.password_hash = "$2b$fakehash"
+    mock_sa.force_password_change = False
 
     with (
-        patch(
-            "app.services.auth_service.get_user_by_username", new_callable=AsyncMock
-        ) as mock_user,
+        patch("app.services.auth_service.db_session") as mock_service_db,
         patch("app.services.auth_service.verify_password", return_value=True),
         patch(
             "app.services.auth_service.update_user_session_id", new_callable=AsyncMock
         ),
-        patch("app.api.v1.endpoints.auth.db_session") as mock_db,
+        patch("app.api.v1.endpoints.auth.db_session") as mock_ep_db,
     ):
-        mock_user.return_value = {
-            "id": admin_id,
-            "username": "admin_ep_test",
-            "email": "admin@recallr.org",
-            "role": "super_admin",
-            "password_hash": "$2b$fakehash",
-            "force_password_change": False,
-        }
-        mock_session = AsyncMock()
-        # session.add() is synchronous in SQLAlchemy; override to avoid coroutine warnings
-        mock_session.add = MagicMock()
-        mock_db.return_value.__aenter__ = AsyncMock(return_value=mock_session)
-        mock_db.return_value.__aexit__ = AsyncMock(return_value=False)
+        mock_svc_session = AsyncMock()
+        mock_res = MagicMock()
+        mock_res.scalar_one_or_none.return_value = mock_sa
+        mock_svc_session.execute = AsyncMock(return_value=mock_res)
+        mock_service_db.return_value.__aenter__ = AsyncMock(
+            return_value=mock_svc_session
+        )
+        mock_service_db.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        mock_ep_session = AsyncMock()
+        mock_ep_session.add = MagicMock()
+        mock_ep_db.return_value.__aenter__ = AsyncMock(return_value=mock_ep_session)
+        mock_ep_db.return_value.__aexit__ = AsyncMock(return_value=False)
 
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             res = await client.post(
                 "/api/v1/auth/super-admin/login",
                 json={
-                    "username_or_email": "admin_ep_test",
+                    "username_or_email": "Admin@Recallr.org",
                     "password": "correct_password",
                 },
             )

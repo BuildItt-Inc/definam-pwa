@@ -5,6 +5,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import HTTPException
+from sqlalchemy import func, select
 
 from app.core.exceptions import (
     AccessCodeAlreadyUsedError,
@@ -32,6 +33,7 @@ from app.core.security import (
 from app.db.database import (
     activate_code,
     create_student_user,
+    db_session,
     get_access_code,
     get_user_by_email,
     get_user_by_id,
@@ -41,6 +43,7 @@ from app.db.database import (
     update_user_password,
     update_user_session_id,
 )
+from app.db.models import User
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
@@ -205,36 +208,49 @@ async def login(body: LoginRequest) -> dict:
 
 async def super_admin_login(body: LoginRequest, client_ip: str | None = None) -> dict:
     """
-    Authenticate exclusively a super_admin user.
-    Enforces per-IP and per-account lockout, verifies role from DB,
+    Authenticate exclusively a super_admin user by normalized email (case-insensitive).
+    Enforces per-IP and per-account lockout, verifies super_admin role from DB,
     and issues tokens with scope=super_admin.
     """
-    credential = body.username_or_email.strip()
-    if not check_super_admin_lockout(credential, client_ip):
+    email_cred = body.username_or_email.strip().lower()
+    if not check_super_admin_lockout(email_cred, client_ip):
         raise HTTPException(
             status_code=429,
             detail="Too many failed super admin login attempts. Account temporarily locked. Please try again later.",
         )
 
-    user_row = await get_user_by_username(credential)
-    if not user_row and "@" in credential:
-        user_row = await get_user_by_email(credential.lower())
+    # Look up strictly by normalized email, case-insensitively, and only for super_admin role
+    async with db_session() as session:
+        result = await session.execute(
+            select(User).where(
+                func.lower(User.email) == email_cred,
+                User.role == "super_admin",
+            )
+        )
+        user = result.scalar_one_or_none()
+        if user:
+            user_row = {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "name": user.name,
+                "role": user.role,
+                "password_hash": user.password_hash,
+                "force_password_change": user.force_password_change,
+            }
+        else:
+            user_row = None
 
     if not user_row:
-        record_super_admin_failure(credential, client_ip)
+        record_super_admin_failure(email_cred, client_ip)
         raise InvalidCredentialsError()
 
     stored_hash = user_row.get("password_hash") or ""
     if not stored_hash or not await verify_password(body.password, stored_hash):
-        record_super_admin_failure(credential, client_ip)
+        record_super_admin_failure(email_cred, client_ip)
         raise InvalidCredentialsError()
 
-    # Reject non-super-admin with exact same generic error (no account/role leakage)
-    if user_row.get("role") != "super_admin":
-        record_super_admin_failure(credential, client_ip)
-        raise InvalidCredentialsError()
-
-    clear_super_admin_lockout(credential, client_ip)
+    clear_super_admin_lockout(email_cred, client_ip)
 
     user_id: str = user_row["id"]
     session_id = str(uuid.uuid4())

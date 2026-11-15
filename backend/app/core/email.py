@@ -226,3 +226,28 @@ async def send_payment_receipt(to: str, amount_naira: int, description: str) -> 
         frontend_url=settings.frontend_url.rstrip("/"),
     )
     await send_email(to, f"Recall Payment Receipt — {formatted}", html)
+
+
+async def send_super_admin_invite(to: str, raw_token: str) -> None:
+    """
+    Send a platform admin invite email.
+
+    The raw token is embedded in the accept link; it is never logged or
+    stored (only its SHA-256 hash is persisted in the database).
+
+    Args:
+        to: Invitee email address.
+        raw_token: The raw secrets.token_urlsafe(32) value.
+
+    Raises:
+        Exception: Propagates any send failure so the caller can roll back
+                   the invite row and not leave an orphaned valid token.
+    """
+    settings = get_settings()
+    accept_url = f"{settings.frontend_url.rstrip('/')}/accept-invite?token={raw_token}"
+    html = _render(
+        "super_admin_invite.html",
+        accept_url=accept_url,
+        frontend_url=settings.frontend_url.rstrip("/"),
+    )
+    await send_email(to, "You've been invited to Recall Platform Admin", html)
