@@ -32,6 +32,20 @@ class LoginResponse(BaseModel):
     force_password_change: bool
 
 
+class SuperAdminLoginResponse(BaseModel):
+    """
+    Body returned on successful super admin login.
+    refresh_token is sent as an httpOnly cookie.
+    Designed to support optional 2FA in the future without breaking changes.
+    """
+
+    access_token: str
+    role: str = "super_admin"
+    force_password_change: bool = False
+    requires_2fa: bool = False
+    temp_token: str | None = None
+
+
 class OrgLoginRequest(BaseModel):
     access_code: str
     user_agent: str = "unknown"
