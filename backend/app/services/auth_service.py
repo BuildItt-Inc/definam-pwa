@@ -396,6 +396,10 @@ async def refresh(refresh_token: str) -> dict:
     if claims.get("type") != "refresh":
         raise InvalidTokenError("Invalid token type")
 
+    # Super admin refresh tokens cannot be used on standard refresh
+    if claims.get("scope") == "super_admin":
+        raise InvalidTokenError("Invalid token scope for standard refresh")
+
     user_id: str = claims["sub"]
     jwt_session_id = claims.get("session_id")
 
@@ -411,6 +415,9 @@ async def refresh(refresh_token: str) -> dict:
         raise InvalidTokenError("Session expired or logged in elsewhere.")
 
     role = user_row["role"]
+    # Normal refresh can never yield a super_admin token
+    if role == "super_admin":
+        raise InvalidTokenError("Super admin accounts must use super admin refresh")
 
     extra_claims: dict = {"role": role}
     # Keep the same session ID for the refreshed session
