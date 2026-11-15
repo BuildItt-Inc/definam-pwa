@@ -12,12 +12,14 @@ from pydantic import BaseModel, EmailStr
 
 from app.api.deps import BearerTokenDep, CurrentUserDep, get_bearer_token
 from app.core.config import get_settings
+from app.core.enums import AuditAction
 from app.core.exceptions import BadRequestError, InvalidTokenError
 from app.core.limiter import limiter
 from app.core.security import create_jwt, create_refresh_jwt, decode_jwt, hash_password
 from app.db.database import (
     consume_password_reset_token,
     create_password_reset_token,
+    db_session,
     get_user_by_email,
     get_user_by_id,
     get_user_by_username,
@@ -33,9 +35,11 @@ from app.schemas.auth import (
     OrgLoginResponse,
     RefreshResponse,
     RegisterRequest,
+    SuperAdminLoginResponse,
     UserMeResponse,
 )
 from app.services import auth_service
+from app.services.audit import write_audit_log
 from app.services.redis_client import get_redis
 
 router = APIRouter()
@@ -78,6 +82,37 @@ def _clear_refresh_cookie(response: Response) -> None:
     samesite_val = "none" if is_secure else "lax"
     response.delete_cookie(
         key=_COOKIE_NAME,
+        path="/",
+        samesite=samesite_val,
+        secure=is_secure,
+    )
+
+
+_SUPER_ADMIN_COOKIE_NAME = "recall_super_admin_refresh_token"
+
+
+def _set_super_admin_refresh_cookie(response: Response, refresh_token: str) -> None:
+    settings = get_settings()
+    is_secure = settings.cookie_secure
+    samesite_val = "none" if is_secure else "lax"
+    max_age = 12 * 3600  # 12 hours absolute lifetime
+    response.set_cookie(
+        key=_SUPER_ADMIN_COOKIE_NAME,
+        value=refresh_token,
+        httponly=True,
+        secure=is_secure,
+        samesite=samesite_val,
+        max_age=max_age,
+        path="/",
+    )
+
+
+def _clear_super_admin_refresh_cookie(response: Response) -> None:
+    settings = get_settings()
+    is_secure = settings.cookie_secure
+    samesite_val = "none" if is_secure else "lax"
+    response.delete_cookie(
+        key=_SUPER_ADMIN_COOKIE_NAME,
         path="/",
         samesite=samesite_val,
         secure=is_secure,
@@ -134,6 +169,79 @@ async def login(
         access_token=result["access_token"],
         role=result["role"],
         force_password_change=result["force_password_change"],
+    )
+
+
+@router.post(
+    "/super-admin/login",
+    response_model=SuperAdminLoginResponse,
+    summary="Super Admin Login",
+    description="Authenticate a platform super admin with short-lived access token and 12-hour rotating refresh cookie.",
+)
+@limiter.limit("5/minute")
+async def super_admin_login(
+    request: Request,
+    body: LoginRequest,
+    response: Response,
+) -> SuperAdminLoginResponse:
+    xff = request.headers.get("x-forwarded-for", "")
+    client_ip = (
+        xff.split(",")[0].strip()
+        if xff
+        else request.headers.get("x-real-ip", "").strip()
+        or (request.client.host if request.client else "0.0.0.0")
+    )
+    if not client_ip:
+        client_ip = "0.0.0.0"
+
+    try:
+        result = await auth_service.super_admin_login(body, client_ip=client_ip)
+    except Exception as exc:
+        async with db_session() as session:
+            cred = body.username_or_email.strip()
+            user_row = await get_user_by_username(cred)
+            if not user_row and "@" in cred:
+                user_row = await get_user_by_email(cred.lower())
+            actor_user_id = user_row["id"] if user_row else None
+            actor_username = user_row["username"] if user_row else cred[:50]
+
+            await write_audit_log(
+                session,
+                actor_user_id=actor_user_id,
+                actor_username=actor_username,
+                action=AuditAction.AUTH_SUPER_ADMIN_LOGIN_FAILED,
+                target_type="user",
+                target_id=actor_user_id,
+                details={
+                    "attempted_credential": cred[:100],
+                    "reason": "invalid_credentials",
+                },
+                ip=client_ip,
+            )
+            await session.commit()
+        raise exc
+
+    async with db_session() as session:
+        user_info = result["user"]
+        await write_audit_log(
+            session,
+            actor_user_id=user_info["id"],
+            actor_username=user_info["username"],
+            action=AuditAction.AUTH_SUPER_ADMIN_LOGIN,
+            target_type="user",
+            target_id=user_info["id"],
+            details={"email": user_info.get("email")},
+            ip=client_ip,
+        )
+        await session.commit()
+
+    _set_super_admin_refresh_cookie(response, result["refresh_token"])
+
+    return SuperAdminLoginResponse(
+        access_token=result["access_token"],
+        role=result["role"],
+        force_password_change=result["force_password_change"],
+        requires_2fa=False,
     )
 
 
@@ -232,6 +340,61 @@ async def logout(
             # If the token is invalid or expired, continue and log out anonymously.
             pass
     return await auth_service.logout(user_id)
+
+
+@router.post(
+    "/super-admin/refresh",
+    response_model=RefreshResponse,
+    summary="Super Admin Refresh",
+    description="Rotate the 12-hour super admin refresh token cookie and issue a new access token.",
+)
+@limiter.limit("10/minute")
+async def super_admin_refresh(
+    request: Request,
+    response: Response,
+    super_admin_refresh_token: str | None = Cookie(
+        default=None, alias=_SUPER_ADMIN_COOKIE_NAME
+    ),
+) -> RefreshResponse:
+    token = super_admin_refresh_token
+    if not token:
+        auth_header = request.headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+
+    if not token:
+        raise InvalidTokenError("No super admin refresh token found.")
+
+    result = await auth_service.super_admin_refresh(token)
+    _set_super_admin_refresh_cookie(response, result["refresh_token"])
+
+    return RefreshResponse(
+        access_token=result["access_token"],
+        role=result["role"],
+    )
+
+
+@router.post(
+    "/super-admin/logout",
+    summary="Super Admin Logout",
+    description="Invalidate super admin session and clear the refresh token cookie.",
+)
+async def super_admin_logout(
+    response: Response,
+    token: str | None = Depends(get_bearer_token),
+) -> dict:
+    _clear_super_admin_refresh_cookie(response)
+    user_id = None
+    if token:
+        try:
+            claims = decode_jwt(token)
+            if claims.get("scope") == "super_admin":
+                user_id = claims.get("sub")
+        except Exception:
+            pass
+    if user_id:
+        await auth_service.logout(user_id)
+    return {"status": "success"}
 
 
 @router.get(
