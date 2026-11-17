@@ -46,6 +46,11 @@ python -m scripts.fix_migration_drift
 echo "▶ Running Alembic migrations …"
 alembic upgrade head
 
+if [ -n "$SUPER_ADMIN_EMAIL" ] && [ -n "$SUPER_ADMIN_INITIAL_PASSWORD" ]; then
+    echo "▶ Checking / seeding super admin from environment variables …"
+    python -m scripts.seed_super_admin || true
+fi
+
 echo "▶ Starting Uvicorn …"
 exec uvicorn app.main:app \
     --host 0.0.0.0 \

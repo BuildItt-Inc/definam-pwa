@@ -579,3 +579,44 @@ async def test_seed_super_admin_script(monkeypatch):
 
     # 4. Run seed again -> idempotent no-op
     await seed_super_admin()
+
+
+@pytest.mark.anyio
+@requires_postgres
+async def test_seed_super_admin_promotes_existing_user(monkeypatch):
+    existing_email = f"Existing_Admin_{uuid.uuid4().hex[:6]}@School.org"
+    new_pw = "NewSuperAdminPassword123!"
+
+    from app.core.config import get_settings
+
+    # 1. Clean super admins so seed runs
+    async with db_session() as session:
+        res = await session.execute(select(User).where(User.role == "super_admin"))
+        for u in res.scalars().all():
+            u.role = "admin"
+
+        # Pre-create a school admin with this email
+        school_admin = User(
+            id=str(uuid.uuid4()),
+            username="existing_school_admin",
+            email=existing_email.strip().lower(),
+            role="admin",
+        )
+        session.add(school_admin)
+        await session.commit()
+
+    monkeypatch.setenv("SUPER_ADMIN_EMAIL", existing_email)
+    monkeypatch.setenv("SUPER_ADMIN_INITIAL_PASSWORD", new_pw)
+    monkeypatch.setenv("DATABASE_URL", get_settings().database_url)
+
+    # 2. Run seed
+    await seed_super_admin()
+
+    # 3. Verify promoted to super_admin
+    async with db_session() as session:
+        res = await session.execute(
+            select(User).where(User.email == existing_email.strip().lower())
+        )
+        user = res.scalar_one_or_none()
+        assert user is not None
+        assert user.role == "super_admin"
