@@ -39,6 +39,24 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 log = logging.getLogger("seed_super_admin")
 
 
+def _clear_redis_lockout(email: str) -> None:
+    """Best-effort: delete Redis rate-limit keys for the super admin email.
+    Silently skips if Redis is unreachable or not configured."""
+    redis_url = os.environ.get("REDIS_URL", "").strip()
+    if not redis_url:
+        return
+    try:
+        import redis as _redis
+
+        r = _redis.from_url(redis_url, decode_responses=True, socket_timeout=2.0)
+        deleted = r.delete(f"sa_fail_cred:{email}")
+        log.info(
+            "LOCKOUT — Cleared Redis rate-limit key for '%s' (deleted=%d).", email, deleted
+        )
+    except Exception as exc:  # noqa: BLE001
+        log.warning("LOCKOUT — Could not clear Redis lockout (non-fatal): %s", exc)
+
+
 async def seed() -> None:
     email = os.environ.get("SUPER_ADMIN_EMAIL", "").strip().lower()
     password = os.environ.get("SUPER_ADMIN_INITIAL_PASSWORD", "").strip()
@@ -80,6 +98,7 @@ async def seed() -> None:
                     "UPDATED — Super admin '%s' password synced from env var.",
                     sa_user.email or sa_user.username,
                 )
+                _clear_redis_lockout(sa_user.email or sa_user.username)
             else:
                 log.info("SKIP — Count >0 but no row found (unexpected). Skipping.")
             await engine.dispose()
@@ -109,6 +128,7 @@ async def seed() -> None:
                 "DONE — Existing user '%s' promoted to 'super_admin' successfully.",
                 existing_user.username,
             )
+            _clear_redis_lockout(existing_user.email or existing_user.username)
             await engine.dispose()
             return
 
