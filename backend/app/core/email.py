@@ -244,7 +244,7 @@ async def send_super_admin_invite(to: str, raw_token: str) -> None:
                    the invite row and not leave an orphaned valid token.
     """
     settings = get_settings()
-    accept_url = f"{settings.frontend_url.rstrip('/')}/accept-invite?token={raw_token}"
+    accept_url = f"{settings.frontend_url.rstrip('/')}/admin/platform/accept-invite?token={raw_token}"
     html = _render(
         "super_admin_invite.html",
         accept_url=accept_url,
