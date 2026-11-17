@@ -12,7 +12,7 @@ Coolify / Production deployment instructions:
 Security notes:
 - The script automatically normalizes the email (lowercase, trimmed) and uses it as the username.
 - force_password_change is set to True, requiring the super admin to choose a new password upon first login.
-- The script is completely idempotent: if any user with role='super_admin' already exists, it is a safe no-op.
+- If a super admin already exists, the script syncs their password from SUPER_ADMIN_INITIAL_PASSWORD on every boot.
 - Never pass passwords as command-line arguments in scripts or terminal history.
 """
 
@@ -62,13 +62,26 @@ async def seed() -> None:
     Session = async_sessionmaker(engine, expire_on_commit=False)
 
     async with Session() as session:
-        # 1. Idempotency check: if any super admin exists, safe no-op.
+        # 1. If a super admin already exists, always sync the password from env var.
         result = await session.execute(
             select(func.count(User.id)).where(User.role == "super_admin")
         )
         count = result.scalar_one()
         if count > 0:
-            log.info("SKIP — %d super admin(s) already exist. Nothing changed.", count)
+            # Fetch the first super admin and update their password from env var.
+            sa_result = await session.execute(
+                select(User).where(User.role == "super_admin").limit(1)
+            )
+            sa_user = sa_result.scalar_one_or_none()
+            if sa_user:
+                sa_user.password_hash = await hash_password(password)
+                await session.commit()
+                log.info(
+                    "UPDATED — Super admin '%s' password synced from env var.",
+                    sa_user.email or sa_user.username,
+                )
+            else:
+                log.info("SKIP — Count >0 but no row found (unexpected). Skipping.")
             await engine.dispose()
             return
 
