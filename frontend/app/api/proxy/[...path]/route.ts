@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BACKEND } from '@/lib/auth-proxy';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   return handleProxy(request, await params);
 }
