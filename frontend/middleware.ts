@@ -153,7 +153,13 @@ export async function middleware(request: NextRequest) {
     const saSession = getSuperAdminSessionFast(request);
 
     if (isPlatformPublic) {
+      const isExplicitSessionReset =
+        request.nextUrl.searchParams.has('expired') ||
+        request.nextUrl.searchParams.has('logout') ||
+        request.nextUrl.searchParams.has('force');
+
       if (
+        !isExplicitSessionReset &&
         saSession.hasCookie &&
         !saSession.isExpired &&
         saSession.role === 'super_admin' &&
@@ -161,7 +167,12 @@ export async function middleware(request: NextRequest) {
       ) {
         return NextResponse.redirect(new URL('/admin/platform', request.url));
       }
-      return NextResponse.next();
+
+      const res = NextResponse.next();
+      if (isExplicitSessionReset) {
+        res.cookies.delete(SUPER_ADMIN_REFRESH_COOKIE);
+      }
+      return res;
     }
 
     if (

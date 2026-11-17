@@ -10,6 +10,7 @@ function SuperAdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextParam = searchParams.get('next');
+  const isExpired = searchParams.get('expired') === '1';
   const destination =
     nextParam && nextParam.startsWith('/admin/platform') ? nextParam : '/admin/platform';
 
@@ -17,7 +18,9 @@ function SuperAdminLoginForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    isExpired ? 'Your session expired or was superseded. Please sign in again.' : null
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,7 +29,7 @@ function SuperAdminLoginForm() {
 
     try {
       await loginSuperAdmin({ email, password });
-      router.replace(destination);
+      window.location.href = destination;
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setError(err.message || 'Invalid email or password.');
