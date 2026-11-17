@@ -331,11 +331,13 @@ export async function acceptSuperAdminInvite(data: { token: string; password: st
 
 // ── Base URL & API Calls ───────────────────────────────────────────────────
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+// Route all super admin platform requests through Next.js server proxy (/api/proxy/...)
+// to guarantee same-origin dispatch, avoiding CORS and missing client env var network errors.
+const BASE_URL = '/api/proxy';
 
 export async function getSuperAdminOverview(): Promise<SuperAdminOverviewResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/overview`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/overview`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch overview' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch overview'));
@@ -360,7 +362,7 @@ export async function getSuperAdminUsers(params?: {
   if (params?.page) query.set('page', String(params.page));
   if (params?.page_size) query.set('page_size', String(params.page_size));
 
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/users?${query.toString()}`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/users?${query.toString()}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch users' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch users'));
@@ -370,7 +372,7 @@ export async function getSuperAdminUsers(params?: {
 
 export async function getSuperAdminSignupAnalytics(days = 30): Promise<SuperAdminSignupAnalyticsResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/analytics/signups?days=${days}`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/analytics/signups?days=${days}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch signup analytics' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch signup analytics'));
@@ -380,7 +382,7 @@ export async function getSuperAdminSignupAnalytics(days = 30): Promise<SuperAdmi
 
 export async function getSuperAdminFunnel(): Promise<SuperAdminFunnelResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/analytics/funnel`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/analytics/funnel`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch funnel analytics' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch funnel analytics'));
@@ -403,7 +405,7 @@ export async function getSuperAdminCodes(params?: {
   if (params?.page) query.set('page', String(params.page));
   if (params?.page_size) query.set('page_size', String(params.page_size));
 
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/codes?${query.toString()}`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/codes?${query.toString()}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch access codes' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch access codes'));
@@ -413,7 +415,7 @@ export async function getSuperAdminCodes(params?: {
 
 export async function generateAccessCodes(data: GenerateCodesRequest): Promise<GenerateCodesResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/codes/generate`, {
+  const res = await fetch(`${BASE_URL}/super-admin/codes/generate`, {
     method: 'POST',
     headers,
     body: JSON.stringify(data),
@@ -427,7 +429,7 @@ export async function generateAccessCodes(data: GenerateCodesRequest): Promise<G
 
 export async function revokeAccessCode(codeId: string): Promise<{ message: string }> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/codes/${codeId}/revoke`, {
+  const res = await fetch(`${BASE_URL}/super-admin/codes/${codeId}/revoke`, {
     method: 'POST',
     headers,
   });
@@ -440,7 +442,7 @@ export async function revokeAccessCode(codeId: string): Promise<{ message: strin
 
 export async function reactivateAccessCode(codeId: string): Promise<{ message: string }> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/codes/${codeId}/reactivate`, {
+  const res = await fetch(`${BASE_URL}/super-admin/codes/${codeId}/reactivate`, {
     method: 'POST',
     headers,
   });
@@ -453,7 +455,7 @@ export async function reactivateAccessCode(codeId: string): Promise<{ message: s
 
 export async function resetSuperAdminUser(userId: string, data: ResetUserRequest): Promise<ResetUserResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/users/${userId}/reset`, {
+  const res = await fetch(`${BASE_URL}/super-admin/users/${userId}/reset`, {
     method: 'POST',
     headers,
     body: JSON.stringify(data),
@@ -467,7 +469,7 @@ export async function resetSuperAdminUser(userId: string, data: ResetUserRequest
 
 export async function deleteSuperAdminUser(userId: string): Promise<{ message: string }> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/users/${userId}`, {
+  const res = await fetch(`${BASE_URL}/super-admin/users/${userId}`, {
     method: 'DELETE',
     headers,
   });
@@ -480,7 +482,7 @@ export async function deleteSuperAdminUser(userId: string): Promise<{ message: s
 
 export async function updateSuperAdminUserRole(userId: string, role: string): Promise<{ message: string; role: string }> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/users/${userId}/role`, {
+  const res = await fetch(`${BASE_URL}/super-admin/users/${userId}/role`, {
     method: 'PATCH',
     headers,
     body: JSON.stringify({ role }),
@@ -496,7 +498,7 @@ export async function updateSuperAdminUserRole(userId: string, role: string): Pr
 
 export async function listSuperAdmins(): Promise<SuperAdminListResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/admins`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch super admins' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch super admins'));
@@ -511,7 +513,7 @@ export async function sendSuperAdminInvite(data: { email: string }): Promise<{
   message: string;
 }> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins/invite`, {
+  const res = await fetch(`${BASE_URL}/super-admin/admins/invite`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ email: data.email.trim().toLowerCase() }),
@@ -525,7 +527,7 @@ export async function sendSuperAdminInvite(data: { email: string }): Promise<{
 
 export async function listSuperAdminInvites(): Promise<SuperAdminInviteListResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins/invites`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/admins/invites`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch invites' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch invites'));
@@ -535,7 +537,7 @@ export async function listSuperAdminInvites(): Promise<SuperAdminInviteListRespo
 
 export async function revokeSuperAdminInvite(inviteId: string): Promise<{ message: string }> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins/invite/${inviteId}/revoke`, {
+  const res = await fetch(`${BASE_URL}/super-admin/admins/invite/${inviteId}/revoke`, {
     method: 'POST',
     headers,
   });
@@ -548,7 +550,7 @@ export async function revokeSuperAdminInvite(inviteId: string): Promise<{ messag
 
 export async function removeSuperAdmin(userId: string): Promise<{ message: string }> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins/${userId}`, {
+  const res = await fetch(`${BASE_URL}/super-admin/admins/${userId}`, {
     method: 'DELETE',
     headers,
   });
@@ -561,7 +563,7 @@ export async function removeSuperAdmin(userId: string): Promise<{ message: strin
 
 export async function clearRevokedSuperAdminInvites(): Promise<{ message: string; deleted_count: number }> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins/invites/revoked`, {
+  const res = await fetch(`${BASE_URL}/super-admin/admins/invites/revoked`, {
     method: 'DELETE',
     headers,
   });
@@ -572,11 +574,24 @@ export async function clearRevokedSuperAdminInvites(): Promise<{ message: string
   return res.json();
 }
 
+export async function clearAllSuperAdminInvites(): Promise<{ message: string; deleted_count: number }> {
+  const headers = await getSuperAdminAuthHeaders();
+  const res = await fetch(`${BASE_URL}/super-admin/admins/invites/clear`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: 'Failed to clear invite history' }));
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to clear invite history'));
+  }
+  return res.json();
+}
+
 export async function getPlatformTraction(
   period: 'weekly' | 'monthly' | 'yearly' = 'monthly'
 ): Promise<PlatformTractionResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/analytics/traction?period=${period}`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/analytics/traction?period=${period}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch platform traction' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch platform traction'));
@@ -592,7 +607,7 @@ export async function clearPlatformActivity(params: {
   clear_recall_queues?: boolean;
 }): Promise<ClearActivityResponse> {
   const headers = await getSuperAdminAuthHeaders();
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/activity/clear`, {
+  const res = await fetch(`${BASE_URL}/super-admin/activity/clear`, {
     method: 'POST',
     headers: { ...headers, 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -623,7 +638,7 @@ export async function getSuperAdminAuditLogs(params?: {
   if (params?.page) query.set('page', String(params.page));
   if (params?.page_size) query.set('page_size', String(params.page_size));
 
-  const res = await fetch(`${BASE_URL}/api/v1/super-admin/audit-logs?${query.toString()}`, { headers });
+  const res = await fetch(`${BASE_URL}/super-admin/audit-logs?${query.toString()}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch audit logs' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch audit logs'));
