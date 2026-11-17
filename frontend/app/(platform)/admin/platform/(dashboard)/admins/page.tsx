@@ -20,6 +20,7 @@ import {
   sendSuperAdminInvite,
   revokeSuperAdminInvite,
   clearRevokedSuperAdminInvites,
+  clearAllSuperAdminInvites,
   removeSuperAdmin,
   type SuperAdminItem,
   type SuperAdminInviteItem,
@@ -121,6 +122,28 @@ export default function PlatformAdminsPage() {
       toast.error(
         'Clear Failed',
         err instanceof Error ? err.message : 'Could not clear revoked invites'
+      );
+    } finally {
+      setIsClearingRevoked(false);
+    }
+  }
+
+  async function handleClearAllInvites() {
+    if (!window.confirm('Clear all invite history? Active pending tokens will also be wiped.')) {
+      return;
+    }
+    setIsClearingRevoked(true);
+    try {
+      const res = await clearAllSuperAdminInvites();
+      toast.success(
+        'History Cleared',
+        `Cleared ${res.deleted_count} invitation record(s).`
+      );
+      void loadData();
+    } catch (err: unknown) {
+      toast.error(
+        'Clear Failed',
+        err instanceof Error ? err.message : 'Could not clear invite history'
       );
     } finally {
       setIsClearingRevoked(false);
@@ -281,18 +304,32 @@ export default function PlatformAdminsPage() {
               Pending, accepted, and revoked email invitations ({invites.length})
             </p>
           </div>
-          {invites.some((i) => i.status === 'revoked' || i.is_expired) && (
-            <button
-              type="button"
-              disabled={isClearingRevoked}
-              onClick={() => void handleClearRevoked()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-border hover:bg-danger-bg hover:text-danger hover:border-danger/20 transition-all text-muted disabled:opacity-50"
-              title="Permanently remove all revoked and expired invitations"
-            >
-              <Trash2 size={12} className={isClearingRevoked ? 'animate-spin' : ''} />
-              <span>{isClearingRevoked ? 'Clearing...' : 'Clear Revoked & Expired'}</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {invites.some((i) => i.status === 'revoked' || i.is_expired) && (
+              <button
+                type="button"
+                disabled={isClearingRevoked}
+                onClick={() => void handleClearRevoked()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-border hover:bg-danger-bg hover:text-danger hover:border-danger/20 transition-all text-muted disabled:opacity-50"
+                title="Permanently remove all revoked and expired invitations"
+              >
+                <Trash2 size={12} className={isClearingRevoked ? 'animate-spin' : ''} />
+                <span>{isClearingRevoked ? 'Clearing...' : 'Clear Revoked'}</span>
+              </button>
+            )}
+            {invites.length > 0 && (
+              <button
+                type="button"
+                disabled={isClearingRevoked}
+                onClick={() => void handleClearAllInvites()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-danger/30 text-danger hover:bg-danger-bg transition-all disabled:opacity-50"
+                title="Wipe entire invite history log"
+              >
+                <Trash2 size={12} className={isClearingRevoked ? 'animate-spin' : ''} />
+                <span>{isClearingRevoked ? 'Clearing...' : 'Clear All History'}</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {invites.length === 0 ? (

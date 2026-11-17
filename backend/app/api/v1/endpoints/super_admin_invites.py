@@ -238,7 +238,44 @@ async def revoke_super_admin_invite(
     return {"id": invite_id, "status": InviteStatus.REVOKED}
 
 
-# ── Clear revoked invites ──────────────────────────────────────────────────
+# ── Clear invites history ──────────────────────────────────────────────────
+
+
+@router.delete("/invites/clear")
+async def clear_all_super_admin_invites(
+    claims: SuperAdminDep,
+    request: Request,
+) -> dict:
+    """Permanently delete all non-pending invitations (accepted, revoked, expired)
+    or all history so the list is clean."""
+    actor_id: str = claims["sub"]
+    actor_username: str = claims.get("email") or claims.get("username", actor_id)
+
+    async with db_session() as session:
+        invites_to_delete = await session.execute(
+            select(SuperAdminInvite)
+        )
+        invites = invites_to_delete.scalars().all()
+        count = len(invites)
+
+        for inv in invites:
+            await session.delete(inv)
+
+        if count > 0:
+            await write_audit_log(
+                session,
+                actor_user_id=actor_id,
+                actor_username=actor_username,
+                action=AuditAction.SUPERADMIN_INVITES_CLEAR_REVOKED,
+                target_type="invite",
+                target_id="bulk_all",
+                details={"deleted_count": count},
+                ip=get_client_ip(request),
+            )
+
+        await session.commit()
+
+    return {"message": f"Successfully cleared {count} invitation record(s).", "deleted_count": count}
 
 
 @router.delete("/invites/revoked")
