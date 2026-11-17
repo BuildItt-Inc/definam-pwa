@@ -237,3 +237,53 @@ async def test_super_admin_login_endpoint_success():
 
             # Verify cookie set
             assert "recall_super_admin_refresh_token" in res.cookies
+
+
+@pytest.mark.anyio
+async def test_super_admin_login_endpoint_accepts_email_field():
+    admin_id = str(uuid.uuid4())
+    transport = ASGITransport(app=app)
+    clear_super_admin_lockout("admin@recallr.org")
+
+    mock_sa = MagicMock()
+    mock_sa.id = admin_id
+    mock_sa.username = "admin@recallr.org"
+    mock_sa.email = "admin@recallr.org"
+    mock_sa.name = "Super Admin"
+    mock_sa.role = "super_admin"
+    mock_sa.password_hash = "$2b$fakehash"
+    mock_sa.force_password_change = False
+
+    with (
+        patch("app.services.auth_service.db_session") as mock_service_db,
+        patch("app.services.auth_service.verify_password", return_value=True),
+        patch(
+            "app.services.auth_service.update_user_session_id", new_callable=AsyncMock
+        ),
+        patch("app.api.v1.endpoints.auth.db_session") as mock_ep_db,
+    ):
+        mock_svc_session = AsyncMock()
+        mock_res = MagicMock()
+        mock_res.scalar_one_or_none.return_value = mock_sa
+        mock_svc_session.execute = AsyncMock(return_value=mock_res)
+        mock_service_db.return_value.__aenter__ = AsyncMock(
+            return_value=mock_svc_session
+        )
+        mock_service_db.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        mock_ep_session = AsyncMock()
+        mock_ep_session.add = MagicMock()
+        mock_ep_db.return_value.__aenter__ = AsyncMock(return_value=mock_ep_session)
+        mock_ep_db.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            res = await client.post(
+                "/api/v1/auth/super-admin/login",
+                json={
+                    "email": "admin@recallr.org",
+                    "password": "correct_password",
+                },
+            )
+            assert res.status_code == 200
+            data = res.json()
+            assert data["role"] == "super_admin"

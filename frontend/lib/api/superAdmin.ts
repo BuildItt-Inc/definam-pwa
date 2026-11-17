@@ -166,6 +166,30 @@ export interface AuditLogListResponse {
 
 let superAdminAccessToken: string | null = null;
 
+function extractErrorMessage(detail: unknown, fallback: string): string {
+  if (typeof detail === 'string' && detail.trim()) return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    const msgs = detail
+      .map((item) =>
+        typeof item === 'string'
+          ? item
+          : item && typeof item === 'object' && 'msg' in item
+            ? String((item as { msg: unknown }).msg)
+            : ''
+      )
+      .filter(Boolean);
+    if (msgs.length > 0) return msgs.join('; ');
+  }
+  if (detail && typeof detail === 'object') {
+    try {
+      return JSON.stringify(detail);
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
 export function getSuperAdminAccessToken(): string | null {
   return superAdminAccessToken;
 }
@@ -183,7 +207,7 @@ export async function refreshSuperAdmin(): Promise<{ access_token: string; role:
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to refresh token' }));
     superAdminAccessToken = null;
-    throw new ApiError(res.status, body.detail || 'Super admin session expired');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Super admin session expired'));
   }
 
   const data = await res.json();
@@ -230,18 +254,20 @@ export async function loginSuperAdmin(data: { email: string; password: string })
     role: string;
   };
 }> {
+  const emailVal = data.email.trim().toLowerCase();
   const res = await fetch('/api/auth/super-admin/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      email: data.email.trim().toLowerCase(),
+      username_or_email: emailVal,
+      email: emailVal,
       password: data.password,
     }),
   });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail || 'Invalid super admin credentials');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Invalid super admin credentials'));
   }
 
   const json = await res.json();
@@ -272,7 +298,7 @@ export async function acceptSuperAdminInvite(data: { token: string; password: st
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail || 'Invalid or expired invite token.');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Invalid or expired invite token.'));
   }
 
   const json = await res.json();
@@ -289,7 +315,7 @@ export async function getSuperAdminOverview(): Promise<SuperAdminOverviewRespons
   const res = await fetch(`${BASE_URL}/api/v1/super-admin/overview`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch overview' }));
-    throw new ApiError(res.status, body.detail || 'Failed to fetch overview');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch overview'));
   }
   return res.json();
 }
@@ -314,7 +340,7 @@ export async function getSuperAdminUsers(params?: {
   const res = await fetch(`${BASE_URL}/api/v1/super-admin/users?${query.toString()}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch users' }));
-    throw new ApiError(res.status, body.detail || 'Failed to fetch users');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch users'));
   }
   return res.json();
 }
@@ -324,7 +350,7 @@ export async function getSuperAdminSignupAnalytics(days = 30): Promise<SuperAdmi
   const res = await fetch(`${BASE_URL}/api/v1/super-admin/analytics/signups?days=${days}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch signup analytics' }));
-    throw new ApiError(res.status, body.detail || 'Failed to fetch signup analytics');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch signup analytics'));
   }
   return res.json();
 }
@@ -334,7 +360,7 @@ export async function getSuperAdminFunnel(): Promise<SuperAdminFunnelResponse> {
   const res = await fetch(`${BASE_URL}/api/v1/super-admin/analytics/funnel`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch funnel analytics' }));
-    throw new ApiError(res.status, body.detail || 'Failed to fetch funnel analytics');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch funnel analytics'));
   }
   return res.json();
 }
@@ -357,7 +383,7 @@ export async function getSuperAdminCodes(params?: {
   const res = await fetch(`${BASE_URL}/api/v1/super-admin/codes?${query.toString()}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch access codes' }));
-    throw new ApiError(res.status, body.detail || 'Failed to fetch access codes');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch access codes'));
   }
   return res.json();
 }
@@ -371,7 +397,7 @@ export async function generateAccessCodes(data: GenerateCodesRequest): Promise<G
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to generate codes' }));
-    throw new ApiError(res.status, body.detail || 'Failed to generate codes');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to generate codes'));
   }
   return res.json();
 }
@@ -384,7 +410,7 @@ export async function revokeAccessCode(codeId: string): Promise<{ message: strin
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to revoke code' }));
-    throw new ApiError(res.status, body.detail || 'Failed to revoke code');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to revoke code'));
   }
   return res.json();
 }
@@ -397,7 +423,7 @@ export async function reactivateAccessCode(codeId: string): Promise<{ message: s
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to reactivate code' }));
-    throw new ApiError(res.status, body.detail || 'Failed to reactivate code');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to reactivate code'));
   }
   return res.json();
 }
@@ -411,7 +437,7 @@ export async function resetSuperAdminUser(userId: string, data: ResetUserRequest
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to reset user' }));
-    throw new ApiError(res.status, body.detail || 'Failed to reset user');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to reset user'));
   }
   return res.json();
 }
@@ -424,7 +450,7 @@ export async function deleteSuperAdminUser(userId: string): Promise<{ message: s
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to delete user' }));
-    throw new ApiError(res.status, body.detail || 'Failed to delete user');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to delete user'));
   }
   return res.json();
 }
@@ -438,7 +464,7 @@ export async function updateSuperAdminUserRole(userId: string, role: string): Pr
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to update user role' }));
-    throw new ApiError(res.status, body.detail || 'Failed to update user role');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to update user role'));
   }
   return res.json();
 }
@@ -450,7 +476,7 @@ export async function listSuperAdmins(): Promise<SuperAdminListResponse> {
   const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch super admins' }));
-    throw new ApiError(res.status, body.detail || 'Failed to fetch super admins');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch super admins'));
   }
   return res.json();
 }
@@ -469,7 +495,7 @@ export async function sendSuperAdminInvite(data: { email: string }): Promise<{
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to send invite' }));
-    throw new ApiError(res.status, body.detail || 'Failed to send invite');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to send invite'));
   }
   return res.json();
 }
@@ -479,7 +505,7 @@ export async function listSuperAdminInvites(): Promise<SuperAdminInviteListRespo
   const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins/invites`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch invites' }));
-    throw new ApiError(res.status, body.detail || 'Failed to fetch invites');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch invites'));
   }
   return res.json();
 }
@@ -492,7 +518,7 @@ export async function revokeSuperAdminInvite(inviteId: string): Promise<{ messag
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to revoke invite' }));
-    throw new ApiError(res.status, body.detail || 'Failed to revoke invite');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to revoke invite'));
   }
   return res.json();
 }
@@ -505,7 +531,7 @@ export async function removeSuperAdmin(userId: string): Promise<{ message: strin
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to remove admin' }));
-    throw new ApiError(res.status, body.detail || 'Failed to remove admin');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to remove admin'));
   }
   return res.json();
 }
@@ -532,7 +558,7 @@ export async function getSuperAdminAuditLogs(params?: {
   const res = await fetch(`${BASE_URL}/api/v1/super-admin/audit-logs?${query.toString()}`, { headers });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to fetch audit logs' }));
-    throw new ApiError(res.status, body.detail || 'Failed to fetch audit logs');
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch audit logs'));
   }
   return res.json();
 }
