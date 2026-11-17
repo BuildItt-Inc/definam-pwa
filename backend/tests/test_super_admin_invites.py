@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import secrets
+import socket
 import uuid
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
@@ -22,7 +23,22 @@ from scripts.seed_super_admin import seed as seed_super_admin
 pytestmark = pytest.mark.anyio
 
 
+def _is_postgres_reachable() -> bool:
+    try:
+        with socket.create_connection(("localhost", 5432), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
+requires_postgres = pytest.mark.skipif(
+    not _is_postgres_reachable(),
+    reason="Live PostgreSQL database not available at localhost:5432",
+)
+
+
 @pytest.mark.anyio
+@requires_postgres
 async def test_invite_super_admin_success():
     actor_id = str(uuid.uuid4())
     async with db_session() as session:
@@ -87,6 +103,7 @@ async def test_invite_super_admin_success():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_invite_super_admin_duplicate_pending_rejected():
     actor_id = str(uuid.uuid4())
     async with db_session() as session:
@@ -132,6 +149,7 @@ async def test_invite_super_admin_duplicate_pending_rejected():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_list_super_admin_invites():
     app.dependency_overrides[get_current_super_admin] = lambda: {
         "sub": str(uuid.uuid4()),
@@ -152,6 +170,7 @@ async def test_list_super_admin_invites():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_revoke_super_admin_invite():
     actor_id = str(uuid.uuid4())
     invite_id = str(uuid.uuid4())
@@ -204,6 +223,7 @@ async def test_revoke_super_admin_invite():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_accept_invite_new_user():
     raw_token = "valid_token_for_new_user_123456789012345678"
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
@@ -250,6 +270,7 @@ async def test_accept_invite_new_user():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_accept_invite_clash_rejected():
     """Verify case-insensitive username or email clash rejects invite with generic error."""
     raw_token = secrets.token_urlsafe(32)
@@ -286,6 +307,7 @@ async def test_accept_invite_clash_rejected():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_accept_invite_existing_user_promoted():
     raw_token = "valid_token_for_existing_user_1234567890123"
     token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
@@ -356,6 +378,7 @@ async def test_remove_super_admin_cannot_remove_self():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_remove_super_admin_deletes_invite_created_and_demotes_promoted():
     actor_id = str(uuid.uuid4())
     other_sa_id = str(uuid.uuid4())
@@ -434,6 +457,7 @@ async def test_remove_super_admin_deletes_invite_created_and_demotes_promoted():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_concurrent_last_admin_removal_protection_real_postgres():
     """Verify row-level locking (SELECT ... FOR UPDATE) prevents removing the last super admin
 
@@ -518,6 +542,7 @@ async def test_concurrent_last_admin_removal_protection_real_postgres():
 
 
 @pytest.mark.anyio
+@requires_postgres
 async def test_seed_super_admin_script(monkeypatch):
     test_email = f"Seed_{uuid.uuid4().hex[:6]}@Example.COM"
     test_pw = "SeedPassword123!"
