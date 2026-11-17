@@ -193,7 +193,7 @@ export default function PlatformAdminsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -201,7 +201,7 @@ export default function PlatformAdminsPage() {
               setInviteError(null);
               setShowInviteModal(true);
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-ink text-bg-0 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-xl bg-ink text-bg-0 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs"
           >
             <UserPlus size={14} />
             <span>Invite Super Admin</span>
@@ -209,7 +209,7 @@ export default function PlatformAdminsPage() {
           <button
             type="button"
             onClick={() => void loadData()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-border bg-card hover:bg-bg-2 text-ink shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-xl border border-border bg-card hover:bg-bg-2 text-ink shadow-xs transition-colors"
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
             <span>Refresh</span>
@@ -297,14 +297,14 @@ export default function PlatformAdminsPage() {
 
       {/* ── SECTION 2: PENDING & RECENT INVITATIONS ──────────────────────── */}
       <div className="bg-card rounded-2xl border border-border shadow-xs overflow-hidden space-y-0">
-        <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold text-ink">Invitation History</h2>
             <p className="text-xs text-muted mt-0.5">
               Pending, accepted, and revoked email invitations ({invites.length})
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {invites.some((i) => i.status === 'revoked' || i.is_expired) && (
               <button
                 type="button"

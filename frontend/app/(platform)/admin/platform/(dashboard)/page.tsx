@@ -132,7 +132,7 @@ export default function PlatformOverviewPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -140,14 +140,14 @@ export default function PlatformOverviewPage() {
               setClearError(null);
               setShowClearModal(true);
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-danger/30 text-danger hover:bg-danger-bg transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-xl border border-danger/30 text-danger hover:bg-danger-bg transition-all shadow-xs"
           >
             <RotateCcw size={13} />
             <span>Clear Activity</span>
           </button>
           <Link
             href="/admin/platform/admins"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-ink text-bg-0 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-xl bg-ink text-bg-0 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs"
           >
             <ShieldCheck size={14} />
             <span>Manage Admins</span>
@@ -155,7 +155,7 @@ export default function PlatformOverviewPage() {
           <button
             type="button"
             onClick={() => void loadData()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-border bg-card hover:bg-bg-2 text-ink shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold rounded-xl border border-border bg-card hover:bg-bg-2 text-ink shadow-xs transition-colors"
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
             <span>Refresh</span>
