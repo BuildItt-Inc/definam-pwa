@@ -291,7 +291,7 @@ async def get_platform_traction(
 
             # Topics reviewed
             r_q = select(func.count(TopicReview.id)).where(
-                and_(TopicReview.reviewed_at >= t_start, TopicReview.reviewed_at < t_end)
+                and_(TopicReview.last_reviewed_at >= t_start, TopicReview.last_reviewed_at < t_end)
             )
             topics_reviewed = (await session.execute(r_q)).scalar_one() or 0
 
@@ -301,12 +301,12 @@ async def get_platform_traction(
             )
             chat_messages = (await session.execute(c_q)).scalar_one() or 0
 
-            # Revenue in Naira
-            rev_q = select(func.coalesce(func.sum(ProcessedWebhook.amount), 0)).where(
+            # Revenue in Naira (estimate from processed payment webhooks)
+            pay_q = select(func.count(ProcessedWebhook.reference)).where(
                 and_(ProcessedWebhook.processed_at >= t_start, ProcessedWebhook.processed_at < t_end)
             )
-            rev_kobo = (await session.execute(rev_q)).scalar_one() or 0
-            revenue_naira = int(rev_kobo // 100)
+            pay_count = (await session.execute(pay_q)).scalar_one() or 0
+            revenue_naira = pay_count * 2000
 
             return TractionMetrics(
                 signups=signups,

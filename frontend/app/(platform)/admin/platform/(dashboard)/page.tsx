@@ -51,19 +51,26 @@ export default function PlatformOverviewPage() {
     setLoading(true);
     setError(null);
     try {
-      const [ovData, tracData] = await Promise.all([
+      const [ovResult, tracResult] = await Promise.allSettled([
         getSuperAdminOverview(),
         getPlatformTraction(tractionPeriod),
       ]);
-      setOverview(ovData);
-      setTraction(tracData);
-    } catch (err: unknown) {
-      if (err instanceof ApiError) {
-        setError(err.message || 'Failed to fetch platform metrics.');
-      } else if (err instanceof Error) {
-        setError(err.message);
+
+      if (ovResult.status === 'fulfilled') {
+        setOverview(ovResult.value);
       } else {
-        setError('Could not connect to platform backend.');
+        const err = ovResult.reason;
+        setError(
+          err instanceof ApiError
+            ? err.message || 'Failed to fetch platform metrics.'
+            : err instanceof Error
+              ? err.message
+              : 'Could not connect to platform backend.'
+        );
+      }
+
+      if (tracResult.status === 'fulfilled') {
+        setTraction(tracResult.value);
       }
     } finally {
       setLoading(false);
