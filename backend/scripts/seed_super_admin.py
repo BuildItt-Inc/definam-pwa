@@ -72,21 +72,32 @@ async def seed() -> None:
             await engine.dispose()
             return
 
-        # 2. Case-insensitive collision check on email and username against existing accounts.
+        # 2. Check if an account with this email or username already exists.
         collision = await session.execute(
-            select(User.id).where(
+            select(User).where(
                 or_(
                     func.lower(User.email) == email,
                     func.lower(User.username) == email,
                 )
             )
         )
-        if collision.scalar_one_or_none() is not None:
-            log.error(
-                "ERROR — An existing user with this email or username already exists. Aborting seed."
+        existing_user = collision.scalar_one_or_none()
+        if existing_user is not None:
+            log.info(
+                "NOTICE — Account '%s' already exists with role '%s'. Promoting to 'super_admin'...",
+                existing_user.username,
+                existing_user.role,
+            )
+            existing_user.role = "super_admin"
+            existing_user.password_hash = await hash_password(password)
+            existing_user.force_password_change = False
+            await session.commit()
+            log.info(
+                "DONE — Existing user '%s' promoted to 'super_admin' successfully.",
+                existing_user.username,
             )
             await engine.dispose()
-            sys.exit(1)
+            return
 
         # 3. Create super admin account using normalized email as username.
         hashed = await hash_password(password)
