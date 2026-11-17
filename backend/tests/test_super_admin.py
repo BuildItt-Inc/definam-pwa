@@ -83,3 +83,38 @@ async def test_super_admin_overview_authorized():
                 assert "total_users" in data
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.anyio
+async def test_super_admin_traction_authorized():
+    app.dependency_overrides[get_current_super_admin] = lambda: {
+        "sub": "00000000-0000-0000-0000-000000000001",
+        "role": "super_admin",
+    }
+    transport = ASGITransport(app=app)
+    try:
+        with patch("app.api.v1.endpoints.super_admin.db_session") as mock_db:
+            mock_session = AsyncMock()
+            mock_result = MagicMock()
+            mock_result.scalar_one.return_value = 10
+            mock_session.execute = AsyncMock(return_value=mock_result)
+            mock_db.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_db.return_value.__aexit__ = AsyncMock(return_value=False)
+
+            async with AsyncClient(
+                transport=transport, base_url="http://test"
+            ) as client:
+                res = await client.get(
+                    "/api/v1/super-admin/analytics/traction?period=monthly",
+                    headers={"Authorization": "Bearer fake-token"},
+                )
+                assert res.status_code == 200
+                data = res.json()
+                assert data["period"] == "monthly"
+                assert "current" in data
+                assert "previous" in data
+                assert "breakdown_labels" in data
+                assert data["current"]["revenue_naira"] == 20000
+    finally:
+        app.dependency_overrides.clear()
+
