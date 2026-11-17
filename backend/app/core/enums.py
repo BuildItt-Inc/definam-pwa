@@ -30,8 +30,12 @@ class AuditAction(StrEnum):
     # Super admin lifecycle
     SUPERADMIN_INVITE = "superadmin.invite"
     SUPERADMIN_INVITE_REVOKE = "superadmin.invite_revoke"
+    SUPERADMIN_INVITES_CLEAR_REVOKED = "superadmin.invites_clear_revoked"
     SUPERADMIN_INVITE_ACCEPT = "superadmin.invite_accept"
     SUPERADMIN_REMOVE = "superadmin.remove"
+
+    # Platform data reset
+    PLATFORM_ACTIVITY_RESET = "platform.activity_reset"
 
     # Platform content
     TOPIC_APPROVE = "topic.approve"

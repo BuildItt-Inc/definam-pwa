@@ -140,6 +140,29 @@ export interface SuperAdminInviteListResponse {
   total: number;
 }
 
+export interface TractionMetrics {
+  signups: number;
+  active_users: number;
+  topics_reviewed: number;
+  chat_messages: number;
+  revenue_naira: number;
+}
+
+export interface PlatformTractionResponse {
+  period: 'weekly' | 'monthly' | 'yearly';
+  current: TractionMetrics;
+  previous: TractionMetrics;
+  percent_changes: Record<string, number | null>;
+  breakdown_labels: string[];
+  breakdown_data: TractionMetrics[];
+}
+
+export interface ClearActivityResponse {
+  success: boolean;
+  message: string;
+  deleted_counts: Record<string, number>;
+}
+
 // ── Audit Logs ─────────────────────────────────────────────────────────────
 
 export interface AuditLogItem {
@@ -532,6 +555,51 @@ export async function removeSuperAdmin(userId: string): Promise<{ message: strin
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Failed to remove admin' }));
     throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to remove admin'));
+  }
+  return res.json();
+}
+
+export async function clearRevokedSuperAdminInvites(): Promise<{ message: string; deleted_count: number }> {
+  const headers = await getSuperAdminAuthHeaders();
+  const res = await fetch(`${BASE_URL}/api/v1/super-admin/admins/invites/revoked`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: 'Failed to clear revoked invites' }));
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to clear revoked invites'));
+  }
+  return res.json();
+}
+
+export async function getPlatformTraction(
+  period: 'weekly' | 'monthly' | 'yearly' = 'monthly'
+): Promise<PlatformTractionResponse> {
+  const headers = await getSuperAdminAuthHeaders();
+  const res = await fetch(`${BASE_URL}/api/v1/super-admin/analytics/traction?period=${period}`, { headers });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: 'Failed to fetch platform traction' }));
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to fetch platform traction'));
+  }
+  return res.json();
+}
+
+export async function clearPlatformActivity(params: {
+  confirmation: string;
+  clear_chat_messages?: boolean;
+  clear_topic_reviews?: boolean;
+  clear_daily_activity?: boolean;
+  clear_recall_queues?: boolean;
+}): Promise<ClearActivityResponse> {
+  const headers = await getSuperAdminAuthHeaders();
+  const res = await fetch(`${BASE_URL}/api/v1/super-admin/activity/clear`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: 'Failed to clear activity data' }));
+    throw new ApiError(res.status, extractErrorMessage(body.detail, 'Failed to clear activity data'));
   }
   return res.json();
 }

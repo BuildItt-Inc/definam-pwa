@@ -16,7 +16,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Request
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 
 from app.api.deps import SuperAdminDep
 from app.core.email import send_super_admin_invite
@@ -236,6 +236,55 @@ async def revoke_super_admin_invite(
         await session.commit()
 
     return {"id": invite_id, "status": InviteStatus.REVOKED}
+
+
+# ── Clear revoked invites ──────────────────────────────────────────────────
+
+
+@router.delete("/invites/revoked")
+async def clear_revoked_super_admin_invites(
+    claims: SuperAdminDep,
+    request: Request,
+) -> dict:
+    """Permanently delete all revoked and expired super admin invitations."""
+    actor_id: str = claims["sub"]
+    actor_username: str = claims.get("email") or claims.get("username", actor_id)
+    now = datetime.now(tz=UTC)
+
+    async with db_session() as session:
+        # Find all invites that are revoked or expired
+        invites_to_delete = await session.execute(
+            select(SuperAdminInvite).where(
+                or_(
+                    SuperAdminInvite.status == InviteStatus.REVOKED,
+                    and_(
+                        SuperAdminInvite.status == InviteStatus.PENDING,
+                        SuperAdminInvite.expires_at < now,
+                    ),
+                )
+            )
+        )
+        invites = invites_to_delete.scalars().all()
+        count = len(invites)
+
+        for inv in invites:
+            await session.delete(inv)
+
+        if count > 0:
+            await write_audit_log(
+                session,
+                actor_user_id=actor_id,
+                actor_username=actor_username,
+                action=AuditAction.SUPERADMIN_INVITES_CLEAR_REVOKED,
+                target_type="invite",
+                target_id="bulk",
+                details={"deleted_count": count},
+                ip=get_client_ip(request),
+            )
+
+        await session.commit()
+
+    return {"message": f"Successfully cleared {count} inactive invitation(s).", "deleted_count": count}
 
 
 # ── Remove super admin ─────────────────────────────────────────────────────
