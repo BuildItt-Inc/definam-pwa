@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Any
+
+from pydantic import BaseModel, Field, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -12,13 +14,28 @@ class RegisterRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     username_or_email: str = Field(
-        ...,
+        default="",
         max_length=150,
         description="Username or email address",
+    )
+    email: str | None = Field(
+        default=None,
+        max_length=150,
+        description="Email address (alternative to username_or_email)",
     )
     password: str = Field(..., max_length=128)
 
     model_config = {"populate_by_name": True}
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_username_or_email(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("username_or_email") and data.get("email"):
+                data["username_or_email"] = data["email"]
+            if not data.get("username_or_email"):
+                raise ValueError("username_or_email or email is required")
+        return data
 
 
 class LoginResponse(BaseModel):
