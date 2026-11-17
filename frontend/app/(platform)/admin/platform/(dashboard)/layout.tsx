@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Menu, ShieldAlert } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import RecallLogo from '@/components/ui/RecallLogo';
 import PlatformSidebar from '@/components/platform/PlatformSidebar';
 import { refreshSuperAdmin, ApiError } from '@/lib/api/superAdmin';
@@ -10,23 +9,38 @@ import { refreshSuperAdmin, ApiError } from '@/lib/api/superAdmin';
 export default function PlatformDashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+    const fallbackTimer = setTimeout(() => {
+      if (mounted && authorized === null) {
+        window.location.href = '/admin/platform/login?expired=1';
+      }
+    }, 6000);
+
     // Verify session on mount
     refreshSuperAdmin()
-      .then(() => setAuthorized(true))
+      .then(() => {
+        clearTimeout(fallbackTimer);
+        if (mounted) setAuthorized(true);
+      })
       .catch((err: unknown) => {
+        clearTimeout(fallbackTimer);
         if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-          router.replace('/admin/platform/login');
+          window.location.href = '/admin/platform/login?expired=1';
         } else {
           // If network glitch or already has token, allow rendering while edge middleware handles it
-          setAuthorized(true);
+          if (mounted) setAuthorized(true);
         }
       });
-  }, [router]);
+
+    return () => {
+      mounted = false;
+      clearTimeout(fallbackTimer);
+    };
+  }, []);
 
   if (authorized === null) {
     return (
