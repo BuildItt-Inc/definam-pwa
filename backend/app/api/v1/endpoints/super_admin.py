@@ -30,9 +30,12 @@ from app.schemas.super_admin import (
     AccessCodeListResponse,
     AuditLogItem,
     AuditLogListResponse,
+    ClearActivityRequest,
+    ClearActivityResponse,
     FunnelStepItem,
     GenerateCodesRequest,
     GenerateCodesResponse,
+    PlatformTractionResponse,
     ResetUserRequest,
     ResetUserResponse,
     SignupTrendItem,
@@ -41,6 +44,7 @@ from app.schemas.super_admin import (
     SuperAdminSignupAnalyticsResponse,
     SuperAdminUserItem,
     SuperAdminUsersListResponse,
+    TractionMetrics,
     UpdateUserRoleRequest,
 )
 from app.services.audit import get_client_ip, write_audit_log
@@ -233,6 +237,186 @@ async def get_signup_trends(
             total_signups=total_signups,
             daily_trends=trends,
         )
+
+
+@router.get("/analytics/traction", response_model=PlatformTractionResponse)
+async def get_platform_traction(
+    _: SuperAdminDep,
+    period: str = Query(default="monthly", pattern="^(weekly|monthly|yearly)$"),
+) -> PlatformTractionResponse:
+    """Return platform traction metrics (signups, active users, topics reviewed,
+    chat messages, revenue) compared to previous period with breakdown buckets.
+    """
+    now = datetime.now(UTC)
+
+    if period == "weekly":
+        duration = timedelta(days=7)
+        buckets_count = 7
+        curr_start = now - duration
+        prev_start = curr_start - duration
+        bucket_duration = timedelta(days=1)
+        labels = [(curr_start + timedelta(days=i)).strftime("%a") for i in range(buckets_count)]
+    elif period == "yearly":
+        duration = timedelta(days=365)
+        buckets_count = 12
+        curr_start = now - duration
+        prev_start = curr_start - duration
+        bucket_duration = timedelta(days=30)
+        labels = [f"M{i+1}" for i in range(buckets_count)]
+    else:  # monthly
+        period = "monthly"
+        duration = timedelta(days=30)
+        buckets_count = 4
+        curr_start = now - duration
+        prev_start = curr_start - duration
+        bucket_duration = timedelta(days=7.5)
+        labels = ["Wk 1", "Wk 2", "Wk 3", "Wk 4"]
+
+    async with db_session() as session:
+        async def _query_metrics(t_start: datetime, t_end: datetime) -> TractionMetrics:
+            # Signups
+            s_q = select(func.count(User.id)).where(
+                and_(User.created_at >= t_start, User.created_at < t_end)
+            )
+            signups = (await session.execute(s_q)).scalar_one() or 0
+
+            # Active users (distinct users with activity or last_seen)
+            a_q = select(func.count(distinct(DailyActivity.user_id))).where(
+                and_(
+                    DailyActivity.activity_date >= t_start.date(),
+                    DailyActivity.activity_date < t_end.date(),
+                )
+            )
+            active_users = (await session.execute(a_q)).scalar_one() or 0
+
+            # Topics reviewed
+            r_q = select(func.count(TopicReview.id)).where(
+                and_(TopicReview.reviewed_at >= t_start, TopicReview.reviewed_at < t_end)
+            )
+            topics_reviewed = (await session.execute(r_q)).scalar_one() or 0
+
+            # Chat messages
+            c_q = select(func.count(ChatMessage.id)).where(
+                and_(ChatMessage.created_at >= t_start, ChatMessage.created_at < t_end)
+            )
+            chat_messages = (await session.execute(c_q)).scalar_one() or 0
+
+            # Revenue in Naira
+            rev_q = select(func.coalesce(func.sum(ProcessedWebhook.amount), 0)).where(
+                and_(ProcessedWebhook.processed_at >= t_start, ProcessedWebhook.processed_at < t_end)
+            )
+            rev_kobo = (await session.execute(rev_q)).scalar_one() or 0
+            revenue_naira = int(rev_kobo // 100)
+
+            return TractionMetrics(
+                signups=signups,
+                active_users=active_users,
+                topics_reviewed=topics_reviewed,
+                chat_messages=chat_messages,
+                revenue_naira=revenue_naira,
+            )
+
+        current_metrics = await _query_metrics(curr_start, now)
+        previous_metrics = await _query_metrics(prev_start, curr_start)
+
+        # Percent changes
+        def _calc_pct(curr: int, prev: int) -> float | None:
+            if prev == 0:
+                return 100.0 if curr > 0 else 0.0
+            return round(((curr - prev) / prev) * 100.0, 1)
+
+        pct_changes = {
+            "signups": _calc_pct(current_metrics.signups, previous_metrics.signups),
+            "active_users": _calc_pct(current_metrics.active_users, previous_metrics.active_users),
+            "topics_reviewed": _calc_pct(current_metrics.topics_reviewed, previous_metrics.topics_reviewed),
+            "chat_messages": _calc_pct(current_metrics.chat_messages, previous_metrics.chat_messages),
+            "revenue_naira": _calc_pct(current_metrics.revenue_naira, previous_metrics.revenue_naira),
+        }
+
+        # Breakdown buckets
+        breakdown_data: list[TractionMetrics] = []
+        for i in range(buckets_count):
+            b_start = curr_start + (bucket_duration * i)
+            b_end = min(curr_start + (bucket_duration * (i + 1)), now)
+            b_m = await _query_metrics(b_start, b_end)
+            breakdown_data.append(b_m)
+
+        return PlatformTractionResponse(
+            period=period,
+            current=current_metrics,
+            previous=previous_metrics,
+            percent_changes=pct_changes,
+            breakdown_labels=labels,
+            breakdown_data=breakdown_data,
+        )
+
+
+@router.post("/activity/clear", response_model=ClearActivityResponse)
+async def clear_platform_activity(
+    payload: ClearActivityRequest,
+    claims: SuperAdminDep,
+    request: Request,
+) -> ClearActivityResponse:
+    """Super Admin bulk reset tool to wipe study, chat, review, and activity history.
+    Users, accounts, schools, and access codes remain fully intact.
+    Requires typing exact confirmation string 'CLEAR ACTIVITY'.
+    """
+    if payload.confirmation.strip() != "CLEAR ACTIVITY":
+        raise BadRequestError("Invalid confirmation string. Must type 'CLEAR ACTIVITY'.")
+
+    actor_id: str = claims["sub"]
+    actor_username: str = claims.get("email") or claims.get("username", actor_id)
+
+    async with db_session() as session:
+        deleted_counts: dict[str, int] = {}
+
+        if payload.clear_chat_messages:
+            c_res = await session.execute(select(func.count(ChatMessage.id)))
+            deleted_counts["chat_messages"] = c_res.scalar_one() or 0
+            from sqlalchemy import delete
+            await session.execute(delete(ChatMessage))
+
+        if payload.clear_topic_reviews:
+            r_res = await session.execute(select(func.count(TopicReview.id)))
+            deleted_counts["topic_reviews"] = r_res.scalar_one() or 0
+            from sqlalchemy import delete
+            await session.execute(delete(TopicReview))
+
+        if payload.clear_daily_activity:
+            a_res = await session.execute(select(func.count(DailyActivity.id)))
+            deleted_counts["daily_activity"] = a_res.scalar_one() or 0
+            from sqlalchemy import delete
+            await session.execute(delete(DailyActivity))
+
+        if payload.clear_recall_queues:
+            q_res = await session.execute(select(func.count(DailyRecallQueue.id)))
+            deleted_counts["recall_queues"] = q_res.scalar_one() or 0
+            from sqlalchemy import delete
+            await session.execute(delete(DailyRecallQueue))
+
+        total_wiped = sum(deleted_counts.values())
+
+        await write_audit_log(
+            session,
+            actor_user_id=actor_id,
+            actor_username=actor_username,
+            action=AuditAction.PLATFORM_ACTIVITY_RESET,
+            target_type="platform_data",
+            target_id="bulk_wipe",
+            details={
+                "deleted_counts": deleted_counts,
+                "total_records_cleared": total_wiped,
+            },
+            ip=get_client_ip(request),
+        )
+
+        await session.commit()
+
+    return ClearActivityResponse(
+        success=True,
+        message=f"Platform activity successfully reset. Cleared {total_wiped} records.",
+        deleted_counts=deleted_counts,
+    )
 
 
 @router.get("/analytics/funnel", response_model=SuperAdminFunnelResponse)

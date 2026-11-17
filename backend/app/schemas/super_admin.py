@@ -48,6 +48,37 @@ class SuperAdminSignupAnalyticsResponse(BaseModel):
     daily_trends: list[SignupTrendItem]
 
 
+class TractionMetrics(BaseModel):
+    signups: int
+    active_users: int
+    topics_reviewed: int
+    chat_messages: int
+    revenue_naira: int
+
+
+class PlatformTractionResponse(BaseModel):
+    period: str  # "weekly", "monthly", "yearly"
+    current: TractionMetrics
+    previous: TractionMetrics
+    percent_changes: dict[str, float | None]
+    breakdown_labels: list[str]
+    breakdown_data: list[TractionMetrics]
+
+
+class ClearActivityRequest(BaseModel):
+    confirmation: str = Field(..., description="Must type 'CLEAR ACTIVITY' to confirm")
+    clear_chat_messages: bool = True
+    clear_topic_reviews: bool = True
+    clear_daily_activity: bool = True
+    clear_recall_queues: bool = True
+
+
+class ClearActivityResponse(BaseModel):
+    success: bool
+    message: str
+    deleted_counts: dict[str, int]
+
+
 class FunnelStepItem(BaseModel):
     step: int
     name: str

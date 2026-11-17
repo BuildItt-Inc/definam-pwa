@@ -14,24 +14,49 @@ import {
   KeyRound,
   ArrowRight,
   TrendingUp,
+  RotateCcw,
+  BookOpen,
+  MessageSquare,
+  Sparkles,
+  ArrowUpRight,
+  ArrowDownRight,
+  Trash2,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   getSuperAdminOverview,
+  getPlatformTraction,
+  clearPlatformActivity,
   type SuperAdminOverviewResponse,
+  type PlatformTractionResponse,
   ApiError,
 } from '@/lib/api/superAdmin';
+import { toast } from '@/lib/toast';
 
 export default function PlatformOverviewPage() {
   const [overview, setOverview] = useState<SuperAdminOverviewResponse | null>(null);
+  const [traction, setTraction] = useState<PlatformTractionResponse | null>(null);
+  const [tractionPeriod, setTractionPeriod] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState(true);
+  const [tractionLoading, setTractionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadOverview() {
+  // Clear activity modal state
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [confirmationInput, setConfirmationInput] = useState('');
+  const [isClearing, setIsClearing] = useState(false);
+  const [clearError, setClearError] = useState<string | null>(null);
+
+  async function loadData() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getSuperAdminOverview();
-      setOverview(data);
+      const [ovData, tracData] = await Promise.all([
+        getSuperAdminOverview(),
+        getPlatformTraction(tractionPeriod),
+      ]);
+      setOverview(ovData);
+      setTraction(tracData);
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setError(err.message || 'Failed to fetch platform metrics.');
@@ -45,8 +70,45 @@ export default function PlatformOverviewPage() {
     }
   }
 
+  async function handlePeriodChange(p: 'weekly' | 'monthly' | 'yearly') {
+    setTractionPeriod(p);
+    setTractionLoading(true);
+    try {
+      const data = await getPlatformTraction(p);
+      setTraction(data);
+    } catch (err) {
+      toast.error('Failed to load traction', err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setTractionLoading(false);
+    }
+  }
+
+  async function handleClearActivity(e: React.FormEvent) {
+    e.preventDefault();
+    if (confirmationInput.trim() !== 'CLEAR ACTIVITY') {
+      setClearError("Please type 'CLEAR ACTIVITY' exactly.");
+      return;
+    }
+
+    setIsClearing(true);
+    setClearError(null);
+    try {
+      const res = await clearPlatformActivity({
+        confirmation: confirmationInput.trim(),
+      });
+      toast.success('Activity Reset', res.message);
+      setShowClearModal(false);
+      setConfirmationInput('');
+      void loadData();
+    } catch (err: unknown) {
+      setClearError(err instanceof Error ? err.message : 'Failed to clear activity');
+    } finally {
+      setIsClearing(false);
+    }
+  }
+
   useEffect(() => {
-    void loadOverview();
+    void loadData();
   }, []);
 
   return (
@@ -71,6 +133,18 @@ export default function PlatformOverviewPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmationInput('');
+              setClearError(null);
+              setShowClearModal(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-danger/30 text-danger hover:bg-danger-bg transition-all shadow-xs"
+          >
+            <RotateCcw size={13} />
+            <span>Clear Activity</span>
+          </button>
           <Link
             href="/admin/platform/admins"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-ink text-bg-0 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs"
@@ -80,7 +154,7 @@ export default function PlatformOverviewPage() {
           </Link>
           <button
             type="button"
-            onClick={() => void loadOverview()}
+            onClick={() => void loadData()}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-border bg-card hover:bg-bg-2 text-ink shadow-xs transition-colors"
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
@@ -231,6 +305,206 @@ export default function PlatformOverviewPage() {
             </div>
           </div>
 
+          {/* ── TRACTION METRICS (Weekly / Monthly / Yearly) ────────────── */}
+          <div className="bg-card p-6 rounded-2xl border border-border shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-ink text-bg-0">
+                    <TrendingUp size={12} strokeWidth={2.5} />
+                  </span>
+                  <h2 className="text-sm font-bold text-ink">Platform Traction</h2>
+                </div>
+                <p className="text-xs text-muted mt-0.5">
+                  Track multi-horizon adoption, study sessions, and retention across time.
+                </p>
+              </div>
+
+              {/* Time Horizon Pills */}
+              <div className="inline-flex items-center bg-bg-2 p-1 rounded-xl border border-border">
+                {(['weekly', 'monthly', 'yearly'] as const).map((period) => (
+                  <button
+                    key={period}
+                    type="button"
+                    onClick={() => void handlePeriodChange(period)}
+                    className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition-all ${
+                      tractionPeriod === period
+                        ? 'bg-card text-ink shadow-xs'
+                        : 'text-muted hover:text-ink'
+                    }`}
+                  >
+                    {period}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {tractionLoading ? (
+              <div className="p-8 flex items-center justify-center text-muted text-xs gap-2">
+                <RefreshCw size={14} className="animate-spin" />
+                <span>Recalculating traction metrics...</span>
+              </div>
+            ) : traction ? (
+              <div className="space-y-6">
+                {/* 5 Traction KPIs */}
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+                  {/* New Signups */}
+                  <div className="p-4 rounded-xl border border-border bg-bg-0 space-y-1">
+                    <div className="flex items-center justify-between text-muted text-[10px] font-bold uppercase tracking-wider">
+                      <span>Signups</span>
+                      <Users size={13} />
+                    </div>
+                    <div className="text-2xl font-extrabold text-ink font-mono mt-1">
+                      {traction.current.signups}
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-semibold">
+                      {(traction.percent_changes.signups ?? 0) >= 0 ? (
+                        <span className="text-success inline-flex items-center">
+                          <ArrowUpRight size={12} />
+                          +{traction.percent_changes.signups}%
+                        </span>
+                      ) : (
+                        <span className="text-danger inline-flex items-center">
+                          <ArrowDownRight size={12} />
+                          {traction.percent_changes.signups}%
+                        </span>
+                      )}
+                      <span className="text-muted text-[10px]">vs prev</span>
+                    </div>
+                  </div>
+
+                  {/* Active Users */}
+                  <div className="p-4 rounded-xl border border-border bg-bg-0 space-y-1">
+                    <div className="flex items-center justify-between text-muted text-[10px] font-bold uppercase tracking-wider">
+                      <span>Active Users</span>
+                      <Activity size={13} />
+                    </div>
+                    <div className="text-2xl font-extrabold text-ink font-mono mt-1">
+                      {traction.current.active_users}
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-semibold">
+                      {(traction.percent_changes.active_users ?? 0) >= 0 ? (
+                        <span className="text-success inline-flex items-center">
+                          <ArrowUpRight size={12} />
+                          +{traction.percent_changes.active_users}%
+                        </span>
+                      ) : (
+                        <span className="text-danger inline-flex items-center">
+                          <ArrowDownRight size={12} />
+                          {traction.percent_changes.active_users}%
+                        </span>
+                      )}
+                      <span className="text-muted text-[10px]">vs prev</span>
+                    </div>
+                  </div>
+
+                  {/* Topics Reviewed */}
+                  <div className="p-4 rounded-xl border border-border bg-bg-0 space-y-1">
+                    <div className="flex items-center justify-between text-muted text-[10px] font-bold uppercase tracking-wider">
+                      <span>Reviews Done</span>
+                      <BookOpen size={13} />
+                    </div>
+                    <div className="text-2xl font-extrabold text-ink font-mono mt-1">
+                      {traction.current.topics_reviewed}
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-semibold">
+                      {(traction.percent_changes.topics_reviewed ?? 0) >= 0 ? (
+                        <span className="text-success inline-flex items-center">
+                          <ArrowUpRight size={12} />
+                          +{traction.percent_changes.topics_reviewed}%
+                        </span>
+                      ) : (
+                        <span className="text-danger inline-flex items-center">
+                          <ArrowDownRight size={12} />
+                          {traction.percent_changes.topics_reviewed}%
+                        </span>
+                      )}
+                      <span className="text-muted text-[10px]">vs prev</span>
+                    </div>
+                  </div>
+
+                  {/* Chat Messages */}
+                  <div className="p-4 rounded-xl border border-border bg-bg-0 space-y-1">
+                    <div className="flex items-center justify-between text-muted text-[10px] font-bold uppercase tracking-wider">
+                      <span>Tutor Chats</span>
+                      <MessageSquare size={13} />
+                    </div>
+                    <div className="text-2xl font-extrabold text-ink font-mono mt-1">
+                      {traction.current.chat_messages}
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-semibold">
+                      {(traction.percent_changes.chat_messages ?? 0) >= 0 ? (
+                        <span className="text-success inline-flex items-center">
+                          <ArrowUpRight size={12} />
+                          +{traction.percent_changes.chat_messages}%
+                        </span>
+                      ) : (
+                        <span className="text-danger inline-flex items-center">
+                          <ArrowDownRight size={12} />
+                          {traction.percent_changes.chat_messages}%
+                        </span>
+                      )}
+                      <span className="text-muted text-[10px]">vs prev</span>
+                    </div>
+                  </div>
+
+                  {/* Revenue */}
+                  <div className="p-4 rounded-xl border border-border bg-bg-0 space-y-1 col-span-2 lg:col-span-1">
+                    <div className="flex items-center justify-between text-muted text-[10px] font-bold uppercase tracking-wider">
+                      <span>Revenue</span>
+                      <CreditCard size={13} />
+                    </div>
+                    <div className="text-2xl font-extrabold text-ink font-mono mt-1">
+                      ₦{traction.current.revenue_naira.toLocaleString()}
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-semibold">
+                      {(traction.percent_changes.revenue_naira ?? 0) >= 0 ? (
+                        <span className="text-success inline-flex items-center">
+                          <ArrowUpRight size={12} />
+                          +{traction.percent_changes.revenue_naira}%
+                        </span>
+                      ) : (
+                        <span className="text-danger inline-flex items-center">
+                          <ArrowDownRight size={12} />
+                          {traction.percent_changes.revenue_naira}%
+                        </span>
+                      )}
+                      <span className="text-muted text-[10px]">vs prev</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Micro Histogram / Breakdown timeline */}
+                <div className="p-4 rounded-xl border border-border bg-bg-0 space-y-3">
+                  <div className="flex items-center justify-between text-xs font-bold text-ink">
+                    <span>Activity Distribution ({tractionPeriod})</span>
+                    <span className="text-muted text-[11px] font-normal">Active users & study reviews</span>
+                  </div>
+                  <div className="grid grid-cols-4 sm:grid-cols-7 lg:grid-cols-12 gap-2 pt-2">
+                    {traction.breakdown_labels.map((label, idx) => {
+                      const bucket = traction.breakdown_data[idx];
+                      const totalActivity = bucket ? bucket.topics_reviewed + bucket.active_users : 0;
+                      return (
+                        <div key={label} className="flex flex-col items-center gap-1">
+                          <div className="h-16 w-full bg-bg-2 rounded-lg flex items-end p-1">
+                            <div
+                              className="w-full bg-ink rounded-md transition-all min-h-[4px]"
+                              style={{
+                                height: `${Math.min(100, Math.max(8, totalActivity * 12))}%`,
+                              }}
+                              title={`${label}: ${bucket?.active_users || 0} active, ${bucket?.topics_reviewed || 0} reviews`}
+                            />
+                          </div>
+                          <span className="text-[10px] font-mono text-muted">{label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
           {/* Quick Nav Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Link
@@ -280,6 +554,85 @@ export default function PlatformOverviewPage() {
               </div>
               <ArrowRight size={14} className="text-muted group-hover:text-ink transition-colors" />
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: CLEAR PLATFORM ACTIVITY ────────────────────────────────── */}
+      {showClearModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="bg-card rounded-2xl border border-danger/30 p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-danger-bg text-danger border border-danger/20">
+                  <RotateCcw size={15} />
+                </span>
+                <h3 className="text-sm font-bold text-ink">Reset Platform Activity</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                className="text-muted hover:text-ink text-xs p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="text-xs text-muted space-y-2 leading-relaxed">
+              <p>
+                This action will wipe student study history, reviews, tutor chat messages, and daily activity logs so you can restart platform testing fresh.
+              </p>
+              <div className="p-3 rounded-xl bg-danger-bg text-danger border border-danger/20 text-[11px] font-medium space-y-1">
+                <p className="font-bold">⚠️ Irreversible Action:</p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  <li>User accounts and super admins are <strong>NOT deleted</strong></li>
+                  <li>Schools and class structures are <strong>preserved</strong></li>
+                  <li>Access codes and payment records remain <strong>intact</strong></li>
+                  <li>Only learning, chat, and review logs are wiped</li>
+                </ul>
+              </div>
+            </div>
+
+            {clearError && (
+              <div className="p-3 rounded-xl bg-danger-bg border border-danger/20 flex items-start gap-2 text-danger text-xs">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <span>{clearError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleClearActivity} className="space-y-4 pt-1">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+                  Type <span className="font-mono text-danger">CLEAR ACTIVITY</span> to confirm:
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="CLEAR ACTIVITY"
+                  value={confirmationInput}
+                  onChange={(e) => setConfirmationInput(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-border bg-bg-0 text-ink placeholder:text-faint focus:outline-none focus:border-danger focus:bg-card transition-colors font-mono uppercase"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowClearModal(false)}
+                  className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-border hover:bg-bg-2 text-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isClearing || confirmationInput.trim() !== 'CLEAR ACTIVITY'}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-danger text-bg-0 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-40 flex items-center gap-1.5"
+                >
+                  <Trash2 size={13} className={isClearing ? 'animate-spin' : ''} />
+                  <span>{isClearing ? 'Resetting...' : 'Confirm Reset Activity'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

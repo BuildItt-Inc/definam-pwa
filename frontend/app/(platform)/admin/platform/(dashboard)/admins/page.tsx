@@ -19,6 +19,7 @@ import {
   listSuperAdminInvites,
   sendSuperAdminInvite,
   revokeSuperAdminInvite,
+  clearRevokedSuperAdminInvites,
   removeSuperAdmin,
   type SuperAdminItem,
   type SuperAdminInviteItem,
@@ -41,6 +42,7 @@ export default function PlatformAdminsPage() {
   // Remove confirmation modal
   const [adminToRemove, setAdminToRemove] = useState<SuperAdminItem | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isClearingRevoked, setIsClearingRevoked] = useState(false);
 
   async function loadData() {
     setLoading(true);
@@ -103,6 +105,25 @@ export default function PlatformAdminsPage() {
         'Revocation Failed',
         err instanceof Error ? err.message : 'Could not revoke invite'
       );
+    }
+  }
+
+  async function handleClearRevoked() {
+    setIsClearingRevoked(true);
+    try {
+      const res = await clearRevokedSuperAdminInvites();
+      toast.success(
+        'Invites Cleared',
+        `Removed ${res.deleted_count} inactive/revoked invite(s).`
+      );
+      void loadData();
+    } catch (err: unknown) {
+      toast.error(
+        'Clear Failed',
+        err instanceof Error ? err.message : 'Could not clear revoked invites'
+      );
+    } finally {
+      setIsClearingRevoked(false);
     }
   }
 
@@ -260,6 +281,18 @@ export default function PlatformAdminsPage() {
               Pending, accepted, and revoked email invitations ({invites.length})
             </p>
           </div>
+          {invites.some((i) => i.status === 'revoked' || i.is_expired) && (
+            <button
+              type="button"
+              disabled={isClearingRevoked}
+              onClick={() => void handleClearRevoked()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-border hover:bg-danger-bg hover:text-danger hover:border-danger/20 transition-all text-muted disabled:opacity-50"
+              title="Permanently remove all revoked and expired invitations"
+            >
+              <Trash2 size={12} className={isClearingRevoked ? 'animate-spin' : ''} />
+              <span>{isClearingRevoked ? 'Clearing...' : 'Clear Revoked & Expired'}</span>
+            </button>
+          )}
         </div>
 
         {invites.length === 0 ? (
