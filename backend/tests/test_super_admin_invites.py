@@ -596,9 +596,10 @@ async def test_seed_super_admin_promotes_existing_user(monkeypatch):
             u.role = "admin"
 
         # Pre-create a school admin with this email
+        unique_suffix = uuid.uuid4().hex[:6]
         school_admin = User(
             id=str(uuid.uuid4()),
-            username="existing_school_admin",
+            username=f"existing_school_admin_{unique_suffix}",
             email=existing_email.strip().lower(),
             role="admin",
         )
