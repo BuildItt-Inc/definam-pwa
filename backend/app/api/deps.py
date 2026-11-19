@@ -103,10 +103,24 @@ def get_current_admin(claims: dict = Depends(get_current_user)) -> dict:
 # ── Super Admin-only dependency ───────────────────────────────────────────
 
 
-def get_current_super_admin(claims: dict = Depends(get_current_user)) -> dict:
-    """Assert that the authenticated user has the super_admin role."""
-    if claims.get("role") != "super_admin":
-        raise ForbiddenError("Super admin access only.")
+async def get_current_super_admin(claims: dict = Depends(get_current_user)) -> dict:
+    """Assert that the authenticated user has the super_admin role and scope claim,
+    and re-check role and active session against the database on each request.
+    """
+    if claims.get("scope") != "super_admin":
+        raise ForbiddenError("Super admin scope required.")
+
+    user_id = claims.get("sub")
+    jwt_session_id = claims.get("session_id")
+
+    async with db_session() as session:
+        user = await session.get(User, user_id)
+        if not user or user.role != "super_admin":
+            raise ForbiddenError("Super admin access only.")
+        if jwt_session_id and user.current_session_id != jwt_session_id:
+            raise InvalidTokenError("Session expired or logged in elsewhere.")
+        claims["email"] = user.email or user.username
+
     return claims
 
 

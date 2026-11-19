@@ -88,21 +88,25 @@
     box-sizing: border-box;
   }
 
-  html {
-    /* Prevent page horizontal scroll while preserving native vertical scroll */
-    overflow-x: clip;
-    /* Smooth scrolling for anchor links */
-    scroll-behavior: smooth;
-    /* Prevent text size inflate on mobile orientation change */
+    html {
+    /* High-performance native vertical scrolling across mobile & desktop */
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     -webkit-text-size-adjust: 100%;
   }
 
   body {
     --font-ui: var(--font-inter, Inter), system-ui, sans-serif;
     margin: 0;
-    min-height: 100dvh; /* dvh = dynamic viewport height — fixes mobile chrome bar */
+    min-height: 100vh;
+    min-height: 100dvh;
     width: 100%;
-    overflow-x: clip;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* Stop horizontal rubber-banding without breaking vertical touch gestures */
+    overscroll-behavior-x: none;
     font-family: var(--font-ui);
     font-size: var(--reading-size);
     line-height: 1.6;
@@ -159,7 +163,7 @@
   }
 
   /* ── Scrollbar styling ──────────────────────────────────────────────────── */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
 }

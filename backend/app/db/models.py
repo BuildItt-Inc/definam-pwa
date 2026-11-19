@@ -117,6 +117,9 @@ class User(Base):
     force_password_change: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )
+    # Stored when an existing user is promoted to super_admin via invite,
+    # so the original role can be restored if they are removed.
+    previous_role: Mapped[str | None] = mapped_column(String(50), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
     )
@@ -566,3 +569,94 @@ class UserNotificationToken(Base):
     )
 
     user: Mapped[User] = relationship("User")
+
+
+# ── Audit Logs ─────────────────────────────────────────────────────────────
+
+
+class AuditLog(Base):
+    """Append-only audit log of administrative and security events."""
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    actor_user_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    actor_username: Mapped[str] = mapped_column(String(255), nullable=False)
+    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    target_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    target_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(tz=UTC),
+        index=True,
+    )
+
+    actor: Mapped[User | None] = relationship("User")
+
+
+# ── Super Admin Invites ────────────────────────────────────────────────────
+
+
+class SuperAdminInvite(Base):
+    """Single-use invite for a new super admin.
+
+    The raw token is never stored.  Only a SHA-256 hex digest is kept so
+    that a database breach does not yield valid invite links.
+    """
+
+    __tablename__ = "super_admin_invites"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    # Normalised (lowercased) email of the invitee.
+    email: Mapped[str] = mapped_column(String(320), nullable=False, index=True)
+    # SHA-256 hex of the raw secrets.token_urlsafe(32) token.
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    # pending | accepted | revoked  (expired is computed from expires_at)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending", index=True
+    )
+    invited_by: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    # Role the invitee had before promotion (NULL if they were a new account).
+    previous_role: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # Whether to delete the account (True) or demote it (False) on removal.
+    created_via_invite: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(tz=UTC)
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # FK to the user row that was created or promoted when accepting.
+    accepted_by: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    inviter: Mapped[User | None] = relationship(
+        "User", foreign_keys=[invited_by], lazy="select"
+    )
+    acceptee: Mapped[User | None] = relationship(
+        "User", foreign_keys=[accepted_by], lazy="select"
+    )

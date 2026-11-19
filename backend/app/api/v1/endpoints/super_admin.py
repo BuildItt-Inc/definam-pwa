@@ -5,15 +5,18 @@ import string
 import uuid
 from datetime import UTC, datetime, time, timedelta
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from sqlalchemy import and_, distinct, func, or_, select
 
 from app.api.deps import SuperAdminDep
+from app.api.v1.endpoints import super_admin_invites
+from app.core.enums import AuditAction
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.security import hash_password
 from app.db.database import db_session
 from app.db.models import (
     AccessCode,
+    AuditLog,
     ChatMessage,
     DailyActivity,
     DailyRecallQueue,
@@ -25,9 +28,14 @@ from app.db.models import (
 from app.schemas.super_admin import (
     AccessCodeItem,
     AccessCodeListResponse,
+    AuditLogItem,
+    AuditLogListResponse,
+    ClearActivityRequest,
+    ClearActivityResponse,
     FunnelStepItem,
     GenerateCodesRequest,
     GenerateCodesResponse,
+    PlatformTractionResponse,
     ResetUserRequest,
     ResetUserResponse,
     SignupTrendItem,
@@ -36,10 +44,13 @@ from app.schemas.super_admin import (
     SuperAdminSignupAnalyticsResponse,
     SuperAdminUserItem,
     SuperAdminUsersListResponse,
+    TractionMetrics,
     UpdateUserRoleRequest,
 )
+from app.services.audit import get_client_ip, write_audit_log
 
 router = APIRouter(prefix="/super-admin", tags=["super-admin"])
+router.include_router(super_admin_invites.router)
 
 
 @router.get("/overview", response_model=SuperAdminOverviewResponse)
@@ -228,6 +239,186 @@ async def get_signup_trends(
         )
 
 
+@router.get("/analytics/traction", response_model=PlatformTractionResponse)
+async def get_platform_traction(
+    _: SuperAdminDep,
+    period: str = Query(default="monthly", pattern="^(weekly|monthly|yearly)$"),
+) -> PlatformTractionResponse:
+    """Return platform traction metrics (signups, active users, topics reviewed,
+    chat messages, revenue) compared to previous period with breakdown buckets.
+    """
+    now = datetime.now(UTC)
+
+    if period == "weekly":
+        duration = timedelta(days=7)
+        buckets_count = 7
+        curr_start = now - duration
+        prev_start = curr_start - duration
+        bucket_duration = timedelta(days=1)
+        labels = [(curr_start + timedelta(days=i)).strftime("%a") for i in range(buckets_count)]
+    elif period == "yearly":
+        duration = timedelta(days=365)
+        buckets_count = 12
+        curr_start = now - duration
+        prev_start = curr_start - duration
+        bucket_duration = timedelta(days=30)
+        labels = [f"M{i+1}" for i in range(buckets_count)]
+    else:  # monthly
+        period = "monthly"
+        duration = timedelta(days=30)
+        buckets_count = 4
+        curr_start = now - duration
+        prev_start = curr_start - duration
+        bucket_duration = timedelta(days=7.5)
+        labels = ["Wk 1", "Wk 2", "Wk 3", "Wk 4"]
+
+    async with db_session() as session:
+        async def _query_metrics(t_start: datetime, t_end: datetime) -> TractionMetrics:
+            # Signups
+            s_q = select(func.count(User.id)).where(
+                and_(User.created_at >= t_start, User.created_at < t_end)
+            )
+            signups = (await session.execute(s_q)).scalar_one() or 0
+
+            # Active users (distinct users with activity or last_seen)
+            a_q = select(func.count(distinct(DailyActivity.user_id))).where(
+                and_(
+                    DailyActivity.activity_date >= t_start.date(),
+                    DailyActivity.activity_date < t_end.date(),
+                )
+            )
+            active_users = (await session.execute(a_q)).scalar_one() or 0
+
+            # Topics reviewed
+            r_q = select(func.count(TopicReview.id)).where(
+                and_(TopicReview.last_reviewed_at >= t_start, TopicReview.last_reviewed_at < t_end)
+            )
+            topics_reviewed = (await session.execute(r_q)).scalar_one() or 0
+
+            # Chat messages
+            c_q = select(func.count(ChatMessage.id)).where(
+                and_(ChatMessage.created_at >= t_start, ChatMessage.created_at < t_end)
+            )
+            chat_messages = (await session.execute(c_q)).scalar_one() or 0
+
+            # Revenue in Naira (estimate from processed payment webhooks)
+            pay_q = select(func.count(ProcessedWebhook.reference)).where(
+                and_(ProcessedWebhook.processed_at >= t_start, ProcessedWebhook.processed_at < t_end)
+            )
+            pay_count = (await session.execute(pay_q)).scalar_one() or 0
+            revenue_naira = pay_count * 2000
+
+            return TractionMetrics(
+                signups=signups,
+                active_users=active_users,
+                topics_reviewed=topics_reviewed,
+                chat_messages=chat_messages,
+                revenue_naira=revenue_naira,
+            )
+
+        current_metrics = await _query_metrics(curr_start, now)
+        previous_metrics = await _query_metrics(prev_start, curr_start)
+
+        # Percent changes
+        def _calc_pct(curr: int, prev: int) -> float | None:
+            if prev == 0:
+                return 100.0 if curr > 0 else 0.0
+            return round(((curr - prev) / prev) * 100.0, 1)
+
+        pct_changes = {
+            "signups": _calc_pct(current_metrics.signups, previous_metrics.signups),
+            "active_users": _calc_pct(current_metrics.active_users, previous_metrics.active_users),
+            "topics_reviewed": _calc_pct(current_metrics.topics_reviewed, previous_metrics.topics_reviewed),
+            "chat_messages": _calc_pct(current_metrics.chat_messages, previous_metrics.chat_messages),
+            "revenue_naira": _calc_pct(current_metrics.revenue_naira, previous_metrics.revenue_naira),
+        }
+
+        # Breakdown buckets
+        breakdown_data: list[TractionMetrics] = []
+        for i in range(buckets_count):
+            b_start = curr_start + (bucket_duration * i)
+            b_end = min(curr_start + (bucket_duration * (i + 1)), now)
+            b_m = await _query_metrics(b_start, b_end)
+            breakdown_data.append(b_m)
+
+        return PlatformTractionResponse(
+            period=period,
+            current=current_metrics,
+            previous=previous_metrics,
+            percent_changes=pct_changes,
+            breakdown_labels=labels,
+            breakdown_data=breakdown_data,
+        )
+
+
+@router.post("/activity/clear", response_model=ClearActivityResponse)
+async def clear_platform_activity(
+    payload: ClearActivityRequest,
+    claims: SuperAdminDep,
+    request: Request,
+) -> ClearActivityResponse:
+    """Super Admin bulk reset tool to wipe study, chat, review, and activity history.
+    Users, accounts, schools, and access codes remain fully intact.
+    Requires typing exact confirmation string 'CLEAR ACTIVITY'.
+    """
+    if payload.confirmation.strip() != "CLEAR ACTIVITY":
+        raise BadRequestError("Invalid confirmation string. Must type 'CLEAR ACTIVITY'.")
+
+    actor_id: str = claims["sub"]
+    actor_username: str = claims.get("email") or claims.get("username", actor_id)
+
+    async with db_session() as session:
+        deleted_counts: dict[str, int] = {}
+
+        if payload.clear_chat_messages:
+            c_res = await session.execute(select(func.count(ChatMessage.id)))
+            deleted_counts["chat_messages"] = c_res.scalar_one() or 0
+            from sqlalchemy import delete
+            await session.execute(delete(ChatMessage))
+
+        if payload.clear_topic_reviews:
+            r_res = await session.execute(select(func.count(TopicReview.id)))
+            deleted_counts["topic_reviews"] = r_res.scalar_one() or 0
+            from sqlalchemy import delete
+            await session.execute(delete(TopicReview))
+
+        if payload.clear_daily_activity:
+            a_res = await session.execute(select(func.count(DailyActivity.id)))
+            deleted_counts["daily_activity"] = a_res.scalar_one() or 0
+            from sqlalchemy import delete
+            await session.execute(delete(DailyActivity))
+
+        if payload.clear_recall_queues:
+            q_res = await session.execute(select(func.count(DailyRecallQueue.id)))
+            deleted_counts["recall_queues"] = q_res.scalar_one() or 0
+            from sqlalchemy import delete
+            await session.execute(delete(DailyRecallQueue))
+
+        total_wiped = sum(deleted_counts.values())
+
+        await write_audit_log(
+            session,
+            actor_user_id=actor_id,
+            actor_username=actor_username,
+            action=AuditAction.PLATFORM_ACTIVITY_RESET,
+            target_type="platform_data",
+            target_id="bulk_wipe",
+            details={
+                "deleted_counts": deleted_counts,
+                "total_records_cleared": total_wiped,
+            },
+            ip=get_client_ip(request),
+        )
+
+        await session.commit()
+
+    return ClearActivityResponse(
+        success=True,
+        message=f"Platform activity successfully reset. Cleared {total_wiped} records.",
+        deleted_counts=deleted_counts,
+    )
+
+
 @router.get("/analytics/funnel", response_model=SuperAdminFunnelResponse)
 async def get_beta_funnel(_: SuperAdminDep) -> SuperAdminFunnelResponse:
     """Compute the 6-step beta onboarding and learning retention funnel:
@@ -386,7 +577,8 @@ async def get_beta_funnel(_: SuperAdminDep) -> SuperAdminFunnelResponse:
 async def reset_user(
     user_id: str,
     payload: ResetUserRequest,
-    _: SuperAdminDep,
+    admin_claims: SuperAdminDep,
+    request: Request,
 ) -> ResetUserResponse:
     """Reset a user's session, device fingerprint, or password (support action)."""
     async with db_session() as session:
@@ -411,6 +603,26 @@ async def reset_user(
             temp_password = "".join(secrets.choice(alphabet) for _ in range(10))
             user.password_hash = await hash_password(temp_password)
             user.force_password_change = True
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.USER_RESET,
+            target_type="user",
+            target_id=user.id,
+            details={
+                "username": user.username,
+                "reset_session": payload.reset_session,
+                "clear_device_fingerprint": payload.clear_device_fingerprint,
+                "password_reset": bool(payload.new_password or temp_password),
+                "force_password_change": payload.force_password_change,
+            },
+            ip=get_client_ip(request),
+        )
 
         await session.commit()
 
@@ -439,8 +651,16 @@ async def update_user_role(
     user_id: str,
     payload: UpdateUserRoleRequest,
     admin_claims: SuperAdminDep,
+    request: Request,
 ) -> dict:
-    """Update a user's role (e.g. promote to super_admin or admin)."""
+    """Update a user's role (disallows granting super_admin or modifying own role)."""
+    if payload.role == "super_admin":
+        raise BadRequestError(
+            "Cannot grant super_admin role via this endpoint; use super admin invite or seed."
+        )
+    if user_id == admin_claims["sub"]:
+        raise BadRequestError("Cannot change your own role.")
+
     async with db_session() as session:
         user_res = await session.execute(select(User).where(User.id == user_id))
         user = user_res.scalar_one_or_none()
@@ -449,6 +669,25 @@ async def update_user_role(
 
         old_role = user.role
         user.role = payload.role
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.USER_ROLE_CHANGE,
+            target_type="user",
+            target_id=user.id,
+            details={
+                "username": user.username,
+                "old_role": old_role,
+                "new_role": payload.role,
+            },
+            ip=get_client_ip(request),
+        )
+
         await session.commit()
 
         return {
@@ -463,6 +702,7 @@ async def update_user_role(
 async def remove_user(
     user_id: str,
     admin_claims: SuperAdminDep,
+    request: Request,
 ) -> dict:
     """Permanently delete a user account (cannot delete own super admin account)."""
     if user_id == admin_claims["sub"]:
@@ -474,10 +714,32 @@ async def remove_user(
         if not user:
             raise NotFoundError("User not found.")
 
+        target_username = user.username
+        target_email = user.email
+        target_role = user.role
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.USER_DELETE,
+            target_type="user",
+            target_id=user_id,
+            details={
+                "username": target_username,
+                "email": target_email,
+                "role": target_role,
+            },
+            ip=get_client_ip(request),
+        )
+
         await session.delete(user)
         await session.commit()
 
-    return {"message": f"User {user.username} successfully deleted."}
+    return {"message": f"User {target_username} successfully deleted."}
 
 
 @router.get("/codes", response_model=AccessCodeListResponse)
@@ -553,7 +815,8 @@ async def list_access_codes(
 @router.post("/codes/generate", response_model=GenerateCodesResponse)
 async def generate_codes(
     payload: GenerateCodesRequest,
-    _: SuperAdminDep,
+    admin_claims: SuperAdminDep,
+    request: Request,
 ) -> GenerateCodesResponse:
     """Generate free bulk access codes (e.g. for beta testers or schools)."""
     if payload.type == "org" and not payload.school_id:
@@ -592,6 +855,27 @@ async def generate_codes(
             )
 
         session.add_all(codes_to_add)
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.CODE_GENERATE,
+            target_type="access_code",
+            target_id=None,
+            details={
+                "count": len(generated_strings),
+                "type": payload.type,
+                "school_id": payload.school_id,
+                "prefix": prefix,
+                "duration_months": payload.duration_months,
+            },
+            ip=get_client_ip(request),
+        )
+
         await session.commit()
 
     return GenerateCodesResponse(
@@ -604,7 +888,8 @@ async def generate_codes(
 @router.post("/codes/{code_id}/revoke")
 async def revoke_code(
     code_id: str,
-    _: SuperAdminDep,
+    admin_claims: SuperAdminDep,
+    request: Request,
 ) -> dict:
     """Revoke any access code platform-wide."""
     async with db_session() as session:
@@ -613,7 +898,23 @@ async def revoke_code(
         if not code:
             raise NotFoundError("Access code not found.")
 
+        prev_status = code.status
         code.status = "revoked"
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.CODE_REVOKE,
+            target_type="access_code",
+            target_id=code.id,
+            details={"code": code.code, "previous_status": prev_status},
+            ip=get_client_ip(request),
+        )
+
         await session.commit()
 
     return {"message": f"Access code {code.code} has been revoked."}
@@ -622,7 +923,8 @@ async def revoke_code(
 @router.post("/codes/{code_id}/reactivate")
 async def reactivate_code(
     code_id: str,
-    _: SuperAdminDep,
+    admin_claims: SuperAdminDep,
+    request: Request,
 ) -> dict:
     """Reactivate a revoked access code platform-wide."""
     async with db_session() as session:
@@ -631,10 +933,93 @@ async def reactivate_code(
         if not code:
             raise NotFoundError("Access code not found.")
 
+        prev_status = code.status
         # If it was previously activated by a user, restore to active, else pending
         code.status = "active" if code.activated_by else "pending"
+
+        admin_user = await session.get(User, admin_claims["sub"])
+        actor_username = admin_user.username if admin_user else "unknown"
+
+        await write_audit_log(
+            session,
+            actor_user_id=admin_claims["sub"],
+            actor_username=actor_username,
+            action=AuditAction.CODE_REACTIVATE,
+            target_type="access_code",
+            target_id=code.id,
+            details={
+                "code": code.code,
+                "previous_status": prev_status,
+                "restored_status": code.status,
+            },
+            ip=get_client_ip(request),
+        )
+
         await session.commit()
 
     return {
         "message": f"Access code {code.code} has been reactivated to {code.status}."
     }
+
+
+# ── Audit Logs ─────────────────────────────────────────────────────────────
+
+
+@router.get("/audit-logs", response_model=AuditLogListResponse)
+async def list_audit_logs(
+    _: SuperAdminDep,
+    actor_user_id: str | None = Query(default=None),
+    action: str | None = Query(default=None),
+    date_from: datetime | None = Query(default=None),
+    date_to: datetime | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+) -> AuditLogListResponse:
+    """List audit log records with filtering and pagination."""
+    async with db_session() as session:
+        query = select(AuditLog)
+        conditions = []
+        if actor_user_id:
+            conditions.append(AuditLog.actor_user_id == actor_user_id)
+        if action:
+            conditions.append(AuditLog.action == action)
+        if date_from:
+            conditions.append(AuditLog.created_at >= date_from)
+        if date_to:
+            conditions.append(AuditLog.created_at <= date_to)
+
+        if conditions:
+            query = query.where(and_(*conditions))
+
+        count_query = select(func.count()).select_from(query.subquery())
+        total = (await session.execute(count_query)).scalar_one()
+
+        offset = (page - 1) * page_size
+        query = (
+            query.order_by(AuditLog.created_at.desc()).offset(offset).limit(page_size)
+        )
+        res = await session.execute(query)
+        logs = res.scalars().all()
+
+        items = [
+            AuditLogItem(
+                id=log_entry.id,
+                actor_user_id=log_entry.actor_user_id,
+                actor_username=log_entry.actor_username,
+                action=log_entry.action,
+                target_type=log_entry.target_type,
+                target_id=log_entry.target_id,
+                details=log_entry.details,
+                ip=log_entry.ip,
+                created_at=log_entry.created_at,
+            )
+            for log_entry in logs
+        ]
+        total_pages = max(1, (total + page_size - 1) // page_size)
+        return AuditLogListResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )

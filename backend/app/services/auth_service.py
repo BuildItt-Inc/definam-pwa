@@ -4,6 +4,9 @@ import logging
 import uuid
 from datetime import UTC, datetime
 
+from fastapi import HTTPException
+from sqlalchemy import func, select
+
 from app.core.exceptions import (
     AccessCodeAlreadyUsedError,
     AccessCodeExpiredError,
@@ -20,6 +23,8 @@ from app.core.exceptions import (
 from app.core.security import (
     create_jwt,
     create_refresh_jwt,
+    create_super_admin_jwt,
+    create_super_admin_refresh_jwt,
     decode_jwt,
     fingerprint_device,
     hash_password,
@@ -28,6 +33,7 @@ from app.core.security import (
 from app.db.database import (
     activate_code,
     create_student_user,
+    db_session,
     get_access_code,
     get_user_by_email,
     get_user_by_id,
@@ -37,14 +43,80 @@ from app.db.database import (
     update_user_password,
     update_user_session_id,
 )
+from app.db.models import User
 from app.schemas.auth import (
     ChangePasswordRequest,
     LoginRequest,
     OrgLoginRequest,
     RegisterRequest,
 )
+from app.services.redis_client import get_redis
 
 logger = logging.getLogger(__name__)
+
+_LOCKOUT_MAX_ATTEMPTS = 5
+_LOCKOUT_WINDOW_SECONDS = 900  # 15 minutes
+_local_sa_attempts: dict[str, list[float]] = {}
+
+
+def check_super_admin_lockout(credential: str, ip: str | None = None) -> bool:
+    """Returns True if NOT locked out (i.e. allowed to attempt), False if locked out."""
+    now = datetime.now(tz=UTC).timestamp()
+    try:
+        r = get_redis()
+        cred_fails = int(r.get(f"sa_fail_cred:{credential}") or 0)
+        ip_fails = int(r.get(f"sa_fail_ip:{ip}") or 0) if ip else 0
+        if cred_fails >= _LOCKOUT_MAX_ATTEMPTS or ip_fails >= _LOCKOUT_MAX_ATTEMPTS:
+            return False
+    except Exception:
+        pass
+
+    for key in [credential, ip]:
+        if not key:
+            continue
+        valid = [
+            t
+            for t in _local_sa_attempts.get(key, [])
+            if now - t < _LOCKOUT_WINDOW_SECONDS
+        ]
+        _local_sa_attempts[key] = valid
+        if len(valid) >= _LOCKOUT_MAX_ATTEMPTS:
+            return False
+
+    return True
+
+
+def record_super_admin_failure(credential: str, ip: str | None = None) -> None:
+    now = datetime.now(tz=UTC).timestamp()
+    for key in [credential, ip]:
+        if not key:
+            continue
+        _local_sa_attempts.setdefault(key, []).append(now)
+
+    try:
+        r = get_redis()
+        if credential:
+            r.incr(f"sa_fail_cred:{credential}")
+            r.expire(f"sa_fail_cred:{credential}", _LOCKOUT_WINDOW_SECONDS)
+        if ip:
+            r.incr(f"sa_fail_ip:{ip}")
+            r.expire(f"sa_fail_ip:{ip}", _LOCKOUT_WINDOW_SECONDS)
+    except Exception:
+        pass
+
+
+def clear_super_admin_lockout(credential: str, ip: str | None = None) -> None:
+    _local_sa_attempts.pop(credential, None)
+    if ip:
+        _local_sa_attempts.pop(ip, None)
+
+    try:
+        r = get_redis()
+        r.delete(f"sa_fail_cred:{credential}")
+        if ip:
+            r.delete(f"sa_fail_ip:{ip}")
+    except Exception:
+        pass
 
 
 async def register(body: RegisterRequest) -> tuple[str, str]:
@@ -112,6 +184,10 @@ async def login(body: LoginRequest) -> dict:
     user_id: str = user_row["id"]
     role: str = user_row["role"]
 
+    # Super admin accounts must exclusively use /auth/super-admin/login
+    if role == "super_admin":
+        raise InvalidCredentialsError()
+
     session_id = str(uuid.uuid4())
     await update_user_session_id(user_id, session_id)
 
@@ -127,6 +203,71 @@ async def login(body: LoginRequest) -> dict:
         "refresh_token": refresh_token,
         "role": role,
         "force_password_change": user_row.get("force_password_change", False),
+    }
+
+
+async def super_admin_login(body: LoginRequest, client_ip: str | None = None) -> dict:
+    """
+    Authenticate exclusively a super_admin user by normalized email (case-insensitive).
+    Enforces per-IP and per-account lockout, verifies super_admin role from DB,
+    and issues tokens with scope=super_admin.
+    """
+    email_cred = body.username_or_email.strip().lower()
+    if not check_super_admin_lockout(email_cred, client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many failed super admin login attempts. Account temporarily locked. Please try again later.",
+        )
+
+    # Look up strictly by normalized email, case-insensitively, and only for super_admin role
+    async with db_session() as session:
+        result = await session.execute(
+            select(User).where(
+                func.lower(User.email) == email_cred,
+                User.role == "super_admin",
+            )
+        )
+        user = result.scalar_one_or_none()
+        if user:
+            user_row = {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "name": user.name,
+                "role": user.role,
+                "password_hash": user.password_hash,
+                "force_password_change": user.force_password_change,
+            }
+        else:
+            user_row = None
+
+    if not user_row:
+        record_super_admin_failure(email_cred, client_ip)
+        raise InvalidCredentialsError()
+
+    stored_hash = user_row.get("password_hash") or ""
+    if not stored_hash or not await verify_password(body.password, stored_hash):
+        record_super_admin_failure(email_cred, client_ip)
+        raise InvalidCredentialsError()
+
+    clear_super_admin_lockout(email_cred, client_ip)
+
+    user_id: str = user_row["id"]
+    session_id = str(uuid.uuid4())
+    await update_user_session_id(user_id, session_id)
+
+    extra_claims = {"role": "super_admin", "session_id": session_id}
+    access_token = create_super_admin_jwt(subject=user_id, extra_claims=extra_claims)
+    refresh_token = create_super_admin_refresh_jwt(
+        subject=user_id, extra_claims=extra_claims
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "role": "super_admin",
+        "force_password_change": user_row.get("force_password_change", False),
+        "user": user_row,
     }
 
 
@@ -255,6 +396,10 @@ async def refresh(refresh_token: str) -> dict:
     if claims.get("type") != "refresh":
         raise InvalidTokenError("Invalid token type")
 
+    # Super admin refresh tokens cannot be used on standard refresh
+    if claims.get("scope") == "super_admin":
+        raise InvalidTokenError("Invalid token scope for standard refresh")
+
     user_id: str = claims["sub"]
     jwt_session_id = claims.get("session_id")
 
@@ -270,6 +415,9 @@ async def refresh(refresh_token: str) -> dict:
         raise InvalidTokenError("Session expired or logged in elsewhere.")
 
     role = user_row["role"]
+    # Normal refresh can never yield a super_admin token
+    if role == "super_admin":
+        raise InvalidTokenError("Super admin accounts must use super admin refresh")
 
     extra_claims: dict = {"role": role}
     # Keep the same session ID for the refreshed session
@@ -288,4 +436,57 @@ async def refresh(refresh_token: str) -> dict:
         "access_token": new_access,
         "refresh_token": new_refresh,
         "role": role,
+    }
+
+
+async def super_admin_refresh(refresh_token: str) -> dict:
+    """
+    Refresh a super admin session with token rotation and 12-hour absolute lifetime enforcement.
+    """
+    if not refresh_token:
+        raise InvalidTokenError("No refresh token provided")
+
+    try:
+        claims = decode_jwt(refresh_token)
+    except ValueError as exc:
+        raise InvalidTokenError("Invalid or expired refresh token") from exc
+
+    if claims.get("type") != "refresh":
+        raise InvalidTokenError("Invalid token type")
+
+    if claims.get("scope") != "super_admin":
+        raise InvalidTokenError("Invalid token scope")
+
+    now_ts = int(datetime.now(tz=UTC).timestamp())
+    orig_iat = claims.get("orig_iat") or claims.get("iat")
+    if orig_iat and (now_ts - orig_iat > 12 * 3600):
+        raise InvalidTokenError(
+            "Super admin session expired (12-hour limit reached). Please log in again."
+        )
+
+    user_id: str = claims["sub"]
+    jwt_session_id = claims.get("session_id")
+
+    user_row = await get_user_by_id(user_id)
+    if not user_row or user_row.get("role") != "super_admin":
+        raise InvalidTokenError("Super admin access revoked or not found")
+
+    db_session_id = user_row.get("current_session_id")
+    if jwt_session_id and db_session_id and db_session_id != jwt_session_id:
+        raise InvalidTokenError("Session expired or logged in elsewhere.")
+
+    # Rotate session ID in database
+    new_session_id = str(uuid.uuid4())
+    await update_user_session_id(user_id, new_session_id)
+
+    extra_claims = {"role": "super_admin", "session_id": new_session_id}
+    new_access = create_super_admin_jwt(subject=user_id, extra_claims=extra_claims)
+    new_refresh = create_super_admin_refresh_jwt(
+        subject=user_id, extra_claims=extra_claims, orig_iat=orig_iat
+    )
+
+    return {
+        "access_token": new_access,
+        "refresh_token": new_refresh,
+        "role": "super_admin",
     }

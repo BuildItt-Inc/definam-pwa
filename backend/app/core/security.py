@@ -30,7 +30,11 @@ async def verify_password(plain: str, hashed: str) -> bool:
 # ── JWT ────────────────────────────────────────────────────────────────────
 
 
-def create_jwt(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
+def create_jwt(
+    subject: str,
+    extra_claims: dict[str, Any] | None = None,
+    scope: str | None = None,
+) -> str:
     settings = get_settings()
     now = datetime.now(tz=UTC)
     expire = now + timedelta(minutes=settings.jwt_expire_minutes)
@@ -40,10 +44,16 @@ def create_jwt(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
         "exp": expire,
         **(extra_claims or {}),
     }
+    if scope:
+        payload["scope"] = scope
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
-def create_refresh_jwt(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
+def create_refresh_jwt(
+    subject: str,
+    extra_claims: dict[str, Any] | None = None,
+    scope: str | None = None,
+) -> str:
     settings = get_settings()
     now = datetime.now(tz=UTC)
     expire = now + timedelta(days=settings.jwt_refresh_expire_days)
@@ -52,6 +62,57 @@ def create_refresh_jwt(subject: str, extra_claims: dict[str, Any] | None = None)
         "iat": now,
         "exp": expire,
         "type": "refresh",
+        **(extra_claims or {}),
+    }
+    if scope:
+        payload["scope"] = scope
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def create_super_admin_jwt(
+    subject: str, extra_claims: dict[str, Any] | None = None
+) -> str:
+    """Issue a short-lived access token specifically for super admins (90 mins, scope=super_admin)."""
+    settings = get_settings()
+    now = datetime.now(tz=UTC)
+    expire = now + timedelta(minutes=90)
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "iat": now,
+        "exp": expire,
+        "scope": "super_admin",
+        **(extra_claims or {}),
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def create_super_admin_refresh_jwt(
+    subject: str,
+    extra_claims: dict[str, Any] | None = None,
+    orig_iat: datetime | int | float | None = None,
+) -> str:
+    """Issue a rotating refresh token for super admin with an absolute maximum lifetime of 12 hours."""
+    settings = get_settings()
+    now = datetime.now(tz=UTC)
+    if orig_iat is None:
+        initial_ts = int(now.timestamp())
+        initial_dt = now
+    elif isinstance(orig_iat, (int, float)):
+        initial_ts = int(orig_iat)
+        initial_dt = datetime.fromtimestamp(orig_iat, tz=UTC)
+    else:
+        initial_ts = int(orig_iat.timestamp())
+        initial_dt = orig_iat
+
+    max_expire = initial_dt + timedelta(hours=12)
+
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "iat": now,
+        "exp": max_expire,
+        "type": "refresh",
+        "scope": "super_admin",
+        "orig_iat": initial_ts,
         **(extra_claims or {}),
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)

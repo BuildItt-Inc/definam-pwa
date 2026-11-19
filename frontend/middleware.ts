@@ -23,6 +23,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 const REFRESH_COOKIE = 'refresh_token';
+const SUPER_ADMIN_REFRESH_COOKIE = 'recall_super_admin_refresh_token';
 
 // ── JWT payload decoder ───────────────────────────────────────────────────
 
@@ -40,6 +41,35 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   } catch {
     return null;
   }
+}
+
+// ── In-memory Edge Super Admin Session Check (0ms latency) ────────────────
+
+function getSuperAdminSessionFast(request: NextRequest): {
+  role: string | null;
+  scope: string | null;
+  isExpired: boolean;
+  hasCookie: boolean;
+} {
+  const refreshCookie = request.cookies.get(SUPER_ADMIN_REFRESH_COOKIE)?.value;
+  if (!refreshCookie) {
+    return { role: null, scope: null, isExpired: false, hasCookie: false };
+  }
+
+  const payload = decodeJwtPayload(refreshCookie);
+  if (!payload) {
+    return { role: null, scope: null, isExpired: true, hasCookie: true };
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const exp = typeof payload.exp === 'number' ? payload.exp : 0;
+  if (exp && exp < nowSec) {
+    return { role: null, scope: null, isExpired: true, hasCookie: true };
+  }
+
+  const role = typeof payload.role === 'string' ? payload.role : null;
+  const scope = typeof payload.scope === 'string' ? payload.scope : null;
+  return { role, scope, isExpired: false, hasCookie: true };
 }
 
 // ── In-memory Edge Session Check (0ms latency) ────────────────────────────
@@ -114,18 +144,72 @@ async function tryRefresh(request: NextRequest): Promise<RefreshResult> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ── SUPER ADMIN PLATFORM ROUTES ──────────────────────────────────────────
+  if (pathname.startsWith('/admin/platform')) {
+    const isPlatformPublic =
+      pathname === '/admin/platform/login' ||
+      pathname === '/admin/platform/accept-invite';
+
+    const saSession = getSuperAdminSessionFast(request);
+
+    if (isPlatformPublic) {
+      const isExplicitSessionReset =
+        request.nextUrl.searchParams.has('expired') ||
+        request.nextUrl.searchParams.has('logout') ||
+        request.nextUrl.searchParams.has('force');
+
+      if (
+        !isExplicitSessionReset &&
+        saSession.hasCookie &&
+        !saSession.isExpired &&
+        saSession.role === 'super_admin' &&
+        saSession.scope === 'super_admin'
+      ) {
+        return NextResponse.redirect(new URL('/admin/platform', request.url));
+      }
+
+      const res = NextResponse.next();
+      if (isExplicitSessionReset) {
+        res.cookies.delete(SUPER_ADMIN_REFRESH_COOKIE);
+      }
+      return res;
+    }
+
+    if (
+      !saSession.hasCookie ||
+      saSession.isExpired ||
+      saSession.role !== 'super_admin' ||
+      saSession.scope !== 'super_admin'
+    ) {
+      const loginUrl = new URL('/admin/platform/login', request.url);
+      if (pathname !== '/admin/platform') {
+        loginUrl.searchParams.set('next', pathname);
+      }
+      return NextResponse.redirect(loginUrl);
+    }
+
+    return NextResponse.next();
+  }
+
   // 1. Fast in-memory Edge decode (0ms latency, eliminates blocking subrequests on every route change)
   const session = getSessionRoleFast(request);
 
   // Instant redirect for authenticated sessions on root route ('/')
   // Ensures returning students and installed PWAs open directly to the workspace with 0ms latency
   if (pathname === '/') {
+    const saSession = getSuperAdminSessionFast(request);
+    if (
+      saSession.hasCookie &&
+      !saSession.isExpired &&
+      saSession.role === 'super_admin' &&
+      saSession.scope === 'super_admin'
+    ) {
+      return NextResponse.redirect(new URL('/admin/platform', request.url));
+    }
+
     if (session.hasCookie && !session.isExpired && session.role) {
       if (session.role.startsWith('student')) {
         return NextResponse.redirect(new URL('/student', request.url));
-      }
-      if (session.role === 'super_admin') {
-        return NextResponse.redirect(new URL('/admin/platform', request.url));
       }
       if (session.role === 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
@@ -135,9 +219,6 @@ export async function middleware(request: NextRequest) {
       const { role } = await tryRefresh(request);
       if (role?.startsWith('student')) {
         return NextResponse.redirect(new URL('/student', request.url));
-      }
-      if (role === 'super_admin') {
-        return NextResponse.redirect(new URL('/admin/platform', request.url));
       }
       if (role === 'admin') {
         return NextResponse.redirect(new URL('/admin', request.url));
@@ -161,7 +242,7 @@ export async function middleware(request: NextRequest) {
   // 2. Fast-path: role verified directly from the active session JWT
   if (session.role) {
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-      if (session.role !== 'admin' && session.role !== 'super_admin') {
+      if (session.role !== 'admin') {
         const loginUrl = new URL('/admin/login', request.url);
         loginUrl.searchParams.set('hint', 'not_admin');
         return NextResponse.redirect(loginUrl);
@@ -203,7 +284,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && role !== 'admin' && role !== 'super_admin') {
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && role !== 'admin') {
     const loginUrl = new URL('/admin/login', request.url);
     loginUrl.searchParams.set('hint', 'not_admin');
     return NextResponse.redirect(loginUrl);
