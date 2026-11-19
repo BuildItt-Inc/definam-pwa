@@ -54,7 +54,7 @@ export default function LandingHowItWorks() {
         <motion.p
           initial={false}
           whileInView="visible"
-          viewport={{ once: true, amount: 0.6 }}
+          viewport={{ once: true, amount: 0.15 }}
           custom={0}
           variants={fadeUp}
           className="mb-3 text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-brand-dark sm:text-[0.75rem]"
@@ -64,7 +64,7 @@ export default function LandingHowItWorks() {
         <motion.h2
           initial={false}
           whileInView="visible"
-          viewport={{ once: true, amount: 0.6 }}
+          viewport={{ once: true, amount: 0.15 }}
           custom={1}
           variants={fadeUp}
           className="font-heading mb-3 text-[1.625rem] font-extrabold tracking-[-0.02em] text-ink sm:text-[2.125rem]"
@@ -74,7 +74,7 @@ export default function LandingHowItWorks() {
         <motion.p
           initial={false}
           whileInView="visible"
-          viewport={{ once: true, amount: 0.6 }}
+          viewport={{ once: true, amount: 0.15 }}
           custom={2}
           variants={fadeUp}
           className="font-body text-[0.875rem] text-muted sm:text-[0.9375rem]"
@@ -89,7 +89,7 @@ export default function LandingHowItWorks() {
             key={title}
             initial={false}
             whileInView="visible"
-            viewport={{ once: true, amount: 0.4 }}
+            viewport={{ once: true, amount: 0.15 }}
             custom={i}
             variants={fadeUp}
             className="rounded-2xl border border-border bg-white p-6 shadow-xs transition-shadow duration-200 hover:shadow-sm sm:p-7"

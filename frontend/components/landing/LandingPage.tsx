@@ -98,7 +98,7 @@ export default function LandingPage() {
 
   return (
     <MotionConfig reducedMotion="user">
-    <div className="landing-page bg-white text-ink">
+    <div className="landing-page bg-white text-ink w-full overflow-x-hidden min-h-screen">
       <a href="#main-content" className="landing-skip-link">Skip to content</a>
       <LandingNav />
       <main id="main-content" tabIndex={-1}>
@@ -118,7 +118,7 @@ export default function LandingPage() {
           <motion.h2
             initial={false}
             whileInView="visible"
-            viewport={{ once: true, amount: 0.6 }}
+            viewport={{ once: true, amount: 0.15 }}
             custom={0}
             variants={fadeUp}
             className="font-heading mb-3 text-center text-[1.5rem] font-extrabold tracking-[-0.02em] text-white sm:text-[1.875rem]"
@@ -128,7 +128,7 @@ export default function LandingPage() {
           <motion.p
             initial={false}
             whileInView="visible"
-            viewport={{ once: true, amount: 0.6 }}
+            viewport={{ once: true, amount: 0.15 }}
             custom={1}
             variants={fadeUp}
             className="font-body mx-auto mb-8 max-w-[480px] text-center text-[0.875rem] text-white/60 sm:mb-11 sm:text-[0.9375rem]"
@@ -141,7 +141,7 @@ export default function LandingPage() {
                 key={title}
                 initial={false}
                 whileInView="visible"
-                viewport={{ once: true, amount: 0.4 }}
+                viewport={{ once: true, amount: 0.15 }}
                 custom={i + 2}
                 variants={fadeUp}
                 className="flex items-start gap-3.5 py-1.5"

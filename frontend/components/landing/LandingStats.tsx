@@ -47,7 +47,7 @@ export default function LandingStats() {
             custom={i}
             initial={false}
             whileInView="visible"
-            viewport={{ once: true, amount: 0.5 }}
+            viewport={{ once: true, amount: 0.15 }}
             variants={fadeUp}
           >
             <div className="font-heading text-[1.625rem] font-extrabold tracking-[-0.02em] text-ink sm:text-[2.125rem]">

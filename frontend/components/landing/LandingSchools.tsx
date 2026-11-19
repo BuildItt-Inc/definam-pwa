@@ -19,7 +19,7 @@ export default function LandingSchools() {
   return (
     <section id="schools" className="relative overflow-hidden bg-ink px-6 py-16 sm:py-24">
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center pointer-events-none"
         style={{ backgroundImage: "url('/schools-cta.webp')" }}
         aria-hidden="true"
       />
@@ -37,7 +37,7 @@ export default function LandingSchools() {
         <motion.h2
           initial={false}
           whileInView="visible"
-          viewport={{ once: true, amount: 0.6 }}
+          viewport={{ once: true, amount: 0.15 }}
           custom={0}
           variants={fadeUp}
           className="font-heading mb-3 text-[1.625rem] font-extrabold tracking-[-0.02em] text-white sm:text-[2.125rem]"
@@ -47,7 +47,7 @@ export default function LandingSchools() {
         <motion.p
           initial={false}
           whileInView="visible"
-          viewport={{ once: true, amount: 0.6 }}
+          viewport={{ once: true, amount: 0.15 }}
           custom={1}
           variants={fadeUp}
           className="font-body mb-8 text-[0.875rem] text-white/85 sm:mb-10 sm:text-[0.9375rem]"
@@ -55,7 +55,7 @@ export default function LandingSchools() {
           Bulk access codes, a dashboard for your students, and reports your teachers will
           actually use.
         </motion.p>
-        <motion.div initial={false} whileInView="visible" viewport={{ once: true, amount: 0.6 }} custom={2} variants={fadeUp}>
+        <motion.div initial={false} whileInView="visible" viewport={{ once: true, amount: 0.15 }} custom={2} variants={fadeUp}>
           <Link
             href="/pay/organisation"
             className="inline-flex items-center justify-center rounded-md bg-cream px-7 py-3.5 text-[0.9375rem] font-bold text-ink transition-colors hover:bg-white active:scale-[0.97]"
