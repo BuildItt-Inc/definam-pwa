@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Check, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ChevronLeft, Check, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { registerUser, ApiError } from '@/lib/api/auth';
 import { AnalyticsEvents } from '@/lib/analytics';
 
@@ -30,10 +30,64 @@ function RegisterForm() {
     /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/i.test(accessCode.trim()) ||
     accessCode.trim().length >= 8;
 
+// Real-time TikTok-style username analysis
+  const trimmedUsername = username.trim();
+  const hasSpaces = /\s/.test(username);
+  const invalidCharacters = Array.from(new Set(username.match(/[^a-zA-Z0-9_]/g) || []));
+  const hasInvalidChars = invalidCharacters.length > 0;
+  const isTooShort = trimmedUsername.length > 0 && trimmedUsername.length < 3;
+  const isTooLong = trimmedUsername.length > 20;
+
   const isUsernameValid =
-    username.trim().length >= 3 &&
-    username.trim().length <= 20 &&
-    /^[a-zA-Z0-9_]+$/.test(username.trim());
+    trimmedUsername.length >= 3 &&
+    trimmedUsername.length <= 20 &&
+    !hasSpaces &&
+    !hasInvalidChars;
+
+  // Real-time status & specific message
+  let usernameStatus: 'empty' | 'valid' | 'invalid' | 'warning' = 'empty';
+  let usernameFeedback: { type: 'neutral' | 'error' | 'warning' | 'success'; message: string } = {
+    type: 'neutral',
+    message: "Letters, numbers, and underscores only. You'll use this to sign in.",
+  };
+
+  if (username.length > 0) {
+    if (hasSpaces) {
+      usernameStatus = 'invalid';
+      usernameFeedback = {
+        type: 'error',
+        message: 'Usernames cannot contain spaces. Use an underscore (_) instead.',
+      };
+    } else if (hasInvalidChars) {
+      usernameStatus = 'invalid';
+      const formattedChars = invalidCharacters
+        .slice(0, 3)
+        .map((c) => `"${c}"`)
+        .join(', ');
+      usernameFeedback = {
+        type: 'error',
+        message: `Special characters like ${formattedChars} are not allowed. Only letters, numbers, and underscores (_).`,
+      };
+    } else if (isTooLong) {
+      usernameStatus = 'invalid';
+      usernameFeedback = {
+        type: 'error',
+        message: 'Username cannot exceed 20 characters.',
+      };
+    } else if (isTooShort) {
+      usernameStatus = 'warning';
+      usernameFeedback = {
+        type: 'warning',
+        message: `Must be at least 3 characters (${trimmedUsername.length}/3).`,
+      };
+    } else if (isUsernameValid) {
+      usernameStatus = 'valid';
+      usernameFeedback = {
+        type: 'success',
+        message: "Username is available! You'll use this to sign in.",
+      };
+    }
+  }
 
   const hasMinLength = password.length >= 8;
   const hasNumber = /[0-9]/.test(password);
@@ -43,7 +97,29 @@ function RegisterForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isFormComplete || isSubmitting) return;
+    if (!isAccessCodeValid) {
+      setBannerError('Please enter a valid access code (e.g. IND-7K2M-Q9).');
+      return;
+    }
+    if (!isUsernameValid) {
+      if (hasSpaces) {
+        setBannerError('Usernames cannot contain spaces. Use an underscore (_) instead.');
+      } else if (hasInvalidChars) {
+        setBannerError(`Your username contains special characters (${invalidCharacters.join(' ')}). Only letters, numbers, and underscores (_) are allowed.`);
+      } else if (isTooShort) {
+        setBannerError('Username must be at least 3 characters.');
+      } else if (isTooLong) {
+        setBannerError('Username cannot exceed 20 characters.');
+      } else {
+        setBannerError('Please enter a valid username (letters, numbers, and underscores only).');
+      }
+      return;
+    }
+    if (!isPasswordValid) {
+      setBannerError('Password must be at least 8 characters and include at least one number.');
+      return;
+    }
+    if (isSubmitting) return;
 
     setBannerError(null);
     setIsSubmitting(true);
@@ -154,35 +230,71 @@ function RegisterForm() {
               </div>
             )}
           </div>
-
           {/* Username */}
           <div>
-            <label htmlFor="username" className="block text-[14px] font-bold text-ink mb-1.5">
-              Username
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="username" className="text-[14px] font-bold text-ink">
+                Username
+              </label>
+              {username.length > 0 && (
+                <span
+                  className={`text-[11px] font-mono ${
+                    isTooLong ? 'text-red-600 font-bold' : 'text-gray-400'
+                  }`}
+                >
+                  {username.length}/20
+                </span>
+              )}
+            </div>
             <div className="relative">
               <input
                 id="username"
                 type="text"
                 autoCapitalize="none"
+                autoCorrect="off"
                 spellCheck={false}
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="francisnaga"
+                onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                placeholder="e.g. chisom123"
                 className={`w-full rounded-xl border ${
-                  isUsernameValid
-                    ? 'border-[#15803d] border-2 ring-1 ring-[#15803d]/20'
-                    : 'border-gray-300'
-                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                  usernameStatus === 'valid'
+                    ? 'border-[#15803d] border-2 ring-1 ring-[#15803d]/20 focus:border-[#15803d]'
+                    : usernameStatus === 'invalid'
+                    ? 'border-red-500 border-2 ring-1 ring-red-500/20 focus:border-red-500'
+                    : usernameStatus === 'warning'
+                    ? 'border-amber-400 border-2 ring-1 ring-amber-400/20 focus:border-amber-400'
+                    : 'border-gray-300 focus:border-brand focus:ring-1 focus:ring-brand'
+                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:outline-none transition-all touch-manipulation`}
               />
-              {isUsernameValid && (
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+                {usernameStatus === 'valid' && (
                   <Check size={18} className="text-[#15803d] stroke-[2.8]" />
-                </div>
-              )}
+                )}
+                {usernameStatus === 'invalid' && (
+                  <AlertCircle size={18} className="text-red-500 stroke-[2.2]" />
+                )}
+              </div>
             </div>
-            <p className="mt-1.5 text-[12.5px] text-gray-500 leading-relaxed">
-              Available. You&apos;ll use this to sign in. Letters and numbers only.
+
+            {/* TikTok-style real-time validation message */}
+            <p
+              className={`mt-1.5 text-[12.5px] leading-snug flex items-start gap-1.5 transition-colors ${
+                usernameFeedback.type === 'error'
+                  ? 'text-red-600 font-medium'
+                  : usernameFeedback.type === 'warning'
+                  ? 'text-amber-700 font-medium'
+                  : usernameFeedback.type === 'success'
+                  ? 'text-emerald-700 font-medium'
+                  : 'text-gray-500'
+              }`}
+            >
+              {usernameFeedback.type === 'error' && (
+                <AlertCircle size={14} className="mt-0.5 shrink-0 text-red-500" />
+              )}
+              {usernameFeedback.type === 'success' && (
+                <Check size={14} className="mt-0.5 shrink-0 text-emerald-600 stroke-[2.5]" />
+              )}
+              <span>{usernameFeedback.message}</span>
             </p>
           </div>
 

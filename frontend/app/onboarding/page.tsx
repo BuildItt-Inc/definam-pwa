@@ -179,7 +179,7 @@ export default function OnboardingPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Francis"
+                  placeholder="e.g. Chisom or Amina"
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-[16px] sm:text-[15px] font-medium text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation"
                 />
               </div>
