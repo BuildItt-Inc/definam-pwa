@@ -32,6 +32,7 @@ import { useSpotlight } from '@/hooks/useSpotlight';
 import { useFloatingChat } from '@/components/student/FloatingChat/FloatingChatContext';
 import { stepSlide } from '@/lib/motion';
 import { toast } from '@/lib/toast';
+import { getStudentProfile } from '@/lib/utils/studentProfile';
 
 // Dark, spotlight-hover CTA matching the redesigned learning interface's
 // .cta-btn — same underlying pattern as the landing page's buttons/cards.
@@ -478,10 +479,12 @@ function AITutorScaffold({
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const cached = getCachedChatHistory(topicId);
     if (cached && cached.length > 0) return cached;
+    const profile = getStudentProfile();
+    const studentName = profile?.name?.trim() ? ` ${profile.name.trim()}` : ' there';
     return [
       {
         role: 'assistant',
-        content: `Hi Francis. Ask me anything about this topic, or tell me the part you're stuck on.`,
+        content: `Hi${studentName}. Ask me anything about this topic, or tell me the part you're stuck on.`,
       },
     ];
   });
