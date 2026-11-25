@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, BookOpen, Clock, BookMarked, Sparkles } from 'lucide-react';
 import { getRecallQueue, getCachedRecallQueue } from '@/lib/api/topics';
-import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import type { RecallItem } from '@/types/topics';
 import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentProfile';
 
@@ -117,7 +116,6 @@ export default function RecallPage() {
                 <p className="text-[12.5px] text-muted">{dateLabel}</p>
               </div>
             </div>
-            <AskZikoraButton />
           </div>
         </header>
 
@@ -207,7 +205,6 @@ export default function RecallPage() {
               <p className="text-[12.5px] text-muted">{dateLabel}</p>
             </div>
           </div>
-          <AskZikoraButton />
         </div>
       </header>
 

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Flame } from 'lucide-react';
 import { getProgressData, getCachedProgressData } from '@/lib/api/topics';
-import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import type { ProgressData } from '@/types/topics';
 import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentProfile';
 
@@ -293,9 +292,8 @@ export default function ProgressPage() {
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
       <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+        <div className="mx-auto max-w-2xl">
           <h1 className="text-[19px] font-bold text-ink">My Progress</h1>
-          <AskZikoraButton />
         </div>
       </header>
 

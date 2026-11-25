@@ -3,21 +3,20 @@ interface CompletionRingProps {
    * produce a visually broken ring (negative dashoffset, etc). */
   percent: number;
   size?: number;
-  variant?: 'light' | 'dark';
 }
 
 /**
- * Small circular progress ring for overall-completion metric.
+ * Small circular progress ring for the dashboard header's overall-completion
+ * metric (distinct topics studied / total topics in the curriculum — see
+ * completion_percent on GET /students/dashboard). Not per-topic mastery.
  */
-export function CompletionRing({ percent, size = 40, variant = 'light' }: CompletionRingProps) {
+export function CompletionRing({ percent, size = 40 }: CompletionRingProps) {
   const clamped = Math.min(100, Math.max(0, percent));
   const radius = (size / 40) * 16;
   const strokeWidth = (size / 40) * 4;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - clamped / 100);
   const center = size / 2;
-
-  const isDark = variant === 'dark';
 
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
@@ -27,7 +26,7 @@ export function CompletionRing({ percent, size = 40, variant = 'light' }: Comple
           cy={center}
           r={radius}
           fill="none"
-          stroke={isDark ? 'rgba(255,255,255,0.14)' : '#E6E5DF'}
+          stroke="rgba(255,255,255,0.12)"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -35,7 +34,7 @@ export function CompletionRing({ percent, size = 40, variant = 'light' }: Comple
           cy={center}
           r={radius}
           fill="none"
-          stroke={isDark ? '#4ADE80' : '#1E7A46'}
+          stroke="#4ADE80"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -45,7 +44,7 @@ export function CompletionRing({ percent, size = 40, variant = 'light' }: Comple
         />
       </svg>
       <span
-        className={`absolute inset-0 flex items-center justify-center font-bold ${isDark ? 'text-white' : 'text-ink'}`}
+        className="absolute inset-0 flex items-center justify-center font-bold text-white"
         style={{ fontSize: (size / 40) * 9.5 }}
       >
         {clamped}%
