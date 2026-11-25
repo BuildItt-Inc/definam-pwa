@@ -91,7 +91,9 @@ export default function SettingsPage() {
   const [nameInput, setNameInput] = useState(() => {
     const p = getStudentProfile();
     const cached = getCachedMe();
-    return p?.name || cached?.name || cached?.username || '';
+    const cachedHome = getCachedHomeData();
+    const validProfileName = p?.name && p.name.trim() && p.name.trim() !== 'Student' ? p.name.trim() : '';
+    return cached?.name || cachedHome?.student_name || validProfileName || cached?.username || '';
   });
   const [nameError, setNameError] = useState(false);
   const [savingName, setSavingName] = useState(false);
@@ -149,7 +151,8 @@ export default function SettingsPage() {
         setMe(meData);
         setHomeData(home);
         if (subjectsData.length > 0) setSubjects(subjectsData);
-        setNameInput((prev) => prev || meData.name || meData.username);
+        const resolvedName = meData.name || home.student_name || meData.username || '';
+        setNameInput((prev) => (!prev || prev === 'Student' ? resolvedName : prev));
       } catch (err: unknown) {
         if (!handleAuthError(err, router)) {
           setFetchError(err instanceof Error ? err.message : 'Failed to load');
@@ -184,14 +187,7 @@ export default function SettingsPage() {
           setNotifEnabled(true);
           toast.success('Daily reminders enabled');
         } else {
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'denied') {
-            toast.error('Notifications blocked by browser. Enable permissions in site settings.');
-          } else if (isIOS && !isInstalled) {
-            setShowInstallModal(true);
-            toast.info('Please add Recall to your Home Screen first.');
-          } else {
-            toast.error('Could not enable notifications. Please grant permission.');
-          }
+          toast.info('Notification permission was dismissed.');
         }
       }
     } catch (err: unknown) {
@@ -361,8 +357,19 @@ export default function SettingsPage() {
 
   const schoolName = homeData?.school_name ?? '';
   const isIndividual = me ? me.role === 'student_individual' : !schoolName;
-  const displayName = (nameInput || profile?.name || me?.name || me?.username || 'Student').trim();
-  const avatarLetter = displayName.charAt(0).toUpperCase() || 'S';
+  const validProfileName =
+    profile?.name && profile.name.trim() && profile.name.trim() !== 'Student'
+      ? profile.name.trim()
+      : '';
+  const displayName = (
+    (nameInput && nameInput !== 'Student' ? nameInput : '') ||
+    me?.name ||
+    homeData?.student_name ||
+    validProfileName ||
+    me?.username ||
+    'Account'
+  ).trim();
+  const avatarLetter = displayName.charAt(0).toUpperCase() || 'A';
 
   const streakDays = homeData?.streak_days ?? 0;
   const completionPercent = homeData?.completion_percent ?? 0;
@@ -375,6 +382,7 @@ export default function SettingsPage() {
     : 'Set your class and exam targets';
 
   return (
+    <>
     <div className="page-with-nav bg-bg-0 page-enter">
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
         <h1 className="mb-4 text-[24px] font-bold tracking-tight text-ink">Settings</h1>
@@ -495,10 +503,10 @@ export default function SettingsPage() {
         <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
           <div className="px-4 py-3.5">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
-                  <Bell size={17} strokeWidth={1.9} />
-                </div>
+              <div className="flex items-center gap-3.5 min-w-0">
+                <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                  <Bell size={22} strokeWidth={1.65} />
+                </span>
                 <div className="min-w-0">
                   <p className="text-[14px] font-semibold text-ink leading-tight">Daily reminders</p>
                   <p className="mt-0.5 text-[12px] text-muted leading-snug">
@@ -557,10 +565,10 @@ export default function SettingsPage() {
             onClick={handleInstallClick}
             className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
-                <Download size={17} strokeWidth={1.9} />
-              </div>
+            <div className="flex items-center gap-3.5 min-w-0">
+              <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                <Download size={22} strokeWidth={1.65} />
+              </span>
               <div className="min-w-0">
                 <p className="text-[14px] font-semibold text-ink leading-tight">Install Recall</p>
                 <p className="mt-0.5 text-[12px] text-muted leading-snug">
@@ -590,10 +598,10 @@ export default function SettingsPage() {
                 }}
                 className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
-                    <Lock size={17} strokeWidth={1.9} />
-                  </div>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                    <Lock size={22} strokeWidth={1.65} />
+                  </span>
                   <div className="min-w-0">
                     <p className="text-[14px] font-semibold text-ink leading-tight">Change password</p>
                     <p className="mt-0.5 text-[12px] text-muted">Opens a secure form</p>
@@ -614,10 +622,10 @@ export default function SettingsPage() {
             href="mailto:support@definam.ng?subject=Recall%20App%20Feedback"
             className="flex items-center justify-between gap-3 px-4 py-3.5 text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
-                <MessageSquarePlus size={17} strokeWidth={1.9} />
-              </div>
+            <div className="flex items-center gap-3.5 min-w-0">
+              <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                <MessageSquarePlus size={22} strokeWidth={1.65} />
+              </span>
               <div className="min-w-0">
                 <p className="text-[14px] font-semibold text-ink leading-tight">Send feedback</p>
                 <p className="mt-0.5 text-[12px] text-muted">Suggest an improvement</p>
@@ -631,10 +639,10 @@ export default function SettingsPage() {
             onClick={() => setShowInstallModal(true)}
             className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
-                <HelpCircle size={17} strokeWidth={1.9} />
-              </div>
+            <div className="flex items-center gap-3.5 min-w-0">
+              <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                <HelpCircle size={22} strokeWidth={1.65} />
+              </span>
               <div className="min-w-0">
                 <p className="text-[14px] font-semibold text-ink leading-tight">Install guide</p>
                 <p className="mt-0.5 text-[12px] text-muted">iPhone and Android steps</p>
@@ -649,10 +657,10 @@ export default function SettingsPage() {
             rel="noopener noreferrer"
             className="flex items-center justify-between gap-3 px-4 py-3.5 text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-warn-bg text-warn">
-                <Bug size={17} strokeWidth={1.9} />
-              </div>
+            <div className="flex items-center gap-3.5 min-w-0">
+              <span className="flex w-7 flex-shrink-0 items-center justify-center text-warn">
+                <Bug size={22} strokeWidth={1.65} />
+              </span>
               <div className="min-w-0">
                 <p className="text-[14px] font-semibold text-ink leading-tight">Report a bug</p>
                 <p className="mt-0.5 text-[12px] text-muted">Something not working? Tell us</p>
@@ -684,11 +692,12 @@ export default function SettingsPage() {
 
         <p className="mt-6 text-center text-[12px] text-faint">v{APP_VERSION}</p>
       </main>
+    </div>
 
-      {/* ── Study Plan Modal (Class & targets) ── */}
+      {/* ── Study Plan Modal (outside page-enter stacking context) ── */}
       {showStudyPlanModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 px-4"
           onClick={() => setShowStudyPlanModal(false)}
         >
           <div
@@ -773,7 +782,7 @@ export default function SettingsPage() {
       {/* ── Change Password Modal ── */}
       {showPasswordModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 px-4"
           onClick={() => setShowPasswordModal(false)}
         >
           <div
@@ -847,7 +856,7 @@ export default function SettingsPage() {
       {/* ── Log Out Confirm Modal ── */}
       {showLogoutConfirm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/60"
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div
@@ -882,6 +891,6 @@ export default function SettingsPage() {
       )}
 
       <AppInstallModal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} />
-    </div>
+    </>
   );
 }

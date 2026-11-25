@@ -23,7 +23,11 @@ export function getStudentProfile(): StudentProfile | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as StudentProfile;
+    const parsed = JSON.parse(raw) as StudentProfile;
+    if (parsed.name === 'Student') {
+      parsed.name = '';
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -101,17 +105,18 @@ export function filterTopicsByProfile<T extends { subject: string }>(
   return filtered;
 }
 
+function createDefaultProfile(subjects: string[] = [...DEFAULT_SUBJECTS]): StudentProfile {
+  return {
+    name: '',
+    class_level: 'SS3',
+    targets: ['WAEC', 'School exams'],
+    selectedSubjects: subjects,
+    completedOnboarding: true,
+  };
+}
+
 export function addSubjectToProfile(subjectName: string): StudentProfile {
-  let profile = getStudentProfile();
-  if (!profile) {
-    profile = {
-      name: 'Student',
-      class_level: 'SS3',
-      targets: ['WAEC', 'School exams'],
-      selectedSubjects: [...DEFAULT_SUBJECTS],
-      completedOnboarding: true,
-    };
-  }
+  const profile = getStudentProfile() ?? createDefaultProfile();
   const current = profile.selectedSubjects || [];
   if (!current.some((s) => normalizeSubjectName(s) === normalizeSubjectName(subjectName))) {
     profile.selectedSubjects = [...current, subjectName];
@@ -121,16 +126,7 @@ export function addSubjectToProfile(subjectName: string): StudentProfile {
 }
 
 export function removeSubjectFromProfile(subjectName: string): StudentProfile {
-  let profile = getStudentProfile();
-  if (!profile) {
-    profile = {
-      name: 'Student',
-      class_level: 'SS3',
-      targets: ['WAEC', 'School exams'],
-      selectedSubjects: [...DEFAULT_SUBJECTS],
-      completedOnboarding: true,
-    };
-  }
+  const profile = getStudentProfile() ?? createDefaultProfile();
   const current = profile.selectedSubjects || [];
   const targetNorm = normalizeSubjectName(subjectName);
   profile.selectedSubjects = current.filter((s) => normalizeSubjectName(s) !== targetNorm);
@@ -139,16 +135,7 @@ export function removeSubjectFromProfile(subjectName: string): StudentProfile {
 }
 
 export function toggleSubjectInProfile(subjectName: string): { profile: StudentProfile; added: boolean } {
-  let profile = getStudentProfile();
-  if (!profile) {
-    profile = {
-      name: 'Student',
-      class_level: 'SS3',
-      targets: ['WAEC', 'School exams'],
-      selectedSubjects: [...DEFAULT_SUBJECTS],
-      completedOnboarding: true,
-    };
-  }
+  const profile = getStudentProfile() ?? createDefaultProfile();
   const current = profile.selectedSubjects || [];
   const targetNorm = normalizeSubjectName(subjectName);
   const exists = current.some((s) => normalizeSubjectName(s) === targetNorm);
@@ -165,18 +152,8 @@ export function toggleSubjectInProfile(subjectName: string): { profile: StudentP
 }
 
 export function setProfileSubjects(subjects: string[]): StudentProfile {
-  let profile = getStudentProfile();
-  if (!profile) {
-    profile = {
-      name: 'Student',
-      class_level: 'SS3',
-      targets: ['WAEC', 'School exams'],
-      selectedSubjects: [...subjects],
-      completedOnboarding: true,
-    };
-  } else {
-    profile.selectedSubjects = [...subjects];
-  }
+  const profile = getStudentProfile() ?? createDefaultProfile([...subjects]);
+  profile.selectedSubjects = [...subjects];
   saveStudentProfile(profile);
   return profile;
 }
