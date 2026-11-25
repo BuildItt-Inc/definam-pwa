@@ -183,7 +183,8 @@ export default function StudentHomePage() {
       .then((homeData) => {
         setData(homeData);
         if (typeof window !== 'undefined' && homeData.recall_queue) {
-          window.dispatchEvent(new CustomEvent('recallQueueUpdated', { detail: homeData.recall_queue.length }));
+          const filteredCount = filterTopicsByProfile(homeData.recall_queue, getStudentProfile()).length;
+          window.dispatchEvent(new CustomEvent('recallQueueUpdated', { detail: filteredCount }));
         }
         if (sessionStorage.getItem('celebrate_login') === '1') {
           sessionStorage.removeItem('celebrate_login');
