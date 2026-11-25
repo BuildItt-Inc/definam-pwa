@@ -705,7 +705,7 @@ function AITutorScaffold({
         onWheel={handleWheel}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        className="flex-1 overflow-y-auto pb-8 pt-4"
+        className="flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-8 pt-4"
       >
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">
           {messages.map((msg, index) => {
