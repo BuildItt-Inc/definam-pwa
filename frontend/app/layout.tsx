@@ -35,6 +35,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://recallr.org'),
   title: 'Recall — Study Smarter',
   description: 'AI-powered spaced-repetition learning for secondary school students',
   manifest: '/manifest.json',
