@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpen, RefreshCw, Clock, BookMarked, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, BookMarked, Sparkles } from 'lucide-react';
 import { getRecallQueue, getCachedRecallQueue } from '@/lib/api/topics';
+import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import type { RecallItem } from '@/types/topics';
 import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentProfile';
 
@@ -101,17 +102,22 @@ export default function RecallPage() {
   if (effectiveQueue.length === 0) {
     return (
       <div className="page-with-nav bg-bg-0 page-enter">
-        <header className="flex items-center gap-3 border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-          <button
-            onClick={() => router.push('/student')}
-            className="flex items-center text-ink active:scale-95 transition-transform"
-            aria-label="Back"
-          >
-            <ArrowLeft size={20} strokeWidth={2} />
-          </button>
-          <div>
-            <h1 className="text-[17px] font-bold text-ink">Daily Review</h1>
-            <p className="text-[13px] text-muted">{dateLabel}</p>
+        <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+          <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/student')}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink hover:bg-bg-2 active:scale-95 transition-all"
+                aria-label="Back"
+              >
+                <ArrowLeft size={20} strokeWidth={2} />
+              </button>
+              <div>
+                <h1 className="text-[17px] font-bold text-ink">Daily Review</h1>
+                <p className="text-[12.5px] text-muted">{dateLabel}</p>
+              </div>
+            </div>
+            <AskZikoraButton />
           </div>
         </header>
 
@@ -186,21 +192,26 @@ export default function RecallPage() {
     <div className="page-with-nav bg-bg-0 page-enter">
 
       {/* Appbar */}
-      <header className="flex items-center gap-3 border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <button
-          onClick={() => router.push('/student')}
-          className="flex items-center text-ink active:scale-95 transition-transform"
-          aria-label="Back"
-        >
-          <ArrowLeft size={20} strokeWidth={2} />
-        </button>
-        <div>
-          <h1 className="text-[17px] font-bold text-ink">Daily Review</h1>
-          <p className="text-[13px] text-muted">{dateLabel}</p>
+      <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/student')}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-ink hover:bg-bg-2 active:scale-95 transition-all"
+              aria-label="Back"
+            >
+              <ArrowLeft size={20} strokeWidth={2} />
+            </button>
+            <div>
+              <h1 className="text-[17px] font-bold text-ink">Daily Review</h1>
+              <p className="text-[12.5px] text-muted">{dateLabel}</p>
+            </div>
+          </div>
+          <AskZikoraButton />
         </div>
       </header>
 
-      <main className="flex-1 px-4 pt-4 pb-nav">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-nav">
 
         {/* Info card */}
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3.5 shadow-sm">

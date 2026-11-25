@@ -8,58 +8,58 @@
     --reading-size: 1rem;
     --heading-tracking: -0.025em;
     /* ── Backgrounds ──────────────────────────────────────────────────────── */
-    --bg-0:   #F6FAF7; /* App body — very soft green-white */
+    --bg-0:   #FAFAF8; /* App body — calm neutral off-white */
     --bg-1:   #FFFFFF; /* Cards, modals, elevated surfaces */
-    --bg-2:   #EEF5F0; /* Hover, secondary buttons, chips */
-    --bg-3:   #DDE9E1; /* Deepest structural */
+    --bg-2:   #F2F1EC; /* Warm neutral chips, tracks, subtle hover */
+    --bg-3:   #E6E5DF; /* Structural dividers & skeleton base */
 
     /* ── Cards ────────────────────────────────────────────────────────────── */
     --card:   #FFFFFF;
-    --card-2: #F6FAF7;
+    --card-2: #FAFAF8;
 
     /* ── Borders ──────────────────────────────────────────────────────────── */
-    --border:   rgba(22, 101, 52, 0.10);  /* 10% green-tinted */
-    --border-2: rgba(22, 101, 52, 0.18);  /* 18% active borders */
+    --border:   #E6E5DF;  /* Calm neutral hairline border */
+    --border-2: #D5D3CB;  /* Stronger interactive border */
 
     /* ── Typography ───────────────────────────────────────────────────────── */
-    --ink:   #111827; /* Near-black, primary */
-    --ink-2: #1F2937; /* High-emphasis secondary */
-    --muted: #6B7280; /* Labels, timestamps */
-    --faint: #9CA3AF; /* Placeholders, disabled */
+    --ink:   #14201B; /* Deep forest-charcoal — headings & primary actions */
+    --ink-2: #4B5651; /* Body text */
+    --muted: #66716B; /* Captions, labels, timestamps */
+    --faint: #8C9691; /* Placeholders, disabled */
 
-    /* ── Brand Green (Accent) ─────────────────────────────────────────────── */
-    --brand:        #16A34A; /* Primary green — Tailwind green-600 */
-    --brand-dark:   #15803D; /* Hover / pressed state */
-    --brand-light:  #4ADE80; /* Bright highlight */
-    --brand-tint:   rgba(22, 163, 74, 0.10);  /* Soft green fill */
-    --brand-tint-b: rgba(22, 163, 74, 0.20);  /* Slightly stronger */
+    /* ── Brand Green (Progress, Success, Active) ──────────────────────────── */
+    --brand:        #1E7A46; /* Progress, mastery, active nav */
+    --brand-dark:   #166037; /* Hover / pressed */
+    --brand-light:  #2E9E5E; /* Bright highlight */
+    --brand-tint:   #E8F3EC; /* Soft green highlight surface */
+    --brand-tint-b: rgba(30, 122, 70, 0.22);
 
     /* ── Semantic ─────────────────────────────────────────────────────────── */
-    --success:    #16A34A;
-    --success-bg: rgba(22, 163, 74, 0.08);
+    --success:    #1E7A46;
+    --success-bg: #E8F3EC;
 
-    --warn:       #D97706;
-    --warn-bg:    rgba(217, 119, 6, 0.08);
+    --warn:       #B45309;
+    --warn-bg:    #FEF3E2;
 
-    --danger:     #DC2626;
-    --danger-bg:  rgba(220, 38, 38, 0.08);
+    --danger:     #B42318;
+    --danger-bg:  #FEF2F2;
 
     /* ── Legacy aliases (keep — remote team uses these) ──────────────────── */
-    --jade:           #16A34A;
-    --jade-light:     #4ADE80;
-    --jade-tint:      rgba(22, 163, 74, 0.10);
-    --jade-tint-border: rgba(22, 163, 74, 0.25);
-    --jade-dark:      #15803D;
+    --jade:           #1E7A46;
+    --jade-light:     #2E9E5E;
+    --jade-tint:      #E8F3EC;
+    --jade-tint-border: rgba(30, 122, 70, 0.25);
+    --jade-dark:      #166037;
 
     /* ── Brand RGB (for rgba() usage) ────────────────────────────────────── */
-    --brand-rgb:  22, 163, 74;
-    --brand-dim:  rgba(22, 163, 74, 0.08);
+    --brand-rgb:  30, 122, 70;
+    --brand-dim:  #E8F3EC;
 
-    /* ── Radius ───────────────────────────────────────────────────────────── */
+    /* ── Radius (8px buttons, 12px cards) ─────────────────────────────────── */
     --radius-sm:   6px;
-    --radius:      10px;
-    --radius-lg:   14px;
-    --radius-xl:   20px;
+    --radius:      8px;
+    --radius-lg:   12px;
+    --radius-xl:   16px;
     --radius-full: 9999px;
 
     /* ── Shadows ──────────────────────────────────────────────────────────── */
@@ -217,34 +217,42 @@
     filter: blur(60px);
   }
 
-  /* Primary button */
+  /* Primary button — Ink (#14201B) for primary screen actions */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3.5 text-[15px] font-semibold text-white shadow-sm active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-lg bg-ink px-5 py-3 text-[15px] font-semibold text-white shadow-xs active:scale-[0.98] disabled:bg-bg-2 disabled:text-faint disabled:shadow-none disabled:cursor-not-allowed;
     transition: background-color 150ms ease, transform 100ms ease, box-shadow 150ms ease;
   }
-  .btn-primary:hover:not(:disabled) { background-color: var(--brand-dark); }
+  .btn-primary:hover:not(:disabled) { background-color: #1f3029; }
 
   /* Secondary button */
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-5 py-3.5 text-[15px] font-semibold text-ink active:scale-[0.97] disabled:opacity-50;
+    @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-lg border border-border bg-bg-1 px-5 py-3 text-[15px] font-semibold text-ink active:scale-[0.98] disabled:opacity-50;
     transition: background-color 150ms ease, transform 100ms ease;
   }
   .btn-secondary:hover:not(:disabled) { background-color: var(--bg-2); }
 
   /* Ghost / outline button */
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-[15px] font-semibold text-brand active:scale-[0.97];
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[15px] font-semibold text-ink-2 active:scale-[0.98];
     transition: background-color 150ms ease, transform 100ms ease;
   }
-  .btn-ghost:hover:not(:disabled) { background-color: var(--brand-tint); }
+  .btn-ghost:hover:not(:disabled) { background-color: var(--bg-2); }
 
   /* Input field wrapper */
   .input-field {
-    @apply w-full rounded-xl border border-border-2 bg-bg-1 px-4 py-3 text-[15px] text-ink placeholder:text-faint focus:border-brand focus:ring-2 focus:ring-green-600/20 outline-none;
+    @apply w-full min-h-[46px] rounded-lg border border-border-2 bg-bg-1 px-4 py-3 text-[15px] text-ink placeholder:text-faint outline-none;
     transition: border-color 150ms ease, box-shadow 150ms ease;
   }
+  .input-field:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(20, 32, 27, 0.08);
+  }
   .input-field.error {
-    @apply border-danger focus:border-danger focus:ring-red-600/20;
+    @apply border-danger;
+  }
+  .input-field.error:focus {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.14);
   }
 
   /* Subject / accent pill */

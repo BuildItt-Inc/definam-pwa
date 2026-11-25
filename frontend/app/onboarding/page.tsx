@@ -147,9 +147,9 @@ export default function OnboardingPage() {
 
           {/* 3-segment progress indicator bar */}
           <div className="grid grid-cols-3 gap-2 mb-2">
-            <div className={`h-1.5 rounded-full transition-colors ${step >= 1 ? 'bg-[#15803d]' : 'bg-gray-200'}`} />
-            <div className={`h-1.5 rounded-full transition-colors ${step >= 2 ? 'bg-[#15803d]' : 'bg-gray-200'}`} />
-            <div className={`h-1.5 rounded-full transition-colors ${step >= 3 ? 'bg-[#15803d]' : 'bg-gray-200'}`} />
+            <div className={`h-1.5 rounded-full transition-colors ${step >= 1 ? 'bg-brand' : 'bg-bg-3'}`} />
+            <div className={`h-1.5 rounded-full transition-colors ${step >= 2 ? 'bg-brand' : 'bg-bg-3'}`} />
+            <div className={`h-1.5 rounded-full transition-colors ${step >= 3 ? 'bg-brand' : 'bg-bg-3'}`} />
           </div>
 
           <p className="text-[12.5px] font-semibold text-gray-500">
@@ -242,7 +242,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="w-full rounded-xl bg-[#15803d] hover:bg-[#166534] py-3.5 text-[15.5px] font-bold text-white shadow-sm active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                className="btn-primary w-full min-h-[48px] text-[15.5px]"
               >
                 <span>Continue</span>
                 <ArrowRight size={17} strokeWidth={2.5} />
@@ -358,7 +358,7 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={() => setStep(3)}
                   disabled={selectedSubjects.length === 0}
-                  className="rounded-xl bg-[#15803d] hover:bg-[#166534] px-6 py-2.5 text-[14.5px] font-bold text-white shadow-sm active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                  className="btn-primary min-h-[44px] px-6 text-[14.5px]"
                 >
                   <span>Continue</span>
                   <ArrowRight size={16} strokeWidth={2.5} />
@@ -416,7 +416,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={handleFinishOnboarding}
-                className="w-full rounded-xl bg-[#15803d] hover:bg-[#166534] py-3.5 text-[15.5px] font-bold text-white shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                className="btn-primary w-full min-h-[48px] text-[15.5px]"
               >
                 <span>Start learning</span>
                 <ArrowRight size={17} strokeWidth={2.5} />

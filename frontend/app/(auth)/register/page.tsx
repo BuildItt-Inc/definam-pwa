@@ -161,7 +161,7 @@ function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafbfa] flex flex-col justify-center px-4 py-8 sm:py-12">
+    <div className="min-h-screen bg-bg-0 flex flex-col justify-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-[390px] mx-auto">
         {/* Back navigation button */}
         <button
@@ -174,7 +174,7 @@ function RegisterForm() {
             }
           }}
           aria-label="Go back"
-          className="text-ink -ml-1 mb-3 p-1.5 text-ink/80 hover:text-ink active:scale-95 transition-all inline-flex items-center"
+          className="text-ink -ml-1 mb-3 p-1.5 min-h-[44px] min-w-[44px] text-ink/80 hover:text-ink active:scale-95 transition-all inline-flex items-center"
         >
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
@@ -191,7 +191,7 @@ function RegisterForm() {
         {bannerError && (
           <div
             role="alert"
-            className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] text-red-700 font-medium"
+            className="mb-4 rounded-xl border border-danger/25 bg-danger-bg px-4 py-3 text-[13.5px] text-danger font-medium"
           >
             {bannerError}
           </div>
@@ -212,22 +212,22 @@ function RegisterForm() {
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                 placeholder="e.g. IND-7K2M-Q9"
-                className={`w-full rounded-xl border ${
+                className={`w-full rounded-lg border ${
                   isAccessCodeValid
-                    ? 'border-[#15803d] border-2 ring-1 ring-[#15803d]/20'
-                    : 'border-gray-300'
-                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[15px] font-mono font-bold tracking-wider text-ink placeholder:text-gray-400 placeholder:font-sans placeholder:font-normal placeholder:tracking-normal focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                    ? 'border-brand border-2 ring-1 ring-[#1E7A46]/15'
+                    : 'border-border-2'
+                } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[15px] font-mono font-bold tracking-wider text-ink placeholder:text-faint placeholder:font-sans placeholder:font-normal placeholder:tracking-normal focus:border-ink focus:ring-2 focus:ring-[#14201B]/10 focus:outline-none transition-all touch-manipulation`}
               />
               {isAccessCodeValid && (
                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Check size={18} className="text-[#15803d] stroke-[2.8]" />
+                  <Check size={18} className="text-brand stroke-[2.8]" />
                 </div>
               )}
             </div>
             {isAccessCodeValid && (
-              <div className="mt-2 rounded-xl bg-[#ecfdf5] border border-emerald-200/70 px-3.5 py-2.5 text-[13px] font-medium text-emerald-900 leading-snug">
-                Code valid · 1 term (120 days). Access starts when you finish signing up.
-              </div>
+              <p className="mt-1.5 text-[12.5px] font-medium text-brand leading-snug">
+                Code valid · Access starts when you finish signing up.
+              </p>
             )}
           </div>
           {/* Username */}
@@ -239,7 +239,7 @@ function RegisterForm() {
               {username.length > 0 && (
                 <span
                   className={`text-[11px] font-mono ${
-                    isTooLong ? 'text-red-600 font-bold' : 'text-gray-400'
+                    isTooLong ? 'text-danger font-bold' : 'text-muted'
                   }`}
                 >
                   {username.length}/20
@@ -256,22 +256,22 @@ function RegisterForm() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 placeholder="e.g. chisom123"
-                className={`w-full rounded-xl border ${
+                className={`w-full rounded-lg border ${
                   usernameStatus === 'valid'
-                    ? 'border-[#15803d] border-2 ring-1 ring-[#15803d]/20 focus:border-[#15803d]'
+                    ? 'border-brand border-2 ring-1 ring-[#1E7A46]/15 focus:border-brand'
                     : usernameStatus === 'invalid'
-                    ? 'border-red-500 border-2 ring-1 ring-red-500/20 focus:border-red-500'
+                    ? 'border-danger border-2 ring-1 ring-[#B42318]/15 focus:border-danger'
                     : usernameStatus === 'warning'
-                    ? 'border-amber-400 border-2 ring-1 ring-amber-400/20 focus:border-amber-400'
-                    : 'border-gray-300 focus:border-brand focus:ring-1 focus:ring-brand'
-                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:outline-none transition-all touch-manipulation`}
+                    ? 'border-warn border-2 ring-1 ring-[#B45309]/15 focus:border-warn'
+                    : 'border-border-2 focus:border-ink focus:ring-2 focus:ring-[#14201B]/10'
+                } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-faint focus:outline-none transition-all touch-manipulation`}
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
                 {usernameStatus === 'valid' && (
-                  <Check size={18} className="text-[#15803d] stroke-[2.8]" />
+                  <Check size={18} className="text-brand stroke-[2.8]" />
                 )}
                 {usernameStatus === 'invalid' && (
-                  <AlertCircle size={18} className="text-red-500 stroke-[2.2]" />
+                  <AlertCircle size={18} className="text-danger stroke-[2.2]" />
                 )}
               </div>
             </div>
@@ -280,19 +280,19 @@ function RegisterForm() {
             <p
               className={`mt-1.5 text-[12.5px] leading-snug flex items-start gap-1.5 transition-colors ${
                 usernameFeedback.type === 'error'
-                  ? 'text-red-600 font-medium'
+                  ? 'text-danger font-medium'
                   : usernameFeedback.type === 'warning'
-                  ? 'text-amber-700 font-medium'
+                  ? 'text-warn font-medium'
                   : usernameFeedback.type === 'success'
-                  ? 'text-emerald-700 font-medium'
-                  : 'text-gray-500'
+                  ? 'text-brand font-medium'
+                  : 'text-muted'
               }`}
             >
               {usernameFeedback.type === 'error' && (
-                <AlertCircle size={14} className="mt-0.5 shrink-0 text-red-500" />
+                <AlertCircle size={14} className="mt-0.5 shrink-0 text-danger" />
               )}
               {usernameFeedback.type === 'success' && (
-                <Check size={14} className="mt-0.5 shrink-0 text-emerald-600 stroke-[2.5]" />
+                <Check size={14} className="mt-0.5 shrink-0 text-brand stroke-[2.5]" />
               )}
               <span>{usernameFeedback.message}</span>
             </p>
@@ -310,66 +310,50 @@ function RegisterForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
-                className={`w-full rounded-xl border ${
+                className={`w-full rounded-lg border ${
                   isPasswordValid
-                    ? 'border-[#15803d] border-2 ring-1 ring-[#15803d]/20'
-                    : 'border-gray-300'
-                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                    ? 'border-brand border-2 ring-1 ring-[#1E7A46]/15'
+                    : 'border-border-2'
+                } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-faint focus:border-ink focus:ring-2 focus:ring-[#14201B]/10 focus:outline-none transition-all touch-manipulation`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-ink transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1.5 text-muted hover:text-ink transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
               </button>
             </div>
 
-            {/* Criteria checklist */}
-            <div className="flex items-center gap-4 mt-2.5">
+            {/* Criteria pill chips */}
+            <div className="flex flex-wrap items-center gap-2 mt-2.5">
               <div
-                className={`flex items-center gap-1.5 text-[12.5px] transition-colors ${
-                  hasMinLength ? 'text-[#15803d] font-semibold' : 'text-gray-500'
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${
+                  hasMinLength ? 'bg-brand-tint text-brand' : 'bg-bg-2 text-muted'
                 }`}
               >
-                <span
-                  className={`flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
-                    hasMinLength
-                      ? 'border-[#15803d] bg-[#15803d] text-white'
-                      : 'border-gray-400 bg-transparent'
-                  }`}
-                >
-                  {hasMinLength && <Check size={11} strokeWidth={3} />}
-                </span>
+                <Check size={12} strokeWidth={2.8} className={hasMinLength ? 'text-brand' : 'text-faint'} />
                 <span>8 or more characters</span>
               </div>
 
               <div
-                className={`flex items-center gap-1.5 text-[12.5px] transition-colors ${
-                  hasNumber ? 'text-[#15803d] font-semibold' : 'text-gray-500'
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${
+                  hasNumber ? 'bg-brand-tint text-brand' : 'bg-bg-2 text-muted'
                 }`}
               >
-                <span
-                  className={`flex h-4 w-4 items-center justify-center rounded-full border transition-all ${
-                    hasNumber
-                      ? 'border-[#15803d] bg-[#15803d] text-white'
-                      : 'border-gray-400 bg-transparent'
-                  }`}
-                >
-                  {hasNumber && <Check size={11} strokeWidth={3} />}
-                </span>
+                <Check size={12} strokeWidth={2.8} className={hasNumber ? 'text-brand' : 'text-faint'} />
                 <span>One number</span>
               </div>
             </div>
           </div>
 
-          {/* Submit CTA */}
+          {/* Submit CTA — Ink primary when ready, muted neutral when incomplete */}
           {isFormComplete ? (
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-6 rounded-xl bg-brand py-3.5 text-[15.5px] font-bold text-white shadow-md hover:bg-brand-dark active:scale-[0.99] transition-all flex items-center justify-center"
+              className="btn-primary w-full mt-6 min-h-[48px] text-[15.5px]"
             >
               {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'Create account'}
             </button>
@@ -377,14 +361,14 @@ function RegisterForm() {
             <button
               type="button"
               disabled
-              className="w-full mt-6 rounded-xl bg-[#dce7dd] py-3.5 text-[15.5px] font-bold text-[#5c7060] cursor-not-allowed flex items-center justify-center transition-colors"
+              className="w-full mt-6 min-h-[48px] rounded-lg bg-bg-2 py-3 text-[15.5px] font-semibold text-faint cursor-not-allowed flex items-center justify-center transition-colors"
             >
               Create account
             </button>
           )}
 
-          <p className="text-[12.5px] text-gray-500 text-center mt-2.5">
-            The button turns green when everything above is filled in.
+          <p className="text-[12.5px] text-muted text-center mt-2.5">
+            Fill in all fields above to continue.
           </p>
         </form>
 

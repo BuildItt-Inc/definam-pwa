@@ -3,20 +3,21 @@ interface CompletionRingProps {
    * produce a visually broken ring (negative dashoffset, etc). */
   percent: number;
   size?: number;
+  variant?: 'light' | 'dark';
 }
 
 /**
- * Small circular progress ring for the dashboard header's overall-completion
- * metric (distinct topics studied / total topics in the curriculum — see
- * completion_percent on GET /students/dashboard). Not per-topic mastery.
+ * Small circular progress ring for overall-completion metric.
  */
-export function CompletionRing({ percent, size = 40 }: CompletionRingProps) {
+export function CompletionRing({ percent, size = 40, variant = 'light' }: CompletionRingProps) {
   const clamped = Math.min(100, Math.max(0, percent));
   const radius = (size / 40) * 16;
   const strokeWidth = (size / 40) * 4;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - clamped / 100);
   const center = size / 2;
+
+  const isDark = variant === 'dark';
 
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
@@ -26,7 +27,7 @@ export function CompletionRing({ percent, size = 40 }: CompletionRingProps) {
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.12)"
+          stroke={isDark ? 'rgba(255,255,255,0.14)' : '#E6E5DF'}
           strokeWidth={strokeWidth}
         />
         <circle
@@ -34,7 +35,7 @@ export function CompletionRing({ percent, size = 40 }: CompletionRingProps) {
           cy={center}
           r={radius}
           fill="none"
-          stroke="#4ADE80"
+          stroke={isDark ? '#4ADE80' : '#1E7A46'}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -44,7 +45,7 @@ export function CompletionRing({ percent, size = 40 }: CompletionRingProps) {
         />
       </svg>
       <span
-        className="absolute inset-0 flex items-center justify-center font-bold text-white"
+        className={`absolute inset-0 flex items-center justify-center font-bold ${isDark ? 'text-white' : 'text-ink'}`}
         style={{ fontSize: (size / 40) * 9.5 }}
       >
         {clamped}%

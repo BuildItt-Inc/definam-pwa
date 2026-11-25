@@ -208,11 +208,11 @@ function LoginContent() {
             )}
           </div>
 
-          {/* Submit CTA */}
+          {/* Submit CTA — Ink primary */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-2 rounded-xl bg-brand py-3.5 text-[15.5px] font-bold text-white shadow-sm hover:bg-brand-dark active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-70"
+            className="btn-primary w-full mt-2 min-h-[48px] text-[15.5px]"
           >
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : 'Sign in'}
           </button>

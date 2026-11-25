@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Search, BookOpen, Plus } from 'lucide-react';
 import { getSubjects, getCachedSubjects } from '@/lib/api/topics';
 import type { Subject } from '@/types/topics';
 import { SubjectCard } from '@/components/student/SubjectCard';
+import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import Link from 'next/link';
 import {
   getStudentProfile,
@@ -17,27 +17,30 @@ import {
 
 function BrowseSkeleton() {
   return (
-    <div className="min-h-screen bg-card">
-      {/* Appbar */}
-      <div className="flex items-center border-b border-border px-4 py-3.5">
-        <div className="h-5 w-16 animate-pulse rounded bg-bg-3" />
-      </div>
-      {/* Search bar */}
-      <div className="mx-3 my-2 h-10 animate-pulse rounded-lg bg-bg-2" />
-      {/* Subject rows */}
-      {[1, 2, 3, 4, 5].map((i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 border-b border-border px-4 py-3"
-        >
-          <div className="h-8 w-8 flex-shrink-0 animate-pulse rounded-lg bg-bg-3" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 w-36 animate-pulse rounded bg-bg-3" />
-            <div className="h-2.5 w-28 animate-pulse rounded bg-bg-2" />
+    <div className="min-h-screen bg-bg-0">
+      <div className="mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
+        <div className="mb-4 flex items-start justify-between">
+          <div className="space-y-1.5">
+            <div className="h-7 w-28 animate-pulse rounded bg-bg-3" />
+            <div className="h-3.5 w-48 animate-pulse rounded bg-bg-2" />
           </div>
-          <div className="h-5 w-8 animate-pulse rounded-[3px] bg-bg-2" />
+          <div className="h-9 w-24 animate-pulse rounded-lg bg-bg-2" />
         </div>
-      ))}
+        <div className="mb-3 h-10 animate-pulse rounded-lg bg-bg-2" />
+        <div className="mb-4 h-11 animate-pulse rounded-xl border border-border bg-card" />
+        <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-3.5 px-4 py-3.5">
+              <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-lg bg-bg-2" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-32 animate-pulse rounded bg-bg-3" />
+                <div className="h-2.5 w-20 animate-pulse rounded bg-bg-2" />
+                <div className="h-1 w-full animate-pulse rounded-full bg-bg-2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -50,7 +53,7 @@ export default function BrowsePage() {
   const [query, setQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'my' | 'all'>('my');
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const router = useRouter();
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     const handleProfileUpdate = () => {
@@ -65,8 +68,6 @@ export default function BrowsePage() {
   }, []);
 
   const hasSelectedSubjects = !!(profile?.selectedSubjects && profile.selectedSubjects.length > 0);
-
-  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     setFetchError(null);
@@ -85,7 +86,7 @@ export default function BrowsePage() {
         <button
           type="button"
           onClick={() => setRetryTick((n) => n + 1)}
-          className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+          className="btn-primary px-5 text-xs"
         >
           Try again
         </button>
@@ -96,10 +97,8 @@ export default function BrowsePage() {
   /* Loading skeleton */
   if (!subjects) return <BrowseSkeleton />;
 
-  // Default to student's selected subjects
-  const baseSubjects = (filterMode === 'my' && hasSelectedSubjects)
-    ? filterSubjectsByProfile(subjects, profile)
-    : subjects;
+  const mySubjects = hasSelectedSubjects ? filterSubjectsByProfile(subjects, profile) : subjects;
+  const baseSubjects = filterMode === 'my' && hasSelectedSubjects ? mySubjects : subjects;
 
   /* Client-side filter */
   const needle = query.toLowerCase().trim();
@@ -108,123 +107,113 @@ export default function BrowsePage() {
     : baseSubjects;
 
   return (
-    <div className="page-with-nav bg-card page-enter">
-
-      {/* ── SCR-05a · Appbar ─────────────────────────────────────────────── */}
-      <header className="flex flex-col gap-2.5 border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[17px] font-bold text-ink">Browse Subjects</h1>
-            <p className="text-xs text-muted">
-              {hasSelectedSubjects && filterMode === 'my'
-                ? `Showing your ${profile?.selectedSubjects?.length || baseSubjects.length} active subjects`
-                : `All ${subjects.length} curriculum subjects`}
+    <div className="page-with-nav bg-bg-0 page-enter">
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
+        {/* Header */}
+        <header className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-[24px] font-bold leading-tight tracking-tight text-ink">
+              Subjects
+            </h1>
+            <p className="mt-0.5 text-[13.5px] text-muted">
+              Pick what you are studying this term.
             </p>
           </div>
+          <AskZikoraButton className="shrink-0" />
+        </header>
 
-          <Link
-            href="/student/subjects"
-            className="flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-bold text-ink shadow-2xs hover:bg-bg-1 active:scale-95 transition-all sm:hidden"
-          >
-            <Plus size={13} strokeWidth={2.5} />
-            <span>Add / Remove</span>
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {hasSelectedSubjects && (
-            <div className="flex items-center gap-1 rounded-xl bg-bg-2 p-1 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setFilterMode('my')}
-                className={`rounded-lg px-2.5 py-1 transition-all ${
-                  filterMode === 'my'
-                    ? 'bg-white text-ink shadow-2xs font-bold'
-                    : 'text-muted hover:text-ink'
-                }`}
-              >
-                My Subjects ({profile?.selectedSubjects?.length || baseSubjects.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterMode('all')}
-                className={`rounded-lg px-2.5 py-1 transition-all ${
-                  filterMode === 'all'
-                    ? 'bg-white text-ink shadow-2xs font-bold'
-                    : 'text-muted hover:text-ink'
-                }`}
-              >
-                All ({subjects.length})
-              </button>
-            </div>
-          )}
-
-          <Link
-            href="/student/subjects"
-            className="hidden sm:inline-flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-bold text-ink shadow-2xs hover:bg-bg-1 active:scale-95 transition-all"
-          >
-            <Plus size={13} strokeWidth={2.5} />
-            <span>Add / Remove</span>
-          </Link>
-        </div>
-      </header>
-
-      {/* ── Search bar ───────────────────────────────────────────────────── */}
-      <div className="px-3 py-2 border-b border-border-2 bg-bg-0">
-        <label className="flex items-center gap-2 rounded-lg border border-border-2 bg-bg-1 px-3 py-2.5 focus-within:border-brand focus-within:ring-1 focus-within:ring-brand/20 transition-all">
-          <Search size={15} strokeWidth={1.5} className="flex-shrink-0 text-muted" />
-          <input
-            type="search"
-            placeholder="Search topics..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent text-[15px] text-ink placeholder:text-muted focus:outline-none"
-          />
-        </label>
-      </div>
-
-      {/* ── Subject list ─────────────────────────────────────────────────── */}
-      <main className="flex-1 pb-nav">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-            <BookOpen
-              size={32}
-              strokeWidth={1.5}
-              className="mb-3 text-faint"
-            />
-            <p className="text-base text-muted">
-              No subjects found
-            </p>
-            <div className="mt-3 flex items-center gap-3">
-              {hasSelectedSubjects && filterMode === 'my' && (
-                <button
-                  type="button"
-                  onClick={() => setFilterMode('all')}
-                  className="text-xs font-bold text-brand underline underline-offset-4"
-                >
-                  View all subjects ({subjects.length})
-                </button>
-              )}
-              <Link
-                href="/student/subjects"
-                className="text-xs font-bold text-ink underline underline-offset-4"
-              >
-                Manage your subjects
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div>
-            {filtered.map((subject) => (
-              <SubjectCard
-                key={subject.name}
-                subject={subject}
-                href={`/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`}
-              />
-            ))}
+        {/* Segmented tabs */}
+        {hasSelectedSubjects && (
+          <div className="mb-3 grid grid-cols-2 rounded-lg bg-bg-2 p-1">
+            <button
+              type="button"
+              onClick={() => setFilterMode('my')}
+              className={`min-h-[36px] rounded-md px-3 py-1.5 text-[13px] font-semibold transition-all ${
+                filterMode === 'my'
+                  ? 'bg-card text-ink shadow-2xs'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              My subjects · {mySubjects.length}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterMode('all')}
+              className={`min-h-[36px] rounded-md px-3 py-1.5 text-[13px] font-semibold transition-all ${
+                filterMode === 'all'
+                  ? 'bg-card text-ink shadow-2xs'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              All · {subjects.length}
+            </button>
           </div>
         )}
-      </main>
+
+        {/* Search bar */}
+        <div className="mb-4">
+          <label className="flex min-h-[44px] items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2 focus-within:border-ink focus-within:ring-2 focus-within:ring-[#14201B]/10 transition-all">
+            <Search size={16} strokeWidth={1.8} className="flex-shrink-0 text-muted" />
+            <input
+              type="search"
+              placeholder="Search subjects"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 bg-transparent text-[15px] text-ink placeholder:text-faint focus:outline-none"
+            />
+          </label>
+        </div>
+
+        {/* Grouped Subject Card */}
+        <main className="flex-1 pb-4">
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card px-6 py-12 text-center">
+              <BookOpen size={30} strokeWidth={1.6} className="mb-3 text-faint" />
+              <p className="text-[15px] font-semibold text-ink">No subjects found</p>
+              <p className="mt-1 text-xs text-muted">
+                Try another search term or view all available subjects.
+              </p>
+              <div className="mt-4 flex items-center gap-3">
+                {hasSelectedSubjects && filterMode === 'my' && (
+                  <button
+                    type="button"
+                    onClick={() => setFilterMode('all')}
+                    className="btn-secondary min-h-[40px] px-3.5 py-2 text-xs"
+                  >
+                    View all ({subjects.length})
+                  </button>
+                )}
+                <Link
+                  href="/student/subjects"
+                  className="btn-primary min-h-[40px] px-3.5 py-2 text-xs"
+                >
+                  Add or remove subjects
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
+                {filtered.map((subject) => (
+                  <SubjectCard
+                    key={subject.name}
+                    subject={subject}
+                    href={`/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`}
+                  />
+                ))}
+              </div>
+
+              <Link
+                href="/student/subjects"
+                className="btn-secondary w-full rounded-xl"
+              >
+                <Plus size={16} strokeWidth={2.2} />
+                <span>Add or remove subjects</span>
+              </Link>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
