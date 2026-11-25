@@ -79,11 +79,23 @@ const curriculumCache = {
   topicDetails: new Map<string, TopicDetail>(),
 };
 
+// Single-flight deduplication for concurrent tab loads
+const inflightRequests = {
+  subjects: null as Promise<Subject[]> | null,
+  home: null as Promise<HomeData> | null,
+  recallQueue: null as Promise<RecallItem[]> | null,
+  progress: null as Promise<ProgressData> | null,
+};
+
 export function clearCurriculumCache() {
   curriculumCache.subjects = null;
   curriculumCache.chaptersByName.clear();
   curriculumCache.topicsByChapter.clear();
   curriculumCache.topicDetails.clear();
+  inflightRequests.subjects = null;
+  inflightRequests.home = null;
+  inflightRequests.recallQueue = null;
+  inflightRequests.progress = null;
   if (typeof window !== 'undefined') {
     for (const store of [localStorage, sessionStorage]) {
       try {
@@ -149,13 +161,23 @@ export async function getSubjects(): Promise<Subject[]> {
     return mockSubjects;
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects`, {
-    headers: await getAuthHeaders(),
-  });
-  const data = await handleResponse<Subject[]>(res);
-  curriculumCache.subjects = data;
-  writeCache('subjects', data);
-  return data;
+  if (inflightRequests.subjects) return inflightRequests.subjects;
+
+  inflightRequests.subjects = (async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects`, {
+        headers: await getAuthHeaders(),
+      });
+      const data = await handleResponse<Subject[]>(res);
+      curriculumCache.subjects = data;
+      writeCache('subjects', data);
+      return data;
+    } finally {
+      inflightRequests.subjects = null;
+    }
+  })();
+
+  return inflightRequests.subjects;
 }
 
 // ── getChaptersBySubjectName ─────────────────────────────────────────────────
@@ -265,13 +287,23 @@ export async function getHomeData(): Promise<HomeData> {
     return mockHomeData;
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/students/dashboard`,
-    { headers: await getAuthHeaders() },
-  );
-  const data = await handleResponse<HomeData>(res);
-  writeCache('homeData', data);
-  return data;
+  if (inflightRequests.home) return inflightRequests.home;
+
+  inflightRequests.home = (async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/students/dashboard`,
+        { headers: await getAuthHeaders() },
+      );
+      const data = await handleResponse<HomeData>(res);
+      writeCache('homeData', data);
+      return data;
+    } finally {
+      inflightRequests.home = null;
+    }
+  })();
+
+  return inflightRequests.home;
 }
 
 // ── getRecallQueue ─────────────────────────────────────────────────────────
@@ -284,39 +316,49 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
     return mockRecallQueue;
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/recall/queue`,
-    { headers: await getAuthHeaders() },
-  );
+  if (inflightRequests.recallQueue) return inflightRequests.recallQueue;
 
-  type RawItem = {
-    topic_id: string;
-    title: string;
-    subject: string | null;
-    question: string | null;
-    model_answer: string | null;
-    next_review_at: string | null;
-  };
+  inflightRequests.recallQueue = (async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/recall/queue`,
+        { headers: await getAuthHeaders() },
+      );
 
-  const raw = await handleResponse<RawItem[]>(res);
-  const items: RawItem[] = Array.isArray(raw)
-    ? raw
-    : raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)
-      ? (raw as { data: RawItem[] }).data
-      : [];
+      type RawItem = {
+        topic_id: string;
+        title: string;
+        subject: string | null;
+        question: string | null;
+        model_answer: string | null;
+        next_review_at: string | null;
+      };
 
-  const result = items
-    .filter((item) => item.question && item.model_answer)
-    .map((item) => ({
-      id: item.topic_id,
-      topic_id: item.topic_id,
-      topic_title: item.title,
-      subject: item.subject ?? '',
-      question: item.question!,
-      model_answer: item.model_answer!,
-    }));
-  writeCache('recallQueue', result);
-  return result;
+      const raw = await handleResponse<RawItem[]>(res);
+      const items: RawItem[] = Array.isArray(raw)
+        ? raw
+        : raw && typeof raw === 'object' && 'data' in raw && Array.isArray((raw as { data: unknown }).data)
+          ? (raw as { data: RawItem[] }).data
+          : [];
+
+      const result = items
+        .filter((item) => item.question && item.model_answer)
+        .map((item) => ({
+          id: item.topic_id,
+          topic_id: item.topic_id,
+          topic_title: item.title,
+          subject: item.subject ?? '',
+          question: item.question!,
+          model_answer: item.model_answer!,
+        }));
+      writeCache('recallQueue', result);
+      return result;
+    } finally {
+      inflightRequests.recallQueue = null;
+    }
+  })();
+
+  return inflightRequests.recallQueue;
 }
 
 // ── getProgressData ────────────────────────────────────────────────────────
@@ -329,47 +371,57 @@ export async function getProgressData(): Promise<ProgressData> {
     return mockProgressData;
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/progress`,
-    { headers: await getAuthHeaders() },
-  );
+  if (inflightRequests.progress) return inflightRequests.progress;
 
-  type RawProgress = {
-    streak_days: number;
-    topics_studied: number;
-    avg_accuracy: number;
-    due_tomorrow: number;
-    subject_mastery: { subject: string; mastery_percent: number }[];
-    upcoming_reviews: { topic_title: string; due: string; urgency: string }[];
-    heatmap_data: number[];
-  };
+  inflightRequests.progress = (async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/student/progress`,
+        { headers: await getAuthHeaders() },
+      );
 
-  const raw = await handleResponse<RawProgress | null>(res);
-  const d: Partial<RawProgress> =
-    (raw && typeof raw === 'object' && 'data' in raw
-      ? (raw as { data: RawProgress }).data
-      : raw) ?? {};
+      type RawProgress = {
+        streak_days: number;
+        topics_studied: number;
+        avg_accuracy: number;
+        due_tomorrow: number;
+        subject_mastery: { subject: string; mastery_percent: number }[];
+        upcoming_reviews: { topic_title: string; due: string; urgency: string }[];
+        heatmap_data: number[];
+      };
 
-  const result: ProgressData = {
-    streak_days: d.streak_days ?? 0,
-    topics_studied: d.topics_studied ?? 0,
-    avg_accuracy: d.avg_accuracy ?? 0,
-    due_tomorrow: d.due_tomorrow ?? 0,
-    subject_mastery: Array.isArray(d.subject_mastery) ? d.subject_mastery : [],
-    upcoming_reviews: Array.isArray(d.upcoming_reviews)
-      ? d.upcoming_reviews.map((r) => ({
-        topic_title: r?.topic_title ?? '',
-        due: r?.due ?? '',
-        urgency: (r?.urgency === 'high' || r?.urgency === 'medium' ? r?.urgency : 'low') as
-          | 'high'
-          | 'medium'
-          | 'low',
-      }))
-      : [],
-    heatmap_data: Array.isArray(d.heatmap_data) ? d.heatmap_data : [],
-  };
-  writeCache('progressData', result);
-  return result;
+      const raw = await handleResponse<RawProgress | null>(res);
+      const d: Partial<RawProgress> =
+        (raw && typeof raw === 'object' && 'data' in raw
+          ? (raw as { data: RawProgress }).data
+          : raw) ?? {};
+
+      const result: ProgressData = {
+        streak_days: d.streak_days ?? 0,
+        topics_studied: d.topics_studied ?? 0,
+        avg_accuracy: d.avg_accuracy ?? 0,
+        due_tomorrow: d.due_tomorrow ?? 0,
+        subject_mastery: Array.isArray(d.subject_mastery) ? d.subject_mastery : [],
+        upcoming_reviews: Array.isArray(d.upcoming_reviews)
+          ? d.upcoming_reviews.map((r) => ({
+            topic_title: r?.topic_title ?? '',
+            due: r?.due ?? '',
+            urgency: (r?.urgency === 'high' || r?.urgency === 'medium' ? r?.urgency : 'low') as
+              | 'high'
+              | 'medium'
+              | 'low',
+          }))
+          : [],
+        heatmap_data: Array.isArray(d.heatmap_data) ? d.heatmap_data : [],
+      };
+      writeCache('progressData', result);
+      return result;
+    } finally {
+      inflightRequests.progress = null;
+    }
+  })();
+
+  return inflightRequests.progress;
 }
 
 // ── pingTopicActivity ──────────────────────────────────────────────────────
