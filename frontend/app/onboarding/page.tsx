@@ -93,13 +93,12 @@ export default function OnboardingPage() {
         setSelectedSubjects(existing.selectedSubjects);
       }
     } else {
-      // Try fetching current student name from /api/v1/auth/me
+      // Only prefill if an actual human display name is already stored on the account
+      // (never auto-fill the student's login username)
       getMe()
         .then((me) => {
           if (me?.name) {
             setName((prev) => prev || me.name || '');
-          } else if (me?.username) {
-            setName((prev) => prev || me.username || '');
           }
         })
         .catch(() => {});
@@ -440,9 +439,11 @@ function SubjectToggleCard({
   onToggle: () => void;
 }) {
   return (
-    <div
+    <button
+      type="button"
       onClick={onToggle}
-      className={`rounded-xl p-3 flex items-center justify-between gap-2 border cursor-pointer select-none transition-all ${
+      aria-pressed={selected}
+      className={`w-full rounded-xl p-3 flex items-center justify-between gap-2 border text-left cursor-pointer select-none active:scale-[0.97] transition-all ${
         selected
           ? 'border-2 border-[#15803d] bg-white shadow-2xs'
           : 'border-gray-200 bg-white hover:border-gray-300'
@@ -464,6 +465,6 @@ function SubjectToggleCard({
           <Check size={16} strokeWidth={3} />
         </span>
       )}
-    </div>
+    </button>
   );
 }

@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Sparkles, Zap } from 'lucide-react';
 import type { RecallItem } from '@/types/topics';
 import { QualityRating } from '@/components/student/QualityRating';
-import { submitRecallRating } from '@/lib/api/topics';
+import { submitRecallRating, getHomeData, getCachedHomeData } from '@/lib/api/topics';
 import { AnalyticsEvents } from '@/lib/analytics';
-import { getHomeData } from '@/lib/api/topics';
 import { toast } from '@/lib/toast';
 
 // ── Session page ──────────────────────────────────────────────────────────
@@ -18,7 +17,10 @@ export default function RecallSessionPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answerRevealed, setAnswerRevealed] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const [streakDays, setStreakDays] = useState<number | null>(null);
+  const [submittingRating, setSubmittingRating] = useState<number | null>(null);
+  const [streakDays, setStreakDays] = useState<number | null>(
+    () => getCachedHomeData()?.streak_days ?? null,
+  );
   const startTime = useRef<number>(Date.now());
 
   useEffect(() => {
@@ -41,8 +43,13 @@ export default function RecallSessionPage() {
 
   if (!queue) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ink">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+      <div className="flex min-h-screen flex-col bg-ink px-4 pb-6 pt-4">
+        <div className="mb-5 flex items-center justify-between">
+          <div className="h-5 w-28 animate-pulse rounded bg-white/10" />
+          <div className="h-6 w-14 animate-pulse rounded-full bg-white/10" />
+        </div>
+        <div className="mb-3 h-40 animate-pulse rounded-2xl border border-white/10 bg-white/5" />
+        <div className="h-12 animate-pulse rounded-xl bg-white/10" />
       </div>
     );
   }
@@ -52,31 +59,34 @@ export default function RecallSessionPage() {
   const elapsedMinutes = Math.max(1, Math.round((Date.now() - startTime.current) / 60000));
 
   async function handleRate(rating: number) {
+    if (submittingRating !== null) return;
+    setSubmittingRating(rating);
     // Submit rating to real backend — this marks the DailyRecallQueue item
     // as completed and advances SM-2 scheduling, which is what the streak query counts.
     try {
-      await submitRecallRating(currentItem.topic_id, rating);
+      const res = await submitRecallRating(currentItem.topic_id, rating);
+      if (typeof res.streak_days === 'number') {
+        setStreakDays(res.streak_days);
+      }
       AnalyticsEvents.reviewCompleted({ topic_id: currentItem.topic_id, quality: rating, repetitions: 1 });
     } catch {
       // Still advance the UI, but the student should know this rating
       // didn't actually get recorded server-side.
       toast.error('Rating failed to save', 'Your progress on this item may not be up to date.');
+    } finally {
+      setSubmittingRating(null);
     }
 
     if (currentIndex < total - 1) {
       setCurrentIndex((i) => i + 1);
       setAnswerRevealed(false);
     } else {
-      // Session complete — fetch authoritative streak from dashboard
-      try {
-        const home = await getHomeData();
-        setStreakDays(home.streak_days);
-      } catch {
-        // If dashboard fetch fails, show a safe fallback
-        setStreakDays(null);
-      }
+      // Show "All done!" immediately with optimistic/returned streak and refresh in background
       setCompleted(true);
       toast.success('Recall session complete', `${total} ${total === 1 ? 'topic' : 'topics'} reviewed`);
+      getHomeData()
+        .then((home) => setStreakDays(home.streak_days))
+        .catch(() => {});
     }
   }
 
@@ -200,7 +210,7 @@ export default function RecallSessionPage() {
               How well did you remember this?
             </p>
 
-            <QualityRating onRate={handleRate} />
+            <QualityRating onRate={handleRate} submittingRating={submittingRating} />
           </>
         )}
       </div>

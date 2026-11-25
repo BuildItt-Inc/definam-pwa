@@ -46,17 +46,17 @@ export const staggerItem: Variants = {
 // keyed on the current step.
 export const stepSlide: Variants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 32 : -32,
+    x: direction > 0 ? 24 : -24,
     opacity: 0,
   }),
   center: {
     x: 0,
     opacity: 1,
-    transition: { duration: 0.32, ease: standardEasing },
+    transition: { duration: 0.16, ease: standardEasing },
   },
   exit: (direction: number) => ({
-    x: direction > 0 ? -32 : 32,
+    x: direction > 0 ? -24 : 24,
     opacity: 0,
-    transition: { duration: 0.32, ease: standardEasing },
+    transition: { duration: 0.14, ease: standardEasing },
   }),
 };

@@ -6,8 +6,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ChevronRight, BookOpen, Bot, MessageSquare, Send, Check, ChevronDown, ArrowUp } from 'lucide-react';
 import {
   getChaptersBySubjectName,
+  getCachedChaptersBySubjectName,
   getTopics,
+  getCachedTopics,
   getTopicDetail,
+  getCachedTopicDetail,
   pingTopicActivity,
   submitTopicCompletion,
 } from '@/lib/api/topics';
@@ -49,7 +52,7 @@ function StepCta({
       ref={ref}
       onMouseMove={onMouseMove}
       onClick={onClick}
-      className="spotlight relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[13px] bg-ink py-[15px] text-[14.5px] font-bold text-white shadow-sm"
+      className="spotlight relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[13px] bg-ink py-[15px] text-[14.5px] font-bold text-white shadow-sm active:scale-[0.98] transition-transform"
     >
       <span className="relative z-10 flex items-center gap-2">{children}</span>
     </button>
@@ -127,24 +130,38 @@ function PageSkeleton() {
 const CLASS_LEVEL_ORDER = ['SS1', 'SS2', 'SS3'];
 
 function ChaptersView({ subjectName }: { subjectName: string }) {
-  const [chapters, setChapters] = useState<Chapter[] | null>(null);
+  const [chapters, setChapters] = useState<Chapter[] | null>(() =>
+    getCachedChaptersBySubjectName(subjectName),
+  );
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const router = useRouter();
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
-    setChapters(null);
+    const cached = getCachedChaptersBySubjectName(subjectName);
+    if (cached && cached.length > 0) {
+      setChapters(cached);
+    } else {
+      setChapters(null);
+    }
     setFetchError(null);
     getChaptersBySubjectName(subjectName)
       .then(setChapters)
       .catch((err: unknown) => {
         setFetchError(err instanceof Error ? err.message : 'Failed to load');
       });
-  }, [subjectName]);
+  }, [subjectName, retryTick]);
 
-  if (fetchError) {
+  if (fetchError && !chapters) {
     return (
-      <div className="px-4 py-6 text-center text-sm text-muted">
-        {fetchError}
+      <div className="flex flex-col items-center justify-center gap-3 px-4 py-10 text-center">
+        <p className="text-sm text-muted">{fetchError}</p>
+        <button
+          type="button"
+          onClick={() => setRetryTick((n) => n + 1)}
+          className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+        >
+          Try again
+        </button>
       </div>
     );
   }
@@ -203,23 +220,36 @@ function ChaptersView({ subjectName }: { subjectName: string }) {
 // ── SCR-05c · Topics view ──────────────────────────────────────────────────
 
 function TopicsView({ chapterId }: { chapterId: string }) {
-  const [topics, setTopics] = useState<Topic[] | null>(null);
+  const [topics, setTopics] = useState<Topic[] | null>(() => getCachedTopics(chapterId));
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
-    setTopics(null);
+    const cached = getCachedTopics(chapterId);
+    if (cached && cached.length > 0) {
+      setTopics(cached);
+    } else {
+      setTopics(null);
+    }
     setFetchError(null);
     getTopics(chapterId)
       .then(setTopics)
       .catch((err: unknown) => {
         setFetchError(err instanceof Error ? err.message : 'Failed to load topics');
       });
-  }, [chapterId]);
+  }, [chapterId, retryTick]);
 
-  if (fetchError) {
+  if (fetchError && !topics) {
     return (
-      <div className="px-4 py-6 text-center text-sm text-muted">
-        {fetchError}
+      <div className="flex flex-col items-center justify-center gap-3 px-4 py-10 text-center">
+        <p className="text-sm text-muted">{fetchError}</p>
+        <button
+          type="button"
+          onClick={() => setRetryTick((n) => n + 1)}
+          className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+        >
+          Try again
+        </button>
       </div>
     );
   }
@@ -791,8 +821,9 @@ function LearningFlow({
 }) {
   const router = useRouter();
   const { celebrate } = useCelebration();
-  const [detail, setDetail] = useState<TopicDetail | null>(null);
+  const [detail, setDetail] = useState<TopicDetail | null>(() => getCachedTopicDetail(topicId));
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -802,6 +833,7 @@ function LearningFlow({
   const [direction, setDirection] = useState(1);
 
   useEffect(() => {
+    setFetchError(null);
     getTopicDetail(topicId)
       .then((data) => {
         setDetail(data);
@@ -821,7 +853,7 @@ function LearningFlow({
         setFetchError(err instanceof Error ? err.message : 'Failed to load topic');
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topicId]);
+  }, [topicId, retryTick]);
 
   const advanceStep = (nextStep: 1 | 2 | 3 | 4) => {
     setDirection(1);
@@ -882,14 +914,27 @@ function LearningFlow({
 
   if (!detail && !fetchError) return <LearningFlowSkeleton />;
 
-  if (fetchError) {
+  if (fetchError && !detail) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-6">
         <BookOpen size={36} strokeWidth={1.5} className="text-gray-300" />
         <p className="text-center text-[15px] text-muted">{fetchError}</p>
-        <button onClick={onExit} className="text-[15px] font-bold text-ink">
-          Go back
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setRetryTick((n) => n + 1)}
+            className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+          >
+            Try again
+          </button>
+          <button
+            type="button"
+            onClick={onExit}
+            className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-ink active:scale-95 transition-all"
+          >
+            Go back
+          </button>
+        </div>
       </div>
     );
   }
