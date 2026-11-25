@@ -60,41 +60,74 @@ export function clearStoredFcmToken(): void {
 
 async function waitForActiveServiceWorker(
   reg: ServiceWorkerRegistration,
-  timeoutMs: number = 5000,
-): Promise<ServiceWorkerRegistration> {
+  timeoutMs: number = 8000,
+): Promise<ServiceWorkerRegistration | null> {
   if (reg.active) return reg;
 
   const worker = reg.installing || reg.waiting;
-  if (!worker) return reg;
+  if (!worker) return null;
 
-  await new Promise<void>((resolve) => {
-    const timer = setTimeout(resolve, timeoutMs);
+  const activated = await new Promise<boolean>((resolve) => {
+    const timer = setTimeout(() => {
+      worker.removeEventListener('statechange', onStateChange);
+      resolve(Boolean(reg.active));
+    }, timeoutMs);
+
     const onStateChange = () => {
-      if (worker.state === 'activated' || worker.state === 'redundant') {
+      if (reg.active || worker.state === 'activated') {
         clearTimeout(timer);
         worker.removeEventListener('statechange', onStateChange);
-        resolve();
+        resolve(true);
+      } else if (worker.state === 'redundant') {
+        clearTimeout(timer);
+        worker.removeEventListener('statechange', onStateChange);
+        resolve(Boolean(reg.active));
       }
     };
+
     worker.addEventListener('statechange', onStateChange);
   });
 
-  return reg;
+  return activated && reg.active ? reg : null;
 }
 
-async function resolveMessagingServiceWorker(): Promise<ServiceWorkerRegistration> {
-  let reg = await navigator.serviceWorker.getRegistration('/');
+const FCM_FALLBACK_SCOPE = '/firebase-cloud-messaging-push-scope';
 
-  if (!reg) {
+async function resolveMessagingServiceWorker(): Promise<ServiceWorkerRegistration> {
+  // 1. Prefer existing active PWA registration on '/' (sw.js includes firebase-messaging-sw.js)
+  const existingRoot = await navigator.serviceWorker.getRegistration('/');
+  if (existingRoot?.active) {
+    return existingRoot;
+  }
+
+  if (existingRoot && (existingRoot.installing || existingRoot.waiting)) {
+    const readyRoot = await waitForActiveServiceWorker(existingRoot, 6000);
+    if (readyRoot?.active) return readyRoot;
+  } else if (!existingRoot) {
     try {
-      reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      const registeredRoot = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      const readyRoot = await waitForActiveServiceWorker(registeredRoot, 6000);
+      if (readyRoot?.active) return readyRoot;
     } catch {
-      // Dev builds or environments without Workbox sw.js fall back to standalone FCM SW
-      reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+      // Ignore /sw.js errors (e.g. dev mode) and fall through to lightweight FCM worker
     }
   }
 
-  return waitForActiveServiceWorker(reg, 5000);
+  // 2. Fallback: register dedicated lightweight FCM worker under an isolated push scope.
+  // Push subscriptions are bound 1:1 to a single registration, so an isolated scope avoids
+  // any conflict or duplicate push delivery with /sw.js.
+  let fcmReg = await navigator.serviceWorker.getRegistration(FCM_FALLBACK_SCOPE);
+  if (!fcmReg || !fcmReg.active) {
+    fcmReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: FCM_FALLBACK_SCOPE,
+    });
+    const readyFcm = await waitForActiveServiceWorker(fcmReg, 6000);
+    if (readyFcm?.active) return readyFcm;
+  }
+
+  if (fcmReg?.active) return fcmReg;
+
+  throw new Error('Could not activate notification service worker. Refresh the page and try again.');
 }
 
 export async function requestNotificationPermissionAndGetToken(): Promise<string | null> {
@@ -176,8 +209,10 @@ export async function showLocalNotification(
 
   try {
     if ('serviceWorker' in navigator) {
-      const reg = await navigator.serviceWorker.ready;
-      if (reg && 'showNotification' in reg) {
+      const reg =
+        (await navigator.serviceWorker.getRegistration('/')) ||
+        (await navigator.serviceWorker.getRegistration(FCM_FALLBACK_SCOPE));
+      if (reg?.active && 'showNotification' in reg) {
         await reg.showNotification(title, {
           icon: '/icons/icon-192.png',
           badge: '/icons/icon-192.png',
