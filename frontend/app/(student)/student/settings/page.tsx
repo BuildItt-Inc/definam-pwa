@@ -3,10 +3,42 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { LogOut, Pencil, Check, X, Bell, MessageSquarePlus, HelpCircle, Bug, ChevronRight } from 'lucide-react';
-import { changePassword, getMe, getCachedMe, updateCachedMe, logout, ApiError, getAuthHeaders, handleAuthError } from '@/lib/api/auth';
-import { getHomeData, getCachedHomeData } from '@/lib/api/topics';
-import { getStudentProfile, saveStudentProfile, DEFAULT_SUBJECTS, type StudentProfile } from '@/lib/utils/studentProfile';
+import {
+  LogOut,
+  Pencil,
+  Check,
+  X,
+  Bell,
+  Download,
+  Lock,
+  MessageSquarePlus,
+  HelpCircle,
+  Bug,
+  ChevronRight,
+} from 'lucide-react';
+import {
+  changePassword,
+  getMe,
+  getCachedMe,
+  updateCachedMe,
+  logout,
+  ApiError,
+  getAuthHeaders,
+  handleAuthError,
+} from '@/lib/api/auth';
+import {
+  getHomeData,
+  getCachedHomeData,
+  getSubjects,
+  getCachedSubjects,
+} from '@/lib/api/topics';
+import {
+  getStudentProfile,
+  saveStudentProfile,
+  filterSubjectsByProfile,
+  DEFAULT_SUBJECTS,
+  type StudentProfile,
+} from '@/lib/utils/studentProfile';
 import {
   requestNotificationPermissionAndGetToken,
   getStoredFcmToken,
@@ -20,22 +52,23 @@ import {
 } from '@/lib/api/notifications';
 import { toast } from '@/lib/toast';
 import type { UserMe } from '@/types/auth';
-import { InstallAppButton } from '@/components/ui/InstallAppButton';
+import type { HomeData, Subject } from '@/types/topics';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { AppInstallModal } from '@/components/ui/AppInstallModal';
 
 const APP_VERSION = '0.1.0';
+const CLASS_LEVELS: StudentProfile['class_level'][] = ['SS1', 'SS2', 'SS3', 'Finished school'];
+const TARGET_OPTIONS = ['WAEC', 'NECO', 'JAMB', 'School exams'];
 
 function SettingsSkeleton() {
   return (
     <div className="page-with-nav bg-bg-0">
-      <div className="border-b border-border bg-bg-0 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <div className="h-5 w-20 animate-pulse rounded bg-border-2" />
-      </div>
-      <div className="px-4 py-4">
-        <div className="mb-4 h-20 animate-pulse rounded-xl bg-bg-3" />
-        <div className="mb-4 h-36 animate-pulse rounded-xl bg-bg-3" />
-        <div className="h-10 animate-pulse rounded-xl bg-bg-3" />
+      <div className="mx-auto w-full max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
+        <div className="mb-4 h-7 w-24 animate-pulse rounded bg-bg-3" />
+        <div className="mb-5 h-36 animate-pulse rounded-2xl bg-bg-2" />
+        <div className="mb-5 h-16 animate-pulse rounded-2xl bg-bg-2" />
+        <div className="mb-5 h-32 animate-pulse rounded-2xl bg-bg-2" />
+        <div className="h-36 animate-pulse rounded-2xl bg-bg-2" />
       </div>
     </div>
   );
@@ -43,15 +76,18 @@ function SettingsSkeleton() {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { isIOS, isInstalled, showInstallModal, setShowInstallModal } = usePWAInstall();
+  const { isIOS, isInstalled, canInstall, promptInstall, showInstallModal, setShowInstallModal } =
+    usePWAInstall();
+
   const [me, setMe] = useState<UserMe | null>(() => getCachedMe());
   const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
-  // Seed school name from session cache for instant render (SWR pattern)
-  const [schoolName, setSchoolName] = useState(() => getCachedHomeData()?.school_name ?? '');
+  const [homeData, setHomeData] = useState<HomeData | null>(() => getCachedHomeData());
+  const [subjects, setSubjects] = useState<Subject[] | null>(() => getCachedSubjects());
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
+
+  // Inline display-name edit state inside dark hero card
   const [isEditingName, setIsEditingName] = useState(false);
-  // Pre-seed nameInput from local profile or cached /me so it's ready before /me loads
   const [nameInput, setNameInput] = useState(() => {
     const p = getStudentProfile();
     const cached = getCachedMe();
@@ -59,10 +95,24 @@ export default function SettingsPage() {
   });
   const [nameError, setNameError] = useState(false);
   const [savingName, setSavingName] = useState(false);
+
+  // Class & targets modal
+  const [showStudyPlanModal, setShowStudyPlanModal] = useState(false);
+  const [draftClass, setDraftClass] = useState<StudentProfile['class_level']>(
+    () => getStudentProfile()?.class_level ?? 'SS3',
+  );
+  const [draftTargets, setDraftTargets] = useState<string[]>(
+    () => getStudentProfile()?.targets ?? ['WAEC', 'School exams'],
+  );
+
+  // Change password modal (opens cleanly from Account -> Change password row)
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [pwForm, setPwForm] = useState({ new_password: '', confirm_password: '' });
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwSuccess, setPwSuccess] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+
+  // Logout & notifications
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(false);
@@ -87,6 +137,28 @@ export default function SettingsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    async function load() {
+      setFetchError(null);
+      try {
+        const [meData, home, subjectsData] = await Promise.all([
+          getMe(),
+          getHomeData(),
+          getSubjects().catch(() => [] as Subject[]),
+        ]);
+        setMe(meData);
+        setHomeData(home);
+        if (subjectsData.length > 0) setSubjects(subjectsData);
+        setNameInput((prev) => prev || meData.name || meData.username);
+      } catch (err: unknown) {
+        if (!handleAuthError(err, router)) {
+          setFetchError(err instanceof Error ? err.message : 'Failed to load');
+        }
+      }
+    }
+    void load();
+  }, [router, retryTick]);
+
   async function handleToggleNotifications() {
     setNotifLoading(true);
     try {
@@ -97,12 +169,11 @@ export default function SettingsPage() {
           clearStoredFcmToken();
         }
         setNotifEnabled(false);
-        toast.info('Notifications disabled');
+        toast.info('Daily reminders disabled');
       } else {
-        // On iOS, Web Push is only supported if added to the Home Screen
         if (isIOS && !isInstalled) {
           setShowInstallModal(true);
-          toast.info('On iPhone, please add Recall to your Home Screen first to enable notifications.');
+          toast.info('On iPhone, add Recall to your Home Screen first to enable notifications.');
           setNotifLoading(false);
           return;
         }
@@ -111,10 +182,10 @@ export default function SettingsPage() {
         if (token) {
           await registerNotificationToken(token, isIOS ? 'ios_web' : 'web');
           setNotifEnabled(true);
-          toast.success('Notifications enabled');
+          toast.success('Daily reminders enabled');
         } else {
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'denied') {
-            toast.error('Notifications blocked by browser. Please enable permissions in site settings.');
+            toast.error('Notifications blocked by browser. Enable permissions in site settings.');
           } else if (isIOS && !isInstalled) {
             setShowInstallModal(true);
             toast.info('Please add Recall to your Home Screen first.');
@@ -136,7 +207,6 @@ export default function SettingsPage() {
       const token = getStoredFcmToken();
       let sentViaCloud = false;
 
-      // 1. If notification token is active, send exactly one test notification via cloud push
       if (token) {
         try {
           await sendTestNotification();
@@ -147,10 +217,9 @@ export default function SettingsPage() {
         }
       }
 
-      // 2. Only if cloud delivery was not possible (e.g. offline, local test), deliver one local notification
       if (!sentViaCloud) {
         await showLocalNotification('Recall Test Notification', {
-          body: 'Push notifications are working on this device! 🎯',
+          body: 'Push notifications are working on this device.',
           tag: 'recall-test-alert',
         });
         toast.success('Test notification delivered locally!');
@@ -162,27 +231,13 @@ export default function SettingsPage() {
     }
   }
 
-  useEffect(() => {
-    async function load() {
-      setFetchError(null);
-      try {
-        // Fetch in parallel instead of sequential waterfall
-        const [meData, homeData] = await Promise.all([getMe(), getHomeData()]);
-        setMe(meData);
-        setSchoolName(homeData.school_name);
-        setNameInput((prev) => prev || meData.name || meData.username);
-      } catch (err: unknown) {
-        if (!handleAuthError(err, router)) {
-          setFetchError(err instanceof Error ? err.message : 'Failed to load');
-        }
-      }
-    }
-    void load();
-  }, [router, retryTick]);
-
   async function handleLogout() {
     setLogoutLoading(true);
-    try { await logout(); } catch { /* best-effort */ }
+    try {
+      await logout();
+    } catch {
+      /* best-effort */
+    }
     router.replace('/login');
   }
 
@@ -204,7 +259,6 @@ export default function SettingsPage() {
         body: JSON.stringify({ name: trimmed }),
       });
       if (!res.ok) throw new Error('Failed to update name');
-      // Sync local profile & /me cache so Home and AI Tutor show the new name immediately
       updateCachedMe({ name: trimmed });
       setMe((prev) => (prev ? { ...prev, name: trimmed } : prev));
       const existing = getStudentProfile();
@@ -217,250 +271,589 @@ export default function SettingsPage() {
       });
       setIsEditingName(false);
       toast.success('Name updated');
-    } catch { setNameError(true); } finally { setSavingName(false); }
+    } catch {
+      setNameError(true);
+    } finally {
+      setSavingName(false);
+    }
+  }
+
+  function openStudyPlanModal() {
+    setDraftClass(profile?.class_level ?? 'SS3');
+    setDraftTargets(profile?.targets && profile.targets.length > 0 ? profile.targets : ['WAEC', 'School exams']);
+    setShowStudyPlanModal(true);
+  }
+
+  function toggleDraftTarget(target: string) {
+    setDraftTargets((prev) => {
+      if (prev.includes(target)) {
+        return prev.length > 1 ? prev.filter((t) => t !== target) : prev;
+      }
+      return [...prev, target];
+    });
+  }
+
+  function handleSaveStudyPlan() {
+    const existing = getStudentProfile();
+    saveStudentProfile({
+      name: existing?.name || displayName,
+      class_level: draftClass,
+      targets: draftTargets,
+      selectedSubjects: existing?.selectedSubjects ?? DEFAULT_SUBJECTS,
+      completedOnboarding: existing?.completedOnboarding ?? true,
+    });
+    setShowStudyPlanModal(false);
+    toast.success('Study plan updated');
   }
 
   async function handleChangePassword(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPwError(null);
     setPwSuccess(false);
-    if (pwForm.new_password !== pwForm.confirm_password) { setPwError('Passwords do not match'); return; }
+    if (pwForm.new_password !== pwForm.confirm_password) {
+      setPwError('Passwords do not match');
+      return;
+    }
     setPwLoading(true);
     try {
-      await changePassword({ new_password: pwForm.new_password, confirm_password: pwForm.confirm_password });
+      await changePassword({
+        new_password: pwForm.new_password,
+        confirm_password: pwForm.confirm_password,
+      });
       setPwSuccess(true);
       setPwForm({ new_password: '', confirm_password: '' });
+      toast.success('Password updated');
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPwSuccess(false);
+      }, 900);
     } catch (err) {
       setPwError(err instanceof ApiError && err.message ? err.message : 'Failed to change password');
-    } finally { setPwLoading(false); }
+    } finally {
+      setPwLoading(false);
+    }
   }
 
-  if (fetchError && !me && !profile && !nameInput) return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-0 px-6 text-center">
-      <p className="text-sm text-muted">{fetchError}</p>
-      <button
-        type="button"
-        onClick={() => setRetryTick((n) => n + 1)}
-        className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
-      >
-        Try again
-      </button>
-    </div>
-  );
+  function handleInstallClick() {
+    if (canInstall) {
+      void promptInstall();
+    } else {
+      setShowInstallModal(true);
+    }
+  }
 
-  // Show skeleton only if we have no profile data at all to show
+  if (fetchError && !me && !profile && !nameInput) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-0 px-6 text-center">
+        <p className="text-sm text-muted">{fetchError}</p>
+        <button
+          type="button"
+          onClick={() => setRetryTick((n) => n + 1)}
+          className="btn-primary px-5 text-xs"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
   if (!me && !profile && !nameInput) return <SettingsSkeleton />;
 
+  const schoolName = homeData?.school_name ?? '';
   const isIndividual = me ? me.role === 'student_individual' : !schoolName;
+  const displayName = (nameInput || profile?.name || me?.name || me?.username || 'Student').trim();
+  const avatarLetter = displayName.charAt(0).toUpperCase() || 'S';
+
+  const streakDays = homeData?.streak_days ?? 0;
+  const completionPercent = homeData?.completion_percent ?? 0;
+  const activeSubjectsCount = subjects
+    ? filterSubjectsByProfile(subjects, profile).length
+    : (profile?.selectedSubjects?.length ?? 0);
+
+  const studyPlanSummary = profile?.class_level
+    ? `${profile.class_level}${profile.targets?.length ? ` · ${profile.targets.join(', ')}` : ''}`
+    : 'Set your class and exam targets';
 
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
-      <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-[19px] font-bold text-ink">Settings</h1>
-        </div>
-      </header>
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
+        <h1 className="mb-4 text-[24px] font-bold tracking-tight text-ink">Settings</h1>
 
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-nav">
-        <div className="mb-4 overflow-hidden rounded-xl border border-border bg-card">
-          <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-            <span className="text-[13px] font-bold text-ink">Profile</span>
-          </div>
-          <div className="px-4 py-3">
-            <div className="flex items-center gap-2">
+        {/* ── Hero Profile Card ── */}
+        <section className="mb-5 rounded-2xl bg-ink p-4 text-white shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[18px] font-bold text-white">
+              {avatarLetter}
+            </div>
+
+            <div className="min-w-0 flex-1">
               {isEditingName ? (
-                <>
-                  <input value={nameInput} onChange={(e) => setNameInput(e.target.value)}
-                    className="input-field flex-1 py-1.5 text-base font-semibold" autoFocus maxLength={40} />
-                  <button onClick={handleSaveName} disabled={savingName}
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white disabled:opacity-50 active:scale-95 transition-all" aria-label="Save name">
-                    <Check size={16} />
+                <div className="flex items-center gap-1.5">
+                  <input
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    className="w-full min-w-0 rounded-lg border border-white/25 bg-white/10 px-2.5 py-1 text-[15px] font-semibold text-white placeholder:text-white/50 focus:border-brand-light focus:outline-none"
+                    autoFocus
+                    maxLength={40}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveName}
+                    disabled={savingName}
+                    aria-label="Save name"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-brand text-white disabled:opacity-50 active:scale-95"
+                  >
+                    <Check size={15} />
                   </button>
-                  <button onClick={handleCancelEdit}
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-border text-muted active:scale-95 transition-all" aria-label="Cancel">
-                    <X size={16} />
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    aria-label="Cancel"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-white active:scale-95"
+                  >
+                    <X size={15} />
                   </button>
-                </>
+                </div>
               ) : (
                 <>
-                  <span className="flex-1 text-[16px] font-semibold text-ink">{nameInput}</span>
-                  <button onClick={() => setIsEditingName(true)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-bg-2 active:scale-95 transition-all" aria-label="Edit name">
-                    <Pencil size={15} />
-                  </button>
+                  <p className="truncate text-[16px] font-bold leading-tight text-white">
+                    {displayName}
+                  </p>
+                  <p className="mt-0.5 truncate text-[12.5px] text-white/65">
+                    {isIndividual ? 'Independent Learner' : schoolName}
+                    {profile?.class_level ? ` · ${profile.class_level}` : ''}
+                  </p>
                 </>
               )}
+              {nameError && (
+                <p className="mt-1 text-[12px] text-red-300">
+                  Could not save. Check your connection.
+                </p>
+              )}
             </div>
-            {nameError && <p className="mt-1.5 text-[13px] text-danger">Could not save. Check your connection and try again.</p>}
-            <p className="mt-1.5 text-[14px] text-muted">{isIndividual ? 'Independent Learner' : schoolName}</p>
-          </div>
-        </div>
 
-        <div className="mb-4 overflow-hidden rounded-xl border border-border bg-card">
-          <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-            <span className="text-[13px] font-bold text-ink">Install App</span>
-          </div>
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <p className="flex-1 text-[13px] text-muted leading-snug">
-              Add Recall to your home screen for faster, one-tap access.
-            </p>
-            <InstallAppButton variant="solid" className="shrink-0 text-[12px] px-3 py-1.5" />
-          </div>
-        </div>
-
-        <div className="mb-4 overflow-hidden rounded-xl border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border bg-bg-0 px-4 py-2.5">
-            <span className="flex items-center gap-1.5 text-[13px] font-bold text-ink">
-              <Bell size={14} /> Push Notifications
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <p className="flex-1 text-[13px] text-muted leading-snug">
-              Get daily review reminders and streak alerts on your device.
-            </p>
-            <button type="button" onClick={handleToggleNotifications} disabled={notifLoading}
-              className={`shrink-0 min-h-[38px] rounded-lg px-3.5 py-1.5 text-[12.5px] font-bold transition-all active:scale-95 ${notifEnabled ? 'bg-brand-tint text-brand' : 'bg-ink text-white hover:bg-[#1f3029]'} disabled:opacity-60`}>
-              {notifLoading ? 'Updating...' : notifEnabled ? 'Enabled' : 'Enable'}
-            </button>
-          </div>
-          {isIOS && !isInstalled && (
-            <div className="border-t border-border-2 bg-amber-50/70 px-4 py-3">
-              <p className="text-[12px] font-semibold text-amber-900 leading-snug">
-                iPhone Requirement: Apple requires adding Recall to your Home Screen before notifications can be delivered.
-              </p>
+            {!isEditingName && (
               <button
                 type="button"
-                onClick={() => setShowInstallModal(true)}
-                className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] font-bold text-ink underline"
+                onClick={() => setIsEditingName(true)}
+                aria-label="Edit name"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white/85 transition-colors hover:bg-white/20 active:scale-95"
               >
-                View iPhone Home Screen Guide →
+                <Pencil size={15} strokeWidth={2} />
+              </button>
+            )}
+          </div>
+
+          <div className="my-3.5 border-t border-white/10" />
+
+          <div className="grid grid-cols-3 text-center">
+            <div>
+              <p className="text-[18px] font-bold leading-none text-white tabular-nums">
+                {streakDays}
+              </p>
+              <p className="mt-1 text-[11.5px] text-white/60">Day streak</p>
+            </div>
+            <div>
+              <p className="text-[18px] font-bold leading-none text-white tabular-nums">
+                {activeSubjectsCount}
+              </p>
+              <p className="mt-1 text-[11.5px] text-white/60">Subjects</p>
+            </div>
+            <div>
+              <p className="text-[18px] font-bold leading-none text-white tabular-nums">
+                {completionPercent}%
+              </p>
+              <p className="mt-1 text-[11.5px] text-white/60">Overall done</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── STUDY PLAN (Class & targets only — no duplicate subjects card) ── */}
+        <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+          Study plan
+        </p>
+        <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card">
+          <button
+            type="button"
+            onClick={openStudyPlanModal}
+            className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
+          >
+            <div className="min-w-0">
+              <p className="text-[12px] text-muted leading-tight">Class &amp; targets</p>
+              <p className="mt-0.5 truncate text-[14px] font-semibold text-ink">
+                {studyPlanSummary}
+              </p>
+            </div>
+            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+          </button>
+        </div>
+
+        {/* ── PREFERENCES ── */}
+        <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+          Preferences
+        </p>
+        <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
+          <div className="px-4 py-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
+                  <Bell size={17} strokeWidth={1.9} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[14px] font-semibold text-ink leading-tight">Daily reminders</p>
+                  <p className="mt-0.5 text-[12px] text-muted leading-snug">
+                    Review alerts and streak nudges
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleNotifications}
+                disabled={notifLoading}
+                className={`shrink-0 rounded-full px-4 py-1.5 text-[12.5px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
+                  notifEnabled
+                    ? 'bg-brand-tint text-brand'
+                    : 'bg-brand text-white hover:bg-brand-dark'
+                }`}
+              >
+                {notifLoading ? 'Updating...' : notifEnabled ? 'Enabled' : 'Enable'}
               </button>
             </div>
-          )}
-          {notifEnabled && (
-            <div className="border-t border-border-2 bg-bg-0/60 px-4 py-3">
-              <div className="flex items-center justify-between gap-2">
+
+            {isIOS && !isInstalled && (
+              <div className="mt-3 rounded-xl bg-warn-bg px-3 py-2.5">
+                <p className="text-[12px] font-medium text-warn leading-snug">
+                  On iPhone, add Recall to your Home Screen first before notifications can arrive.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowInstallModal(true)}
+                  className="mt-1 text-[12px] font-semibold text-ink underline"
+                >
+                  View iPhone guide →
+                </button>
+              </div>
+            )}
+
+            {notifEnabled && (
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-bg-0 px-3 py-2 border border-border">
                 <span className="text-[12px] text-muted truncate">
-                  Test notification on this device
+                  Verify alerts on this device
                 </span>
                 <button
                   type="button"
                   onClick={() => handleSendTestNotification()}
                   disabled={testNotifLoading}
-                  className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11px] font-bold text-ink hover:bg-bg-1 active:scale-95 transition-all disabled:opacity-50"
+                  className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11.5px] font-semibold text-ink hover:bg-bg-2 active:scale-95 disabled:opacity-50"
                 >
-                  {testNotifLoading ? 'Testing…' : 'Send Test Notification'}
+                  {testNotifLoading ? 'Testing…' : 'Send test'}
                 </button>
               </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleInstallClick}
+            className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
+                <Download size={17} strokeWidth={1.9} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[14px] font-semibold text-ink leading-tight">Install Recall</p>
+                <p className="mt-0.5 text-[12px] text-muted leading-snug">
+                  {isInstalled
+                    ? 'Installed on this device'
+                    : 'One-tap access from your home screen'}
+                </p>
+              </div>
             </div>
-          )}
+            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+          </button>
         </div>
 
+        {/* ── ACCOUNT ── */}
         {isIndividual && (
-          <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
-            <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-              <span className="text-[13px] font-bold text-ink">Change Password</span>
-            </div>
-            <form onSubmit={handleChangePassword} className="px-4 py-3">
-              <div className="mb-3">
-                <label className="mb-1 block text-[13px] font-semibold text-muted">New Password</label>
-                <input type="password" className="input-field" value={pwForm.new_password}
-                  onChange={(e) => setPwForm((f) => ({ ...f, new_password: e.target.value }))} autoComplete="new-password" required />
-              </div>
-              <div className="mb-3">
-                <label className="mb-1 block text-[13px] font-semibold text-muted">Confirm Password</label>
-                <input type="password" className="input-field" value={pwForm.confirm_password}
-                  onChange={(e) => setPwForm((f) => ({ ...f, confirm_password: e.target.value }))} autoComplete="new-password" required />
-              </div>
-              {pwError && <p className="mb-2 text-[14px] text-danger">{pwError}</p>}
-              {pwSuccess && <p className="mb-2 text-[14px] text-success">Password updated successfully.</p>}
-              <button type="submit" disabled={pwLoading} className="btn-primary w-full shadow-brand-sm disabled:opacity-60">
-                {pwLoading ? 'Saving...' : 'Save Password'}
+          <>
+            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Account
+            </p>
+            <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card">
+              <button
+                type="button"
+                onClick={() => {
+                  setPwError(null);
+                  setPwSuccess(false);
+                  setShowPasswordModal(true);
+                }}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
+                    <Lock size={17} strokeWidth={1.9} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold text-ink leading-tight">Change password</p>
+                    <p className="mt-0.5 text-[12px] text-muted">Opens a secure form</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="flex-shrink-0 text-faint" />
               </button>
-            </form>
-          </div>
+            </div>
+          </>
         )}
 
-        {/* Help & Feedback */}
-        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
-          <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-            <span className="text-[13px] font-bold text-ink">Help &amp; Feedback</span>
-          </div>
-          <div className="divide-y divide-border">
-            <a
-              href="mailto:support@definam.ng?subject=Recall%20App%20Feedback"
-              className="flex items-center justify-between px-4 py-3 text-ink hover:bg-bg-1 active:bg-bg-2 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-dim text-brand">
-                  <MessageSquarePlus size={16} strokeWidth={2} />
-                </div>
-                <div>
-                  <p className="text-[14px] font-semibold text-ink leading-tight">Send Feedback</p>
-                  <p className="text-[12px] text-muted">Suggest improvements or report an issue</p>
-                </div>
+        {/* ── HELP ── */}
+        <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+          Help
+        </p>
+        <div className="mb-4 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
+          <a
+            href="mailto:support@definam.ng?subject=Recall%20App%20Feedback"
+            className="flex items-center justify-between gap-3 px-4 py-3.5 text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
+                <MessageSquarePlus size={17} strokeWidth={1.9} />
               </div>
-              <ChevronRight size={16} className="text-muted" />
-            </a>
-
-            <button
-              type="button"
-              onClick={() => setShowInstallModal(true)}
-              className="flex w-full items-center justify-between px-4 py-3 text-left text-ink hover:bg-bg-1 active:bg-bg-2 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-bg-2 text-ink">
-                  <HelpCircle size={16} strokeWidth={2} />
-                </div>
-                <div>
-                  <p className="text-[14px] font-semibold text-ink leading-tight">Install App Guide</p>
-                  <p className="text-[12px] text-muted">How to install Recall on iPhone or Android</p>
-                </div>
+              <div className="min-w-0">
+                <p className="text-[14px] font-semibold text-ink leading-tight">Send feedback</p>
+                <p className="mt-0.5 text-[12px] text-muted">Suggest an improvement</p>
               </div>
-              <ChevronRight size={16} className="text-muted" />
-            </button>
+            </div>
+            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+          </a>
 
-            <a
-              href="https://forms.gle/G93Xc3xbM12p1M327"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between px-4 py-3 text-ink hover:bg-bg-1 active:bg-bg-2 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FEF3E2] text-[#B54708]">
-                  <Bug size={16} strokeWidth={2} />
-                </div>
-                <div>
-                  <p className="text-[14px] font-semibold text-ink leading-tight">Report a Bug</p>
-                  <p className="text-[12px] text-muted">Something not working? Let us know</p>
-                </div>
+          <button
+            type="button"
+            onClick={() => setShowInstallModal(true)}
+            className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
+                <HelpCircle size={17} strokeWidth={1.9} />
               </div>
-              <ChevronRight size={16} className="text-muted" />
-            </a>
+              <div className="min-w-0">
+                <p className="text-[14px] font-semibold text-ink leading-tight">Install guide</p>
+                <p className="mt-0.5 text-[12px] text-muted">iPhone and Android steps</p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+          </button>
 
-            <div className="flex items-center justify-between px-4 py-2.5 text-xs text-muted">
-              <Link href="/terms" className="hover:text-ink hover:underline">
-                Terms of Service
-              </Link>
-              <span>·</span>
-              <Link href="/privacy" className="hover:text-ink hover:underline">
-                Privacy Policy
-              </Link>
+          <a
+            href="https://forms.gle/G93Xc3xbM12p1M327"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between gap-3 px-4 py-3.5 text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-warn-bg text-warn">
+                <Bug size={17} strokeWidth={1.9} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[14px] font-semibold text-ink leading-tight">Report a bug</p>
+                <p className="mt-0.5 text-[12px] text-muted">Something not working? Tell us</p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+          </a>
+        </div>
+
+        {/* Legal links */}
+        <div className="mb-4 flex items-center justify-center gap-4 text-[12.5px] text-muted">
+          <Link href="/terms" className="underline underline-offset-2 hover:text-ink">
+            Terms of Service
+          </Link>
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-ink">
+            Privacy Policy
+          </Link>
+        </div>
+
+        {/* Log out */}
+        <button
+          type="button"
+          onClick={() => setShowLogoutConfirm(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-[15px] font-semibold text-danger transition-colors hover:bg-danger-bg/40 active:scale-[0.99]"
+        >
+          <LogOut size={16} strokeWidth={2} />
+          <span>Log out</span>
+        </button>
+
+        <p className="mt-6 text-center text-[12px] text-faint">v{APP_VERSION}</p>
+      </main>
+
+      {/* ── Study Plan Modal (Class & targets) ── */}
+      {showStudyPlanModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4"
+          onClick={() => setShowStudyPlanModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-card p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[17px] font-bold text-ink">Class &amp; targets</h2>
+              <button
+                type="button"
+                onClick={() => setShowStudyPlanModal(false)}
+                aria-label="Close"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-bg-2"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="mb-2 text-[12.5px] font-semibold text-muted">Class level</p>
+              <div className="grid grid-cols-2 gap-2">
+                {CLASS_LEVELS.map((lvl) => (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setDraftClass(lvl)}
+                    className={`rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition-all ${
+                      draftClass === lvl
+                        ? 'border-ink bg-ink text-white'
+                        : 'border-border bg-bg-0 text-ink hover:bg-bg-2'
+                    }`}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <p className="mb-2 text-[12.5px] font-semibold text-muted">Exam targets</p>
+              <div className="flex flex-wrap gap-2">
+                {TARGET_OPTIONS.map((t) => {
+                  const selected = draftTargets.includes(t);
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => toggleDraftTarget(t)}
+                      className={`rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-all ${
+                        selected
+                          ? 'border-brand bg-brand-tint text-brand'
+                          : 'border-border bg-bg-0 text-muted hover:text-ink'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowStudyPlanModal(false)}
+                className="btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveStudyPlan}
+                className="btn-primary flex-1"
+              >
+                Save changes
+              </button>
             </div>
           </div>
         </div>
+      )}
 
-        <button type="button" onClick={() => setShowLogoutConfirm(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border-2 bg-card py-3.5 text-[16px] font-bold text-danger active:bg-bg-1 transition-colors">
-          <LogOut size={16} strokeWidth={2} /> Log Out
-        </button>
+      {/* ── Change Password Modal ── */}
+      {showPasswordModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4"
+          onClick={() => setShowPasswordModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-card p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[17px] font-bold text-ink">Change password</h2>
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(false)}
+                aria-label="Close"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-bg-2"
+              >
+                <X size={16} />
+              </button>
+            </div>
 
-        <p className="mt-8 text-center text-[13px] text-muted">v{APP_VERSION}</p>
-      </main>
+            <form onSubmit={handleChangePassword}>
+              <div className="mb-3">
+                <label className="mb-1 block text-[13px] font-semibold text-muted">
+                  New password
+                </label>
+                <input
+                  type="password"
+                  className="input-field"
+                  value={pwForm.new_password}
+                  onChange={(e) => setPwForm((f) => ({ ...f, new_password: e.target.value }))}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="mb-1 block text-[13px] font-semibold text-muted">
+                  Confirm password
+                </label>
+                <input
+                  type="password"
+                  className="input-field"
+                  value={pwForm.confirm_password}
+                  onChange={(e) => setPwForm((f) => ({ ...f, confirm_password: e.target.value }))}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+              {pwError && <p className="mb-3 text-[13.5px] text-danger">{pwError}</p>}
+              {pwSuccess && (
+                <p className="mb-3 text-[13.5px] text-success">Password updated successfully.</p>
+              )}
+              <div className="flex gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={pwLoading}
+                  className="btn-primary flex-1 disabled:opacity-60"
+                >
+                  {pwLoading ? 'Saving...' : 'Save password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
+      {/* ── Log Out Confirm Modal ── */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60" onClick={() => setShowLogoutConfirm(false)}>
-          <div className="mx-4 w-full max-w-md animate-slide-up rounded-3xl bg-bg-0 px-6 pb-6 pt-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div
+            className="mx-4 w-full max-w-md animate-slide-up rounded-3xl bg-bg-0 px-6 pb-6 pt-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
             <p className="mb-2 text-lg font-bold text-ink">Log out?</p>
             {!isIndividual && (
               <p className="mb-5 text-sm text-muted leading-snug">
@@ -468,20 +861,27 @@ export default function SettingsPage() {
               </p>
             )}
             <div className={`flex gap-3 ${isIndividual ? 'mt-5' : ''}`}>
-              <button type="button" onClick={() => setShowLogoutConfirm(false)} className="btn-secondary flex-1">Cancel</button>
-              <button type="button" onClick={handleLogout} disabled={logoutLoading}
-                className="flex-1 rounded-xl bg-danger py-3.5 text-base font-bold text-white disabled:opacity-60 active:opacity-90 transition-opacity">
-                {logoutLoading ? 'Signing out...' : 'Log Out'}
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={logoutLoading}
+                className="flex-1 rounded-xl bg-danger py-3.5 text-base font-bold text-white disabled:opacity-60 active:opacity-90 transition-opacity"
+              >
+                {logoutLoading ? 'Signing out...' : 'Log out'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <AppInstallModal
-        isOpen={showInstallModal}
-        onClose={() => setShowInstallModal(false)}
-      />
+      <AppInstallModal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} />
     </div>
   );
 }

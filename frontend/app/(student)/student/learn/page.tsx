@@ -30,7 +30,7 @@ function BrowseSkeleton() {
         <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex items-center gap-3.5 px-4 py-3.5">
-              <div className="h-10 w-10 flex-shrink-0 animate-pulse rounded-lg bg-bg-2" />
+              <div className="h-7 w-7 mx-1 flex-shrink-0 animate-pulse rounded-md bg-bg-2" />
               <div className="flex-1 space-y-2">
                 <div className="h-3.5 w-32 animate-pulse rounded bg-bg-3" />
                 <div className="h-2.5 w-20 animate-pulse rounded bg-bg-2" />
