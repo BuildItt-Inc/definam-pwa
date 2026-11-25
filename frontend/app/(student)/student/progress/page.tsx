@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Flame } from 'lucide-react';
 import { getProgressData, getCachedProgressData } from '@/lib/api/topics';
+import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import type { ProgressData } from '@/types/topics';
 import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentProfile';
 
@@ -79,14 +80,14 @@ function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
                   {item.subject}
                 </span>
                 <span
-                  className={`text-[15px] font-bold ${isGood ? 'text-ink' : 'text-ink-2'}`}
+                  className={`text-[15px] font-bold ${isGood ? 'text-brand' : 'text-ink-2'}`}
                 >
                   {pctText}
                 </span>
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-bg-2">
                 <div
-                  className={`h-full rounded-full ${isGood ? 'bg-ink' : 'bg-ink-2'}`}
+                  className={`h-full rounded-full transition-all duration-300 ${isGood ? 'bg-brand' : 'bg-ink-2'}`}
                   style={{ width: pctText }}
                 />
               </div>
@@ -291,11 +292,14 @@ export default function ProgressPage() {
 
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
-      <header className="border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <h1 className="text-[17px] font-bold text-ink">My Progress</h1>
+      <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+          <h1 className="text-[19px] font-bold text-ink">My Progress</h1>
+          <AskZikoraButton />
+        </div>
       </header>
 
-      <main className="flex-1 px-4 pt-4 pb-nav">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-nav">
         <div className="mb-4 grid grid-cols-2 gap-3">
           <StatCard
             variant="streak"

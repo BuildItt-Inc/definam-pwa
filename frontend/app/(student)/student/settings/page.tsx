@@ -21,6 +21,7 @@ import {
 import { toast } from '@/lib/toast';
 import type { UserMe } from '@/types/auth';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
+import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { AppInstallModal } from '@/components/ui/AppInstallModal';
 
@@ -255,12 +256,15 @@ export default function SettingsPage() {
 
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
-      <header className="border-b border-border px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <h1 className="text-[17px] font-bold text-ink">Settings</h1>
+      <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+          <h1 className="text-[19px] font-bold text-ink">Settings</h1>
+          <AskZikoraButton />
+        </div>
       </header>
 
-      <main className="flex-1 px-4 pt-4 pb-nav">
-        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-nav">
+        <div className="mb-4 overflow-hidden rounded-xl border border-border bg-card">
           <div className="border-b border-border bg-bg-0 px-4 py-2.5">
             <span className="text-[13px] font-bold text-ink">Profile</span>
           </div>
@@ -271,11 +275,11 @@ export default function SettingsPage() {
                   <input value={nameInput} onChange={(e) => setNameInput(e.target.value)}
                     className="input-field flex-1 py-1.5 text-base font-semibold" autoFocus maxLength={40} />
                   <button onClick={handleSaveName} disabled={savingName}
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-brand text-white disabled:opacity-50" aria-label="Save name">
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white disabled:opacity-50 active:scale-95 transition-all" aria-label="Save name">
                     <Check size={16} />
                   </button>
                   <button onClick={handleCancelEdit}
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-border-2 text-muted" aria-label="Cancel">
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-border text-muted active:scale-95 transition-all" aria-label="Cancel">
                     <X size={16} />
                   </button>
                 </>
@@ -283,7 +287,7 @@ export default function SettingsPage() {
                 <>
                   <span className="flex-1 text-[16px] font-semibold text-ink">{nameInput}</span>
                   <button onClick={() => setIsEditingName(true)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted active:bg-bg-2 transition-colors" aria-label="Edit name">
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted hover:bg-bg-2 active:scale-95 transition-all" aria-label="Edit name">
                     <Pencil size={15} />
                   </button>
                 </>
@@ -294,61 +298,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Curriculum & Subjects */}
-        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
-          <div className="flex items-center justify-between border-b border-border bg-bg-0 px-4 py-2.5">
-            <span className="text-[13px] font-bold text-ink">My Curriculum & Subjects</span>
-            <Link
-              href="/student/subjects"
-              className="text-xs font-bold text-brand hover:underline"
-            >
-              Manage Subjects
-            </Link>
-          </div>
-          <div className="px-4 py-3">
-            {profile ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-muted">Class & Targets</span>
-                  <span className="font-bold text-ink">
-                    {profile.class_level || 'SS3'}{profile.targets?.length ? ` · ${profile.targets.join(', ')}` : ''}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-muted mb-2">
-                    Active Subjects ({profile.selectedSubjects?.length || 0})
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {profile.selectedSubjects && profile.selectedSubjects.length > 0 ? (
-                      profile.selectedSubjects.map((s: string) => (
-                        <span
-                          key={s}
-                          className="rounded-lg bg-bg-2 border border-border px-2.5 py-1 text-xs font-semibold text-ink"
-                        >
-                          {s}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-muted">All subjects active</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted">Custom curriculum not set</span>
-                <Link
-                  href="/student/subjects"
-                  className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white shadow-2xs"
-                >
-                  Set Up Curriculum
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
+        <div className="mb-4 overflow-hidden rounded-xl border border-border bg-card">
           <div className="border-b border-border bg-bg-0 px-4 py-2.5">
             <span className="text-[13px] font-bold text-ink">Install App</span>
           </div>
@@ -360,7 +310,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="mb-4 overflow-hidden rounded-xl border border-border-2 bg-card shadow-sm">
+        <div className="mb-4 overflow-hidden rounded-xl border border-border bg-card">
           <div className="flex items-center justify-between border-b border-border bg-bg-0 px-4 py-2.5">
             <span className="flex items-center gap-1.5 text-[13px] font-bold text-ink">
               <Bell size={14} /> Push Notifications
@@ -371,7 +321,7 @@ export default function SettingsPage() {
               Get daily review reminders and streak alerts on your device.
             </p>
             <button type="button" onClick={handleToggleNotifications} disabled={notifLoading}
-              className={`shrink-0 rounded-xl px-3 py-1.5 text-[12px] font-bold transition-colors ${notifEnabled ? 'bg-brand-tint text-brand active:bg-brand-tint-b' : 'bg-brand text-white active:bg-brand-dark'} disabled:opacity-60`}>
+              className={`shrink-0 min-h-[38px] rounded-lg px-3.5 py-1.5 text-[12.5px] font-bold transition-all active:scale-95 ${notifEnabled ? 'bg-brand-tint text-brand' : 'bg-ink text-white hover:bg-[#1f3029]'} disabled:opacity-60`}>
               {notifLoading ? 'Updating...' : notifEnabled ? 'Enabled' : 'Enable'}
             </button>
           </div>

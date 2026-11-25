@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useParams, usePathname } from 'next/navigation';
-import { Bot, MessageCircle, ArrowUp, Trash2, X, ChevronDown } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { Bot, Sparkles, ArrowUp, Trash2, X, ChevronDown } from 'lucide-react';
 import { useFloatingChat } from './FloatingChatContext';
 import {
   getChatHistory,
@@ -19,48 +19,55 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { toast } from '@/lib/toast';
 
 /**
- * Global floating chat bubble + panel. Rendered once in the (student)
- * layout so it persists across navigation. Button always visible; panel
- * content opens immediately with background history sync.
+ * Labelled header button for launching Zikora (replaces the old floating circle).
+ * Matches the Recall design system: neutral white/bordered chip with green sparkle.
+ */
+export function AskZikoraButton({
+  topicId,
+  className = '',
+}: {
+  topicId?: string;
+  className?: string;
+}) {
+  const { openChat } = useFloatingChat();
+  const params = useParams<{ topicId?: string }>();
+  const resolvedTopicId = topicId ?? params?.topicId;
+
+  return (
+    <button
+      type="button"
+      onClick={() => openChat(resolvedTopicId ? { topicId: resolvedTopicId } : undefined)}
+      className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[13px] font-semibold text-ink shadow-2xs transition-all hover:bg-bg-2 active:scale-[0.97] ${className}`}
+    >
+      <Sparkles size={14} strokeWidth={2.2} className="text-brand flex-shrink-0" />
+      <span>Ask Zikora</span>
+    </button>
+  );
+}
+
+/**
+ * Global Zikora drawer (mobile bottom sheet / desktop right side panel).
+ * Triggered by labelled header buttons (`AskZikoraButton`) or inline hooks
+ * ("Ask AI why this is wrong"), never a floating circle.
  */
 export function FloatingChatWidget() {
   const {
     isOpen,
     topicId,
     pendingSeedMessage,
-    openChat,
     closeChat,
     consumeSeedMessage,
-    isSuppressed,
   } = useFloatingChat();
-  const params = useParams<{ topicId?: string }>();
-  const currentPageTopicId = params?.topicId;
-  const pathname = usePathname();
 
-  const isOnChatPage = pathname === '/student/chat';
+  if (!isOpen) return null;
 
   return (
-    <>
-      {!isOpen && !isOnChatPage && !isSuppressed && (
-        <button
-          type="button"
-          onClick={() => openChat(currentPageTopicId ? { topicId: currentPageTopicId } : undefined)}
-          aria-label="Open Zikora AI tutor"
-          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6 hover:bg-ink/90"
-        >
-          <MessageCircle size={24} strokeWidth={2} />
-        </button>
-      )}
-
-      {isOpen && (
-        <FloatingChatPanel
-          topicId={topicId}
-          seedMessage={pendingSeedMessage}
-          onSeedConsumed={consumeSeedMessage}
-          onClose={closeChat}
-        />
-      )}
-    </>
+    <FloatingChatPanel
+      topicId={topicId}
+      seedMessage={pendingSeedMessage}
+      onSeedConsumed={consumeSeedMessage}
+      onClose={closeChat}
+    />
   );
 }
 
@@ -272,24 +279,21 @@ function FloatingChatPanel({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 sm:items-end sm:justify-end sm:bg-transparent sm:p-6 overflow-hidden overscroll-none"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/35 backdrop-blur-[1px] md:items-stretch md:justify-end overflow-hidden overscroll-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="page-enter relative flex h-[min(85dvh,640px)] max-h-[100dvh] w-full max-w-full sm:max-w-md flex-col overflow-hidden rounded-t-2xl border-0 bg-card shadow-2xl sm:h-[560px] sm:rounded-2xl">
+      <div className="page-enter relative flex h-[min(85dvh,640px)] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl border-t border-border bg-bg-0 shadow-2xl md:h-full md:w-[420px] md:rounded-none md:border-t-0 md:border-l">
         {/* Header */}
-        <header
-          className="flex items-center gap-3 px-4 py-3.5"
-          style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 160%)' }}
-        >
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
-            <Bot size={18} strokeWidth={1.5} className="text-white" />
+        <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3.5">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-tint text-brand">
+            <Bot size={18} strokeWidth={1.8} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-[15px] text-white">Zikora</p>
-            <p className="truncate text-[12px] text-white/50">
-              {topicId ? 'Chatting about this topic' : 'General study help'}
+            <p className="font-bold text-[15px] text-ink leading-tight">Zikora</p>
+            <p className="truncate text-[12px] text-muted">
+              {topicId ? 'Helping with this topic' : 'Your AI study tutor'}
             </p>
           </div>
           {messages.length > 0 &&
@@ -298,7 +302,7 @@ function FloatingChatPanel({
                 type="button"
                 onClick={handleClearClick}
                 disabled={isClearing}
-                className="flex-shrink-0 whitespace-nowrap rounded-md bg-white/15 px-2 py-1 text-[11px] font-bold text-red-200 transition-colors hover:bg-white/25 disabled:opacity-50"
+                className="flex-shrink-0 whitespace-nowrap rounded-lg bg-danger-bg px-2.5 py-1.5 text-[11px] font-bold text-danger transition-colors hover:bg-danger/15 disabled:opacity-50"
               >
                 Clear chat?
               </button>
@@ -308,16 +312,16 @@ function FloatingChatPanel({
                 onClick={handleClearClick}
                 aria-label="Clear conversation"
                 title="Clear conversation"
-                className="flex-shrink-0 rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg-2 hover:text-ink"
               >
-                <Trash2 size={16} strokeWidth={1.5} />
+                <Trash2 size={16} strokeWidth={1.8} />
               </button>
             ))}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close chat"
-            className="flex-shrink-0 rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg-2 hover:text-ink"
           >
             <X size={18} strokeWidth={2} />
           </button>
@@ -420,7 +424,7 @@ function FloatingChatPanel({
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
               aria-label="Send message"
-              className="flex h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand text-white transition-colors hover:bg-brand-dark disabled:bg-bg-2 disabled:text-faint active:scale-95"
+              className="flex h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white transition-colors hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint active:scale-95"
             >
               <ArrowUp size={16} strokeWidth={2.5} />
             </button>

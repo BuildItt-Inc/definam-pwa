@@ -316,12 +316,12 @@ export default function ManageSubjectsPage() {
                   {/* Right: Toggle Button */}
                   <div className="flex-shrink-0">
                     {isSelected ? (
-                      <span className="inline-flex items-center gap-1 rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white shadow-2xs group-hover:bg-neutral-800 transition-colors">
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-brand-tint px-3 py-1.5 text-xs font-bold text-brand transition-colors">
                         <Check size={13} strokeWidth={3} />
                         <span>Added</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-xl border border-border bg-bg-1 px-3 py-1.5 text-xs font-semibold text-muted group-hover:border-ink/30 group-hover:text-ink transition-colors">
+                      <span className="inline-flex items-center gap-1 rounded-lg border border-border bg-bg-1 px-3 py-1.5 text-xs font-semibold text-muted group-hover:border-ink/30 group-hover:text-ink transition-colors">
                         <Plus size={13} strokeWidth={2.2} />
                         <span>Add</span>
                       </span>
@@ -335,8 +335,8 @@ export default function ManageSubjectsPage() {
       </main>
 
       {/* ── Fixed Floating Bottom Bar ── */}
-      <div className="fixed bottom-[60px] left-0 right-0 z-30 px-4 pointer-events-none">
-        <div className="mx-auto max-w-lg pointer-events-auto flex items-center justify-between rounded-2xl border border-ink/10 bg-white/95 backdrop-blur-md p-3 shadow-lg">
+      <div className="fixed bottom-[calc(62px+env(safe-area-inset-bottom,0px))] left-0 right-0 z-30 px-4 pointer-events-none">
+        <div className="mx-auto max-w-lg pointer-events-auto flex items-center justify-between rounded-xl border border-border bg-card/95 backdrop-blur-md p-3 shadow-lg">
           <div className="min-w-0">
             <p className="text-xs font-bold text-ink truncate">
               {activeCount} of {ALL_CURRICULUM_SUBJECTS.length} subjects active

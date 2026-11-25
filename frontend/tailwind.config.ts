@@ -88,8 +88,8 @@ const config: Config = {
         sm:  "var(--shadow-sm)",
         md:  "var(--shadow-md)",
         lg:  "var(--shadow-lg)",
-        "brand-sm": "0 2px 8px rgba(22,163,74,0.20)",
-        "brand-md": "0 4px 16px rgba(22,163,74,0.25)",
+        "brand-sm": "0 2px 8px rgba(20,32,27,0.12)",
+        "brand-md": "0 4px 16px rgba(20,32,27,0.16)",
       },
 
       keyframes: {

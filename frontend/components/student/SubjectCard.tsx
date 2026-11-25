@@ -13,43 +13,40 @@ interface SubjectCardProps {
 
 export function SubjectCard({ subject, href, onClick }: SubjectCardProps) {
   const Icon = subjectIcon(subject.name);
-  const mastery = subject.mastery_percent;
+  const mastery = subject.mastery_percent ?? 0;
+  const started = subject.mastery_percent !== null && subject.mastery_percent > 0;
 
   const inner = (
-    <div className="flex w-full items-center gap-3 border-b border-border bg-card px-4 py-4 text-left transition-colors active:bg-bg-2">
-      {/* Icon */}
-      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-dim border border-brand/20">
-        <Icon size={16} strokeWidth={1.8} className="text-brand" />
+    <div className="flex min-h-[64px] w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2">
+      {/* Neutral icon tile */}
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-bg-2 text-ink-2">
+        <Icon size={18} strokeWidth={1.8} />
       </span>
 
-      {/* Name and meta */}
+      {/* Name, dynamic meta, and progress bar */}
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold text-ink">
-          {subject.name}
+        <span className="flex items-center justify-between gap-2">
+          <span className="truncate text-[15px] font-bold text-ink">
+            {subject.name}
+          </span>
+          {started && (
+            <span className="flex-shrink-0 text-xs font-semibold text-brand">
+              {mastery}%
+            </span>
+          )}
         </span>
-        <span className="mt-0.5 block text-[13px] text-muted">
-          {subject.chapter_count} chapters
+        <span className="mt-0.5 block text-[12.5px] text-muted">
+          {subject.chapter_count} {subject.chapter_count === 1 ? 'chapter' : 'chapters'}
+        </span>
+        <span className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-bg-2">
+          <span
+            className="block h-full rounded-full bg-brand transition-all duration-300"
+            style={{ width: `${mastery}%` }}
+          />
         </span>
       </span>
 
-      {/* Mastery */}
-      {mastery !== null && mastery > 0 ? (
-        <span
-          className={`flex-shrink-0 rounded-md px-2 py-0.5 text-[12px] font-semibold ${
-            mastery >= 60
-              ? 'bg-brand-dim text-brand'
-              : 'bg-bg-2 text-ink-2'
-          }`}
-        >
-          {mastery}%
-        </span>
-      ) : (
-        <span className="flex-shrink-0 rounded-md bg-bg-2 px-2 py-0.5 text-[12px] font-medium text-faint">
-          New
-        </span>
-      )}
-
-      <ChevronRight size={15} strokeWidth={1.5} className="flex-shrink-0 text-faint ml-1" />
+      <ChevronRight size={16} strokeWidth={1.8} className="flex-shrink-0 text-faint" />
     </div>
   );
 
