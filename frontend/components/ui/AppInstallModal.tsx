@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Share, Plus, ChevronRight, MoreVertical, Download, ExternalLink } from 'lucide-react';
 
 interface AppInstallModalProps {
@@ -10,6 +11,11 @@ interface AppInstallModalProps {
 
 export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
   const [platform, setPlatform] = useState<'ios' | 'samsung' | 'chrome' | 'inapp' | 'generic'>('generic');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -33,16 +39,16 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
       {/* Backdrop click area */}
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Modal Card */}
       <div
-        className="relative z-10 w-full max-w-sm rounded-[24px] bg-white p-6 shadow-2xl animate-slide-up sm:max-w-md border border-border-2"
+        className="relative z-10 w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[24px] bg-white p-6 shadow-2xl animate-slide-up sm:max-w-md border border-border-2"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -254,6 +260,7 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
           <ChevronRight size={16} strokeWidth={2.5} />
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

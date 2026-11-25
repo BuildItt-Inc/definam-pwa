@@ -58,48 +58,72 @@ export function clearStoredFcmToken(): void {
   localStorage.removeItem(FCM_TOKEN_STORAGE_KEY);
 }
 
+async function waitForActiveServiceWorker(
+  reg: ServiceWorkerRegistration,
+  timeoutMs: number = 5000,
+): Promise<ServiceWorkerRegistration> {
+  if (reg.active) return reg;
+
+  const worker = reg.installing || reg.waiting;
+  if (!worker) return reg;
+
+  await new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, timeoutMs);
+    const onStateChange = () => {
+      if (worker.state === 'activated' || worker.state === 'redundant') {
+        clearTimeout(timer);
+        worker.removeEventListener('statechange', onStateChange);
+        resolve();
+      }
+    };
+    worker.addEventListener('statechange', onStateChange);
+  });
+
+  return reg;
+}
+
+async function resolveMessagingServiceWorker(): Promise<ServiceWorkerRegistration> {
+  let reg = await navigator.serviceWorker.getRegistration('/');
+
+  if (!reg) {
+    try {
+      reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    } catch {
+      // Dev builds or environments without Workbox sw.js fall back to standalone FCM SW
+      reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+    }
+  }
+
+  return waitForActiveServiceWorker(reg, 5000);
+}
+
 export async function requestNotificationPermissionAndGetToken(): Promise<string | null> {
   if (typeof window === 'undefined' || !('Notification' in window)) {
-    return null;
+    throw new Error('Notifications are not supported in this browser.');
+  }
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    throw new Error('Push notifications require a supported browser or Home Screen app.');
   }
 
   // Must be called directly within user gesture (critical for iOS)
   const permission = await Notification.requestPermission();
+  if (permission === 'denied') {
+    throw new Error('Notifications are blocked by your browser. Enable permissions in site settings.');
+  }
   if (permission !== 'granted') {
     return null;
   }
 
   const msg = getFirebaseMessaging();
-  if (!msg) return null;
+  if (!msg) {
+    throw new Error('Could not initialize push notifications on this device.');
+  }
+
+  const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || DEFAULT_VAPID_KEY;
+  const serviceWorkerRegistration = await resolveMessagingServiceWorker();
 
   try {
-    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || DEFAULT_VAPID_KEY;
-    let serviceWorkerRegistration: ServiceWorkerRegistration | undefined;
-
-    if ('serviceWorker' in navigator) {
-      // Use navigator.serviceWorker.ready to get the active controlling SW (sw.js).
-      // sw.js already importScripts('/firebase-messaging-sw.js') so Firebase messaging
-      // is active within that single SW scope.
-      //
-      // IMPORTANT: Do NOT fall back to registering /firebase-messaging-sw.js as a
-      // separate SW — that would create two independent SWs both receiving the same
-      // push event, causing duplicate OS notifications.
-      try {
-        serviceWorkerRegistration = await navigator.serviceWorker.ready;
-      } catch (e) {
-        console.warn('[firebase.ts] SW ready check failed:', e);
-      }
-
-      if (!serviceWorkerRegistration) {
-        // Only register sw.js (Workbox PWA SW that includes firebase-messaging-sw.js).
-        try {
-          serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        } catch (e) {
-          console.warn('[firebase.ts] SW registration failed:', e);
-        }
-      }
-    }
-
     const token = await getToken(msg, {
       vapidKey,
       serviceWorkerRegistration,
@@ -109,10 +133,17 @@ export async function requestNotificationPermissionAndGetToken(): Promise<string
       setStoredFcmToken(token);
       return token;
     }
+    throw new Error('Push service did not return a device token. Please try again.');
   } catch (err) {
     console.error('Failed to get FCM token:', err);
+    const rawMsg = err instanceof Error ? err.message : '';
+    if (/push service error|AbortError/i.test(rawMsg)) {
+      throw new Error(
+        'Push service blocked by browser or privacy shield. Try disabling ad/tracker blocking for this site.',
+      );
+    }
+    throw err instanceof Error ? err : new Error('Could not register device for notifications.');
   }
-  return null;
 }
 
 export function onForegroundMessage(
