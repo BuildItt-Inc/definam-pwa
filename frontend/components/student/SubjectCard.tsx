@@ -17,10 +17,10 @@ export function SubjectCard({ subject, href, onClick }: SubjectCardProps) {
   const started = subject.mastery_percent !== null && subject.mastery_percent > 0;
 
   const inner = (
-    <div className="flex min-h-[64px] w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2">
-      {/* Neutral icon tile */}
-      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-bg-2 text-ink-2">
-        <Icon size={18} strokeWidth={1.8} />
+    <div className="flex min-h-[68px] w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2">
+      {/* Clean borderless subject icon */}
+      <span className="flex w-9 flex-shrink-0 items-center justify-center text-ink-2">
+        <Icon size={26} strokeWidth={1.6} />
       </span>
 
       {/* Name, dynamic meta, and progress bar */}

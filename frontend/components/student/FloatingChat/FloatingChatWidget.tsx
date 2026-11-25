@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import {
-  Bot,
   MessageCircle,
   Sparkles,
   ArrowUp,
@@ -13,6 +12,7 @@ import {
   Maximize2,
   Minimize2,
 } from 'lucide-react';
+import { ZikoraLogo } from '@/components/student/ZikoraLogo';
 import { useFloatingChat } from './FloatingChatContext';
 import {
   getChatHistory,
@@ -304,18 +304,15 @@ function FloatingChatPanel({
       >
         {/* ── Header ── */}
         <header
-          className={`flex shrink-0 items-center gap-3 border-b border-border bg-card px-4 py-3 ${
+          className={`flex shrink-0 items-center gap-2.5 border-b border-border bg-card px-4 py-3 ${
             isFullscreen ? 'pt-[calc(env(safe-area-inset-top,0px)+12px)]' : ''
           }`}
         >
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
-            <Bot size={18} strokeWidth={1.8} />
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+            <ZikoraLogo size={26} className="text-ink" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-bold text-[15px] text-ink leading-tight">Zikora</p>
-            <p className="truncate text-[12px] text-muted">
-              {topicId ? 'Helping with this topic' : 'Your AI study tutor'}
-            </p>
+            <p className="font-bold text-[15.5px] text-ink leading-tight tracking-tight">Zikora</p>
           </div>
 
           {/* Clear button */}
@@ -383,12 +380,10 @@ function FloatingChatPanel({
           >
             {messages.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center my-auto py-10 px-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-tint border border-brand/20">
-                  <Bot size={24} strokeWidth={1.8} className="text-brand" />
-                </div>
+                <ZikoraLogo size={40} className="text-ink" />
                 <div>
-                  <p className="text-[15px] font-bold text-ink">Hi, I&apos;m Zikora</p>
-                  <p className="text-[13px] text-muted mt-1 max-w-[260px] leading-relaxed">
+                  <p className="text-[16px] font-bold text-ink tracking-tight">Hi, I&apos;m Zikora</p>
+                  <p className="text-[13.5px] text-muted mt-1 max-w-[260px] leading-relaxed">
                     {topicId
                       ? 'Ask me anything about this topic — explanations, definitions, or exam questions.'
                       : "Ask me anything — study tips, tricky concepts, or questions you're stuck on."}
@@ -419,7 +414,7 @@ function FloatingChatPanel({
             type="button"
             onClick={jumpToBottom}
             aria-label="Jump to bottom"
-            className="absolute bottom-[74px] left-1/2 z-20 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-ink shadow-md transition-all hover:bg-bg-2 active:scale-95"
+            className="absolute bottom-[94px] left-1/2 z-20 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-ink shadow-md transition-all hover:bg-bg-2 active:scale-95"
           >
             <ArrowDown size={16} strokeWidth={2.2} />
           </button>
@@ -428,12 +423,10 @@ function FloatingChatPanel({
         {/* ── Input ── */}
         <form
           onSubmit={handleSubmit}
-          className={`shrink-0 border-t border-border bg-card px-3 py-2.5 sm:px-4 sm:py-3 w-full box-border ${
-            isFullscreen ? 'pb-[calc(env(safe-area-inset-bottom,0px)+12px)]' : ''
-          }`}
+          className="shrink-0 border-t border-border bg-card px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] md:pb-5 w-full box-border"
         >
           <div
-            className={`flex items-center gap-2 rounded-xl border border-border-2 bg-bg-0 px-3 py-2 focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-ink/5 transition-all w-full max-w-full box-border ${
+            className={`flex items-center gap-2.5 rounded-2xl border border-border-2 bg-bg-0 px-3.5 py-2.5 min-h-[48px] focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-ink/5 transition-all w-full max-w-full box-border ${
               isFullscreen ? 'mx-auto max-w-3xl' : ''
             }`}
           >
@@ -443,7 +436,7 @@ function FloatingChatPanel({
               onChange={(e) => setInputMessage(e.target.value)}
               disabled={isLoading}
               placeholder="Ask Zikora"
-              className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
+              className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14.5px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
             />
             <button
               type="submit"

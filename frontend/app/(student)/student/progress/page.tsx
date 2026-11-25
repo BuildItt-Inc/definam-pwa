@@ -1,12 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Flame } from 'lucide-react';
-import { getProgressData, getCachedProgressData } from '@/lib/api/topics';
-import type { ProgressData } from '@/types/topics';
-import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentProfile';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  getProgressData,
+  getCachedProgressData,
+  getSubjects,
+  getCachedSubjects,
+} from '@/lib/api/topics';
+import type { ProgressData, Subject } from '@/types/topics';
+import {
+  getStudentProfile,
+  filterSubjectsByProfile,
+  normalizeSubjectName,
+  type StudentProfile,
+} from '@/lib/utils/studentProfile';
 
-const HEATMAP_COLORS = ['#EEEEEE', '#9FE1CB', '#5DCAA5', '#1B6B4A', '#085041'] as const;
+const HEATMAP_COLORS = ['#E4E7E3', '#BCE3CA', '#5DB380', '#1E7A46', '#14532D'] as const;
 
 function heatmapColor(level: number): string {
   return HEATMAP_COLORS[Math.min(Math.max(Math.round(level), 0), 4)];
@@ -14,237 +23,315 @@ function heatmapColor(level: number): string {
 
 function ProgressSkeleton() {
   return (
-    <div className="min-h-screen bg-bg-0">
-      <div className="border-b border-border bg-bg-0 px-4 py-3.5">
-        <div className="h-5 w-28 animate-pulse rounded bg-border-2" />
-      </div>
-
-      <div className="px-4 py-4 pb-24">
+    <div className="page-with-nav bg-bg-0">
+      <div className="mx-auto w-full max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
+        <div className="mb-4 h-7 w-32 animate-pulse rounded bg-bg-3" />
         <div className="mb-4 grid grid-cols-2 gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-bg-2" />
+            <div key={i} className="h-20 animate-pulse rounded-2xl bg-bg-2" />
           ))}
         </div>
-        <div className="mb-4 h-36 animate-pulse rounded-xl bg-bg-2" />
-        <div className="mb-4 h-28 animate-pulse rounded-xl bg-bg-2" />
-        <div className="h-32 animate-pulse rounded-xl bg-bg-2" />
+        <div className="mb-4 h-48 animate-pulse rounded-2xl bg-bg-2" />
+        <div className="mb-4 h-36 animate-pulse rounded-2xl bg-bg-2" />
+        <div className="h-32 animate-pulse rounded-2xl bg-bg-2" />
       </div>
     </div>
   );
 }
 
-interface StatCardProps {
+function StatCard({
+  variant,
+  value,
+  label,
+}: {
   variant: 'streak' | 'plain';
   value: string;
   label: string;
-}
-
-function StatCard({ variant, value, label }: StatCardProps) {
+}) {
   if (variant === 'streak') {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl bg-ink px-3 py-4 shadow-sm">
-        <div className="mb-1 flex items-center gap-1.5">
-          <Flame size={22} strokeWidth={2} className="text-brand-light" />
-          <span className="text-[28px] font-black leading-none text-white">
-            {value}
-          </span>
-        </div>
-        <span className="text-[13px] font-semibold text-white/70">{label}</span>
+      <div className="flex flex-col items-center justify-center rounded-2xl bg-ink px-4 py-4 text-center shadow-xs">
+        <span className="text-[26px] font-bold leading-none text-white tabular-nums">
+          {value}
+        </span>
+        <span className="mt-1.5 text-[12px] font-medium text-white/70">{label}</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card px-3 py-4">
-      <span className="font-bold text-[28px] leading-none text-ink">{value}</span>
-      <span className="mt-1 text-[13px] text-muted">{label}</span>
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card px-4 py-4 text-center">
+      <span className="text-[26px] font-bold leading-none text-ink tabular-nums">
+        {value}
+      </span>
+      <span className="mt-1.5 text-[12px] font-medium text-muted">{label}</span>
     </div>
   );
 }
 
-function MasterySection({ data }: { data: ProgressData['subject_mastery'] }) {
+function MasterySection({
+  items,
+}: {
+  items: Array<{ subject: string; mastery_percent: number }>;
+}) {
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border border-border-2">
-      <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-        <span className="text-[13px] font-bold text-ink">Subject Mastery</span>
+    <section className="mb-4 rounded-2xl border border-border bg-card p-4">
+      <div className="mb-3.5 flex items-center justify-between gap-2">
+        <h2 className="text-[15px] font-bold text-ink">Subject mastery</h2>
+        <span className="text-[12.5px] text-muted">
+          {items.length} {items.length === 1 ? 'subject' : 'subjects'}
+        </span>
       </div>
-      <div className="bg-card px-4 py-3">
-        {data.map((item, idx) => {
-          const isGood = item.mastery_percent >= 60;
-          const pctText = `${item.mastery_percent}%`;
-          return (
-            <div key={item.subject} className={idx < data.length - 1 ? 'mb-3' : ''}>
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[15px] font-semibold text-ink">
-                  {item.subject}
-                </span>
-                <span
-                  className={`text-[15px] font-bold ${isGood ? 'text-brand' : 'text-ink-2'}`}
-                >
-                  {pctText}
-                </span>
+
+      {items.length === 0 ? (
+        <p className="text-[13px] text-muted">
+          Pick your subjects to begin tracking mastery.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {items.map((item) => {
+            const pct = Math.max(0, Math.min(100, Math.round(item.mastery_percent)));
+            return (
+              <div key={item.subject}>
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <span className="truncate text-[13.5px] font-medium text-ink">
+                    {item.subject}
+                  </span>
+                  <span
+                    className={`flex-shrink-0 text-[13px] font-semibold tabular-nums ${
+                      pct > 0 ? 'text-brand' : 'text-muted'
+                    }`}
+                  >
+                    {pct}%
+                  </span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-2">
+                  <div
+                    className="h-full rounded-full bg-brand transition-all duration-300"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-bg-2">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${isGood ? 'bg-brand' : 'bg-ink-2'}`}
-                  style={{ width: pctText }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 
-// HeatmapSection renders a GitHub-style 90-day activity grid.
-// data[0] = oldest day (today - 89 days); data[89] = today (newest).
-// Values are 0-4 (already clamped by the backend).
-// Grid: 7 rows (Sun=row0 ... Sat=row6), columns = weeks (oldest left).
-// startDow leading cells are empty padding to align the first day's weekday row.
-// Cell index mapping: cellIdx = col*7 + row; dataIdx = cellIdx - startDow.
 function HeatmapSection({ data }: { data: number[] }) {
   const [tooltip, setTooltip] = useState<{ date: string; count: number } | null>(null);
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="mb-4 rounded-xl border border-border-2 bg-card px-4 py-3">
-        <p className="mb-3 text-[13px] font-bold text-ink">Study Activity &mdash; 3 Months</p>
-        <div className="flex h-[74px] items-center justify-center text-[11px] text-muted">
-          No activity data available
-        </div>
-      </div>
-    );
-  }
-
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
-  const todayStart = new Date();
-  todayStart.setHours(12, 0, 0, 0);
-  const startMs = todayStart.getTime() - (data.length - 1) * MS_PER_DAY;
-  const startDow = new Date(startMs).getDay(); // 0=Sun, 6=Sat
-  const numWeeks = Math.ceil((startDow + data.length) / 7);
+  const effectiveData = data && data.length > 0 ? data : Array.from({ length: 84 }, () => 0);
 
-  const cells = Array.from({ length: numWeeks * 7 }, (_, cellIdx) => {
-    const dataIdx = cellIdx - startDow;
-    if (dataIdx < 0 || dataIdx >= data.length) {
-      return (
-        <div
-          key={cellIdx}
-          style={{ width: 10, height: 10, borderRadius: 2 }}
-        />
-      );
-    }
-    const count = data[dataIdx] ?? 0;
-    const cellDate = new Date(startMs + dataIdx * MS_PER_DAY);
-    const dateLabel = cellDate.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
+  const { cells, numWeeks, monthLabels } = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(12, 0, 0, 0);
+    const startMs = todayStart.getTime() - (effectiveData.length - 1) * MS_PER_DAY;
+    const startDow = new Date(startMs).getDay();
+    const weeks = Math.ceil((startDow + effectiveData.length) / 7);
+
+    const startDate = new Date(startMs);
+    const midDate = new Date(startMs + Math.floor(effectiveData.length / 2) * MS_PER_DAY);
+    const endDate = todayStart;
+    const labels = [
+      startDate.toLocaleDateString('en-US', { month: 'short' }),
+      midDate.toLocaleDateString('en-US', { month: 'short' }),
+      endDate.toLocaleDateString('en-US', { month: 'short' }),
+    ];
+
+    const built = Array.from({ length: weeks * 7 }, (_, cellIdx) => {
+      const dataIdx = cellIdx - startDow;
+      if (dataIdx < 0 || dataIdx >= effectiveData.length) {
+        return { key: cellIdx, empty: true as const, count: 0, dateLabel: '' };
+      }
+      const count = effectiveData[dataIdx] ?? 0;
+      const cellDate = new Date(startMs + dataIdx * MS_PER_DAY);
+      const dateLabel = cellDate.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+      return { key: cellIdx, empty: false as const, count, dateLabel };
     });
-    return (
-      <div
-        key={cellIdx}
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: 2,
-          backgroundColor: heatmapColor(count),
-        }}
-        onMouseEnter={() => setTooltip({ date: dateLabel, count })}
-        onMouseLeave={() => setTooltip(null)}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          setTooltip((prev) =>
-            prev?.date === dateLabel ? null : { date: dateLabel, count },
-          );
-        }}
-      />
-    );
-  });
+
+    return { cells: built, numWeeks: weeks, monthLabels: labels };
+  }, [effectiveData, MS_PER_DAY]);
 
   return (
-    <div className="mb-4 rounded-xl border border-border-2 bg-card px-4 py-3">
-      <p className="mb-3 text-[13px] font-bold text-ink">Study Activity &mdash; 3 Months</p>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateRows: 'repeat(7, 10px)',
-          gridAutoFlow: 'column',
-          gridAutoColumns: '10px',
-          gap: '2px',
-        }}
-      >
-        {cells}
+    <section className="mb-4 rounded-2xl border border-border bg-card p-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-[15px] font-bold text-ink">Study activity</h2>
+        <span className="text-[12.5px] text-muted">Last 3 months</span>
       </div>
 
-      <div className="mt-2 h-4 text-[11px] text-muted">
-        {tooltip
-          ? `${tooltip.date} - ${tooltip.count} review${tooltip.count !== 1 ? 's' : ''}`
-          : ' '}
+      {/* Dynamic month row */}
+      <div className="mb-1.5 flex items-center justify-between text-[11px] text-muted">
+        <span>{monthLabels[0]}</span>
+        <span>{monthLabels[1]}</span>
+        <span>{monthLabels[2]}</span>
       </div>
 
-      <div className="mt-1 flex items-center gap-1.5">
-        <span className="text-[9px] text-muted">Less</span>
-        {HEATMAP_COLORS.map((color) => (
-          <div
-            key={color}
-            style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color }}
-          />
-        ))}
-        <span className="text-[9px] text-muted">More</span>
+      {/* Activity Grid */}
+      <div className="overflow-x-auto">
+        <div
+          className="grid w-full gap-[3px]"
+          style={{
+            gridTemplateRows: 'repeat(7, minmax(10px, 1fr))',
+            gridTemplateColumns: `repeat(${numWeeks}, minmax(10px, 1fr))`,
+            gridAutoFlow: 'column',
+          }}
+        >
+          {cells.map((cell) =>
+            cell.empty ? (
+              <div key={cell.key} className="aspect-square w-full rounded-[3px]" />
+            ) : (
+              <button
+                key={cell.key}
+                type="button"
+                aria-label={`${cell.dateLabel}: ${cell.count} activities`}
+                className="aspect-square w-full rounded-[3px] transition-transform hover:scale-110 focus:outline-none"
+                style={{ backgroundColor: heatmapColor(cell.count) }}
+                onMouseEnter={() => setTooltip({ date: cell.dateLabel, count: cell.count })}
+                onMouseLeave={() => setTooltip(null)}
+                onClick={() =>
+                  setTooltip((prev) =>
+                    prev?.date === cell.dateLabel
+                      ? null
+                      : { date: cell.dateLabel, count: cell.count },
+                  )
+                }
+              />
+            ),
+          )}
+        </div>
       </div>
-    </div>
+
+      <div className="mt-2.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-muted">Less</span>
+          {HEATMAP_COLORS.slice(0, 4).map((color) => (
+            <span
+              key={color}
+              className="inline-block h-2.5 w-2.5 rounded-[3px]"
+              style={{ backgroundColor: color }}
+            />
+          ))}
+          <span className="text-[11px] text-muted">More</span>
+        </div>
+
+        <span className="min-h-[16px] text-[11px] text-muted">
+          {tooltip
+            ? `${tooltip.date} · ${tooltip.count} review${tooltip.count !== 1 ? 's' : ''}`
+            : ''}
+        </span>
+      </div>
+    </section>
   );
 }
 
+function getDueDayOffset(dueText: string): number | null {
+  const lower = dueText.trim().toLowerCase();
+  if (lower === 'today') return 0;
+  if (lower === 'tomorrow') return 1;
+  const inDays = lower.match(/in\s+(\d+)\s+day/);
+  if (inDays) return Number(inDays[1]);
+  const parsed = Date.parse(dueText);
+  if (!Number.isNaN(parsed)) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(parsed);
+    target.setHours(0, 0, 0, 0);
+    return Math.round((target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  }
+  return null;
+}
+
 function UpcomingSection({ data }: { data: ProgressData['upcoming_reviews'] }) {
+  const weekDays = useMemo(() => {
+    const today = new Date();
+    const counts = Array.from({ length: 7 }, () => 0);
+
+    for (const item of data) {
+      const offset = getDueDayOffset(item.due);
+      if (offset !== null && offset >= 0 && offset < 7) {
+        counts[offset] += 1;
+      }
+    }
+
+    return counts.map((count, offset) => {
+      const d = new Date(today.getTime() + offset * 24 * 60 * 60 * 1000);
+      return {
+        key: offset,
+        label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        count,
+        isToday: offset === 0,
+      };
+    });
+  }, [data]);
+
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border border-border-2">
-      <div className="border-b border-border bg-bg-0 px-4 py-2.5">
-        <span className="text-[13px] font-bold text-ink">Upcoming Reviews</span>
-      </div>
-      <div className="bg-card">
-        {data.map((item, idx) => {
-          const isLast = idx === data.length - 1;
-          const isToday = item.due.toLowerCase() === 'today';
+    <section className="mb-4 rounded-2xl border border-border bg-card p-4">
+      <h2 className="mb-3 text-[15px] font-bold text-ink">Upcoming reviews</h2>
 
-          const dotClass =
-            item.urgency === 'high'
-              ? 'bg-ink'
-              : item.urgency === 'medium'
-                ? 'bg-ink-2'
-                : 'border border-border-2 bg-bg-2';
-
-          return (
+      {/* Dynamic 7-day strip */}
+      <div className="grid grid-cols-7 gap-1.5 text-center">
+        {weekDays.map((day) => (
+          <div key={day.key} className="flex flex-col items-center gap-1.5">
+            <span className="text-[11px] font-medium text-muted">{day.label}</span>
             <div
-              key={item.topic_title}
-              className={`flex items-center gap-3 px-4 py-3 ${!isLast ? 'border-b border-border' : ''}`}
+              className={`flex h-9 w-full items-center justify-center rounded-xl text-[14px] font-bold tabular-nums ${
+                day.count > 0
+                  ? 'bg-brand-tint text-brand'
+                  : 'bg-bg-2/75 text-ink'
+              }`}
             >
-              <span
-                className={`h-2 w-2 flex-shrink-0 rounded-full ${dotClass}`}
-              />
-              <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">
-                {item.topic_title}
-              </span>
-              <span
-                className={`flex-shrink-0 text-[14px] font-bold ${isToday ? 'text-ink' : 'text-muted'}`}
-              >
-                {item.due}
-              </span>
+              {day.count}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
-    </div>
+
+      {data.length === 0 ? (
+        <p className="mt-3.5 text-[12.5px] leading-relaxed text-muted">
+          Finish a topic and its review cards will show up here.
+        </p>
+      ) : (
+        <div className="mt-3.5 divide-y divide-border border-t border-border pt-1">
+          {data.map((item) => {
+            const isToday = item.due.toLowerCase() === 'today';
+            return (
+              <div
+                key={`${item.topic_title}-${item.due}`}
+                className="flex items-center justify-between gap-3 py-2.5"
+              >
+                <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-ink">
+                  {item.topic_title}
+                </span>
+                <span
+                  className={`flex-shrink-0 text-[12.5px] font-semibold ${
+                    isToday ? 'text-brand' : 'text-muted'
+                  }`}
+                >
+                  {item.due}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 
 export default function ProgressPage() {
   const [data, setData] = useState<ProgressData | null>(() => getCachedProgressData());
-  const [profile, setProfile] = useState(() => getStudentProfile());
+  const [subjects, setSubjects] = useState<Subject[] | null>(() => getCachedSubjects());
+  const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     const handleProfileUpdate = () => {
@@ -258,8 +345,6 @@ export default function ProgressPage() {
     };
   }, []);
 
-  const [retryTick, setRetryTick] = useState(0);
-
   useEffect(() => {
     setFetchError(null);
     getProgressData()
@@ -267,7 +352,39 @@ export default function ProgressPage() {
       .catch((err: unknown) => {
         setFetchError(err instanceof Error ? err.message : 'Failed to load');
       });
+
+    getSubjects()
+      .then(setSubjects)
+      .catch(() => {});
   }, [retryTick]);
+
+  const displayMastery = useMemo(() => {
+    if (!data) return [];
+
+    const masteryMap = new Map<string, number>();
+    for (const item of data.subject_mastery) {
+      masteryMap.set(normalizeSubjectName(item.subject), item.mastery_percent);
+    }
+
+    // Prefer the student's active curriculum subjects so newly enrolled accounts show all chosen subjects at 0%
+    if (subjects && subjects.length > 0) {
+      const selected = filterSubjectsByProfile(subjects, profile);
+      return selected.map((subj) => ({
+        subject: subj.name,
+        mastery_percent:
+          masteryMap.get(normalizeSubjectName(subj.name)) ?? subj.mastery_percent ?? 0,
+      }));
+    }
+
+    if (profile?.selectedSubjects && profile.selectedSubjects.length > 0) {
+      return profile.selectedSubjects.map((name) => ({
+        subject: name,
+        mastery_percent: masteryMap.get(normalizeSubjectName(name)) ?? 0,
+      }));
+    }
+
+    return data.subject_mastery;
+  }, [data, subjects, profile]);
 
   if (fetchError && !data) {
     return (
@@ -276,7 +393,7 @@ export default function ProgressPage() {
         <button
           type="button"
           onClick={() => setRetryTick((n) => n + 1)}
-          className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+          className="btn-primary px-5 text-xs"
         >
           Try again
         </button>
@@ -286,42 +403,19 @@ export default function ProgressPage() {
 
   if (!data) return <ProgressSkeleton />;
 
-  const filteredMastery = filterTopicsByProfile(data.subject_mastery, profile);
-  const displayMastery = filteredMastery.length > 0 ? filteredMastery : data.subject_mastery;
-
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
-      <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-[19px] font-bold text-ink">My Progress</h1>
-        </div>
-      </header>
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
+        <h1 className="mb-4 text-[24px] font-bold tracking-tight text-ink">My Progress</h1>
 
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-nav">
         <div className="mb-4 grid grid-cols-2 gap-3">
-          <StatCard
-            variant="streak"
-            value={String(data.streak_days)}
-            label="day streak"
-          />
-          <StatCard
-            variant="plain"
-            value={String(data.topics_studied)}
-            label="topics studied"
-          />
-          <StatCard
-            variant="plain"
-            value={`${data.avg_accuracy}%`}
-            label="avg accuracy"
-          />
-          <StatCard
-            variant="plain"
-            value={String(data.due_tomorrow)}
-            label="due tomorrow"
-          />
+          <StatCard variant="streak" value={String(data.streak_days)} label="Day streak" />
+          <StatCard variant="plain" value={String(data.topics_studied)} label="Topics studied" />
+          <StatCard variant="plain" value={`${data.avg_accuracy}%`} label="Avg accuracy" />
+          <StatCard variant="plain" value={String(data.due_tomorrow)} label="Due tomorrow" />
         </div>
 
-        <MasterySection data={displayMastery} />
+        <MasterySection items={displayMastery} />
         <HeatmapSection data={data.heatmap_data} />
         <UpcomingSection data={data.upcoming_reviews} />
       </main>

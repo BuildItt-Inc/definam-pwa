@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, ChevronRight, BookOpen, Check, ArrowDown, ArrowUp, X, Bot } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight, BookOpen, Check, ArrowDown, ArrowUp, X } from 'lucide-react';
 import {
   getChaptersBySubjectName,
   getCachedChaptersBySubjectName,
@@ -33,6 +33,7 @@ import {
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useFloatingChat } from '@/components/student/FloatingChat/FloatingChatContext';
 import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
+import { ZikoraLogo } from '@/components/student/ZikoraLogo';
 import { stepSlide } from '@/lib/motion';
 import { toast } from '@/lib/toast';
 import { getStudentProfile } from '@/lib/utils/studentProfile';
@@ -677,16 +678,15 @@ function AITutorScaffold({
   return (
     <div className="flex h-[100dvh] flex-col bg-bg-0 relative overflow-hidden">
       {/* Appbar */}
-      <header className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
+      <header className="flex shrink-0 items-center gap-2.5 border-b border-border bg-card px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-ink/70 hover:text-ink -ml-1 p-1">
           <ArrowLeft size={20} strokeWidth={2} />
         </button>
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
-          <Bot size={18} strokeWidth={1.8} />
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+          <ZikoraLogo size={26} className="text-ink" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-[15px] text-ink leading-tight">Zikora</p>
-          <p className="text-[12px] text-muted">Your AI study tutor</p>
+          <p className="font-bold text-[15.5px] text-ink leading-tight tracking-tight">Zikora</p>
         </div>
       </header>
 
@@ -777,16 +777,16 @@ function AITutorScaffold({
       {/* Input bar */}
       <form
         onSubmit={handleSubmit}
-        className="border-t border-border px-4 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] bg-card w-full max-w-full box-border shrink-0"
+        className="border-t border-border px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] md:pb-5 bg-card w-full max-w-full box-border shrink-0"
       >
-        <div className="mx-auto flex max-w-3xl items-center gap-2 rounded-xl border border-border-2 bg-bg-0 px-3 py-2 focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-ink/5 transition-all w-full box-border">
+        <div className="mx-auto flex max-w-3xl items-center gap-2.5 rounded-2xl border border-border-2 bg-bg-0 px-3.5 py-2.5 min-h-[48px] focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-ink/5 transition-all w-full box-border">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             disabled={isLoading}
             placeholder="Ask Zikora"
-            className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
+            className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14.5px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
           />
           <button
             type="submit"

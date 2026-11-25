@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpen, Clock, BookMarked, Sparkles } from 'lucide-react';
+import { BookOpen, Clock, BookMarked, TrendingUp, ArrowRight } from 'lucide-react';
 import { getRecallQueue, getCachedRecallQueue } from '@/lib/api/topics';
 import type { RecallItem } from '@/types/topics';
 import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentProfile';
@@ -11,26 +11,12 @@ import { getStudentProfile, filterTopicsByProfile } from '@/lib/utils/studentPro
 
 function RecallSkeleton() {
   return (
-    <div className="min-h-screen bg-card">
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
-        <div className="h-5 w-5 animate-pulse rounded bg-bg-3" />
-        <div className="h-5 w-28 animate-pulse rounded bg-bg-3" />
-      </div>
-      <div className="px-4 py-4">
-        <div className="mb-4 h-20 animate-pulse rounded-xl bg-bg-2" />
-        <div className="mb-4 h-2 animate-pulse rounded-full bg-bg-2" />
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="mb-2 flex items-center gap-3 rounded-xl border border-border px-3.5 py-3"
-          >
-            <div className="h-7 w-7 flex-shrink-0 animate-pulse rounded-lg bg-bg-3" />
-            <div className="flex-1 space-y-1.5">
-              <div className="h-3 w-32 animate-pulse rounded bg-bg-3" />
-              <div className="h-2.5 w-20 animate-pulse rounded bg-bg-2" />
-            </div>
-          </div>
-        ))}
+    <div className="page-with-nav bg-bg-0">
+      <div className="mx-auto w-full max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
+        <div className="mb-1.5 h-7 w-36 animate-pulse rounded bg-bg-3" />
+        <div className="mb-6 h-4 w-44 animate-pulse rounded bg-bg-2" />
+        <div className="mb-4 h-44 animate-pulse rounded-2xl bg-bg-2" />
+        <div className="h-36 animate-pulse rounded-2xl bg-bg-2" />
       </div>
     </div>
   );
@@ -52,9 +38,17 @@ export default function RecallPage() {
   const [queue, setQueue] = useState<RecallItem[] | null>(() => getCachedRecallQueue());
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [dateLabel, setDateLabel] = useState('');
+  const [profile, setProfile] = useState(() => getStudentProfile());
   const router = useRouter();
-
   const [retryTick, setRetryTick] = useState(0);
+
+  useEffect(() => {
+    const handleProfileUpdate = () => setProfile(getStudentProfile());
+    window.addEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
+    return () => {
+      window.removeEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     setDateLabel(todayLabel());
@@ -79,7 +73,7 @@ export default function RecallPage() {
         <button
           type="button"
           onClick={() => setRetryTick((n) => n + 1)}
-          className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+          className="btn-primary px-5 text-xs"
         >
           Try again
         </button>
@@ -89,7 +83,6 @@ export default function RecallPage() {
 
   if (!queue) return <RecallSkeleton />;
 
-  const profile = getStudentProfile();
   const effectiveQueue = filterTopicsByProfile(queue, profile);
   const minuteEstimate = Math.ceil(effectiveQueue.length * 2.5);
 
@@ -102,85 +95,87 @@ export default function RecallPage() {
   if (effectiveQueue.length === 0) {
     return (
       <div className="page-with-nav bg-bg-0 page-enter">
-        <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-          <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+        <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
+          {/* Clean tab header — no back button */}
+          <header className="mb-8">
+            <h1 className="text-[24px] font-bold tracking-tight text-ink">Daily Review</h1>
+            {dateLabel && (
+              <p className="mt-0.5 text-[13.5px] text-muted">{dateLabel}</p>
+            )}
+          </header>
+
+          {/* Calm caught-up state */}
+          <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center pb-6">
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-tint text-brand">
+                <TrendingUp size={22} strokeWidth={2} />
+              </div>
+
+              <h2 className="text-[20px] font-bold tracking-tight text-ink">
+                You&apos;re all caught up
+              </h2>
+              <p className="mx-auto mt-1.5 max-w-[300px] text-[14px] leading-relaxed text-muted">
+                Recall brings topics back right as your memory starts to fade.
+              </p>
+
               <button
-                onClick={() => router.push('/student')}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-ink hover:bg-bg-2 active:scale-95 transition-all"
-                aria-label="Back"
+                type="button"
+                onClick={() => router.push('/student/learn')}
+                className="btn-primary mt-5 w-full"
               >
-                <ArrowLeft size={20} strokeWidth={2} />
+                <span>Study a new topic</span>
+                <ArrowRight size={16} strokeWidth={2.2} />
               </button>
-              <div>
-                <h1 className="text-[17px] font-bold text-ink">Daily Review</h1>
-                <p className="text-[12.5px] text-muted">{dateLabel}</p>
+            </div>
+
+            {/* Single calm editorial explainer card */}
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="px-4 pt-4 pb-3.5">
+                <p className="mb-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  How it works
+                </p>
+
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <span className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-brand-tint text-[13px] font-bold text-brand tabular-nums">
+                      1
+                    </span>
+                    <p className="text-[13px] font-semibold text-ink">Learn</p>
+                    <p className="mt-0.5 text-[11.5px] leading-snug text-muted">
+                      Study a topic step by step
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-brand-tint text-[13px] font-bold text-brand tabular-nums">
+                      3
+                    </span>
+                    <p className="text-[13px] font-semibold text-ink">Review</p>
+                    <p className="mt-0.5 text-[11.5px] leading-snug text-muted">
+                      2-min cards on Day 1, 3 &amp; 7
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-brand-tint text-[13px] font-bold text-brand tabular-nums">
+                      7
+                    </span>
+                    <p className="text-[13px] font-semibold text-ink">Remember</p>
+                    <p className="mt-0.5 text-[11.5px] leading-snug text-muted">
+                      Ready for WAEC &amp; exams
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 border-t border-border bg-bg-0/70 px-4 py-2.5 text-[12px] text-muted">
+                <Clock size={14} strokeWidth={2} className="flex-shrink-0 text-brand" />
+                <span>
+                  Finished a topic today? Your first review unlocks after <strong className="font-semibold text-ink">24 hours</strong>.
+                </span>
               </div>
             </div>
           </div>
-        </header>
-
-        <main className="flex flex-1 flex-col items-center justify-center px-5 py-8 pb-nav text-center max-w-md mx-auto">
-          {/* Badge & Icon */}
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-dim border border-brand/20 shadow-xs">
-            <Sparkles size={30} strokeWidth={1.8} className="text-brand" />
-          </div>
-
-          <h2 className="text-[20px] font-bold text-ink tracking-tight mb-2">
-            No Reviews Due Right Now
-          </h2>
-          <p className="text-[14px] leading-relaxed text-muted mb-4">
-            Recall uses spaced repetition to resurface topics right as your brain begins to forget them. 
-          </p>
-
-          {/* Day 1 tester notice */}
-          <div className="mb-6 w-full rounded-2xl border border-brand/20 bg-brand-dim p-3.5 text-left">
-            <p className="text-xs font-bold text-ink flex items-center gap-1.5 mb-1">
-              <Sparkles size={14} className="text-brand shrink-0" />
-              <span>Finished a topic today?</span>
-            </p>
-            <p className="text-[12.5px] text-ink/80 leading-snug">
-              Reviews unlock <strong>24 hours after completion</strong>. If you completed a lesson today, your first 2-minute review card will automatically appear here tomorrow!
-            </p>
-          </div>
-
-          {/* Spaced repetition micro-guide */}
-          <div className="w-full text-left rounded-2xl border border-border bg-card p-4 mb-6 shadow-xs space-y-3">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-faint">
-              How Spaced Repetition Works
-            </p>
-            <div className="flex items-start gap-3">
-              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white mt-0.5">
-                1
-              </span>
-              <p className="text-[13px] text-ink leading-snug">
-                <strong>Learn a topic:</strong> Master key concepts with step-by-step explanations and real-world examples.
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white mt-0.5">
-                2
-              </span>
-              <p className="text-[13px] text-ink leading-snug">
-                <strong>Smart intervals:</strong> Quick 2-minute review cards are scheduled at Day 1, 3, and 7.
-              </p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white mt-0.5">
-                3
-              </span>
-              <p className="text-[13px] text-ink leading-snug">
-                <strong>Lock in memory:</strong> Retain everything effortlessly for your WAEC, JAMB, or school exams.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => router.push('/student/learn')}
-            className="btn-primary w-full shadow-brand"
-          >
-            Start Learning Topics →
-          </button>
         </main>
       </div>
     );
@@ -189,68 +184,49 @@ export default function RecallPage() {
   // ── Queue present ──────────────────────────────────────────────────────
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
+        <header className="mb-4">
+          <h1 className="text-[24px] font-bold tracking-tight text-ink">Daily Review</h1>
+          {dateLabel && (
+            <p className="mt-0.5 text-[13.5px] text-muted">{dateLabel}</p>
+          )}
+        </header>
 
-      {/* Appbar */}
-      <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push('/student')}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-ink hover:bg-bg-2 active:scale-95 transition-all"
-              aria-label="Back"
-            >
-              <ArrowLeft size={20} strokeWidth={2} />
-            </button>
-            <div>
-              <h1 className="text-[17px] font-bold text-ink">Daily Review</h1>
-              <p className="text-[12.5px] text-muted">{dateLabel}</p>
-            </div>
+        {/* Summary card */}
+        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
+            <BookMarked size={19} strokeWidth={2} />
           </div>
-        </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-nav">
-
-        {/* Info card */}
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3.5 shadow-sm">
-          <BookMarked size={22} strokeWidth={2} className="flex-shrink-0 text-brand" />
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <p className="text-[15px] font-bold text-ink">
               {effectiveQueue.length} {effectiveQueue.length === 1 ? 'topic' : 'topics'} due today
             </p>
-            <p className="flex items-center gap-1 text-[13px] text-muted">
-              <Clock size={10} strokeWidth={2} />
-              ~{minuteEstimate} minutes
+            <p className="mt-0.5 flex items-center gap-1 text-[12.5px] text-muted">
+              <Clock size={12} strokeWidth={2} />
+              <span>About {minuteEstimate} minutes</span>
             </p>
           </div>
-          <div className="flex-shrink-0 text-center">
-            <p className="text-[16px] font-black text-ink">
+          <div className="flex-shrink-0 text-right">
+            <p className="text-[15px] font-bold text-ink tabular-nums">
               0/{effectiveQueue.length}
             </p>
-            <p className="text-[9px] font-semibold text-muted">done</p>
+            <p className="text-[11px] text-muted">done</p>
           </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-bg-2">
-          <div className="h-full w-0 rounded-full bg-brand" />
         </div>
 
         {/* Topic list */}
-        <div className="mb-6 flex flex-col gap-2">
+        <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
           {effectiveQueue.map((item) => (
             <div
               key={item.topic_id}
-              className="card flex items-center gap-3 px-3.5 py-3"
+              className="flex items-center gap-3 px-4 py-3"
             >
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-bg-1 border border-border">
-                <BookOpen size={14} strokeWidth={2} className="text-muted" />
-              </div>
+              <BookOpen size={17} strokeWidth={1.8} className="flex-shrink-0 text-ink-2" />
               <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-bold text-ink">
+                <p className="truncate text-[14.5px] font-semibold text-ink">
                   {item.topic_title}
                 </p>
-                <p className="text-[13px] font-medium text-muted">
+                <p className="text-[12.5px] text-muted">
                   {item.subject} · Due today
                 </p>
               </div>
@@ -258,14 +234,15 @@ export default function RecallPage() {
           ))}
         </div>
 
-        {/* CTA */}
+        {/* Primary Ink CTA */}
         <button
+          type="button"
           onClick={handleStartAll}
-          className="btn-primary w-full shadow-brand-sm"
+          className="btn-primary w-full"
         >
-          Start All Reviews →
+          <span>Start all reviews</span>
+          <ArrowRight size={16} strokeWidth={2.2} />
         </button>
-
       </main>
     </div>
   );
