@@ -20,11 +20,25 @@ import {
 
 const delay = () => new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
 
+/** Extract a readable string from FastAPI detail — handles both string and Pydantic array shapes. */
+function extractDetail(body: unknown, fallback: string): string {
+  if (!body || typeof body !== 'object') return fallback;
+  const d = (body as Record<string, unknown>)['detail'];
+  if (!d) return fallback;
+  if (typeof d === 'string') return d;
+  if (Array.isArray(d)) {
+    const msgs = d
+      .map((item) => (typeof item === 'object' && item !== null ? (item as Record<string, unknown>)['msg'] : null))
+      .filter((m): m is string => typeof m === 'string');
+    return msgs.length > 0 ? msgs.join('. ') : fallback;
+  }
+  return fallback;
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    const errorMsg = body.detail || `API Error: ${res.status} ${res.statusText}`;
-    throw new ApiError(res.status, errorMsg);
+    throw new ApiError(res.status, extractDetail(body, `API Error: ${res.status} ${res.statusText}`));
   }
   return res.json() as Promise<T>;
 }

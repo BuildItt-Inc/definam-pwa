@@ -22,6 +22,38 @@ export class ApiError extends Error {
 }
 
 /**
+ * Extracts a human-readable error message from a FastAPI response body.
+ *
+ * FastAPI returns two shapes:
+ *   - String detail:  { "detail": "Invalid access code." }
+ *   - Array detail:   { "detail": [{ "loc": [...], "msg": "...", "type": "..." }] }  (Pydantic 422)
+ *
+ * Without this, calling extractDetail(body) on an array produces "[object Object]"
+ * which is confusing and useless to the user.
+ */
+function extractDetail(body: unknown, fallback = ''): string {
+  if (!body || typeof body !== 'object') return fallback;
+  const b = body as Record<string, unknown>;
+  const detail = b['detail'];
+  if (!detail) return fallback;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    // Pydantic validation error array — join the human-readable msg fields
+    const msgs = detail
+      .map((item) => {
+        if (typeof item === 'object' && item !== null) {
+          const i = item as Record<string, unknown>;
+          return typeof i['msg'] === 'string' ? (i['msg'] as string) : null;
+        }
+        return null;
+      })
+      .filter(Boolean);
+    return msgs.length > 0 ? msgs.join('. ') : fallback;
+  }
+  return fallback;
+}
+
+/**
  * Handles 401 session expiration, specifically distinguishing single-session logouts
  * ("Session expired or logged in elsewhere.") from normal unauthenticated errors.
  */
@@ -91,7 +123,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail ?? '');
+    throw new ApiError(res.status, extractDetail(body));
   }
 
   const json: LoginResponse = await res.json();
@@ -118,7 +150,7 @@ export async function changePassword(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail ?? '');
+    throw new ApiError(res.status, extractDetail(body));
   }
 
   return res.json() as Promise<{ ok: true }>;
@@ -137,7 +169,7 @@ export async function registerUser(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail ?? '');
+    throw new ApiError(res.status, extractDetail(body));
   }
 
   const json: RegisterResponse = await res.json();
@@ -159,7 +191,7 @@ export async function orgLogin(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail ?? '');
+    throw new ApiError(res.status, extractDetail(body));
   }
 
   const json: OrgLoginResponse = await res.json();
@@ -182,7 +214,7 @@ export async function forgotPassword(data: ForgotPasswordRequest): Promise<void>
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail ?? '');
+    throw new ApiError(res.status, extractDetail(body));
   }
 }
 
@@ -198,7 +230,7 @@ export async function resetPassword(data: ResetPasswordRequest): Promise<void> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail ?? '');
+    throw new ApiError(res.status, extractDetail(body));
   }
 }
 
@@ -212,7 +244,7 @@ export async function refreshToken(): Promise<void> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail ?? '');
+    throw new ApiError(res.status, extractDetail(body));
   }
 
   const json = (await res.json()) as { access_token: string };
@@ -243,7 +275,7 @@ export async function getMe(): Promise<UserMe> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, body.detail ?? '');
+    throw new ApiError(res.status, extractDetail(body));
   }
 
   return res.json() as Promise<UserMe>;
@@ -287,3 +319,4 @@ export async function getAuthHeaders(): Promise<HeadersInit> {
     Authorization: `Bearer ${accessToken}`,
   };
 }
+

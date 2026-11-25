@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LogOut, Pencil, Check, X, Bell, MessageSquarePlus, HelpCircle, ChevronRight } from 'lucide-react';
 import { changePassword, getMe, logout, ApiError, getAuthHeaders, handleAuthError } from '@/lib/api/auth';
-import { getHomeData } from '@/lib/api/topics';
+import { getHomeData, getCachedHomeData } from '@/lib/api/topics';
 import { getStudentProfile, type StudentProfile } from '@/lib/utils/studentProfile';
 import {
   requestNotificationPermissionAndGetToken,
@@ -46,10 +46,15 @@ export default function SettingsPage() {
   const { isIOS, isInstalled, showInstallModal, setShowInstallModal } = usePWAInstall();
   const [me, setMe] = useState<UserMe | null>(null);
   const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
-  const [schoolName, setSchoolName] = useState('');
+  // Seed school name from session cache for instant render (SWR pattern)
+  const [schoolName, setSchoolName] = useState(() => getCachedHomeData()?.school_name ?? '');
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState('');
+  // Pre-seed nameInput from local profile so it's ready before /me loads
+  const [nameInput, setNameInput] = useState(() => {
+    const p = getStudentProfile();
+    return p?.name ?? '';
+  });
   const [nameError, setNameError] = useState(false);
   const [savingName, setSavingName] = useState(false);
   const [pwForm, setPwForm] = useState({ new_password: '', confirm_password: '' });
@@ -221,9 +226,10 @@ export default function SettingsPage() {
     </div>
   );
 
-  if (!me) return <SettingsSkeleton />;
+  // Show skeleton only if we have no profile data at all to show
+  if (!me && !profile && !nameInput) return <SettingsSkeleton />;
 
-  const isIndividual = me.role === 'student_individual';
+  const isIndividual = me ? me.role === 'student_individual' : !schoolName;
 
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
