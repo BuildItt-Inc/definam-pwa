@@ -153,6 +153,13 @@ export function onAuthChange(callback: (type: 'login' | 'logout') => void): () =
   return () => authChannel.removeEventListener('message', handler);
 }
 
+function clearSessionCachesBestEffort(): void {
+  setCachedMe(null);
+  void import('@/lib/api/topics')
+    .then(({ clearCurriculumCache }) => clearCurriculumCache())
+    .catch(() => {});
+}
+
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   // Route through the Next.js proxy so the refresh_token cookie is set on
   // the frontend domain and the Edge Middleware can read it.
@@ -169,6 +176,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
 
   const json: LoginResponse = await res.json();
   accessToken = json.access_token;
+  clearSessionCachesBestEffort();
   broadcastAuthChange('login');
   return json;
 }
@@ -215,6 +223,7 @@ export async function registerUser(
 
   const json: RegisterResponse = await res.json();
   accessToken = json.access_token;
+  clearSessionCachesBestEffort();
   broadcastAuthChange('login');
   return json;
 }
@@ -237,6 +246,7 @@ export async function orgLogin(
 
   const json: OrgLoginResponse = await res.json();
   accessToken = json.access_token;
+  clearSessionCachesBestEffort();
   broadcastAuthChange('login');
   return json;
 }

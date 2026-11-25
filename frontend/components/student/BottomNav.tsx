@@ -1,11 +1,13 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { House, BookOpen, RefreshCw, Activity, Settings } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { getRecallQueue, getCachedRecallQueue } from '@/lib/api/topics';
+import { getRecallQueue } from '@/lib/api/topics';
+import { filterTopicsByProfile, getStudentProfile } from '@/lib/utils/studentProfile';
+import type { RecallItem } from '@/types/topics';
 
 interface Tab {
   label: string;
@@ -28,19 +30,23 @@ export interface BottomNavProps {
 function BottomNavContent({ recallCount: initialRecallCount }: BottomNavProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  // Seed synchronously from local cache so the badge is immediate with 0ms delay
-  const [recallCount, setRecallCount] = useState<number>(
-    () => initialRecallCount ?? getCachedRecallQueue()?.length ?? 0,
-  );
+  // Start from 0 (or explicit prop) so stale localStorage from an older session never shows phantom counts.
+  const [recallCount, setRecallCount] = useState<number>(initialRecallCount ?? 0);
+  const latestQueueRef = useRef<RecallItem[] | null>(null);
 
-  // Sync recall queue count once on mount + listen for live queue update events
-  // (avoids hammering GET /api/v1/recall/queue on every bottom-nav tab tap)
+  const syncFilteredCount = useCallback((items: RecallItem[]) => {
+    const profile = getStudentProfile();
+    setRecallCount(filterTopicsByProfile(items, profile).length);
+  }, []);
+
+  // Sync recall queue count once on mount + listen for live queue/profile update events
   useEffect(() => {
     let isSubscribed = true;
     getRecallQueue()
       .then((items) => {
         if (isSubscribed && Array.isArray(items)) {
-          setRecallCount(items.length);
+          latestQueueRef.current = items;
+          syncFilteredCount(items);
         }
       })
       .catch(() => {
@@ -48,15 +54,25 @@ function BottomNavContent({ recallCount: initialRecallCount }: BottomNavProps) {
       });
 
     const handleQueueUpdate = (e: CustomEvent<number>) => {
-      setRecallCount(e.detail);
+      if (typeof e.detail === 'number') {
+        setRecallCount(e.detail);
+      }
     };
+    const handleProfileUpdate = () => {
+      if (latestQueueRef.current) {
+        syncFilteredCount(latestQueueRef.current);
+      }
+    };
+
     window.addEventListener('recallQueueUpdated', handleQueueUpdate as EventListener);
+    window.addEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
 
     return () => {
       isSubscribed = false;
       window.removeEventListener('recallQueueUpdated', handleQueueUpdate as EventListener);
+      window.removeEventListener('studentProfileUpdated', handleProfileUpdate as EventListener);
     };
-  }, []);
+  }, [syncFilteredCount]);
 
   if (!pathname) return null;
 
@@ -104,7 +120,7 @@ function BottomNavContent({ recallCount: initialRecallCount }: BottomNavProps) {
                 />
                 {showBadge && (
                   <span className="absolute -right-2 -top-1 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold text-white ring-2 ring-card">
-                    {recallCount}
+                    {recallCount > 9 ? '9+' : recallCount}
                   </span>
                 )}
               </span>

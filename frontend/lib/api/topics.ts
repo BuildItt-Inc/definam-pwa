@@ -460,7 +460,9 @@ export async function submitRecallRating(
     const nextQueue = cachedQueue.filter((item) => item.topic_id !== topicId);
     writeCache('recallQueue', nextQueue);
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('recallQueueUpdated', { detail: nextQueue.length }));
+      const { filterTopicsByProfile, getStudentProfile } = await import('@/lib/utils/studentProfile');
+      const filteredCount = filterTopicsByProfile(nextQueue, getStudentProfile()).length;
+      window.dispatchEvent(new CustomEvent('recallQueueUpdated', { detail: filteredCount }));
     }
   }
   return result;

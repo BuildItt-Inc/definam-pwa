@@ -63,7 +63,8 @@ export default function RecallPage() {
       .then((items) => {
         setQueue(items);
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('recallQueueUpdated', { detail: items.length }));
+          const filteredCount = filterTopicsByProfile(items, getStudentProfile()).length;
+          window.dispatchEvent(new CustomEvent('recallQueueUpdated', { detail: filteredCount }));
         }
       })
       .catch((err: unknown) => {

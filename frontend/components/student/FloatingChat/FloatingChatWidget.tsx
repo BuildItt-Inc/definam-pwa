@@ -1,8 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, usePathname } from 'next/navigation';
-import { Bot, MessageCircle, Sparkles, ArrowUp, Trash2, X, ChevronDown } from 'lucide-react';
+import {
+  Bot,
+  MessageCircle,
+  Sparkles,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+  X,
+  Maximize2,
+  Minimize2,
+} from 'lucide-react';
 import { useFloatingChat } from './FloatingChatContext';
 import {
   getChatHistory,
@@ -13,13 +23,12 @@ import {
   ChatError,
   type ChatMessage,
 } from '@/lib/api/chat';
-import { MathContent } from '@/components/student/MathContent';
-import { getFollowUpSuggestions } from '@/lib/utils/chatFollowUps';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ChatMessageItem } from '@/components/student/ChatMessageItem';
+import { useSmartChatScroll } from '@/hooks/useSmoothedStream';
 import { toast } from '@/lib/toast';
 
 /**
- * Labelled header button for launching Zikora (replaces the old floating circle).
+ * Labelled header button for launching Zikora.
  * Matches the Recall design system: neutral white/bordered chip with green sparkle.
  */
 export function AskZikoraButton({
@@ -90,16 +99,6 @@ export function FloatingChatWidget() {
   );
 }
 
-function ThinkingDots() {
-  return (
-    <div className="flex items-center gap-1.5 py-1">
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '0ms' }} />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '150ms' }} />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" style={{ animationDelay: '300ms' }} />
-    </div>
-  );
-}
-
 function FloatingChatPanel({
   topicId,
   seedMessage,
@@ -111,7 +110,6 @@ function FloatingChatPanel({
   onSeedConsumed: () => void;
   onClose: () => void;
 }) {
-  // Initialize with cached messages if available so the window opens instantly with 0ms delay
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     return getCachedChatHistory(topicId) || [];
   });
@@ -119,11 +117,21 @@ function FloatingChatPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const scrollContainerRef = useRef<HTMLElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isUserScrolledUpRef = useRef(false);
+  const {
+    scrollContainerRef,
+    messagesEndRef,
+    showJumpToBottom,
+    handleScroll,
+    handleWheel,
+    handleTouchStart,
+    handleTouchMove,
+    jumpToBottom,
+    pinToBottom,
+    followIfPinned,
+  } = useSmartChatScroll();
+
   const seedSentRef = useRef(false);
   const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -132,6 +140,20 @@ function FloatingChatPanel({
       if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
     };
   }, []);
+
+  // Escape exits fullscreen first, then closes panel
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (isFullscreen) {
+        setIsFullscreen(false);
+      } else {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isFullscreen, onClose]);
 
   // Fetch history in background silently without blocking the UI
   useEffect(() => {
@@ -155,39 +177,10 @@ function FloatingChatPanel({
     };
   }, [topicId]);
 
-  const handleScroll = useCallback(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    // If user is more than 60px from bottom, they have scrolled up to read
-    const isScrolledUp = distanceFromBottom > 60;
-    isUserScrolledUpRef.current = isScrolledUp;
-    setShowScrollBottomBtn(isScrolledUp && distanceFromBottom > 120);
-  }, []);
-
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      el.scrollTo({ top: el.scrollHeight, behavior });
-    } else {
-      messagesEndRef.current?.scrollIntoView({ behavior });
-    }
-    isUserScrolledUpRef.current = false;
-    setShowScrollBottomBtn(false);
-  }, []);
-
-  // Smart scroll effect: DO NOT snatch user's scroll down during streaming if they scrolled up!
+  // Scroll to bottom on initial mount or when message count changes (if pinned)
   useEffect(() => {
-    if (isUserScrolledUpRef.current) {
-      // User is reading earlier content — leave viewport exactly where it is!
-      return;
-    }
-    const el = scrollContainerRef.current;
-    if (el) {
-      // Direct scroll assignment keeps up with rapid SSE streaming without jitter
-      el.scrollTop = el.scrollHeight;
-    }
-  }, [messages, isLoading]);
+    followIfPinned();
+  }, [messages.length, followIfPinned]);
 
   const handleClearClick = () => {
     if (!confirmingClear) {
@@ -211,7 +204,6 @@ function FloatingChatPanel({
     if (!query.trim() || isLoading) return;
     setIsLoading(true);
 
-    // Atomically append user message and placeholder assistant bubble
     setMessages((prev) => {
       const next: ChatMessage[] = [
         ...prev,
@@ -222,10 +214,7 @@ function FloatingChatPanel({
       return next;
     });
 
-    // Reset user scroll so they see their question and the start of the response
-    isUserScrolledUpRef.current = false;
-    setShowScrollBottomBtn(false);
-    setTimeout(() => scrollToBottom('smooth'), 50);
+    pinToBottom();
 
     let responseAccumulator = '';
 
@@ -257,7 +246,6 @@ function FloatingChatPanel({
           setMessages((prev) => {
             if (prev.length === 0) return prev;
             const last = prev[prev.length - 1];
-            // If the assistant message is still completely empty, drop it
             if (last?.role === 'assistant' && !last.content) {
               const pruned = prev.slice(0, -1);
               setCachedChatHistory(topicId, pruned);
@@ -279,7 +267,7 @@ function FloatingChatPanel({
     }
   };
 
-  // Auto-send pre-seeded message immediately without waiting for background fetch
+  // Auto-send pre-seeded message immediately
   useEffect(() => {
     if (!seedMessage || seedSentRef.current) return;
     seedSentRef.current = true;
@@ -298,15 +286,29 @@ function FloatingChatPanel({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/35 backdrop-blur-[1px] md:items-stretch md:justify-end overflow-hidden overscroll-none"
+      className={
+        isFullscreen
+          ? 'fixed inset-0 z-[70] flex overflow-hidden overscroll-none bg-bg-0'
+          : 'fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 backdrop-blur-[2px] md:items-stretch md:justify-end overflow-hidden overscroll-none'
+      }
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (!isFullscreen && e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="page-enter relative flex h-[min(85dvh,640px)] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl border-t border-border bg-bg-0 shadow-2xl md:h-full md:w-[420px] md:rounded-none md:border-t-0 md:border-l">
-        {/* Header */}
-        <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3.5">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-tint text-brand">
+      <div
+        className={
+          isFullscreen
+            ? 'relative flex h-full w-full flex-col bg-bg-0'
+            : 'page-enter relative flex h-[min(88dvh,680px)] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl border-t border-border bg-bg-0 shadow-2xl md:h-full md:w-[440px] md:rounded-none md:border-t-0 md:border-l'
+        }
+      >
+        {/* ── Header ── */}
+        <header
+          className={`flex shrink-0 items-center gap-3 border-b border-border bg-card px-4 py-3 ${
+            isFullscreen ? 'pt-[calc(env(safe-area-inset-top,0px)+12px)]' : ''
+          }`}
+        >
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
             <Bot size={18} strokeWidth={1.8} />
           </div>
           <div className="min-w-0 flex-1">
@@ -315,6 +317,8 @@ function FloatingChatPanel({
               {topicId ? 'Helping with this topic' : 'Your AI study tutor'}
             </p>
           </div>
+
+          {/* Clear button */}
           {messages.length > 0 &&
             (confirmingClear ? (
               <button
@@ -331,106 +335,108 @@ function FloatingChatPanel({
                 onClick={handleClearClick}
                 aria-label="Clear conversation"
                 title="Clear conversation"
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg-2 hover:text-ink"
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg-2 hover:text-ink active:scale-95"
               >
-                <Trash2 size={16} strokeWidth={1.8} />
+                <Trash2 size={15} strokeWidth={1.8} />
               </button>
             ))}
+
+          {/* Expand / Exit Fullscreen */}
+          <button
+            type="button"
+            onClick={() => setIsFullscreen((f) => !f)}
+            aria-label={isFullscreen ? 'Exit full screen' : 'Expand to full screen'}
+            title={isFullscreen ? 'Exit full screen' : 'Expand to full screen'}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg-2 hover:text-ink active:scale-95"
+          >
+            {isFullscreen ? (
+              <Minimize2 size={15} strokeWidth={2} />
+            ) : (
+              <Maximize2 size={15} strokeWidth={2} />
+            )}
+          </button>
+
+          {/* Close */}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close chat"
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg-2 hover:text-ink"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg-2 hover:text-ink active:scale-95"
           >
-            <X size={18} strokeWidth={2} />
+            <X size={17} strokeWidth={2} />
           </button>
         </header>
 
-        {/* Messages */}
+        {/* ── Messages scroll area ── */}
         <main
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-4 space-y-4"
+          onWheel={handleWheel}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          className="relative flex-1 overflow-y-auto pb-8 pt-4"
         >
-          {messages.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center my-auto py-10 px-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-dim border border-brand/20">
-                <Bot size={24} strokeWidth={1.8} className="text-brand" />
-              </div>
-              <div>
-                <p className="text-[15px] font-bold text-ink">Hi, I&apos;m Zikora</p>
-                <p className="text-[13px] text-muted mt-1 max-w-[260px] leading-relaxed">
-                  {topicId
-                    ? 'Ask me anything about this topic — explanations, definitions, or exam questions.'
-                    : "Ask me anything — study tips, tricky concepts, or questions you're stuck on."}
-                </p>
-              </div>
-            </div>
-          ) : (
-            messages.map((msg, index) => {
-              const isLastBubble = index === messages.length - 1;
-              const showThinking =
-                msg.role === 'assistant' && isLastBubble && isLoading && msg.content === '';
-
-              return (
-                <div
-                  key={index}
-                  className={`flex items-end ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 ${
-                      msg.role === 'user'
-                        ? 'rounded-br-sm bg-ink text-white'
-                        : 'rounded-bl-sm border border-border-2 bg-card text-ink'
-                    }`}
-                  >
-                    {showThinking ? (
-                      <ThinkingDots />
-                    ) : (
-                      <ErrorBoundary
-                        fallback={
-                          <div className="text-[13px] text-red-500">
-                            Failed to render message content.
-                          </div>
-                        }
-                      >
-                        <MathContent
-                          content={msg.content}
-                          allowBlock={true}
-                          isStreaming={msg.role === 'assistant' && isLastBubble && isLoading && msg.content !== ''}
-                          className={`text-[14px] leading-relaxed [&_.math-para]:mb-0 [&_.math-para]:text-[14px] ${
-                            msg.role === 'user' ? 'text-white [&_.math-para]:text-white' : 'text-ink'
-                          }`}
-                        />
-                      </ErrorBoundary>
-                    )}
-                  </div>
+          <div
+            className={`flex min-h-full w-full flex-col gap-6 ${
+              isFullscreen ? 'mx-auto max-w-3xl px-5 md:px-10' : 'px-4'
+            }`}
+          >
+            {messages.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center my-auto py-10 px-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-tint border border-brand/20">
+                  <Bot size={24} strokeWidth={1.8} className="text-brand" />
                 </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
+                <div>
+                  <p className="text-[15px] font-bold text-ink">Hi, I&apos;m Zikora</p>
+                  <p className="text-[13px] text-muted mt-1 max-w-[260px] leading-relaxed">
+                    {topicId
+                      ? 'Ask me anything about this topic — explanations, definitions, or exam questions.'
+                      : "Ask me anything — study tips, tricky concepts, or questions you're stuck on."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              messages.map((msg, index) => {
+                const isLastAssistant =
+                  index === messages.length - 1 && msg.role === 'assistant';
+                return (
+                  <ChatMessageItem
+                    key={index}
+                    message={msg}
+                    isStreaming={isLastAssistant && isLoading}
+                    onStreamAdvance={followIfPinned}
+                  />
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </main>
 
-        {/* Floating "Scroll to bottom" button if user scrolled up to read while stream arrives */}
-        {showScrollBottomBtn && (
+        {/* ── Centered circular jump-to-bottom button (matches reference UI) ── */}
+        {showJumpToBottom && (
           <button
             type="button"
-            onClick={() => scrollToBottom('smooth')}
-            aria-label="Scroll to latest messages"
-            className="absolute bottom-16 right-4 z-10 flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold text-white shadow-lg border border-white/20 transition-all hover:bg-ink/90 active:scale-95"
+            onClick={jumpToBottom}
+            aria-label="Jump to bottom"
+            className="absolute bottom-[74px] left-1/2 z-20 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-ink shadow-md transition-all hover:bg-bg-2 active:scale-95"
           >
-            <ChevronDown size={14} strokeWidth={2.5} />
-            <span>Latest</span>
+            <ArrowDown size={16} strokeWidth={2.2} />
           </button>
         )}
 
-        {/* Input */}
+        {/* ── Input ── */}
         <form
           onSubmit={handleSubmit}
-          className="border-t border-border px-3 py-2.5 sm:px-4 sm:py-3 w-full max-w-full box-border bg-card shrink-0"
+          className={`shrink-0 border-t border-border bg-card px-3 py-2.5 sm:px-4 sm:py-3 w-full box-border ${
+            isFullscreen ? 'pb-[calc(env(safe-area-inset-bottom,0px)+12px)]' : ''
+          }`}
         >
-          <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-1 px-3 py-2 sm:px-4 sm:py-2.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all w-full max-w-full box-border">
+          <div
+            className={`flex items-center gap-2 rounded-xl border border-border-2 bg-bg-0 px-3 py-2 focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-ink/5 transition-all w-full max-w-full box-border ${
+              isFullscreen ? 'mx-auto max-w-3xl' : ''
+            }`}
+          >
             <input
               type="text"
               value={inputMessage}
@@ -443,9 +449,9 @@ function FloatingChatPanel({
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
               aria-label="Send message"
-              className="flex h-9 w-9 sm:h-8 sm:w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white transition-colors hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint active:scale-95"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white transition-all hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint active:scale-95"
             >
-              <ArrowUp size={16} strokeWidth={2.5} />
+              <ArrowUp size={15} strokeWidth={2.5} />
             </button>
           </div>
         </form>

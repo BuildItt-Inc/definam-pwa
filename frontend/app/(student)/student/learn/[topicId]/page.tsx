@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, ChevronRight, BookOpen, Check, ChevronDown, ArrowUp, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight, BookOpen, Check, ArrowDown, ArrowUp, X, Bot } from 'lucide-react';
 import {
   getChaptersBySubjectName,
   getCachedChaptersBySubjectName,
@@ -20,8 +20,8 @@ import { TopicListItem } from '@/components/student/TopicListItem';
 import { AnalyticsEvents } from '@/lib/analytics';
 import { LearningStep } from '@/components/student/LearningStep';
 import { PracticeQuestion } from '@/components/student/PracticeQuestion';
-import { MathContent } from '@/components/student/MathContent';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ChatMessageItem } from '@/components/student/ChatMessageItem';
+import { useSmartChatScroll } from '@/hooks/useSmoothedStream';
 import { getFollowUpSuggestions } from '@/lib/utils/chatFollowUps';
 import {
   getChatHistory,
@@ -553,11 +553,19 @@ function AITutorScaffold({
   });
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
 
-  const scrollContainerRef = useRef<HTMLElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isUserScrolledUpRef = useRef(false);
+  const {
+    scrollContainerRef,
+    messagesEndRef,
+    showJumpToBottom,
+    handleScroll,
+    handleWheel,
+    handleTouchStart,
+    handleTouchMove,
+    jumpToBottom,
+    pinToBottom,
+    followIfPinned,
+  } = useSmartChatScroll();
   const { setSuppressed } = useFloatingChat();
 
   // Suppress floating AI widget while at the full-screen AI chat page
@@ -588,34 +596,9 @@ function AITutorScaffold({
     };
   }, [topicId, topicTitle]);
 
-  const handleScroll = useCallback(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    const isScrolledUp = distanceFromBottom > 60;
-    isUserScrolledUpRef.current = isScrolledUp;
-    setShowScrollBottomBtn(isScrolledUp && distanceFromBottom > 120);
-  }, []);
-
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      el.scrollTo({ top: el.scrollHeight, behavior });
-    } else {
-      messagesEndRef.current?.scrollIntoView({ behavior });
-    }
-    isUserScrolledUpRef.current = false;
-    setShowScrollBottomBtn(false);
-  }, []);
-
-  // Smart scroll: Never snatch user down if they have scrolled up to read!
   useEffect(() => {
-    if (isUserScrolledUpRef.current) return;
-    const el = scrollContainerRef.current;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
-    }
-  }, [messages, isLoading]);
+    followIfPinned();
+  }, [messages.length, followIfPinned]);
 
   const submitMessage = async (query: string) => {
     if (!query.trim() || isLoading) return;
@@ -634,9 +617,7 @@ function AITutorScaffold({
       return next;
     });
 
-    isUserScrolledUpRef.current = false;
-    setShowScrollBottomBtn(false);
-    setTimeout(() => scrollToBottom('smooth'), 50);
+    pinToBottom();
 
     let responseAccumulator = '';
 
@@ -694,146 +675,126 @@ function AITutorScaffold({
   const followUpSuggestions = !isLoading ? getFollowUpSuggestions(messages, topicTitle) : [];
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#fafbfa] relative">
-      {/* Appbar matching Image 1 */}
-      <header className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200">
+    <div className="flex h-[100dvh] flex-col bg-bg-0 relative overflow-hidden">
+      {/* Appbar */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-4 py-3 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <button onClick={onBack} aria-label="Go back" className="flex-shrink-0 text-ink/70 hover:text-ink -ml-1 p-1">
           <ArrowLeft size={20} strokeWidth={2} />
         </button>
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#15803d] text-white font-bold text-base shadow-xs">
-          Z
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-brand-tint text-brand">
+          <Bot size={18} strokeWidth={1.8} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-[15.5px] text-ink leading-tight">Zikora</p>
-          <p className="text-[12px] text-muted">Your AI tutor</p>
+          <p className="font-bold text-[15px] text-ink leading-tight">Zikora</p>
+          <p className="text-[12px] text-muted">Your AI study tutor</p>
         </div>
       </header>
 
-      {/* Context pill banner matching Image 1 */}
-      <div className="mx-4 mt-3 mb-1 flex items-center gap-2 rounded-xl bg-[#eff4ff] border border-blue-100 px-3.5 py-2.5 text-[13px] font-semibold text-[#1e40af]">
-        <BookOpen size={15} className="text-blue-600 flex-shrink-0" />
-        <span className="truncate">Helping with: {topicTitle}</span>
+      {/* Context banner */}
+      <div className="mx-auto w-full max-w-3xl px-4 pt-3 pb-1 shrink-0">
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-[12.5px] font-medium text-ink-2">
+          <BookOpen size={14} className="text-brand flex-shrink-0" />
+          <span className="truncate">Helping with: <strong className="font-semibold text-ink">{topicTitle}</strong></span>
+        </div>
       </div>
 
       {/* Chat area */}
       <main
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex flex-1 flex-col overflow-y-auto px-4 pb-4 pt-3 space-y-4"
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        className="flex-1 overflow-y-auto pb-8 pt-4"
       >
-        {messages.map((msg, index) => {
-          const isLast = index === messages.length - 1;
-          const isStreamingThis = isLast && isLoading && msg.role === 'assistant';
-          const isThinking = isStreamingThis && !msg.content;
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4">
+          {messages.map((msg, index) => {
+            const isLast = index === messages.length - 1;
+            const isStreamingThis = isLast && isLoading && msg.role === 'assistant';
 
-          return (
-            <div key={index} className="space-y-2">
-              <div
-                className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : ''}`}
-              >
-                <div
-                  className={`max-w-[88%] rounded-2xl px-4 py-3 text-[14.5px] leading-relaxed shadow-xs ${
-                    msg.role === 'user'
-                      ? 'bg-[#15803d] text-white font-medium rounded-tr-sm'
-                      : 'border border-gray-200 bg-white text-ink rounded-tl-sm'
-                  }`}
-                >
-                  {msg.role === 'user' ? (
-                    <span>{msg.content}</span>
-                  ) : isThinking ? (
-                    <div className="flex items-center gap-1.5 py-1 text-xs text-muted">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#15803d]" style={{ animationDelay: '0ms' }} />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#15803d]" style={{ animationDelay: '150ms' }} />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#15803d]" style={{ animationDelay: '300ms' }} />
-                      <span className="ml-1 text-[12px] font-semibold text-muted">Zikora is thinking…</span>
-                    </div>
-                  ) : (
-                    <ErrorBoundary
-                      fallback={
-                        <div className="text-[13px] text-red-500">
-                          Failed to render message content.
-                        </div>
-                      }
-                    >
-                      <MathContent content={msg.content} isStreaming={isStreamingThis} className="text-[14.5px]" />
-                    </ErrorBoundary>
-                  )}
-                </div>
+            return (
+              <div key={index} className="space-y-3">
+                <ChatMessageItem
+                  message={msg}
+                  isStreaming={isStreamingThis}
+                  onStreamAdvance={followIfPinned}
+                />
+
+                {/* Auto follow-up question pills directly beneath assistant reply */}
+                {isLast && msg.role === 'assistant' && !isLoading && followUpSuggestions.length > 0 && (
+                  <div className="flex flex-wrap items-start gap-2 pt-1">
+                    {followUpSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => void submitMessage(suggestion)}
+                        className="rounded-xl border border-border bg-card px-3.5 py-2 text-[13px] font-medium text-ink shadow-2xs hover:bg-bg-2 active:scale-[0.98] transition-all text-left"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-
-              {/* Auto follow-up question pills directly beneath assistant reply (Image 1) */}
-              {isLast && msg.role === 'assistant' && !isLoading && followUpSuggestions.length > 0 && (
-                <div className="flex flex-col items-start gap-2 pt-1 pl-1">
-                  {followUpSuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      onClick={() => void submitMessage(suggestion)}
-                      className="rounded-full border border-[#15803d] bg-white px-4 py-2 text-[13.5px] font-semibold text-[#15803d] shadow-2xs hover:bg-[#ecfdf5] active:scale-95 transition-all text-left"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
       </main>
 
-      {/* Floating scroll to bottom button */}
-      {showScrollBottomBtn && (
+      {/* Centered circular jump-to-bottom button */}
+      {showJumpToBottom && (
         <button
           type="button"
-          onClick={() => scrollToBottom('smooth')}
-          aria-label="Scroll to latest messages"
-          className="absolute bottom-20 right-4 z-10 flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold text-white shadow-lg border border-white/20 transition-all hover:bg-ink/90 active:scale-95"
+          onClick={jumpToBottom}
+          aria-label="Jump to bottom"
+          className={`absolute ${!isLoading && messages.length > 2 ? 'bottom-[134px]' : 'bottom-[82px]'} left-1/2 z-20 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-ink shadow-md transition-all hover:bg-bg-2 active:scale-95`}
         >
-          <ChevronDown size={14} strokeWidth={2.5} />
-          <span>Latest</span>
+          <ArrowDown size={16} strokeWidth={2.2} />
         </button>
       )}
 
       {/* Bottom control CTAs if inactive */}
       {!isLoading && messages.length > 2 && (
-        <div className="flex gap-2 justify-center bg-white border-t border-border px-4 py-2.5 pb-safe">
-          <button
-            onClick={onBrowse}
-            className="flex-1 rounded-xl bg-ink text-white py-2.5 text-xs font-bold hover:bg-ink/90 active:scale-95 transition-all"
-          >
-            Browse Topics
-          </button>
-          <button
-            onClick={onHome}
-            className="flex-1 rounded-xl border border-gray-300 bg-white text-ink py-2.5 text-xs font-bold hover:bg-gray-50 active:scale-95 transition-all"
-          >
-            Back Home
-          </button>
+        <div className="shrink-0 border-t border-border bg-card px-4 py-2.5">
+          <div className="mx-auto flex max-w-3xl gap-2 justify-center">
+            <button
+              onClick={onBrowse}
+              className="flex-1 rounded-xl bg-ink text-white py-2.5 text-xs font-bold hover:bg-ink/90 active:scale-95 transition-all"
+            >
+              Browse Topics
+            </button>
+            <button
+              onClick={onHome}
+              className="flex-1 rounded-xl border border-border bg-card text-ink py-2.5 text-xs font-bold hover:bg-bg-2 active:scale-95 transition-all"
+            >
+              Back Home
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Input bar matching Image 1 */}
+      {/* Input bar */}
       <form
         onSubmit={handleSubmit}
-        className="border-t border-border px-4 py-3 bg-white w-full max-w-full box-border shrink-0"
+        className="border-t border-border px-4 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] bg-card w-full max-w-full box-border shrink-0"
       >
-        <div className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-1.5 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20 transition-all w-full max-w-full box-border">
+        <div className="mx-auto flex max-w-3xl items-center gap-2 rounded-xl border border-border-2 bg-bg-0 px-3 py-2 focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-ink/5 transition-all w-full box-border">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             disabled={isLoading}
             placeholder="Ask Zikora"
-            className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14.5px] leading-normal placeholder:text-gray-400 focus:outline-none text-ink disabled:opacity-50 touch-manipulation py-1.5"
+            className="flex-1 min-w-0 bg-transparent text-[16px] sm:text-[14px] leading-normal placeholder:text-faint focus:outline-none text-ink disabled:opacity-50 touch-manipulation"
           />
           <button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#15803d] text-white hover:bg-[#166534] disabled:bg-gray-200 disabled:text-gray-400 transition-colors active:scale-95"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
             aria-label="Send message"
           >
-            <ArrowUp size={18} strokeWidth={2.5} />
+            <ArrowUp size={15} strokeWidth={2.5} />
           </button>
         </div>
       </form>
