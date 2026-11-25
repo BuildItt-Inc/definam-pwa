@@ -141,6 +141,48 @@ function FloatingChatPanel({
     };
   }, []);
 
+  // Lock background page scroll while chat is open (Android Chrome & iOS Safari)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    const scrollY = window.scrollY;
+    const html = document.documentElement;
+    const body = document.body;
+
+    const prevHtmlOverflow = html.style.overflow;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyPosition = body.style.position;
+    const prevBodyTop = body.style.top;
+    const prevBodyLeft = body.style.left;
+    const prevBodyRight = body.style.right;
+    const prevBodyWidth = body.style.width;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+
+    html.style.overflow = 'hidden';
+    html.style.overscrollBehavior = 'none';
+    body.style.overflow = 'hidden';
+    body.style.overscrollBehavior = 'none';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      body.style.overflow = prevBodyOverflow;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+      body.style.position = prevBodyPosition;
+      body.style.top = prevBodyTop;
+      body.style.left = prevBodyLeft;
+      body.style.right = prevBodyRight;
+      body.style.width = prevBodyWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
   // Escape exits fullscreen first, then closes panel
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -289,7 +331,7 @@ function FloatingChatPanel({
       className={
         isFullscreen
           ? 'fixed inset-0 z-[70] flex overflow-hidden overscroll-none bg-bg-0'
-          : 'fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 backdrop-blur-[2px] md:items-stretch md:justify-end overflow-hidden overscroll-none'
+          : 'fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 backdrop-blur-[2px] md:items-stretch md:justify-end overflow-hidden overscroll-none touch-none'
       }
       onClick={(e) => {
         if (!isFullscreen && e.target === e.currentTarget) onClose();
@@ -298,13 +340,13 @@ function FloatingChatPanel({
       <div
         className={
           isFullscreen
-            ? 'relative flex h-full w-full flex-col bg-bg-0'
-            : 'page-enter relative flex h-[min(88dvh,680px)] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl border-t border-border bg-bg-0 shadow-2xl md:h-full md:w-[440px] md:rounded-none md:border-t-0 md:border-l'
+            ? 'relative flex h-full w-full flex-col bg-bg-0 overscroll-none'
+            : 'page-enter relative flex h-[min(88dvh,680px)] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl border-t border-border bg-bg-0 shadow-2xl md:h-full md:w-[440px] md:rounded-none md:border-t-0 md:border-l overscroll-none'
         }
       >
         {/* ── Header ── */}
         <header
-          className={`flex shrink-0 items-center gap-2.5 border-b border-border bg-card px-4 py-3 ${
+          className={`flex shrink-0 touch-none items-center gap-2.5 border-b border-border bg-card px-4 py-3 ${
             isFullscreen ? 'pt-[calc(env(safe-area-inset-top,0px)+12px)]' : ''
           }`}
         >
@@ -371,7 +413,7 @@ function FloatingChatPanel({
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
-          className="relative flex-1 overflow-y-auto pb-8 pt-4"
+          className="relative flex-1 overflow-y-auto overscroll-contain touch-pan-y pb-8 pt-4"
         >
           <div
             className={`flex min-h-full w-full flex-col gap-6 ${
@@ -423,7 +465,7 @@ function FloatingChatPanel({
         {/* ── Input ── */}
         <form
           onSubmit={handleSubmit}
-          className="shrink-0 border-t border-border bg-card px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] md:pb-5 w-full box-border"
+          className="shrink-0 overscroll-none border-t border-border bg-card px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] md:pb-5 w-full box-border"
         >
           <div
             className={`flex items-center gap-2.5 rounded-2xl border border-border-2 bg-bg-0 px-3.5 py-2.5 min-h-[48px] focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-ink/5 transition-all w-full max-w-full box-border ${
