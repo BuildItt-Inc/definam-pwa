@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import { Bot, Sparkles, ArrowUp, Trash2, X, ChevronDown } from 'lucide-react';
+import { useParams, usePathname } from 'next/navigation';
+import { Bot, MessageCircle, Sparkles, ArrowUp, Trash2, X, ChevronDown } from 'lucide-react';
 import { useFloatingChat } from './FloatingChatContext';
 import {
   getChatHistory,
@@ -46,28 +46,47 @@ export function AskZikoraButton({
 }
 
 /**
- * Global Zikora drawer (mobile bottom sheet / desktop right side panel).
- * Triggered by labelled header buttons (`AskZikoraButton`) or inline hooks
- * ("Ask AI why this is wrong"), never a floating circle.
+ * Global floating chat bubble + panel. Rendered once in the (student)
+ * layout so it persists across navigation.
  */
 export function FloatingChatWidget() {
   const {
     isOpen,
     topicId,
     pendingSeedMessage,
+    openChat,
     closeChat,
     consumeSeedMessage,
+    isSuppressed,
   } = useFloatingChat();
+  const params = useParams<{ topicId?: string }>();
+  const currentPageTopicId = params?.topicId;
+  const pathname = usePathname();
 
-  if (!isOpen) return null;
+  const isOnChatPage = pathname === '/student/chat';
 
   return (
-    <FloatingChatPanel
-      topicId={topicId}
-      seedMessage={pendingSeedMessage}
-      onSeedConsumed={consumeSeedMessage}
-      onClose={closeChat}
-    />
+    <>
+      {!isOpen && !isOnChatPage && !isSuppressed && (
+        <button
+          type="button"
+          onClick={() => openChat(currentPageTopicId ? { topicId: currentPageTopicId } : undefined)}
+          aria-label="Open Zikora AI tutor"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6 hover:bg-[#1f3029]"
+        >
+          <MessageCircle size={24} strokeWidth={2} />
+        </button>
+      )}
+
+      {isOpen && (
+        <FloatingChatPanel
+          topicId={topicId}
+          seedMessage={pendingSeedMessage}
+          onSeedConsumed={consumeSeedMessage}
+          onClose={closeChat}
+        />
+      )}
+    </>
   );
 }
 

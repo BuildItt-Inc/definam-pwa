@@ -856,6 +856,7 @@ function LearningFlow({
 }) {
   const router = useRouter();
   const { celebrate } = useCelebration();
+  const { setSuppressed } = useFloatingChat();
   const [detail, setDetail] = useState<TopicDetail | null>(() => getCachedTopicDetail(topicId));
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
@@ -866,6 +867,12 @@ function LearningFlow({
   // +1 advancing (Continue/Next), -1 going back — drives which direction the
   // slide+fade transition animates in (see stepSlide in lib/motion.ts).
   const [direction, setDirection] = useState(1);
+
+  // Use header Ask Zikora button inside active lesson instead of the floating circle
+  useEffect(() => {
+    setSuppressed(true);
+    return () => setSuppressed(false);
+  }, [setSuppressed]);
 
   useEffect(() => {
     setFetchError(null);
@@ -1115,7 +1122,6 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
               {isTopicsView && subjectName ? subjectName : name}
             </h1>
           </div>
-          <AskZikoraButton className="shrink-0" />
         </div>
       </header>
 

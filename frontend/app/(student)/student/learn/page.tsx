@@ -5,7 +5,6 @@ import { Search, BookOpen, Plus } from 'lucide-react';
 import { getSubjects, getCachedSubjects } from '@/lib/api/topics';
 import type { Subject } from '@/types/topics';
 import { SubjectCard } from '@/components/student/SubjectCard';
-import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import Link from 'next/link';
 import {
   getStudentProfile,
@@ -110,16 +109,13 @@ export default function BrowsePage() {
     <div className="page-with-nav bg-bg-0 page-enter">
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
         {/* Header */}
-        <header className="mb-4 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-[24px] font-bold leading-tight tracking-tight text-ink">
-              Subjects
-            </h1>
-            <p className="mt-0.5 text-[13.5px] text-muted">
-              Pick what you are studying this term.
-            </p>
-          </div>
-          <AskZikoraButton className="shrink-0" />
+        <header className="mb-4">
+          <h1 className="text-[24px] font-bold leading-tight tracking-tight text-ink">
+            Subjects
+          </h1>
+          <p className="mt-0.5 text-[13.5px] text-muted">
+            Pick what you are studying this term.
+          </p>
         </header>
 
         {/* Segmented tabs */}

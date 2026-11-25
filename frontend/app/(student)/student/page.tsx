@@ -9,12 +9,13 @@ import { getHomeData, getSubjects, getCachedHomeData, getCachedSubjects } from '
 import type { HomeData, RecentTopic, Subject } from '@/types/topics';
 import { RecallCard } from '@/components/student/RecallCard';
 import { CompletionRing } from '@/components/student/CompletionRing';
-import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
-import { SUBJECT_ICONS, subjectIcon } from '@/lib/utils/subjects';
+import { useSpotlight } from '@/hooks/useSpotlight';
+import { SUBJECT_ICONS, subjectIcon, subjectColor } from '@/lib/utils/subjects';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import {
   getStudentProfile,
+  getSelectedSubjectNames,
   filterSubjectsByProfile,
   filterTopicsByProfile,
   type StudentProfile,
@@ -35,28 +36,30 @@ function getGreeting(): string {
 function HomeSkeleton() {
   return (
     <div className="min-h-screen bg-bg-0">
-      <div className="border-b border-border bg-card px-4 pb-4 pt-[calc(env(safe-area-inset-top,0px)+16px)]">
-        <div className="mx-auto flex max-w-2xl items-start justify-between gap-3">
-          <div className="space-y-1.5">
-            <div className="h-3 w-20 animate-pulse rounded bg-bg-2" />
-            <div className="h-7 w-40 animate-pulse rounded bg-bg-3" />
-            <div className="h-3 w-32 animate-pulse rounded bg-bg-2" />
-          </div>
-          <div className="h-9 w-24 animate-pulse rounded-lg bg-bg-2" />
+      <div
+        className="relative overflow-hidden px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)]"
+        style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 130%)' }}
+      >
+        <div className="mb-1 h-3 w-20 animate-pulse rounded bg-white/10" />
+        <div className="mb-1 h-8 w-44 animate-pulse rounded bg-white/20" />
+        <div className="mb-4 h-3 w-36 animate-pulse rounded bg-white/10" />
+        <div className="flex items-center justify-between">
+          <div className="h-9 w-28 animate-pulse rounded-full bg-white/10" />
+          <div className="h-10 w-10 animate-pulse rounded-full bg-white/10" />
         </div>
-      </div>
-      <div className="mx-auto max-w-2xl space-y-4 px-4 pt-4">
-        <div className="h-16 animate-pulse rounded-xl border border-border bg-card" />
-        <div className="h-24 animate-pulse rounded-xl border border-border bg-card" />
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="h-20 animate-pulse rounded-xl border border-border bg-card" />
-          <div className="h-20 animate-pulse rounded-xl border border-border bg-card" />
-        </div>
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl border border-border bg-card" />
+        <div className="mt-3.5 flex gap-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-[34px] w-[34px] animate-pulse rounded-[10px] bg-white/10" />
           ))}
         </div>
+      </div>
+      <div className="mt-4 px-4">
+        <div className="h-28 animate-pulse rounded-2xl bg-white border border-border" />
+      </div>
+      <div className="mt-4 px-4 space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 animate-pulse rounded-xl bg-white border border-border" />
+        ))}
       </div>
     </div>
   );
@@ -66,40 +69,44 @@ function HomeSkeleton() {
 
 function TopicRow({ topic }: { topic: RecentTopic }) {
   const Icon = subjectIcon(topic.subject);
+  const color = subjectColor(topic.subject);
+  const { ref, onMouseMove } = useSpotlight<HTMLAnchorElement>();
   const progress = topic.mastery_percent ?? 0;
   const started = progress > 0;
 
   return (
     <Link
+      ref={ref}
+      onMouseMove={onMouseMove}
       href={`/student/learn/${topic.topic_id}`}
-      className="flex min-h-[60px] items-center gap-3 px-4 py-3.5 transition-colors hover:bg-bg-0 active:bg-bg-2"
+      className="spotlight spotlight-card relative flex items-center gap-3 overflow-hidden rounded-[14px] border border-border bg-white px-3 py-3 active:scale-[0.99] transition-transform"
     >
-      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-bg-2 text-ink-2">
+      {/* Subject icon */}
+      <span
+        className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[11px]"
+        style={{ backgroundColor: color.bg, color: color.fg }}
+      >
         <Icon size={18} strokeWidth={1.8} />
       </span>
 
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14.5px] font-bold text-ink">
+      {/* Info + progress bar */}
+      <span className="relative z-10 min-w-0 flex-1">
+        <span className="block truncate text-sm font-bold text-ink">
           {topic.topic_title}
         </span>
-        <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-bg-2">
+        <span className="mt-1.5 block h-[5px] overflow-hidden rounded-full bg-bg-2">
           <span
-            className="block h-full rounded-full bg-brand transition-all duration-300"
-            style={{ width: `${progress}%` }}
+            className="block h-full rounded-full"
+            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #4ADE80, #16A34A)' }}
           />
         </span>
-        <span className="mt-1 block text-xs text-muted">
+        <span className="mt-1 block text-xs text-faint">
           {topic.subject} · {started ? `${progress}% done` : 'Not started'}
         </span>
       </span>
 
-      <span
-        className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold ${
-          started
-            ? 'border border-border bg-card text-ink'
-            : 'bg-ink text-white'
-        }`}
-      >
+      {/* CTA */}
+      <span className="relative z-10 flex-shrink-0 rounded-[9px] bg-ink px-3 py-1.5 text-xs font-bold text-white">
         {started ? 'Continue' : 'Start'}
       </span>
     </Link>
@@ -112,7 +119,7 @@ function SubjectStrip({ subjects }: { subjects: Subject[] }) {
   const mappedSubjects = subjects.filter((s) => s.name in SUBJECT_ICONS).slice(0, 6);
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
+    <div className="relative z-10 mt-3.5 flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
       {mappedSubjects.map((subject) => {
         const Icon = subjectIcon(subject.name);
         return (
@@ -121,10 +128,9 @@ function SubjectStrip({ subjects }: { subjects: Subject[] }) {
             href={`/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`}
             aria-label={subject.name}
             title={subject.name}
-            className="inline-flex h-9 items-center gap-1.5 flex-shrink-0 rounded-lg border border-border bg-card px-2.5 text-xs font-semibold text-ink hover:bg-bg-2 active:scale-[0.97] transition-all"
+            className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[10px] border border-white/10 bg-white/[0.08] text-white active:bg-white/[0.16] transition-colors"
           >
-            <Icon size={14} strokeWidth={1.9} className="text-ink-2" />
-            <span className="max-w-[96px] truncate">{subject.name}</span>
+            <Icon size={16} strokeWidth={1.8} />
           </Link>
         );
       })}
@@ -132,9 +138,9 @@ function SubjectStrip({ subjects }: { subjects: Subject[] }) {
         href="/student/subjects"
         aria-label="Add or remove subjects"
         title="Add or remove subjects"
-        className="inline-flex h-9 flex-shrink-0 items-center gap-1 rounded-lg border border-border bg-bg-2 px-2.5 text-xs font-semibold text-ink hover:bg-bg-3 active:scale-[0.97] transition-all"
+        className="flex h-[34px] flex-shrink-0 items-center gap-1 rounded-[10px] border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white active:bg-white/20 transition-colors"
       >
-        <Plus size={14} strokeWidth={2.3} />
+        <Plus size={14} strokeWidth={2.5} />
         <span>Edit</span>
       </Link>
     </div>
@@ -148,10 +154,10 @@ export default function StudentHomePage() {
   const [subjects, setSubjects] = useState<Subject[] | null>(() => getCachedSubjects());
   const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [retryTick, setRetryTick] = useState(0);
   const [greeting, setGreeting] = useState('Good morning');
   const router = useRouter();
   const { celebrate } = useCelebration();
+  const { ref: glowRef, onMouseMove: onGlowMouseMove } = useSpotlight<HTMLDivElement>();
   const {
     canInstall,
     promptInstall,
@@ -173,7 +179,6 @@ export default function StudentHomePage() {
 
   useEffect(() => {
     setGreeting(getGreeting());
-    setFetchError(null);
     getHomeData()
       .then((homeData) => {
         setData(homeData);
@@ -192,20 +197,21 @@ export default function StudentHomePage() {
       });
     getSubjects()
       .then(setSubjects)
-      .catch(() => setSubjects((prev) => prev ?? []));
-  }, [router, celebrate, retryTick]);
+      .catch(() => setSubjects([]));
+  }, [router, celebrate]);
 
   if (fetchError && !data) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-0 px-6 text-center">
-        <p className="text-sm text-muted">{fetchError}</p>
-        <button
-          type="button"
-          onClick={() => setRetryTick((n) => n + 1)}
-          className="btn-primary px-5 text-xs"
-        >
-          Try again
-        </button>
+      <div className="flex min-h-screen items-center justify-center px-6 bg-bg-0">
+        <div className="text-center">
+          <p className="text-base text-muted mb-4">{fetchError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-sm font-semibold text-brand underline underline-offset-2"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
@@ -223,75 +229,80 @@ export default function StudentHomePage() {
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
 
-      {/* ── 1. Clean Executive Header (no overlapping cards underneath) ── */}
-      <header className="border-b border-border bg-card px-4 pb-4 pt-[calc(env(safe-area-inset-top,0px)+16px)]">
-        <div className="mx-auto flex max-w-2xl items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-muted">
-              {greeting}
-            </p>
-            <h1 className="truncate text-[24px] font-bold leading-tight tracking-tight text-ink">
-              {displayName}
-            </h1>
-            {profile?.class_level ? (
-              <p className="mt-0.5 truncate text-[13px] text-muted">
-                {profile.class_level}{profile.targets?.length ? ` · ${profile.targets.join(', ')}` : ''}{school_name ? ` · ${school_name}` : ''}
-              </p>
-            ) : school_name ? (
-              <p className="mt-0.5 truncate text-[13px] text-muted">{school_name}</p>
-            ) : null}
-          </div>
+      {/* ── 1. Hero Header ── */}
+      <div
+        ref={glowRef}
+        onMouseMove={onGlowMouseMove}
+        className="relative shrink-0 overflow-hidden px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)]"
+        style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 130%)' }}
+      >
+        {/* Static corner glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.22), transparent 70%)' }}
+        />
 
-          <AskZikoraButton className="shrink-0 mt-0.5" />
-        </div>
-      </header>
+        <p className="relative z-10 mb-0.5 text-xs font-medium text-white/50 tracking-wide">
+          {greeting}
+        </p>
+        <h1 className="relative z-10 mb-0.5 text-[26px] font-bold leading-tight text-white tracking-tight">
+          {displayName}
+        </h1>
+        {profile?.class_level ? (
+          <p className="relative z-10 mb-5 text-sm text-white/50">
+            {profile.class_level}{profile.targets?.length ? ` · ${profile.targets.join(', ')}` : ''}{school_name ? ` · ${school_name}` : ''}
+          </p>
+        ) : school_name ? (
+          <p className="relative z-10 mb-5 text-sm text-white/40">{school_name}</p>
+        ) : (
+          <div className="mb-4" />
+        )}
 
-      {/* ── 2. Main scroll area ── */}
-      <main className="mx-auto w-full max-w-2xl flex-1 space-y-4 px-4 pt-4 pb-nav">
-
-        {/* Streak & Overall Progress strip */}
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-tint text-brand">
-              <Flame size={18} strokeWidth={2} className={streak_days > 0 ? 'flame-pulse' : ''} />
+        {/* Streak pill + completion ring — streak shown once only here */}
+        <div className="relative z-10 flex items-center justify-between gap-2.5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-brand-light/30 bg-white/10 px-3.5 py-2">
+            <Flame size={15} strokeWidth={2} className="flame-pulse text-brand-light" />
+            <span className="font-bold text-base leading-none text-white">
+              {streak_days}
             </span>
-            <div>
-              <p className="text-[15px] font-bold leading-tight text-ink">
-                {streak_days} {streak_days === 1 ? 'day' : 'days'} streak
-              </p>
-              <p className="text-xs text-muted">
-                {streak_days === 0 ? 'Complete a topic to start your streak' : 'Keep showing up daily'}
-              </p>
-            </div>
+            <span className="text-xs text-white/55">
+              {streak_days === 0 ? 'Start your streak' : streak_days === 1 ? 'day streak' : 'day streak'}
+            </span>
           </div>
           <CompletionRing percent={completion_percent} />
         </div>
 
         {/* Subject shortcut strip */}
         {displaySubjects && displaySubjects.length > 0 && <SubjectStrip subjects={displaySubjects} />}
+      </div>
 
-        {/* Recall card — sits cleanly in normal flow below the header */}
-        <RecallCard
-          queue={recall_queue}
-          onStart={() => router.push('/student/review')}
-        />
+      {/* ── 2. Main scroll area ── */}
+      <main className="flex-1 px-4 pb-nav">
+
+        {/* Recall card — sits cleanly below the header with no overlap */}
+        <div className="mt-4 mb-4">
+          <RecallCard
+            queue={recall_queue}
+            onStart={() => router.push('/student/review')}
+          />
+        </div>
 
         {/* PWA install banner */}
         {canInstall && (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
-            <div className="min-w-0 flex-1">
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-border bg-white p-3.5 shadow-xs">
+            <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-ink">Install Recall App</p>
-              <p className="mt-0.5 text-xs leading-snug text-muted">
+              <p className="text-xs text-muted mt-0.5 leading-snug">
                 Add Recall to your home screen for quick, one-tap access.
               </p>
             </div>
             <button
-              type="button"
               onClick={promptInstall}
-              className="btn-primary min-h-[38px] px-3.5 py-1.5 text-xs flex-shrink-0"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-white active:scale-95 transition-transform"
             >
               <Download size={13} strokeWidth={2.5} />
-              <span>Install</span>
+              Install
             </button>
           </div>
         )}
@@ -301,58 +312,56 @@ export default function StudentHomePage() {
           onClose={() => setShowInstallModal(false)}
         />
 
-        {/* Stats row — live counts only */}
-        <div className="grid grid-cols-2 gap-2.5">
+        {/* Stats row — displays filtered subjects count */}
+        <div className="mb-5 grid grid-cols-2 gap-2">
           <Link
             href="/student/subjects"
             aria-label="Manage your subjects"
-            className="group rounded-xl border border-border bg-card px-3.5 py-3.5 transition-colors hover:bg-bg-0 active:scale-[0.98]"
+            className="group rounded-[14px] border border-border bg-white px-3 py-3.5 text-center transition-all hover:border-ink/20 active:scale-[0.98]"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xl font-bold text-ink">
-                {displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}
-              </span>
-              <ChevronRight size={15} className="text-muted transition-colors group-hover:text-ink" />
+            <div className="flex items-center justify-center gap-1 text-xl font-extrabold text-ink">
+              <span>{displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}</span>
+              <ChevronRight size={14} className="text-muted group-hover:text-ink transition-colors" />
             </div>
-            <div className="mt-0.5 text-xs text-muted">My subjects · edit</div>
+            <div className="mt-0.5 text-xs text-muted">my subjects · edit</div>
           </Link>
-          <div className="rounded-xl border border-border bg-card px-3.5 py-3.5">
-            <div className="text-xl font-bold text-brand">
+          <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
+            <div className="text-xl font-extrabold text-ink">
               {completion_percent}%
             </div>
-            <div className="mt-0.5 text-xs text-muted">Overall progress</div>
+            <div className="mt-0.5 text-xs text-muted">overall done</div>
           </div>
         </div>
 
         {/* Topics section */}
-        <section className="pb-4">
-          <div className="mb-2.5 flex items-center justify-between">
-            <span className="text-[15px] font-bold text-ink">
+        <section className="mb-6">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-base font-bold text-ink">
               {hasStarted ? 'Continue studying' : 'Start here'}
             </span>
             <Link
               href="/student/learn"
-              className="text-[13px] font-semibold text-brand hover:underline underline-offset-4 active:opacity-70"
+              className="text-sm font-semibold text-brand active:opacity-70 transition-opacity"
             >
-              All subjects
+              Browse all
             </Link>
           </div>
 
           {displayTopics.length > 0 ? (
-            <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
+            <div className="flex flex-col gap-2">
               {displayTopics.map((topic) => (
                 <TopicRow key={topic.topic_id} topic={topic} />
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-border bg-card p-5 text-center">
-              <p className="text-sm font-bold text-ink">Ready to begin?</p>
-              <p className="mx-auto mt-1 max-w-[280px] text-xs text-muted leading-relaxed">
+            <div className="rounded-[14px] border border-border bg-white p-5 text-center">
+              <p className="text-sm font-semibold text-ink">Ready to begin?</p>
+              <p className="text-xs text-muted mt-1 max-w-[280px] mx-auto">
                 Explore your selected subjects and start your first topic to build your recall streak.
               </p>
               <Link
                 href="/student/learn"
-                className="btn-primary mt-3.5 inline-flex text-xs px-4"
+                className="mt-3.5 inline-flex items-center justify-center rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-brand-dark transition-colors"
               >
                 Open My Subjects
               </Link>

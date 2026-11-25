@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { LogOut, Pencil, Check, X, Bell, MessageSquarePlus, HelpCircle, ChevronRight } from 'lucide-react';
+import { LogOut, Pencil, Check, X, Bell, MessageSquarePlus, HelpCircle, Bug, ChevronRight } from 'lucide-react';
 import { changePassword, getMe, getCachedMe, updateCachedMe, logout, ApiError, getAuthHeaders, handleAuthError } from '@/lib/api/auth';
 import { getHomeData, getCachedHomeData } from '@/lib/api/topics';
 import { getStudentProfile, saveStudentProfile, DEFAULT_SUBJECTS, type StudentProfile } from '@/lib/utils/studentProfile';
@@ -21,7 +21,6 @@ import {
 import { toast } from '@/lib/toast';
 import type { UserMe } from '@/types/auth';
 import { InstallAppButton } from '@/components/ui/InstallAppButton';
-import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { AppInstallModal } from '@/components/ui/AppInstallModal';
 
@@ -257,9 +256,8 @@ export default function SettingsPage() {
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
       <header className="border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+        <div className="mx-auto max-w-2xl">
           <h1 className="text-[19px] font-bold text-ink">Settings</h1>
-          <AskZikoraButton />
         </div>
       </header>
 
@@ -421,6 +419,24 @@ export default function SettingsPage() {
               </div>
               <ChevronRight size={16} className="text-muted" />
             </button>
+
+            <a
+              href="https://forms.gle/G93Xc3xbM12p1M327"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between px-4 py-3 text-ink hover:bg-bg-1 active:bg-bg-2 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FEF3E2] text-[#B54708]">
+                  <Bug size={16} strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="text-[14px] font-semibold text-ink leading-tight">Report a Bug</p>
+                  <p className="text-[12px] text-muted">Something not working? Let us know</p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted" />
+            </a>
 
             <div className="flex items-center justify-between px-4 py-2.5 text-xs text-muted">
               <Link href="/terms" className="hover:text-ink hover:underline">
