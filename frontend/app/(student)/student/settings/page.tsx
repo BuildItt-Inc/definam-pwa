@@ -4,9 +4,9 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LogOut, Pencil, Check, X, Bell, MessageSquarePlus, HelpCircle, ChevronRight } from 'lucide-react';
-import { changePassword, getMe, logout, ApiError, getAuthHeaders, handleAuthError } from '@/lib/api/auth';
+import { changePassword, getMe, getCachedMe, updateCachedMe, logout, ApiError, getAuthHeaders, handleAuthError } from '@/lib/api/auth';
 import { getHomeData, getCachedHomeData } from '@/lib/api/topics';
-import { getStudentProfile, type StudentProfile } from '@/lib/utils/studentProfile';
+import { getStudentProfile, saveStudentProfile, DEFAULT_SUBJECTS, type StudentProfile } from '@/lib/utils/studentProfile';
 import {
   requestNotificationPermissionAndGetToken,
   getStoredFcmToken,
@@ -44,16 +44,18 @@ function SettingsSkeleton() {
 export default function SettingsPage() {
   const router = useRouter();
   const { isIOS, isInstalled, showInstallModal, setShowInstallModal } = usePWAInstall();
-  const [me, setMe] = useState<UserMe | null>(null);
+  const [me, setMe] = useState<UserMe | null>(() => getCachedMe());
   const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
   // Seed school name from session cache for instant render (SWR pattern)
   const [schoolName, setSchoolName] = useState(() => getCachedHomeData()?.school_name ?? '');
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [retryTick, setRetryTick] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
-  // Pre-seed nameInput from local profile so it's ready before /me loads
+  // Pre-seed nameInput from local profile or cached /me so it's ready before /me loads
   const [nameInput, setNameInput] = useState(() => {
     const p = getStudentProfile();
-    return p?.name ?? '';
+    const cached = getCachedMe();
+    return p?.name || cached?.name || cached?.username || '';
   });
   const [nameError, setNameError] = useState(false);
   const [savingName, setSavingName] = useState(false);
@@ -162,12 +164,13 @@ export default function SettingsPage() {
 
   useEffect(() => {
     async function load() {
+      setFetchError(null);
       try {
-        const meData = await getMe();
-        const homeData = await getHomeData();
+        // Fetch in parallel instead of sequential waterfall
+        const [meData, homeData] = await Promise.all([getMe(), getHomeData()]);
         setMe(meData);
         setSchoolName(homeData.school_name);
-        setNameInput(meData.name || meData.username);
+        setNameInput((prev) => prev || meData.name || meData.username);
       } catch (err: unknown) {
         if (!handleAuthError(err, router)) {
           setFetchError(err instanceof Error ? err.message : 'Failed to load');
@@ -175,7 +178,7 @@ export default function SettingsPage() {
       }
     }
     void load();
-  }, [router]);
+  }, [router, retryTick]);
 
   async function handleLogout() {
     setLogoutLoading(true);
@@ -184,7 +187,7 @@ export default function SettingsPage() {
   }
 
   function handleCancelEdit() {
-    setNameInput(me?.name || me?.username || '');
+    setNameInput(profile?.name || me?.name || me?.username || '');
     setIsEditingName(false);
     setNameError(false);
   }
@@ -201,7 +204,19 @@ export default function SettingsPage() {
         body: JSON.stringify({ name: trimmed }),
       });
       if (!res.ok) throw new Error('Failed to update name');
+      // Sync local profile & /me cache so Home and AI Tutor show the new name immediately
+      updateCachedMe({ name: trimmed });
+      setMe((prev) => (prev ? { ...prev, name: trimmed } : prev));
+      const existing = getStudentProfile();
+      saveStudentProfile({
+        name: trimmed,
+        class_level: existing?.class_level ?? 'SS3',
+        targets: existing?.targets ?? ['WAEC', 'School exams'],
+        selectedSubjects: existing?.selectedSubjects ?? DEFAULT_SUBJECTS,
+        completedOnboarding: existing?.completedOnboarding ?? true,
+      });
       setIsEditingName(false);
+      toast.success('Name updated');
     } catch { setNameError(true); } finally { setSavingName(false); }
   }
 
@@ -220,9 +235,16 @@ export default function SettingsPage() {
     } finally { setPwLoading(false); }
   }
 
-  if (fetchError) return (
-    <div className="flex min-h-screen items-center justify-center bg-bg-0 px-6">
-      <p className="text-center text-sm text-muted">{fetchError}</p>
+  if (fetchError && !me && !profile && !nameInput) return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-0 px-6 text-center">
+      <p className="text-sm text-muted">{fetchError}</p>
+      <button
+        type="button"
+        onClick={() => setRetryTick((n) => n + 1)}
+        className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+      >
+        Try again
+      </button>
     </div>
   );
 

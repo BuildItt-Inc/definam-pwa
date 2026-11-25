@@ -258,18 +258,28 @@ export default function ProgressPage() {
     };
   }, []);
 
+  const [retryTick, setRetryTick] = useState(0);
+
   useEffect(() => {
+    setFetchError(null);
     getProgressData()
       .then(setData)
       .catch((err: unknown) => {
         setFetchError(err instanceof Error ? err.message : 'Failed to load');
       });
-  }, []);
+  }, [retryTick]);
 
   if (fetchError && !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg-0 px-6">
-        <p className="text-center text-sm text-muted">{fetchError}</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg-0 px-6 text-center">
+        <p className="text-sm text-muted">{fetchError}</p>
+        <button
+          type="button"
+          onClick={() => setRetryTick((n) => n + 1)}
+          className="rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+        >
+          Try again
+        </button>
       </div>
     );
   }

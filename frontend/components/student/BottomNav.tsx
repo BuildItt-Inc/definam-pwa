@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { House, BookOpen, RefreshCw, Activity, Settings } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { getRecallQueue } from '@/lib/api/topics';
+import { getRecallQueue, getCachedRecallQueue } from '@/lib/api/topics';
 
 interface Tab {
   label: string;
@@ -28,9 +28,13 @@ export interface BottomNavProps {
 function BottomNavContent({ recallCount: initialRecallCount }: BottomNavProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [recallCount, setRecallCount] = useState<number>(initialRecallCount ?? 0);
+  // Seed synchronously from local cache so the badge is immediate with 0ms delay
+  const [recallCount, setRecallCount] = useState<number>(
+    () => initialRecallCount ?? getCachedRecallQueue()?.length ?? 0,
+  );
 
-  // Fetch or sync recall queue count across persistent session
+  // Sync recall queue count once on mount + listen for live queue update events
+  // (avoids hammering GET /api/v1/recall/queue on every bottom-nav tab tap)
   useEffect(() => {
     let isSubscribed = true;
     getRecallQueue()
@@ -52,7 +56,7 @@ function BottomNavContent({ recallCount: initialRecallCount }: BottomNavProps) {
       isSubscribed = false;
       window.removeEventListener('recallQueueUpdated', handleQueueUpdate as EventListener);
     };
-  }, [pathname]);
+  }, []);
 
   if (!pathname) return null;
 

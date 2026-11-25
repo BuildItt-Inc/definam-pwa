@@ -8,15 +8,6 @@ export interface RecallSubmitResult {
 }
 import { ApiError, getAuthHeaders } from '@/lib/api/auth';
 import { USE_MOCK, MOCK_DELAY_MS } from '@/lib/api/mock/week2';
-import {
-  mockSubjects,
-  mockChapters,
-  mockTopics,
-  mockTopicDetail,
-  mockHomeData,
-  mockRecallQueue,
-  mockProgressData,
-} from '@/lib/api/mock/data';
 
 const delay = () => new Promise<void>((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
 
@@ -43,25 +34,41 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-// ── SessionStorage Cache Helpers ──────────────────────────────────────────
+// ── Persistent Cache Helpers (localStorage for offline/PWA cold start + session fallback) ──
 
-function getSession<T>(key: string): T | null {
+function readCache<T>(key: string): T | null {
   if (typeof window === 'undefined') return null;
+  const storageKey = `recall:${key}`;
   try {
-    const raw = sessionStorage.getItem(`recall:${key}`);
+    const raw = localStorage.getItem(storageKey) ?? sessionStorage.getItem(storageKey);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
     return null;
   }
 }
 
-function setSession<T>(key: string, value: T): void {
+function writeCache<T>(key: string, value: T): void {
   if (typeof window === 'undefined') return;
+  const storageKey = `recall:${key}`;
+  const serialized = JSON.stringify(value);
   try {
-    sessionStorage.setItem(`recall:${key}`, JSON.stringify(value));
+    localStorage.setItem(storageKey, serialized);
   } catch {
-    // Ignore quota errors in private browsing
+    try {
+      sessionStorage.setItem(storageKey, serialized);
+    } catch {
+      // Ignore quota errors in private browsing
+    }
   }
+}
+
+function removeCache(key: string): void {
+  if (typeof window === 'undefined') return;
+  const storageKey = `recall:${key}`;
+  try {
+    localStorage.removeItem(storageKey);
+    sessionStorage.removeItem(storageKey);
+  } catch {}
 }
 
 // ── In-memory curriculum cache (persists within session for instant transitions) ──
@@ -78,55 +85,66 @@ export function clearCurriculumCache() {
   curriculumCache.topicsByChapter.clear();
   curriculumCache.topicDetails.clear();
   if (typeof window !== 'undefined') {
-    try {
-      Object.keys(sessionStorage).forEach((k) => {
-        if (k.startsWith('recall:')) sessionStorage.removeItem(k);
-      });
-    } catch {}
+    for (const store of [localStorage, sessionStorage]) {
+      try {
+        Object.keys(store).forEach((k) => {
+          if (k.startsWith('recall:')) store.removeItem(k);
+        });
+      } catch {}
+    }
   }
 }
 
 export function getCachedHomeData(): HomeData | null {
-  return getSession<HomeData>('homeData');
+  return readCache<HomeData>('homeData');
 }
 
 export function getCachedSubjects(): Subject[] | null {
-  return curriculumCache.subjects || getSession<Subject[]>('subjects');
+  return curriculumCache.subjects || readCache<Subject[]>('subjects');
+}
+
+export function getCachedChaptersBySubjectName(subjectName: string): Chapter[] | null {
+  return curriculumCache.chaptersByName.get(subjectName) || readCache<Chapter[]>(`chapters:${subjectName}`);
+}
+
+export function getCachedTopics(chapterId: string): Topic[] | null {
+  return curriculumCache.topicsByChapter.get(chapterId) || readCache<Topic[]>(`topics:${chapterId}`);
+}
+
+export function getCachedTopicDetail(topicId: string): TopicDetail | null {
+  return curriculumCache.topicDetails.get(topicId) || readCache<TopicDetail>(`topicDetail:${topicId}`);
 }
 
 export function getCachedRecallQueue(): RecallItem[] | null {
-  return getSession<RecallItem[]>('recallQueue');
+  return readCache<RecallItem[]>('recallQueue');
 }
 
 export function getCachedProgressData(): ProgressData | null {
-  return getSession<ProgressData>('progressData');
+  return readCache<ProgressData>('progressData');
 }
 
 // ── getSubjects ────────────────────────────────────────────────────────────
 // Real: GET /api/v1/subjects
 
 export async function getSubjects(): Promise<Subject[]> {
-  if (curriculumCache.subjects) {
-    return curriculumCache.subjects;
-  }
-  const fromSession = getSession<Subject[]>('subjects');
-  if (fromSession && fromSession.length > 0) {
-    curriculumCache.subjects = fromSession;
-    // Silent background revalidation
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects`, {
-      headers: await getAuthHeaders().catch(() => ({})),
-    })
+  const cached = getCachedSubjects();
+  if (cached && cached.length > 0) {
+    curriculumCache.subjects = cached;
+    // Silent background revalidation so curriculum counts/mastery stay fresh
+    getAuthHeaders()
+      .then((headers) => fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects`, { headers }))
       .then(handleResponse<Subject[]>)
       .then((data) => {
         curriculumCache.subjects = data;
-        setSession('subjects', data);
+        writeCache('subjects', data);
       })
       .catch(() => {});
-    return fromSession;
+    return cached;
   }
 
   if (USE_MOCK) {
     await delay();
+    const { mockSubjects } = await import('@/lib/api/mock/data');
     curriculumCache.subjects = mockSubjects;
     return mockSubjects;
   }
@@ -136,7 +154,7 @@ export async function getSubjects(): Promise<Subject[]> {
   });
   const data = await handleResponse<Subject[]>(res);
   curriculumCache.subjects = data;
-  setSession('subjects', data);
+  writeCache('subjects', data);
   return data;
 }
 
@@ -146,77 +164,81 @@ export async function getSubjects(): Promise<Subject[]> {
 // each annotated with class_level so the caller can group them.
 
 export async function getChaptersBySubjectName(subjectName: string): Promise<Chapter[]> {
-  if (curriculumCache.chaptersByName.has(subjectName)) {
-    return curriculumCache.chaptersByName.get(subjectName)!;
-  }
-  const fromSession = getSession<Chapter[]>(`chapters:${subjectName}`);
-  if (fromSession && fromSession.length > 0) {
-    curriculumCache.chaptersByName.set(subjectName, fromSession);
-    return fromSession;
+  const cached = getCachedChaptersBySubjectName(subjectName);
+  const fetchFresh = async () => {
+    if (USE_MOCK) {
+      await delay();
+      const { mockChapters } = await import('@/lib/api/mock/data');
+      void subjectName;
+      curriculumCache.chaptersByName.set(subjectName, mockChapters);
+      return mockChapters;
+    }
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects/by-name/${encodeURIComponent(subjectName)}/chapters`,
+      { headers: await getAuthHeaders() },
+    );
+    const data = await handleResponse<Chapter[]>(res);
+    curriculumCache.chaptersByName.set(subjectName, data);
+    writeCache(`chapters:${subjectName}`, data);
+    return data;
+  };
+
+  if (cached && cached.length > 0) {
+    curriculumCache.chaptersByName.set(subjectName, cached);
+    // Silent SWR revalidation in background so chapter mastery stays fresh
+    void fetchFresh().catch(() => {});
+    return cached;
   }
 
-  if (USE_MOCK) {
-    await delay();
-    void subjectName;
-    curriculumCache.chaptersByName.set(subjectName, mockChapters);
-    return mockChapters;
-  }
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/subjects/by-name/${encodeURIComponent(subjectName)}/chapters`,
-    { headers: await getAuthHeaders() },
-  );
-  const data = await handleResponse<Chapter[]>(res);
-  curriculumCache.chaptersByName.set(subjectName, data);
-  setSession(`chapters:${subjectName}`, data);
-  return data;
+  return fetchFresh();
 }
 
 // ── getTopics ──────────────────────────────────────────────────────────────
 // Real: GET /api/v1/chapters/:id/topics
 
 export async function getTopics(chapterId: string): Promise<Topic[]> {
-  if (curriculumCache.topicsByChapter.has(chapterId)) {
-    return curriculumCache.topicsByChapter.get(chapterId)!;
-  }
-  const fromSession = getSession<Topic[]>(`topics:${chapterId}`);
-  if (fromSession && fromSession.length > 0) {
-    curriculumCache.topicsByChapter.set(chapterId, fromSession);
-    return fromSession;
-  }
-
-  if (USE_MOCK) {
-    await delay();
-    const data = mockTopics.filter((t) => t.chapter_id === chapterId);
+  const cached = getCachedTopics(chapterId);
+  const fetchFresh = async () => {
+    if (USE_MOCK) {
+      await delay();
+      const { mockTopics } = await import('@/lib/api/mock/data');
+      const data = mockTopics.filter((t) => t.chapter_id === chapterId);
+      curriculumCache.topicsByChapter.set(chapterId, data);
+      return data;
+    }
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chapters/${chapterId}/topics`,
+      { headers: await getAuthHeaders() },
+    );
+    const data = await handleResponse<Topic[]>(res);
     curriculumCache.topicsByChapter.set(chapterId, data);
+    writeCache(`topics:${chapterId}`, data);
     return data;
+  };
+
+  if (cached && cached.length > 0) {
+    curriculumCache.topicsByChapter.set(chapterId, cached);
+    // Silent SWR revalidation so topic mastery badges update
+    void fetchFresh().catch(() => {});
+    return cached;
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/chapters/${chapterId}/topics`,
-    { headers: await getAuthHeaders() },
-  );
-  const data = await handleResponse<Topic[]>(res);
-  curriculumCache.topicsByChapter.set(chapterId, data);
-  setSession(`topics:${chapterId}`, data);
-  return data;
+  return fetchFresh();
 }
 
 // ── getTopicDetail ─────────────────────────────────────────────────────────
 // Real: GET /api/v1/topics/:id
 
 export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
-  if (curriculumCache.topicDetails.has(topicId)) {
-    return curriculumCache.topicDetails.get(topicId)!;
-  }
-  const fromSession = getSession<TopicDetail>(`topicDetail:${topicId}`);
-  if (fromSession) {
-    curriculumCache.topicDetails.set(topicId, fromSession);
-    return fromSession;
+  const cached = getCachedTopicDetail(topicId);
+  if (cached) {
+    curriculumCache.topicDetails.set(topicId, cached);
+    return cached;
   }
 
   if (USE_MOCK) {
     await delay();
+    const { mockTopicDetail } = await import('@/lib/api/mock/data');
     const detail = mockTopicDetail[topicId];
     if (!detail) throw new ApiError(404, `Topic detail not found: ${topicId}`);
     curriculumCache.topicDetails.set(topicId, detail);
@@ -229,7 +251,7 @@ export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
   );
   const data = await handleResponse<TopicDetail>(res);
   curriculumCache.topicDetails.set(topicId, data);
-  setSession(`topicDetail:${topicId}`, data);
+  writeCache(`topicDetail:${topicId}`, data);
   return data;
 }
 
@@ -239,6 +261,7 @@ export async function getTopicDetail(topicId: string): Promise<TopicDetail> {
 export async function getHomeData(): Promise<HomeData> {
   if (USE_MOCK) {
     await delay();
+    const { mockHomeData } = await import('@/lib/api/mock/data');
     return mockHomeData;
   }
 
@@ -247,7 +270,7 @@ export async function getHomeData(): Promise<HomeData> {
     { headers: await getAuthHeaders() },
   );
   const data = await handleResponse<HomeData>(res);
-  setSession('homeData', data);
+  writeCache('homeData', data);
   return data;
 }
 
@@ -257,6 +280,7 @@ export async function getHomeData(): Promise<HomeData> {
 export async function getRecallQueue(): Promise<RecallItem[]> {
   if (USE_MOCK) {
     await delay();
+    const { mockRecallQueue } = await import('@/lib/api/mock/data');
     return mockRecallQueue;
   }
 
@@ -291,7 +315,7 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
       question: item.question!,
       model_answer: item.model_answer!,
     }));
-  setSession('recallQueue', result);
+  writeCache('recallQueue', result);
   return result;
 }
 
@@ -301,6 +325,7 @@ export async function getRecallQueue(): Promise<RecallItem[]> {
 export async function getProgressData(): Promise<ProgressData> {
   if (USE_MOCK) {
     await delay();
+    const { mockProgressData } = await import('@/lib/api/mock/data');
     return mockProgressData;
   }
 
@@ -343,7 +368,7 @@ export async function getProgressData(): Promise<ProgressData> {
       : [],
     heatmap_data: Array.isArray(d.heatmap_data) ? d.heatmap_data : [],
   };
-  setSession('progressData', result);
+  writeCache('progressData', result);
   return result;
 }
 
@@ -397,11 +422,7 @@ export async function submitTopicCompletion(
     if (res.ok) {
       curriculumCache.topicDetails.delete(topicId);
       curriculumCache.topicsByChapter.clear();
-      if (typeof window !== 'undefined') {
-        try {
-          sessionStorage.removeItem(`recall:topicDetail:${topicId}`);
-        } catch {}
-      }
+      removeCache(`topicDetail:${topicId}`);
     }
     return res.ok;
   } catch {
@@ -431,5 +452,16 @@ export async function submitRecallRating(
       body: JSON.stringify({ rating }),
     },
   );
-  return handleResponse<RecallSubmitResult>(res);
+  const result = await handleResponse<RecallSubmitResult>(res);
+
+  // Optimistically remove this topic from cached recallQueue so Home/BottomNav badge stays accurate
+  const cachedQueue = getCachedRecallQueue();
+  if (cachedQueue) {
+    const nextQueue = cachedQueue.filter((item) => item.topic_id !== topicId);
+    writeCache('recallQueue', nextQueue);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('recallQueueUpdated', { detail: nextQueue.length }));
+    }
+  }
+  return result;
 }

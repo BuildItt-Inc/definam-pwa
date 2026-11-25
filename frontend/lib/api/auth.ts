@@ -89,9 +89,50 @@ export function handleAuthError(
 
 // In-memory only. Never written to localStorage or sessionStorage.
 let accessToken: string | null = null;
+// Single-flight lock prevents concurrent API calls from stamping on rotating refresh tokens
+let refreshInFlight: Promise<void> | null = null;
+// In-memory / localStorage cache for /auth/me (SWR)
+let cachedMe: UserMe | null = null;
+const ME_CACHE_KEY = 'recall:cache:me';
 
 export function getAccessToken(): string | null {
   return accessToken;
+}
+
+export function getCachedMe(): UserMe | null {
+  if (cachedMe) return cachedMe;
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(ME_CACHE_KEY);
+    if (raw) {
+      cachedMe = JSON.parse(raw) as UserMe;
+      return cachedMe;
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return null;
+}
+
+function setCachedMe(me: UserMe | null): void {
+  cachedMe = me;
+  if (typeof window === 'undefined') return;
+  try {
+    if (me) {
+      localStorage.setItem(ME_CACHE_KEY, JSON.stringify(me));
+    } else {
+      localStorage.removeItem(ME_CACHE_KEY);
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export function updateCachedMe(partial: Partial<UserMe>): void {
+  const existing = getCachedMe();
+  if (existing) {
+    setCachedMe({ ...existing, ...partial });
+  }
 }
 
 const authChannel: BroadcastChannel | null =
@@ -237,18 +278,30 @@ export async function resetPassword(data: ResetPasswordRequest): Promise<void> {
 // ── Token lifecycle ────────────────────────────────────────────────────────
 
 // Uses the httpOnly refresh cookie the backend sets on login.
+// Single-flight deduplication ensures concurrent API calls share one refresh request
+// instead of racing on rotating refresh tokens.
 export async function refreshToken(): Promise<void> {
-  // Calls the Next.js proxy which reads the frontend-domain cookie and
-  // forwards it to the backend, returning a new access_token.
-  const res = await fetch('/api/auth/refresh', { method: 'POST' });
-
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ detail: '' }));
-    throw new ApiError(res.status, extractDetail(body));
+  if (refreshInFlight) {
+    return refreshInFlight;
   }
 
-  const json = (await res.json()) as { access_token: string };
-  accessToken = json.access_token;
+  refreshInFlight = (async () => {
+    const res = await fetch('/api/auth/refresh', { method: 'POST' });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ detail: '' }));
+      throw new ApiError(res.status, extractDetail(body));
+    }
+
+    const json = (await res.json()) as { access_token: string };
+    accessToken = json.access_token;
+  })();
+
+  try {
+    await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
 }
 
 export async function logout(): Promise<void> {
@@ -264,6 +317,14 @@ export async function logout(): Promise<void> {
     // Best-effort cleanup — proceed with logout regardless
   }
 
+  try {
+    const { clearCurriculumCache } = await import('@/lib/api/topics');
+    clearCurriculumCache();
+  } catch {
+    // ignore
+  }
+
+  setCachedMe(null);
   await fetch('/api/auth/logout', { method: 'POST' });
   accessToken = null;
   broadcastAuthChange('logout');
@@ -278,7 +339,9 @@ export async function getMe(): Promise<UserMe> {
     throw new ApiError(res.status, extractDetail(body));
   }
 
-  return res.json() as Promise<UserMe>;
+  const me = (await res.json()) as UserMe;
+  setCachedMe(me);
+  return me;
 }
 
 export async function sendHeartbeat(): Promise<{ status: string; last_seen_at: string } | null> {
@@ -297,17 +360,21 @@ export async function sendHeartbeat(): Promise<{ status: string; last_seen_at: s
 
 export async function getAuthHeaders(): Promise<HeadersInit> {
   if (!accessToken) {
-    // First attempt
     try {
       await refreshToken();
-    } catch {
-      // Mobile Safari can delay cross-origin cookie transmission on first load.
-      // Wait briefly and retry once before declaring the session gone.
-      await new Promise((r) => setTimeout(r, 800));
-      try {
-        await refreshToken();
-      } catch {
-        throw new ApiError(401, 'Not authenticated');
+    } catch (err) {
+      // Only pause & retry on transient network/cookie delay — not explicit 401 rejection
+      const isHard401 = err instanceof ApiError && err.status === 401;
+      if (isHard401) {
+        throw err;
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      if (!accessToken) {
+        try {
+          await refreshToken();
+        } catch {
+          throw new ApiError(401, 'Not authenticated');
+        }
       }
     }
   }
