@@ -13,6 +13,8 @@ function RegisterForm() {
   const codeParam = searchParams.get('code') || searchParams.get('access_code') || '';
 
   const [accessCode, setAccessCode] = useState(codeParam.toUpperCase());
+  const [codeTouched, setCodeTouched] = useState(Boolean(codeParam));
+  const [codeServerError, setCodeServerError] = useState<string | null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,13 +24,22 @@ function RegisterForm() {
   useEffect(() => {
     if (codeParam) {
       setAccessCode(codeParam.toUpperCase());
+      setCodeTouched(true);
     }
   }, [codeParam]);
 
-  // Validation criteria
-  const isAccessCodeValid =
-    /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/i.test(accessCode.trim()) ||
-    accessCode.trim().length >= 8;
+  // Strict individual/beta access code format validation (DB check happens on submit)
+  const normalizedCode = accessCode.trim().toUpperCase();
+  const looksLikeOrgCode = /^DA-/.test(normalizedCode);
+  const isAccessCodeFormatValid =
+    /^(IND-[A-Z0-9]{4}-[A-Z0-9]{2,4}|BETA-[A-Z0-9]{6,10}|SMOKE-[A-Z0-9]{2,6}-[A-Z0-9]{2,6})$/.test(
+      normalizedCode,
+    );
+  const showCodeFormatError =
+    !isAccessCodeFormatValid &&
+    normalizedCode.length > 0 &&
+    (codeTouched || (normalizedCode.length >= 6 && !/^(IND|BETA|SMOKE)/i.test(normalizedCode)));
+  const isAccessCodeValid = isAccessCodeFormatValid && !codeServerError;
 
 // Real-time TikTok-style username analysis
   const trimmedUsername = username.trim();
@@ -148,7 +159,14 @@ function RegisterForm() {
             err.message.toLowerCase().includes('code') ||
             err.message.toLowerCase().includes('join'))
         ) {
-          setBannerError(err.message || 'Invalid or expired access code.');
+          const msg = err.message || 'Invalid or expired access code.';
+          setCodeServerError(msg);
+          setBannerError(msg);
+        } else if (err.status === 404 || err.status === 409) {
+          if (err.message.toLowerCase().includes('code')) {
+            setCodeServerError(err.message);
+          }
+          setBannerError(err.message || 'Check your details and try again.');
         } else {
           setBannerError(err.message || 'Check your details and try again.');
         }
@@ -210,23 +228,54 @@ function RegisterForm() {
                 autoCapitalize="characters"
                 spellCheck={false}
                 value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  setAccessCode(e.target.value.toUpperCase());
+                  if (codeServerError) setCodeServerError(null);
+                  if (bannerError) setBannerError(null);
+                }}
+                onBlur={() => {
+                  if (normalizedCode.length > 0) setCodeTouched(true);
+                }}
                 placeholder="e.g. IND-7K2M-Q9"
                 className={`w-full rounded-lg border ${
-                  isAccessCodeValid
-                    ? 'border-brand border-2 ring-1 ring-[#1E7A46]/15'
-                    : 'border-border-2'
-                } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[15px] font-mono font-bold tracking-wider text-ink placeholder:text-faint placeholder:font-sans placeholder:font-normal placeholder:tracking-normal focus:border-ink focus:ring-2 focus:ring-[#14201B]/10 focus:outline-none transition-all touch-manipulation`}
+                  codeServerError || looksLikeOrgCode || showCodeFormatError
+                    ? 'border-danger border-2 ring-1 ring-[#B42318]/15 focus:border-danger'
+                    : isAccessCodeFormatValid
+                    ? 'border-ink focus:border-ink'
+                    : 'border-border-2 focus:border-ink focus:ring-2 focus:ring-[#14201B]/10'
+                } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[15px] font-mono font-bold tracking-wider text-ink placeholder:text-faint placeholder:font-sans placeholder:font-normal placeholder:tracking-normal focus:outline-none transition-all touch-manipulation`}
               />
-              {isAccessCodeValid && (
+              {(codeServerError || looksLikeOrgCode || showCodeFormatError) && (
                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Check size={18} className="text-brand stroke-[2.8]" />
+                  <AlertCircle size={18} className="text-danger stroke-[2.2]" />
                 </div>
               )}
             </div>
-            {isAccessCodeValid && (
-              <p className="mt-1.5 text-[12.5px] font-medium text-brand leading-snug">
-                Code valid · Access starts when you finish signing up.
+            {codeServerError ? (
+              <p className="mt-1.5 flex items-start gap-1.5 text-[12.5px] font-medium text-danger leading-snug">
+                <AlertCircle size={14} className="mt-0.5 shrink-0 text-danger" />
+                <span>{codeServerError}</span>
+              </p>
+            ) : looksLikeOrgCode ? (
+              <p className="mt-1.5 text-[12.5px] font-medium text-danger leading-snug">
+                That looks like a school code (DA-…).{' '}
+                <Link href="/join" className="underline font-bold">
+                  Use School Student Access instead
+                </Link>
+                .
+              </p>
+            ) : showCodeFormatError ? (
+              <p className="mt-1.5 flex items-start gap-1.5 text-[12.5px] font-medium text-danger leading-snug">
+                <AlertCircle size={14} className="mt-0.5 shrink-0 text-danger" />
+                <span>Invalid code format. Enter the full code with dashes (e.g. IND-7K2M-Q9).</span>
+              </p>
+            ) : isAccessCodeFormatValid ? (
+              <p className="mt-1.5 text-[12.5px] text-muted leading-snug">
+                Format looks right · Your code will be verified when you create your account.
+              </p>
+            ) : (
+              <p className="mt-1.5 text-[12px] text-muted leading-snug">
+                Individual codes start with <span className="font-mono font-semibold text-ink-2">IND-</span> or <span className="font-mono font-semibold text-ink-2">BETA-</span>.
               </p>
             )}
           </div>

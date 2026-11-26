@@ -172,11 +172,11 @@ export default function SettingsPage() {
           clearStoredFcmToken();
         }
         setNotifEnabled(false);
-        toast.info('Daily reminders disabled');
+        toast.info('Study reminders disabled');
       } else {
         if (isIOS && !isInstalled) {
           setShowInstallModal(true);
-          toast.info('On iPhone, add Recall to your Home Screen first to enable notifications.');
+          toast.info('On iPhone, add Recall to your Home Screen first to enable study reminders.');
           setNotifLoading(false);
           return;
         }
@@ -185,7 +185,7 @@ export default function SettingsPage() {
         if (token) {
           await registerNotificationToken(token, isIOS ? 'ios_web' : 'web');
           setNotifEnabled(true);
-          toast.success('Daily reminders enabled');
+          toast.success('Study reminders enabled');
         } else {
           toast.info('Notification permission was dismissed.');
         }
@@ -508,9 +508,9 @@ export default function SettingsPage() {
                   <Bell size={22} strokeWidth={1.65} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[14px] font-semibold text-ink leading-tight">Daily reminders</p>
+                  <p className="text-[14px] font-semibold text-ink leading-tight">Study reminders</p>
                   <p className="mt-0.5 text-[12px] text-muted leading-snug">
-                    Review alerts and streak nudges
+                    Study alerts and streak nudges
                   </p>
                 </div>
               </div>

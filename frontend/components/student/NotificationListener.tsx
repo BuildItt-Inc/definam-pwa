@@ -28,8 +28,8 @@ export function NotificationListener() {
           });
         }
       } else {
-        toast(title || 'Daily Review Reminder', {
-          description: body || 'You have topics to review today.',
+        toast(title || 'Study Reminder', {
+          description: body || 'You have topics ready to study or review today.',
           action: {
             label: 'Review Now',
             onClick: () => router.push('/student/review'),

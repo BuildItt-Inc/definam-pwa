@@ -14,18 +14,27 @@ import {
 } from 'lucide-react';
 import { ZikoraLogo } from '@/components/student/ZikoraLogo';
 import { useFloatingChat } from './FloatingChatContext';
-import {
-  getChatHistory,
-  getCachedChatHistory,
-  setCachedChatHistory,
-  sendChatMessageStream,
-  clearChatHistory,
-  ChatError,
-  type ChatMessage,
-} from '@/lib/api/chat';
 import { ChatMessageItem } from '@/components/student/ChatMessageItem';
-import { useSmartChatScroll } from '@/hooks/useSmoothedStream';
-import { toast } from '@/lib/toast';
+import { useTopicChat } from '@/hooks/useTopicChat';
+import { getStudentProfile } from '@/lib/utils/studentProfile';
+
+const GENERAL_STARTER_PROMPTS = [
+  { label: 'Explain a topic simply', prompt: 'Help me understand a tricky concept simply.' },
+  {
+    label: 'Quiz me',
+    prompt: 'Quiz me with one multiple-choice question (options A, B, C, D) and score my answer.',
+  },
+  { label: 'Give me study tips', prompt: 'Give me a practical study plan for today.' },
+];
+
+const TOPIC_STARTER_PROMPTS = [
+  { label: 'Explain it simply', prompt: 'Explain this topic in simple everyday terms.' },
+  { label: 'Give me an example', prompt: 'Give me a worked example for this topic.' },
+  {
+    label: 'Quiz me',
+    prompt: 'Quiz me on this topic one question at a time with options A, B, C, D and rate my answer.',
+  },
+];
 
 /**
  * Labelled header button for launching Zikora.
@@ -56,7 +65,7 @@ export function AskZikoraButton({
 
 /**
  * Global floating chat bubble + panel. Rendered once in the (student)
- * layout so it persists across navigation.
+ * layout so it persists across navigation on both mobile and desktop.
  */
 export function FloatingChatWidget() {
   const {
@@ -81,7 +90,7 @@ export function FloatingChatWidget() {
           type="button"
           onClick={() => openChat(currentPageTopicId ? { topicId: currentPageTopicId } : undefined)}
           aria-label="Open Zikora AI tutor"
-          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6 hover:bg-[#1f3029]"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6 md:right-6 hover:bg-[#1f3029]"
         >
           <MessageCircle size={24} strokeWidth={2} />
         </button>
@@ -110,16 +119,21 @@ function FloatingChatPanel({
   onSeedConsumed: () => void;
   onClose: () => void;
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    return getCachedChatHistory(topicId) || [];
-  });
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [confirmingClear, setConfirmingClear] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const seedSentRef = useRef(false);
 
   const {
+    messages,
+    inputMessage,
+    setInputMessage,
+    isLoading,
+    confirmingClear,
+    isClearing,
+    quizScore,
+    recordQuizOutcome,
+    handleClearClick,
+    submitMessage,
+    handleSubmit,
     scrollContainerRef,
     messagesEndRef,
     showJumpToBottom,
@@ -128,18 +142,12 @@ function FloatingChatPanel({
     handleTouchStart,
     handleTouchMove,
     jumpToBottom,
-    pinToBottom,
     followIfPinned,
-  } = useSmartChatScroll();
+  } = useTopicChat({ topicId });
 
-  const seedSentRef = useRef(false);
-  const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
-    };
-  }, []);
+  const profile = getStudentProfile();
+  const studentName = profile?.name?.trim() || '';
+  const starters = topicId ? TOPIC_STARTER_PROMPTS : GENERAL_STARTER_PROMPTS;
 
   // Lock background page scroll while chat is open (Android Chrome & iOS Safari)
   useEffect(() => {
@@ -197,134 +205,13 @@ function FloatingChatPanel({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isFullscreen, onClose]);
 
-  // Fetch history in background silently without blocking the UI
-  useEffect(() => {
-    seedSentRef.current = false;
-    let isCurrent = true;
-
-    getChatHistory(topicId)
-      .then((history) => {
-        if (!isCurrent) return;
-        if (history && history.length > 0) {
-          setMessages(history);
-          setCachedChatHistory(topicId, history);
-        }
-      })
-      .catch(() => {
-        // Keep whatever cached messages or empty state we have
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [topicId]);
-
-  // Scroll to bottom on initial mount or when message count changes (if pinned)
-  useEffect(() => {
-    followIfPinned();
-  }, [messages.length, followIfPinned]);
-
-  const handleClearClick = () => {
-    if (!confirmingClear) {
-      setConfirmingClear(true);
-      confirmTimeoutRef.current = setTimeout(() => setConfirmingClear(false), 5000);
-      return;
-    }
-    if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
-    setConfirmingClear(false);
-    setIsClearing(true);
-    clearChatHistory(topicId)
-      .then(() => {
-        setMessages([]);
-        setCachedChatHistory(topicId, []);
-      })
-      .catch(() => toast.error('Could not clear chat', 'Please try again.'))
-      .finally(() => setIsClearing(false));
-  };
-
-  const submitMessage = async (query: string) => {
-    if (!query.trim() || isLoading) return;
-    setIsLoading(true);
-
-    setMessages((prev) => {
-      const next: ChatMessage[] = [
-        ...prev,
-        { role: 'user', content: query },
-        { role: 'assistant', content: '' },
-      ];
-      setCachedChatHistory(topicId, next);
-      return next;
-    });
-
-    pinToBottom();
-
-    let responseAccumulator = '';
-
-    try {
-      await sendChatMessageStream(
-        topicId,
-        query,
-        (chunk) => {
-          responseAccumulator += chunk;
-          setMessages((prev) => {
-            if (prev.length === 0) return prev;
-            const next = [...prev];
-            const lastIdx = next.length - 1;
-            if (next[lastIdx]?.role === 'assistant') {
-              next[lastIdx] = {
-                ...next[lastIdx],
-                content: responseAccumulator,
-              };
-            }
-            setCachedChatHistory(topicId, next);
-            return next;
-          });
-        },
-        () => {
-          setIsLoading(false);
-        },
-        (err) => {
-          setIsLoading(false);
-          setMessages((prev) => {
-            if (prev.length === 0) return prev;
-            const last = prev[prev.length - 1];
-            if (last?.role === 'assistant' && !last.content) {
-              const pruned = prev.slice(0, -1);
-              setCachedChatHistory(topicId, pruned);
-              return pruned;
-            }
-            return prev;
-          });
-          if (err instanceof ChatError && err.status === 429) {
-            toast.error('Daily chat limit reached', err.message);
-          } else if (err instanceof ChatError && err.status >= 500) {
-            toast.error('AI Tutor Temporarily Busy', err.message);
-          } else {
-            toast.error('Message failed to send', err?.message || 'Check your connection and try again.');
-          }
-        },
-      );
-    } catch {
-      setIsLoading(false);
-    }
-  };
-
   // Auto-send pre-seeded message immediately
   useEffect(() => {
     if (!seedMessage || seedSentRef.current) return;
     seedSentRef.current = true;
     onSeedConsumed();
     void submitMessage(seedMessage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seedMessage]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const query = inputMessage.trim();
-    if (!query) return;
-    setInputMessage('');
-    void submitMessage(query);
-  };
+  }, [seedMessage, onSeedConsumed, submitMessage]);
 
   return (
     <div
@@ -353,8 +240,13 @@ function FloatingChatPanel({
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
             <ZikoraLogo size={26} className="text-ink" />
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 flex items-center gap-2">
             <p className="font-bold text-[15.5px] text-ink leading-tight tracking-tight">Zikora</p>
+            {quizScore.total > 0 && (
+              <span className="rounded-full bg-brand-tint px-2 py-0.5 text-[11px] font-bold text-brand">
+                {quizScore.correct}/{quizScore.total}
+              </span>
+            )}
           </div>
 
           {/* Clear button */}
@@ -421,27 +313,44 @@ function FloatingChatPanel({
             }`}
           >
             {messages.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center my-auto py-10 px-4">
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center my-auto py-8 px-4">
                 <ZikoraLogo size={40} className="text-ink" />
                 <div>
-                  <p className="text-[16px] font-bold text-ink tracking-tight">Hi, I&apos;m Zikora</p>
-                  <p className="text-[13.5px] text-muted mt-1 max-w-[260px] leading-relaxed">
-                    {topicId
-                      ? 'Ask me anything about this topic — explanations, definitions, or exam questions.'
-                      : "Ask me anything — study tips, tricky concepts, or questions you're stuck on."}
+                  <p className="text-[16px] font-bold text-ink tracking-tight">
+                    Hi{studentName ? `, ${studentName}` : ''} — I&apos;m Zikora
                   </p>
+                  <p className="text-[13.5px] text-muted mt-1 max-w-[270px] leading-relaxed">
+                    {topicId
+                      ? 'Ask me anything about this topic, or pick a prompt below.'
+                      : 'Ask me anything — study tips, tricky concepts, or a quick interactive quiz.'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2 pt-1">
+                  {starters.map((s) => (
+                    <button
+                      key={s.label}
+                      type="button"
+                      onClick={() => void submitMessage(s.prompt)}
+                      className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-ink shadow-2xs hover:bg-bg-2 active:scale-[0.97] transition-all"
+                    >
+                      {s.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             ) : (
               messages.map((msg, index) => {
-                const isLastAssistant =
-                  index === messages.length - 1 && msg.role === 'assistant';
+                const isLast = index === messages.length - 1;
+                const isLastAssistant = isLast && msg.role === 'assistant';
                 return (
                   <ChatMessageItem
                     key={index}
                     message={msg}
                     isStreaming={isLastAssistant && isLoading}
+                    interactiveDisabled={isLoading || !isLast}
                     onStreamAdvance={followIfPinned}
+                    onSelectOption={(reply) => void submitMessage(reply)}
+                    onScored={recordQuizOutcome}
                   />
                 );
               })
@@ -450,7 +359,7 @@ function FloatingChatPanel({
           </div>
         </main>
 
-        {/* ── Centered circular jump-to-bottom button (matches reference UI) ── */}
+        {/* ── Centered circular jump-to-bottom button ── */}
         {showJumpToBottom && (
           <button
             type="button"
