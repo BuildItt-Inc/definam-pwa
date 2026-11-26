@@ -8,6 +8,7 @@ import { getStudentProfile, type StudentProfile } from '@/lib/utils/studentProfi
 import { getCachedHomeData, getHomeData } from '@/lib/api/topics';
 import { getMe } from '@/lib/api/auth';
 import RecallLogo from '@/components/ui/RecallLogo';
+import { useFloatingChat } from '@/components/student/FloatingChat/FloatingChatContext';
 
 const NAV_ITEMS = [
   { label: 'Home',     icon: House,     href: '/student' },
@@ -34,6 +35,7 @@ function DesktopSidebarInner() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { openChat } = useFloatingChat();
   const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
   const [resolvedName, setResolvedName] = useState<string>(() => {
     const p = getStudentProfile();
@@ -149,14 +151,14 @@ function DesktopSidebarInner() {
 
         <div className="my-2 border-t border-border/80" />
 
-        <Link
-          href="/student/chat"
-          prefetch
-          className="flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold text-muted hover:bg-bg-2 hover:text-ink transition-colors duration-100"
+        <button
+          type="button"
+          onClick={() => openChat()}
+          className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold text-muted hover:bg-bg-2 hover:text-ink transition-colors duration-100"
         >
           <Sparkles size={17} strokeWidth={1.9} className="flex-shrink-0 text-brand" />
           <span>Ask Zikora</span>
-        </Link>
+        </button>
       </nav>
 
       {/* User card */}

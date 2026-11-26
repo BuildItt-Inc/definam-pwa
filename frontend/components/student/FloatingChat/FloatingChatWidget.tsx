@@ -150,9 +150,12 @@ function FloatingChatPanel({
   const studentName = profile?.name?.trim() || '';
   const starters = topicId ? TOPIC_STARTER_PROMPTS : GENERAL_STARTER_PROMPTS;
 
-  // Lock background page scroll while chat is open (Android Chrome & iOS Safari)
+  // Lock background page scroll while chat is open — mobile only
+  // (on desktop the panel is a side drawer; the page behind it stays scrollable)
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    // Skip scroll-lock on desktop — it causes the layout to jump
+    if (window.innerWidth >= 768) return;
 
     const scrollY = window.scrollY;
     const html = document.documentElement;
@@ -219,7 +222,7 @@ function FloatingChatPanel({
       className={
         isFullscreen
           ? 'fixed inset-0 z-[70] flex overflow-hidden overscroll-none bg-bg-0'
-          : 'fixed inset-0 z-[60] flex items-end justify-center bg-black/45 backdrop-blur-[2px] md:items-stretch md:justify-end overflow-hidden overscroll-none touch-none'
+          : 'fixed inset-0 z-[60] flex items-end justify-center bg-black/45 backdrop-blur-[2px] md:items-stretch md:justify-end md:left-[220px] overflow-hidden overscroll-none touch-none'
       }
       onClick={(e) => {
         if (!isFullscreen && e.target === e.currentTarget) onClose();
@@ -229,7 +232,7 @@ function FloatingChatPanel({
         className={
           isFullscreen
             ? 'relative flex h-full w-full flex-col bg-bg-0 overscroll-none'
-            : 'page-enter relative flex h-[min(88dvh,680px)] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl border-t border-border bg-bg-0 shadow-2xl md:h-full md:w-[440px] md:rounded-none md:border-t-0 md:border-l overscroll-none'
+            : 'page-enter relative flex h-[min(88dvh,680px)] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden rounded-t-2xl border-t border-border bg-bg-0 shadow-2xl md:h-full md:w-[420px] md:rounded-none md:border-t-0 md:border-l overscroll-none'
         }
       >
         {/* ── Header ── */}

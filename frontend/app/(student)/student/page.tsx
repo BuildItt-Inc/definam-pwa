@@ -11,7 +11,7 @@ import { RecallCard } from '@/components/student/RecallCard';
 import { CompletionRing } from '@/components/student/CompletionRing';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
-import { SUBJECT_ICONS, subjectIcon } from '@/lib/utils/subjects';
+import { SUBJECT_ICONS, subjectIcon, subjectColor } from '@/lib/utils/subjects';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import {
   getStudentProfile,
