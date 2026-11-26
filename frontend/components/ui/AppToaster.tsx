@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Toaster } from 'sonner';
+import { getThemePreference, resolveTheme, subscribeToTheme, type ResolvedTheme } from '@/lib/theme';
 
 /**
  * Mounted once in the root layout. Corner toasts only — auto-dismissing,
@@ -9,8 +11,16 @@ import { Toaster } from 'sonner';
  * CelebrationOverlay instead, not this.
  */
 export function AppToaster() {
+  const [theme, setTheme] = useState<ResolvedTheme>('light');
+
+  useEffect(() => {
+    setTheme(resolveTheme(getThemePreference()));
+    return subscribeToTheme((_pref, resolved) => setTheme(resolved));
+  }, []);
+
   return (
     <Toaster
+      theme={theme}
       position="top-center"
       richColors={false}
       closeButton={false}
@@ -18,7 +28,7 @@ export function AppToaster() {
         unstyled: true,
         classNames: {
           toast:
-            'flex items-start gap-2.5 w-full rounded-xl border px-4 py-3 shadow-lg bg-card text-[14px] font-medium',
+            'flex items-start gap-2.5 w-full rounded-xl border border-border px-4 py-3 shadow-lg bg-card text-[14px] font-medium',
           title: 'text-ink font-semibold',
           description: 'text-muted text-[13px]',
           success: 'border-brand/25 [&_[data-icon]]:text-brand',

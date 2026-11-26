@@ -43,7 +43,7 @@ export default function RecallSessionPage() {
 
   if (!queue) {
     return (
-      <div className="flex min-h-screen flex-col bg-ink px-4 pb-6 pt-4">
+      <div className="flex min-h-screen flex-col bg-[#14201B] dark:bg-[#0D110F] px-4 pb-6 pt-4">
         <div className="mb-5 flex items-center justify-between">
           <div className="h-5 w-28 animate-pulse rounded bg-white/10" />
           <div className="h-6 w-14 animate-pulse rounded-full bg-white/10" />
@@ -141,7 +141,7 @@ export default function RecallSessionPage() {
 
   // ── SCR-07b/c · Active question ─────────────────────────────────────────
   return (
-    <div className="flex min-h-screen flex-col bg-ink">
+    <div className="flex min-h-screen flex-col bg-[#14201B] dark:bg-[#0D110F]">
       <div className="px-4 pb-6 pt-4">
 
         {/* Top bar */}

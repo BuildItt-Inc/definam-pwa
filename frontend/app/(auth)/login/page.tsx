@@ -32,9 +32,9 @@ function AuthNoticeBanner() {
     return (
       <div
         role="alert"
-        className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-medium leading-snug"
+        className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-warn-bg border border-warn/25 text-warn text-xs sm:text-sm font-medium leading-snug"
       >
-        <span aria-hidden className="text-amber-600 font-bold mt-0.5">ℹ</span>
+        <span aria-hidden className="text-warn font-bold mt-0.5">ℹ</span>
         <span>
           <strong>You were signed in on another device.</strong> For security, only one session can be active at a time. Sign in below to continue studying on this device.
         </span>
@@ -46,9 +46,9 @@ function AuthNoticeBanner() {
     return (
       <div
         role="alert"
-        className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-medium leading-snug"
+        className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-warn-bg border border-warn/25 text-warn text-xs sm:text-sm font-medium leading-snug"
       >
-        <span aria-hidden className="text-amber-600 font-bold mt-0.5">ℹ</span>
+        <span aria-hidden className="text-warn font-bold mt-0.5">ℹ</span>
         <span>Your session expired. Please sign in again to continue your study streak.</span>
       </div>
     );
@@ -100,7 +100,7 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafbfa] flex flex-col justify-center px-4 py-8 sm:py-12">
+    <div className="min-h-screen bg-bg-0 flex flex-col justify-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-[390px] mx-auto">
         {/* Back navigation button */}
         <button
@@ -161,12 +161,12 @@ function LoginContent() {
               spellCheck={false}
               placeholder="e.g. chisom123"
               className={`w-full rounded-xl border ${
-                errors.username ? 'border-red-500' : 'border-gray-300'
-              } bg-white px-4 py-3 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                errors.username ? 'border-danger' : 'border-border-2'
+              } bg-card px-4 py-3 text-[16px] sm:text-[14.5px] text-ink placeholder:text-faint focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
               {...register('username')}
             />
             {errors.username && (
-              <p className="mt-1 text-xs text-red-600 font-medium">{errors.username.message}</p>
+              <p className="mt-1 text-xs text-danger font-medium">{errors.username.message}</p>
             )}
           </div>
 
@@ -190,21 +190,21 @@ function LoginContent() {
                 autoComplete="current-password"
                 placeholder="Your password"
                 className={`w-full rounded-xl border ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                  errors.password ? 'border-danger' : 'border-border-2'
+                } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-faint focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
                 {...register('password')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-ink transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-faint hover:text-ink transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1 text-xs text-red-600 font-medium">{errors.password.message}</p>
+              <p className="mt-1 text-xs text-danger font-medium">{errors.password.message}</p>
             )}
           </div>
 
@@ -221,10 +221,10 @@ function LoginContent() {
         {/* Divider */}
         <div className="relative my-7">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
+            <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-[12.5px]">
-            <span className="bg-[#fafbfa] px-3 font-medium text-gray-500">
+            <span className="bg-bg-0 px-3 font-medium text-muted">
               New to Recall?
             </span>
           </div>
@@ -233,7 +233,7 @@ function LoginContent() {
         {/* Access code CTA */}
         <Link
           href="/register"
-          className="w-full rounded-xl border border-gray-300 bg-white py-3.5 text-[15px] font-bold text-ink shadow-xs hover:bg-gray-50 active:scale-[0.99] transition-all text-center block"
+          className="w-full rounded-xl border border-border-2 bg-card py-3.5 text-[15px] font-bold text-ink shadow-xs hover:bg-bg-2 active:scale-[0.99] transition-all text-center block"
         >
           I have an access code
         </Link>
@@ -252,7 +252,7 @@ function LoginContent() {
         <div className="text-center mt-8">
           <Link
             href="/admin/login"
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-xs text-muted hover:text-ink transition-colors"
           >
             School administrator portal
           </Link>

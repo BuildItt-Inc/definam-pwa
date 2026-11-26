@@ -52,7 +52,7 @@ export function PracticeQuestion({
       <div
         ref={ref}
         onMouseMove={onMouseMove}
-        className="spotlight spotlight-card relative mb-4 overflow-hidden rounded-2xl border border-[#F3F4F6] bg-white px-5 py-5 shadow-sm"
+        className="spotlight spotlight-card relative mb-4 overflow-hidden rounded-2xl border border-border bg-card px-5 py-5 shadow-sm"
       >
         <p className="relative z-10 mb-2 text-[12px] font-bold uppercase tracking-wider text-muted">
           Practice Question

@@ -36,11 +36,11 @@ function Particles() {
 function CelebrationShell({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="celebration-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-ink/50 px-6"
+      className="celebration-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-black/55 backdrop-blur-[2px] px-6"
       role="status"
       aria-live="polite"
     >
-      <div className="celebration-card relative w-full max-w-[320px] rounded-2xl bg-card px-6 py-8 text-center shadow-xl">
+      <div className="celebration-card relative w-full max-w-[320px] rounded-2xl border border-border bg-card px-6 py-8 text-center shadow-xl">
         {children}
       </div>
     </div>
@@ -79,7 +79,7 @@ function LoginCelebration({ name, onDismiss }: { name: string; onDismiss: () => 
   return (
     <CelebrationShell>
       <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-ink">
-        <Hand size={30} strokeWidth={2} className="celebration-icon-wiggle text-white" />
+        <Hand size={30} strokeWidth={2} className="celebration-icon-wiggle text-on-ink" />
       </div>
       <p className="text-[18px] font-bold text-ink">Welcome back, {name}!</p>
     </CelebrationShell>
@@ -145,7 +145,7 @@ function PaymentCelebration({
     return (
       <CelebrationShell>
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-ink">
-          <Loader2 size={28} strokeWidth={2} className="animate-spin text-white" />
+          <Loader2 size={28} strokeWidth={2} className="animate-spin text-on-ink" />
         </div>
         <p className="text-[16px] font-bold text-ink">Redirecting to registration…</p>
       </CelebrationShell>
@@ -156,7 +156,7 @@ function PaymentCelebration({
     <CelebrationShell>
       <div className="relative mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-ink">
         <Particles />
-        <CircleCheck size={30} strokeWidth={2} className="celebration-icon-pop text-white" />
+        <CircleCheck size={30} strokeWidth={2} className="celebration-icon-pop text-on-ink" />
       </div>
       <p className="text-[18px] font-bold text-ink">Payment Successful!</p>
       <p className="mt-1.5 text-[13px] text-muted leading-snug">

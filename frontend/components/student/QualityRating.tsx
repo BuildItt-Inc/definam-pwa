@@ -36,7 +36,7 @@ export function QualityRating({ onRate, submittingRating = null }: QualityRating
               'flex min-h-[54px] flex-col items-center justify-center rounded-lg py-2.5 transition-all active:scale-95 disabled:cursor-not-allowed',
               isThisSubmitting ? 'opacity-90 ring-2 ring-brand-light' : isBusy ? 'opacity-40' : '',
               isPerfect
-                ? 'border border-white bg-ink text-white'
+                ? 'border border-white bg-white/15 text-white'
                 : isStruggling
                   ? 'border border-dashed border-white/40 bg-transparent text-white'
                   : 'border border-white/40 bg-transparent text-white',

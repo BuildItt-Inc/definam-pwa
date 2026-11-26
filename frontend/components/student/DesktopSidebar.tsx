@@ -165,8 +165,8 @@ function DesktopSidebarInner() {
           href="/student/settings"
           className="flex items-center gap-2.5 rounded-xl p-1.5 -m-1.5 hover:bg-bg-0 transition-colors"
         >
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink text-white text-[13px] font-bold select-none">
-            {initial || <span className="h-2 w-2 rounded-full bg-white/40 animate-pulse" />}
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink text-on-ink text-[13px] font-bold select-none">
+            {initial || <span className="h-2 w-2 rounded-full bg-on-ink/40 animate-pulse" />}
           </div>
           <div className="min-w-0 flex-1">
             {displayName ? (

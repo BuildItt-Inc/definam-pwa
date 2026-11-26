@@ -142,7 +142,7 @@ export default function OrgPayPage() {
       <main className="px-5 pt-7 pb-12 md:max-w-md md:mx-auto md:pt-10">
 
         {/* Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink text-white text-[10px] font-bold uppercase tracking-widest mb-4">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ink text-on-ink text-[10px] font-bold uppercase tracking-widest mb-4">
           <Building2 size={10} strokeWidth={3} aria-hidden />
           School &amp; Institutional Bulk License
         </div>
@@ -301,13 +301,13 @@ export default function OrgPayPage() {
 
           {/* Payment method pills */}
           <div className="flex items-center justify-center gap-2 mb-3.5">
-            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-card text-[11px] font-medium text-muted">
               Card
             </span>
-            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-card text-[11px] font-medium text-muted">
               Bank transfer
             </span>
-            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-card text-[11px] font-medium text-muted">
               USSD
             </span>
           </div>

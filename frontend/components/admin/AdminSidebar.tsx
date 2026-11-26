@@ -232,7 +232,7 @@ export default function AdminSidebar(props: AdminSidebarProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="md:hidden fixed inset-0 bg-ink/40 z-40 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
       )}

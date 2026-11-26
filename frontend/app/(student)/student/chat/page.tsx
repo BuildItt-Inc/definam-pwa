@@ -291,7 +291,7 @@ function ChatWorkspaceInner() {
           href="/student/settings"
           className="flex items-center gap-2.5 rounded-xl p-1 -m-1 hover:bg-bg-0 transition-colors"
         >
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink text-white text-[13px] font-bold select-none">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink text-on-ink text-[13px] font-bold select-none">
             {initial || '·'}
           </div>
           <div className="min-w-0 flex-1">
@@ -325,7 +325,7 @@ function ChatWorkspaceInner() {
       {/* Mobile slide-over drawer */}
       {mobileDrawerOpen && (
         <div
-          className="fixed inset-0 z-50 flex md:hidden bg-ink/30 backdrop-blur-[2px]"
+          className="fixed inset-0 z-50 flex md:hidden bg-black/45 backdrop-blur-[2px]"
           onClick={(e) => {
             if (e.target === e.currentTarget) setMobileDrawerOpen(false);
           }}
@@ -391,7 +391,7 @@ function ChatWorkspaceInner() {
               <button
                 type="button"
                 onClick={handleNewChat}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-2 text-[12.5px] font-semibold text-white hover:bg-[#1f3029] active:scale-[0.98] transition-all shadow-2xs"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-2 text-[12.5px] font-semibold text-on-ink hover:opacity-90 active:scale-[0.98] transition-all shadow-2xs"
               >
                 <Plus size={14} strokeWidth={2.5} />
                 <span>New chat</span>
@@ -468,7 +468,7 @@ function ChatWorkspaceInner() {
                     type="submit"
                     disabled={isLoading || !inputMessage.trim()}
                     aria-label="Send message"
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-on-ink hover:opacity-90 disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
                   >
                     <ArrowUp size={15} strokeWidth={2.5} />
                   </button>
@@ -553,7 +553,7 @@ function ChatWorkspaceInner() {
                   type="submit"
                   disabled={isLoading || !inputMessage.trim()}
                   aria-label="Send message"
-                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-on-ink hover:opacity-90 disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
                 >
                   <ArrowUp size={15} strokeWidth={2.5} />
                 </button>

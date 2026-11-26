@@ -35,7 +35,7 @@ export function InstallAppButton({
     'inline-flex items-center gap-2 rounded-[16px] px-4 py-2 text-[13px] font-bold transition-all active:scale-95';
 
   const variants: Record<string, string> = {
-    solid: 'bg-ink text-white hover:bg-ink/90 shadow-md',
+    solid: 'bg-ink text-on-ink hover:opacity-90 shadow-md',
     outline: 'border border-ink text-ink hover:bg-ink/5',
     ghost: 'text-ink hover:bg-ink/5',
   };

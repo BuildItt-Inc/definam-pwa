@@ -90,7 +90,7 @@ export function FloatingChatWidget() {
           type="button"
           onClick={() => openChat(currentPageTopicId ? { topicId: currentPageTopicId } : undefined)}
           aria-label="Open Zikora AI tutor"
-          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-xl transition-transform active:scale-95 md:bottom-6 md:right-6 hover:bg-[#1f3029]"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] right-4 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-ink text-on-ink shadow-xl transition-transform active:scale-95 md:bottom-6 md:right-6 hover:opacity-90"
         >
           <MessageCircle size={24} strokeWidth={2} />
         </button>
@@ -219,7 +219,7 @@ function FloatingChatPanel({
       className={
         isFullscreen
           ? 'fixed inset-0 z-[70] flex overflow-hidden overscroll-none bg-bg-0'
-          : 'fixed inset-0 z-[60] flex items-end justify-center bg-ink/30 backdrop-blur-[2px] md:items-stretch md:justify-end overflow-hidden overscroll-none touch-none'
+          : 'fixed inset-0 z-[60] flex items-end justify-center bg-black/45 backdrop-blur-[2px] md:items-stretch md:justify-end overflow-hidden overscroll-none touch-none'
       }
       onClick={(e) => {
         if (!isFullscreen && e.target === e.currentTarget) onClose();
@@ -401,7 +401,7 @@ function FloatingChatPanel({
               type="submit"
               disabled={isLoading || !inputMessage.trim()}
               aria-label="Send message"
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white transition-all hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint active:scale-95"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-on-ink transition-all hover:opacity-90 disabled:bg-bg-2 disabled:text-faint active:scale-95"
             >
               <ArrowUp size={15} strokeWidth={2.5} />
             </button>

@@ -138,7 +138,7 @@ function AdminLoginForm() {
   //  RENDER
   // ═════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-[#fafbfa] flex flex-col justify-center px-4 py-8 sm:py-12">
+    <div className="min-h-screen bg-bg-0 flex flex-col justify-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-[390px] mx-auto">
 
         {/* Back navigation */}
@@ -206,12 +206,12 @@ function AdminLoginForm() {
                   autoCapitalize="none"
                   placeholder="admin@yourschool.edu"
                   className={`w-full rounded-xl border ${
-                    loginErrors.username ? 'border-red-500' : 'border-gray-300'
-                  } bg-white px-4 py-3 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                    loginErrors.username ? 'border-danger' : 'border-border-2'
+                  } bg-card px-4 py-3 text-[16px] sm:text-[14.5px] text-ink placeholder:text-faint focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
                   {...registerLogin('username')}
                 />
                 {loginErrors.username && (
-                  <p className="mt-1 text-xs text-red-600 font-medium">
+                  <p className="mt-1 text-xs text-danger font-medium">
                     {loginErrors.username.message}
                   </p>
                 )}
@@ -229,15 +229,15 @@ function AdminLoginForm() {
                     autoComplete="current-password"
                     placeholder="Your password"
                     className={`w-full rounded-xl border ${
-                      loginErrors.password ? 'border-red-500' : 'border-gray-300'
-                    } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                      loginErrors.password ? 'border-danger' : 'border-border-2'
+                    } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-faint focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
                     {...registerLogin('password')}
                   />
                   <button
                     type="button"
                     aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
                     onClick={() => setShowLoginPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-ink transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-faint hover:text-ink transition-colors"
                   >
                     {showLoginPassword ? (
                       <EyeOff size={18} strokeWidth={2} />
@@ -326,15 +326,15 @@ function AdminLoginForm() {
                     autoComplete="new-password"
                     placeholder="Min 8 chars, 1 uppercase, 1 number"
                     className={`w-full rounded-xl border ${
-                      changeErrors.new_password ? 'border-red-500' : 'border-gray-300'
-                    } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                      changeErrors.new_password ? 'border-danger' : 'border-border-2'
+                    } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-faint focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
                     {...registerChange('new_password')}
                   />
                   <button
                     type="button"
                     aria-label={showNewPassword ? 'Hide password' : 'Show password'}
                     onClick={() => setShowNewPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-ink transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-faint hover:text-ink transition-colors"
                   >
                     {showNewPassword ? (
                       <EyeOff size={18} strokeWidth={2} />
@@ -344,7 +344,7 @@ function AdminLoginForm() {
                   </button>
                 </div>
                 {changeErrors.new_password && (
-                  <p className="mt-1 text-xs text-red-600 font-medium">
+                  <p className="mt-1 text-xs text-danger font-medium">
                     {changeErrors.new_password.message}
                   </p>
                 )}
@@ -362,15 +362,15 @@ function AdminLoginForm() {
                     autoComplete="new-password"
                     placeholder="Repeat your new password"
                     className={`w-full rounded-xl border ${
-                      changeErrors.confirm_password ? 'border-red-500' : 'border-gray-300'
-                    } bg-white px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
+                      changeErrors.confirm_password ? 'border-danger' : 'border-border-2'
+                    } bg-card px-4 py-3 pr-11 text-[16px] sm:text-[14.5px] text-ink placeholder:text-faint focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation`}
                     {...registerChange('confirm_password')}
                   />
                   <button
                     type="button"
                     aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                     onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-ink transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-faint hover:text-ink transition-colors"
                   >
                     {showConfirmPassword ? (
                       <EyeOff size={18} strokeWidth={2} />

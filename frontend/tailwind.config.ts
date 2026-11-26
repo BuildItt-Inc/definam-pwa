@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -23,8 +24,9 @@ const config: Config = {
         "border-2":"var(--border-2)",
 
         /* ── Typography ───────────────────────────────────── */
-        ink:    "var(--ink)",
-        "ink-2":"var(--ink-2)",
+        ink:      "var(--ink)",
+        "on-ink": "var(--on-ink)",
+        "ink-2":  "var(--ink-2)",
         muted:  "var(--muted)",
         faint:  "var(--faint)",
 

@@ -48,13 +48,13 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
 
       {/* Modal Card */}
       <div
-        className="relative z-10 w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[24px] bg-white p-6 shadow-2xl animate-slide-up sm:max-w-md border border-border-2"
+        className="relative z-10 w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-[24px] bg-card p-6 shadow-2xl animate-slide-up sm:max-w-md border border-border-2"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-bg-1 text-ink/70 hover:bg-bg-2 active:scale-95 transition-all"
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-bg-2 text-ink/70 hover:bg-bg-3 active:scale-95 transition-all"
           aria-label="Close install modal"
         >
           <X size={18} />
@@ -64,7 +64,7 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
         {platform === 'inapp' && (
           <div>
             <div className="mb-5 text-center">
-              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200">
+              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-warn-bg text-warn border border-warn/25">
                 <ExternalLink size={22} />
               </div>
               <h2 className="text-[17.5px] font-extrabold text-ink">Open in Main Browser</h2>
@@ -74,8 +74,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-border-2 text-ink">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm border border-border-2 text-ink">
                   <MoreVertical size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -86,8 +86,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-border-2 text-emerald-600">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm border border-border-2 text-brand">
                   <ExternalLink size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
         {platform === 'samsung' && (
           <div>
             <div className="mb-5 text-center">
-              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-tint text-brand border border-brand/25">
                 <Download size={22} />
               </div>
               <h2 className="text-[17.5px] font-extrabold text-ink">Install on Samsung Galaxy</h2>
@@ -115,8 +115,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-border-2 text-emerald-600">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm border border-border-2 text-brand">
                   <Download size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -127,8 +127,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-border-2 text-ink">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm border border-border-2 text-ink">
                   <Plus size={18} strokeWidth={2.5} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -146,7 +146,7 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
         {platform === 'chrome' && (
           <div>
             <div className="mb-5 text-center">
-              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-tint text-brand border border-brand/25">
                 <Download size={22} />
               </div>
               <h2 className="text-[17.5px] font-extrabold text-ink">Install on Android</h2>
@@ -156,8 +156,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-border-2 text-ink">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm border border-border-2 text-ink">
                   <MoreVertical size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -168,8 +168,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-border-2 text-emerald-600">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm border border-border-2 text-brand">
                   <Download size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -187,7 +187,7 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
         {platform === 'ios' && (
           <div>
             <div className="mb-5 text-center">
-              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-tint text-brand border border-brand/25">
                 <Share size={22} />
               </div>
               <h2 className="text-[17.5px] font-extrabold text-ink">Install Recall on iPhone</h2>
@@ -197,8 +197,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-border-2 text-emerald-600">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm border border-border-2 text-brand">
                   <Share size={18} strokeWidth={2} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -209,8 +209,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-border-2 text-ink">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card shadow-sm border border-border-2 text-ink">
                   <Plus size={18} strokeWidth={2.5} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -221,8 +221,8 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-1 p-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-white shadow-sm">
+              <div className="flex items-start gap-3.5 rounded-2xl bg-bg-0 p-3.5 border border-border">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ink text-on-ink shadow-sm">
                   <span className="text-[12px] font-extrabold">Add</span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -245,7 +245,7 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
                 Install Recall on your device for fast, one-tap study access.
               </p>
             </div>
-            <p className="rounded-xl bg-bg-1 p-3 text-center text-[12.5px] text-muted leading-relaxed">
+            <p className="rounded-xl bg-bg-0 border border-border p-3 text-center text-[12.5px] text-muted leading-relaxed">
               Open your browser menu (<strong>⋮</strong> or <strong>☰</strong>) and select <strong>&quot;Install App&quot;</strong> or <strong>&quot;Add to Home screen&quot;</strong>.
             </p>
           </div>
@@ -254,7 +254,7 @@ export function AppInstallModal({ isOpen, onClose }: AppInstallModalProps) {
         {/* Got it Button */}
         <button
           onClick={onClose}
-          className="mt-6 flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink py-3 text-[14px] font-bold text-white shadow-md active:scale-95 transition-all"
+          className="mt-6 flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink py-3 text-[14px] font-bold text-on-ink shadow-md active:scale-95 transition-all"
         >
           Got it
           <ChevronRight size={16} strokeWidth={2.5} />

@@ -140,7 +140,7 @@ export default function ManageSubjectsPage() {
   return (
     <div className="page-with-nav min-h-screen bg-bg-0 text-ink page-enter pb-32">
       {/* ── Top Header ── */}
-      <header className="sticky top-0 z-20 border-b border-border bg-white/95 backdrop-blur-md px-4 md:px-7 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] shadow-2xs">
+      <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur-md px-4 md:px-7 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] shadow-2xs">
         <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -169,7 +169,7 @@ export default function ManageSubjectsPage() {
             type="button"
             onClick={handleDone}
             disabled={isSaving}
-            className="flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs active:scale-95 transition-all"
+            className="flex items-center gap-1.5 rounded-xl bg-ink px-3.5 py-1.5 text-xs font-bold text-on-ink shadow-2xs active:scale-95 transition-all"
           >
             <Check size={14} strokeWidth={2.5} />
             <span>Done</span>
@@ -178,7 +178,7 @@ export default function ManageSubjectsPage() {
 
         {/* ── Search Input ── */}
         <div className="mt-3">
-          <label className="flex items-center gap-2 rounded-xl border border-border bg-bg-1 px-3 py-2 focus-within:border-ink focus-within:bg-white focus-within:ring-1 focus-within:ring-ink/10 transition-all">
+          <label className="flex items-center gap-2 rounded-xl border border-border bg-bg-1 px-3 py-2 focus-within:border-ink focus-within:bg-card focus-within:ring-1 focus-within:ring-ink/10 transition-all">
             <Search size={15} strokeWidth={2} className="text-muted flex-shrink-0" />
             <input
               type="search"
@@ -201,7 +201,7 @@ export default function ManageSubjectsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
                   isTabActive
-                    ? 'bg-ink text-white shadow-2xs'
+                    ? 'bg-ink text-on-ink shadow-2xs'
                     : 'bg-bg-2 text-muted hover:text-ink hover:bg-bg-3'
                 }`}
               >
@@ -216,7 +216,7 @@ export default function ManageSubjectsPage() {
       {/* ── Main Subject List ── */}
       <main className="mx-auto max-w-5xl px-4 md:px-7 pt-4">
         {/* Banner with helpful hints and shortcuts */}
-        <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 rounded-2xl border border-border bg-white p-3.5 shadow-2xs">
+        <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 rounded-2xl border border-border bg-card p-3.5 shadow-2xs">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand/10 text-brand">
               <Sparkles size={16} strokeWidth={2.2} />
@@ -284,8 +284,8 @@ export default function ManageSubjectsPage() {
                   }}
                   className={`group relative flex items-center justify-between gap-3 rounded-2xl border p-3.5 cursor-pointer transition-all active:scale-[0.99] ${
                     isSelected
-                      ? 'border-ink/20 bg-white shadow-2xs hover:border-ink/40'
-                      : 'border-border bg-white/60 opacity-80 hover:opacity-100 hover:border-border-2 hover:bg-white'
+                      ? 'border-ink/20 bg-card shadow-2xs hover:border-ink/40'
+                      : 'border-border bg-card/60 opacity-80 hover:opacity-100 hover:border-border-2 hover:bg-card'
                   }`}
                 >
                   {/* Left: Clean scaled unboxed icon + Info */}
@@ -346,7 +346,7 @@ export default function ManageSubjectsPage() {
           <button
             type="button"
             onClick={handleDone}
-            className="flex items-center gap-1.5 rounded-xl bg-ink px-4 py-2 text-xs font-bold text-white shadow-xs active:scale-95 transition-transform"
+            className="flex items-center gap-1.5 rounded-xl bg-ink px-4 py-2 text-xs font-bold text-on-ink shadow-xs active:scale-95 transition-transform"
           >
             <span>Save & Done</span>
             <Check size={14} strokeWidth={2.5} />

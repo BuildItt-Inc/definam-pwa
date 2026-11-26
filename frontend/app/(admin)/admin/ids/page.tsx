@@ -204,7 +204,7 @@ export default function AdminIdsPage() {
           <button
             onClick={handleDownloadAll}
             disabled={downloadingAll}
-            className="flex items-center gap-2 px-4 py-2 bg-ink text-white text-[11px] font-bold rounded-lg hover:bg-ink/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-ink text-on-ink text-[11px] font-bold rounded-lg hover:opacity-90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Download size={13} strokeWidth={1.5} />
             {downloadingAll ? 'Downloading...' : 'Download All IDs'}

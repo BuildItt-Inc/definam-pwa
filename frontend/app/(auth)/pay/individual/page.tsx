@@ -120,7 +120,7 @@ function IndividualPayContent() {
                 <div
                   className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
                     selectedTerms === 1
-                      ? 'bg-ink text-white'
+                      ? 'bg-ink text-on-ink'
                       : 'border-2 border-border-2'
                   }`}
                 >
@@ -164,7 +164,7 @@ function IndividualPayContent() {
                 <div
                   className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
                     selectedTerms === 3
-                      ? 'bg-ink text-white'
+                      ? 'bg-ink text-on-ink'
                       : 'border-2 border-border-2'
                   }`}
                 >
@@ -282,13 +282,13 @@ function IndividualPayContent() {
 
           {/* Payment method pills */}
           <div className="flex items-center justify-center gap-2 mb-3.5">
-            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-card text-[11px] font-medium text-muted">
               Card
             </span>
-            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-card text-[11px] font-medium text-muted">
               Bank transfer
             </span>
-            <span className="px-3 py-1 rounded-lg border border-border-2 bg-white text-[11px] font-medium text-muted">
+            <span className="px-3 py-1 rounded-lg border border-border-2 bg-card text-[11px] font-medium text-muted">
               USSD
             </span>
           </div>

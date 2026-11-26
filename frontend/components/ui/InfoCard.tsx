@@ -39,7 +39,7 @@ export function InfoCard({
       {Icon && (
         usePill ? (
           <div className="w-9 h-9 bg-ink rounded-xl flex items-center justify-center flex-shrink-0">
-            <Icon size={17} strokeWidth={2} className="text-white" aria-hidden />
+            <Icon size={17} strokeWidth={2} className="text-on-ink" aria-hidden />
           </div>
         ) : (
           <Icon

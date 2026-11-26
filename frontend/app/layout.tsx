@@ -7,6 +7,7 @@ import { CelebrationProvider } from '@/components/ui/celebration/CelebrationCont
 import AuthSyncListener from '@/components/AuthSyncListener';
 import PWARegistration from '@/components/PWARegistration';
 import { AnalyticsInit } from '@/components/AnalyticsInit';
+import ThemeSync from '@/components/ThemeSync';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -75,6 +76,20 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              (function() {
+                try {
+                  var pref = localStorage.getItem('recall-theme-preference') || 'system';
+                  var isDark = pref === 'dark' || (pref === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  document.documentElement.classList.toggle('dark', isDark);
+                  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
               if (window.location.pathname === '/') {
                 try {
                   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -112,6 +127,7 @@ export default function RootLayout({
         <AuthSyncListener />
         <PWARegistration />
         <AnalyticsInit />
+        <ThemeSync />
       </body>
     </html>
   );
