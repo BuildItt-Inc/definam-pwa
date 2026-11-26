@@ -36,7 +36,7 @@ function getGreeting(): string {
 function HomeSkeleton() {
   return (
     <div className="min-h-screen bg-bg-0 md:max-w-5xl md:mx-auto md:px-6 md:pt-7">
-      <div className="rounded-b-3xl md:rounded-2xl bg-ink px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)] md:px-7 md:py-6">
+      <div className="rounded-b-3xl md:rounded-2xl bg-[#14201B] dark:bg-[#171C1A] dark:border dark:border-border px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)] md:px-7 md:py-6">
         <div className="mb-1.5 h-3 w-20 animate-pulse rounded bg-white/10" />
         <div className="mb-1.5 h-8 w-44 animate-pulse rounded bg-white/20" />
         <div className="mb-5 h-3 w-36 animate-pulse rounded bg-white/10" />
@@ -98,7 +98,7 @@ function TopicRow({ topic }: { topic: RecentTopic }) {
         className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-[12px] font-bold transition-colors ${
           started
             ? 'bg-brand-tint text-brand group-hover:bg-brand group-hover:text-white'
-            : 'border border-border bg-bg-0 text-ink group-hover:border-ink group-hover:bg-ink group-hover:text-white'
+            : 'border border-border bg-bg-0 text-ink group-hover:border-ink group-hover:bg-ink group-hover:text-on-ink'
         }`}
       >
         {started ? 'Continue' : 'Start'}
@@ -251,7 +251,7 @@ export default function StudentHomePage() {
       <div
         ref={glowRef}
         onMouseMove={onGlowMouseMove}
-        className="relative shrink-0 overflow-hidden rounded-b-3xl bg-ink px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)] md:rounded-2xl md:px-7 md:py-6"
+        className="relative shrink-0 overflow-hidden rounded-b-3xl bg-[#14201B] dark:bg-[#171C1A] dark:border dark:border-border px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)] md:rounded-2xl md:px-7 md:py-6"
       >
         <div className="relative z-10 flex items-center justify-between gap-4 md:gap-6">
           <div className="min-w-0 flex-1">
@@ -314,7 +314,7 @@ export default function StudentHomePage() {
         {/* PWA install banner (spans across mobile, sits top of left col on desktop) */}
         <div className="min-w-0">
           {canInstall && (
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-border bg-white p-3.5 shadow-xs">
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-border bg-card p-3.5 shadow-xs">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-ink">Install Recall App</p>
                 <p className="text-xs text-muted mt-0.5 leading-snug">
@@ -323,7 +323,7 @@ export default function StudentHomePage() {
               </div>
               <button
                 onClick={promptInstall}
-                className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-white active:scale-95 transition-transform"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-on-ink active:scale-95 transition-transform"
               >
                 <Download size={13} strokeWidth={2.5} />
                 Install
@@ -341,7 +341,7 @@ export default function StudentHomePage() {
             <Link
               href="/student/subjects"
               aria-label="Manage your subjects"
-              className="group rounded-[14px] border border-border bg-white px-3 py-3.5 text-center transition-all hover:border-ink/20 active:scale-[0.98]"
+              className="group rounded-[14px] border border-border bg-card px-3 py-3.5 text-center transition-all hover:border-ink/20 active:scale-[0.98]"
             >
               <div className="flex items-center justify-center gap-1 text-xl font-extrabold text-ink">
                 <span>{displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}</span>
@@ -349,7 +349,7 @@ export default function StudentHomePage() {
               </div>
               <div className="mt-0.5 text-xs text-muted">my subjects · edit</div>
             </Link>
-            <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
+            <div className="rounded-[14px] border border-border bg-card px-3 py-3.5 text-center">
               <div className="text-xl font-extrabold text-ink">
                 {completion_percent}%
               </div>
@@ -401,7 +401,7 @@ export default function StudentHomePage() {
                 </p>
                 <Link
                   href="/student/learn"
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand md:bg-ink px-4 py-2.5 text-xs md:text-[13px] font-bold text-white shadow-xs hover:opacity-90 transition-all"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand text-white md:bg-ink md:text-on-ink px-4 py-2.5 text-xs md:text-[13px] font-bold shadow-xs hover:opacity-90 transition-all"
                 >
                   <span>Open my subjects</span>
                   <ChevronRight size={14} strokeWidth={2.5} />

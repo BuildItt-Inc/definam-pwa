@@ -46,7 +46,7 @@ export function TopicListItem({
   const inner = (
     <div
       className={`flex min-h-[62px] w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-bg-2 ${
-        isNext ? 'bg-[#E8F3EC]/70 hover:bg-[#E8F3EC]' : 'bg-card hover:bg-bg-0'
+        isNext ? 'bg-brand-tint/60 hover:bg-brand-tint' : 'bg-card hover:bg-bg-0'
       }`}
     >
       {/* Number / completion square badge */}

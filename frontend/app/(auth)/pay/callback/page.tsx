@@ -279,7 +279,7 @@ function CallbackContent() {
             {/* Email row */}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-9 h-9 bg-ink rounded-xl flex items-center justify-center flex-shrink-0">
-                <Building2 size={16} strokeWidth={2} className="text-white" aria-hidden />
+                <Building2 size={16} strokeWidth={2} className="text-on-ink" aria-hidden />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-muted uppercase tracking-wider mb-0.5">
@@ -322,7 +322,7 @@ function CallbackContent() {
           <motion.div {...scaleTap}>
             <Link
               href="/admin/login"
-              className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 transition-colors shadow-sm"
+              className="w-full min-h-[52px] bg-ink text-on-ink rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:opacity-90 transition-colors shadow-sm"
             >
               Sign In as Admin
               <ArrowRight size={18} strokeWidth={2.2} aria-hidden />
@@ -370,7 +370,7 @@ function CallbackContent() {
       <motion.div {...scaleTap} className="w-full mb-3">
         <a
           href={`mailto:support@definam.ng?subject=${supportSubject}&body=${supportBody}`}
-          className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 transition-colors shadow-sm"
+          className="w-full min-h-[52px] bg-ink text-on-ink rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:opacity-90 transition-colors shadow-sm"
         >
           <Mail size={16} strokeWidth={2.2} aria-hidden />
           Contact Support with Reference

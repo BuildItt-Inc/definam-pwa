@@ -15,7 +15,13 @@ import {
   type StudentProfile,
 } from '@/lib/utils/studentProfile';
 
-const HEATMAP_COLORS = ['#E4E7E3', '#BCE3CA', '#5DB380', '#1E7A46', '#14532D'] as const;
+const HEATMAP_COLORS = [
+  'var(--heat-0)',
+  'var(--heat-1)',
+  'var(--heat-2)',
+  'var(--heat-3)',
+  'var(--heat-4)',
+] as const;
 
 function heatmapColor(level: number): string {
   return HEATMAP_COLORS[Math.min(Math.max(Math.round(level), 0), 4)];
@@ -24,16 +30,20 @@ function heatmapColor(level: number): string {
 function ProgressSkeleton() {
   return (
     <div className="page-with-nav bg-bg-0">
-      <div className="mx-auto w-full max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 pb-24 pt-[calc(env(safe-area-inset-top)+16px)] md:pt-7">
         <div className="mb-4 h-7 w-32 animate-pulse rounded bg-bg-3" />
-        <div className="mb-4 grid grid-cols-2 gap-3">
+        <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-20 animate-pulse rounded-2xl bg-bg-2" />
           ))}
         </div>
-        <div className="mb-4 h-48 animate-pulse rounded-2xl bg-bg-2" />
-        <div className="mb-4 h-36 animate-pulse rounded-2xl bg-bg-2" />
-        <div className="h-32 animate-pulse rounded-2xl bg-bg-2" />
+        <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+          <div className="h-56 animate-pulse rounded-2xl bg-bg-2" />
+          <div className="space-y-4">
+            <div className="h-44 animate-pulse rounded-2xl bg-bg-2" />
+            <div className="h-36 animate-pulse rounded-2xl bg-bg-2" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -50,7 +60,7 @@ function StatCard({
 }) {
   if (variant === 'streak') {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl bg-ink px-4 py-4 text-center shadow-xs">
+      <div className="flex flex-col items-center justify-center rounded-2xl bg-[#14201B] dark:bg-[#171C1A] dark:border dark:border-border px-4 py-4 text-center shadow-xs">
         <span className="text-[26px] font-bold leading-none text-white tabular-nums">
           {value}
         </span>
@@ -405,19 +415,23 @@ export default function ProgressPage() {
 
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
-        <h1 className="mb-4 text-[24px] font-bold tracking-tight text-ink">My Progress</h1>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 sm:px-6 pt-[calc(env(safe-area-inset-top)+16px)] md:pt-7 pb-nav">
+        <h1 className="mb-4 md:mb-5 text-[24px] sm:text-[26px] font-bold tracking-tight text-ink">My Progress</h1>
 
-        <div className="mb-4 grid grid-cols-2 gap-3">
+        <div className="mb-4 md:mb-5 grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard variant="streak" value={String(data.streak_days)} label="Day streak" />
           <StatCard variant="plain" value={String(data.topics_studied)} label="Topics studied" />
           <StatCard variant="plain" value={`${data.avg_accuracy}%`} label="Avg accuracy" />
           <StatCard variant="plain" value={String(data.due_tomorrow)} label="Due tomorrow" />
         </div>
 
-        <MasterySection items={displayMastery} />
-        <HeatmapSection data={data.heatmap_data} />
-        <UpcomingSection data={data.upcoming_reviews} />
+        <div className="lg:grid lg:grid-cols-[1.3fr_1fr] lg:gap-5 lg:items-start">
+          <HeatmapSection data={data.heatmap_data} />
+          <div className="min-w-0">
+            <MasterySection items={displayMastery} />
+            <UpcomingSection data={data.upcoming_reviews} />
+          </div>
+        </div>
       </main>
     </div>
   );

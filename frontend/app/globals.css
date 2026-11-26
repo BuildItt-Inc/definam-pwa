@@ -22,10 +22,18 @@
     --border-2: #D5D3CB;  /* Stronger interactive border */
 
     /* ── Typography ───────────────────────────────────────────────────────── */
-    --ink:   #14201B; /* Deep forest-charcoal — headings & primary actions */
-    --ink-2: #4B5651; /* Body text */
-    --muted: #66716B; /* Captions, labels, timestamps */
-    --faint: #8C9691; /* Placeholders, disabled */
+    --ink:    #14201B; /* Deep forest-charcoal — headings & primary actions */
+    --on-ink: #FFFFFF; /* Foreground text/icons placed on bg-ink surfaces */
+    --ink-2:  #4B5651; /* Body text */
+    --muted:  #66716B; /* Captions, labels, timestamps */
+    --faint:  #8C9691; /* Placeholders, disabled */
+
+    /* ── Heatmap scale ───────────────────────────────────────────────────── */
+    --heat-0: #E4E7E3;
+    --heat-1: #C2E5CD;
+    --heat-2: #7CC797;
+    --heat-3: #3BA366;
+    --heat-4: #1E7A46;
 
     /* ── Brand Green (Progress, Success, Active) ──────────────────────────── */
     --brand:        #1E7A46; /* Progress, mastery, active nav */
@@ -70,6 +78,60 @@
 
     /* ── BottomNav ────────────────────────────────────────────────────────── */
     --nav-h: 56px; /* base nav height, excluding safe-area-inset-bottom */
+  }
+
+  html.dark {
+    --bg-0:   #0B0E0D;
+    --bg-1:   #131715;
+    --bg-2:   #1B201E;
+    --bg-3:   #242A27;
+
+    --card:   #131715;
+    --card-2: #181D1B;
+
+    --border:   #242B27;
+    --border-2: #323B36;
+
+    --ink:    #F2F5F3;
+    --on-ink: #0C0E0D;
+    --ink-2:  #C2CBC6;
+    --muted:  #939E98;
+    --faint:  #68736D;
+
+    --brand:        #2E9E5E;
+    --brand-dark:   #25844E;
+    --brand-light:  #44B875;
+    --brand-tint:   rgba(46, 158, 94, 0.14);
+    --brand-tint-b: rgba(46, 158, 94, 0.30);
+
+    --success:    #34B46B;
+    --success-bg: rgba(46, 158, 94, 0.14);
+
+    --warn:       #F59E0B;
+    --warn-bg:    rgba(245, 158, 11, 0.14);
+
+    --danger:     #F87171;
+    --danger-bg:  rgba(248, 113, 113, 0.14);
+
+    --jade:             #2E9E5E;
+    --jade-light:       #44B875;
+    --jade-tint:        rgba(46, 158, 94, 0.14);
+    --jade-tint-border: rgba(46, 158, 94, 0.30);
+    --jade-dark:        #25844E;
+
+    --brand-rgb:  46, 158, 94;
+    --brand-dim:  rgba(46, 158, 94, 0.14);
+
+    --heat-0: #1D2320;
+    --heat-1: #173D27;
+    --heat-2: #1F5B39;
+    --heat-3: #27804E;
+    --heat-4: #34B46B;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.30);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.36);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.44);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.56);
   }
 
   html[data-typography='ios'] body {
@@ -212,11 +274,18 @@
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(22, 101, 52, 0.08);
   }
+  html.dark .glass-card {
+    background: rgba(19, 23, 21, 0.94);
+    border: 1px solid var(--border);
+  }
   @supports (backdrop-filter: blur(1px)) {
     .glass-card {
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
+    }
+    html.dark .glass-card {
+      background: rgba(19, 23, 21, 0.82);
     }
   }
 
@@ -229,12 +298,13 @@
     filter: blur(60px);
   }
 
-  /* Primary button — Ink (#14201B) for primary screen actions */
+  /* Primary button — Ink for primary screen actions */
   .btn-primary {
-    @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-lg bg-ink px-5 py-3 text-[15px] font-semibold text-white shadow-xs active:scale-[0.98] disabled:bg-bg-2 disabled:text-faint disabled:shadow-none disabled:cursor-not-allowed;
+    @apply inline-flex min-h-[46px] items-center justify-center gap-2 rounded-lg bg-ink px-5 py-3 text-[15px] font-semibold text-on-ink shadow-xs active:scale-[0.98] disabled:bg-bg-2 disabled:text-faint disabled:shadow-none disabled:cursor-not-allowed;
     transition: background-color 150ms ease, transform 100ms ease, box-shadow 150ms ease;
   }
   .btn-primary:hover:not(:disabled) { background-color: #1f3029; }
+  html.dark .btn-primary:hover:not(:disabled) { background-color: #DCE2DF; }
 
   /* Secondary button */
   .btn-secondary {
@@ -258,6 +328,9 @@
   .input-field:focus {
     border-color: var(--ink);
     box-shadow: 0 0 0 3px rgba(20, 32, 27, 0.08);
+  }
+  html.dark .input-field:focus {
+    box-shadow: 0 0 0 3px rgba(242, 245, 243, 0.12);
   }
   .input-field.error {
     @apply border-danger;
@@ -470,7 +543,29 @@
 }
 .flame-pulse { animation: flamePulseScale 1s ease-in-out infinite; }
 
-/* Shared platform typography; landing prose stays readable at every width. */
+/* Shared platform typography; landing prose stays readable at every width
+   and keeps its fixed light/brand marketing palette regardless of app theme. */
+.landing-page,
+.landing-menu {
+  --bg-0: #FAFAF8;
+  --bg-1: #FFFFFF;
+  --bg-2: #F2F1EC;
+  --bg-3: #E6E5DF;
+  --card: #FFFFFF;
+  --card-2: #FAFAF8;
+  --border: #E6E5DF;
+  --border-2: #D5D3CB;
+  --ink: #14201B;
+  --on-ink: #FFFFFF;
+  --ink-2: #4B5651;
+  --muted: #66716B;
+  --faint: #8C9691;
+  --brand: #1E7A46;
+  --brand-dark: #166037;
+  --brand-light: #2E9E5E;
+  --brand-tint: #E8F3EC;
+  color-scheme: light;
+}
 .landing-page { font-family: var(--font-ui); }
 .landing-skip-link {
   position: fixed;

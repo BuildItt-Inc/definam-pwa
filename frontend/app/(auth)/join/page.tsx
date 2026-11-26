@@ -177,7 +177,7 @@ export default function JoinPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full min-h-[52px] bg-ink text-white rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:bg-ink/90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-8"
+              className="w-full min-h-[52px] bg-ink text-on-ink rounded-xl font-bold text-[15px] tracking-tight flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.985] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 shadow-sm mb-8"
             >
               {isSubmitting ? (
                 <>

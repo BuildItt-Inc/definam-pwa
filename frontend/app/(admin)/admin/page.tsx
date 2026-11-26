@@ -23,7 +23,7 @@ function SkeletonStatCard() {
 
 function SkeletonAlertBar() {
   return (
-    <div className="h-10 w-full bg-amber-50 border border-amber-100 rounded-lg animate-pulse mb-4" />
+    <div className="h-10 w-full bg-warn-bg border border-warn/25 rounded-lg animate-pulse mb-4" />
   );
 }
 

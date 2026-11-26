@@ -233,7 +233,7 @@ export default function AdminClassesPage() {
                     {...scaleTap}
                     type="submit"
                     disabled={creating || !newClassName.trim()}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-ink text-white text-[11px] font-bold rounded-[16px] hover:bg-ink/90 transition-colors disabled:opacity-60"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-ink text-on-ink text-[11px] font-bold rounded-[16px] hover:opacity-90 transition-colors disabled:opacity-60"
                   >
                     <Plus size={13} strokeWidth={2} />
                     {creating ? 'Creating...' : 'Create'}
@@ -275,7 +275,7 @@ export default function AdminClassesPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setManagingClass(cls)}
-                            className="text-[11px] font-bold border border-border-2 bg-bg-0 text-ink px-3 py-1.5 rounded-[16px] hover:bg-ink hover:text-white hover:border-ink transition-colors flex items-center gap-1"
+                            className="text-[11px] font-bold border border-border-2 bg-bg-0 text-ink px-3 py-1.5 rounded-[16px] hover:bg-ink hover:text-on-ink hover:border-ink transition-colors flex items-center gap-1"
                           >
                             <Users size={12} />
                             Manage Students
@@ -348,7 +348,7 @@ export default function AdminClassesPage() {
                       {...scaleTap}
                       onClick={handleAssignStudents}
                       disabled={updatingStudents}
-                      className="flex items-center gap-1 px-3 py-1 bg-ink text-white text-[10px] font-extrabold rounded-[12px] hover:bg-ink/90 transition-colors"
+                      className="flex items-center gap-1 px-3 py-1 bg-ink text-on-ink text-[10px] font-extrabold rounded-[12px] hover:opacity-90 transition-colors"
                     >
                       <Check size={11} />
                       Assign Selected ({selectedStudentIds.length})

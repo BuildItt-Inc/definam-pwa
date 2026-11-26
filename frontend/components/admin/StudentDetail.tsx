@@ -20,7 +20,7 @@ interface StudentDetailProps {
 
 function AccuracyBar({ accuracy }: { accuracy: number }) {
   const fillColor =
-    accuracy >= 60 ? 'bg-ink' : accuracy >= 40 ? 'bg-gray-400' : 'bg-bg-3';
+    accuracy >= 60 ? 'bg-ink' : accuracy >= 40 ? 'bg-muted' : 'bg-bg-3';
   return (
     <div className="flex items-center gap-2">
       <div className="w-14 h-1 bg-bg-1 border border-border-2 rounded-full overflow-hidden shrink-0">
@@ -53,7 +53,7 @@ function StatusPill({
         Active
         {streakDays > 0 && (
           <>
-            <span className="text-gray-300">·</span>
+            <span className="text-faint">·</span>
             <Flame size={12} strokeWidth={2} className="text-muted" />
             {streakDays} days
           </>
@@ -71,7 +71,7 @@ function StatusPill({
   }
   return (
     <span className={`${base} bg-bg-0 text-muted border-border-2`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+      <span className="w-1.5 h-1.5 rounded-full bg-faint shrink-0" />
       Not Started
     </span>
   );
@@ -208,11 +208,11 @@ function ChatLogsPanel({ sessions }: { sessions: ChatSession[] }) {
                 >
                   {session.date}
                 </span>
-                <span className="text-[10px] text-gray-300">·</span>
+                <span className="text-[10px] text-faint">·</span>
                 <span className="text-[12px] font-medium text-muted">
                   {session.subject}
                 </span>
-                <span className="text-[10px] text-gray-300">·</span>
+                <span className="text-[10px] text-faint">·</span>
                 <span className="text-[12px] font-semibold text-ink truncate">
                   {session.topic}
                 </span>
@@ -240,7 +240,7 @@ function ChatLogsPanel({ sessions }: { sessions: ChatSession[] }) {
                       {session.preview_messages.map((msg, i) => (
                         <div key={i} className="flex gap-3">
                           <span
-                            className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-[8px] border border-border-2 h-fit shrink-0 ${ msg.role === 'ai' ? 'bg-ink text-white' : 'bg-bg-0 text-ink' }`}
+                            className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-[8px] border border-border-2 h-fit shrink-0 ${ msg.role === 'ai' ? 'bg-ink text-on-ink' : 'bg-bg-0 text-ink' }`}
                           >
                             {msg.role === 'ai' ? 'AI' : 'Student'}
                           </span>
@@ -288,7 +288,7 @@ export function StudentDetail({ student }: StudentDetailProps) {
         <div className="ml-auto">
           <motion.button
             {...scaleTap}
-            className="flex items-center gap-2 text-[12px] font-bold text-ink bg-bg-0 border border-border-2 rounded-[16px] px-4 py-2 hover:bg-ink hover:text-white transition-colors"
+            className="flex items-center gap-2 text-[12px] font-bold text-ink bg-bg-0 border border-border-2 rounded-[16px] px-4 py-2 hover:bg-ink hover:text-on-ink transition-colors"
           >
             <Download size={14} strokeWidth={2} />
             Export Data

@@ -15,7 +15,16 @@ import {
   HelpCircle,
   Bug,
   ChevronRight,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
+import {
+  getThemePreference,
+  setThemePreference,
+  subscribeToTheme,
+  type ThemePreference,
+} from '@/lib/theme';
 import {
   changePassword,
   getMe,
@@ -63,12 +72,19 @@ const TARGET_OPTIONS = ['WAEC', 'NECO', 'JAMB', 'School exams'];
 function SettingsSkeleton() {
   return (
     <div className="page-with-nav bg-bg-0">
-      <div className="mx-auto w-full max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 pb-24 pt-[calc(env(safe-area-inset-top)+16px)] md:pt-7">
         <div className="mb-4 h-7 w-24 animate-pulse rounded bg-bg-3" />
-        <div className="mb-5 h-36 animate-pulse rounded-2xl bg-bg-2" />
-        <div className="mb-5 h-16 animate-pulse rounded-2xl bg-bg-2" />
-        <div className="mb-5 h-32 animate-pulse rounded-2xl bg-bg-2" />
-        <div className="h-36 animate-pulse rounded-2xl bg-bg-2" />
+        <div className="grid gap-5 lg:grid-cols-[1.05fr_1fr]">
+          <div className="space-y-4">
+            <div className="h-36 animate-pulse rounded-2xl bg-bg-2" />
+            <div className="h-20 animate-pulse rounded-2xl bg-bg-2" />
+            <div className="h-44 animate-pulse rounded-2xl bg-bg-2" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-20 animate-pulse rounded-2xl bg-bg-2" />
+            <div className="h-44 animate-pulse rounded-2xl bg-bg-2" />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -120,6 +136,12 @@ export default function SettingsPage() {
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
   const [testNotifLoading, setTestNotifLoading] = useState(false);
+  const [themePref, setThemePref] = useState<ThemePreference>('system');
+
+  useEffect(() => {
+    setThemePref(getThemePreference());
+    return subscribeToTheme((pref) => setThemePref(pref));
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -384,324 +406,384 @@ export default function SettingsPage() {
   return (
     <>
     <div className="page-with-nav bg-bg-0 page-enter">
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
-        <h1 className="mb-4 text-[24px] font-bold tracking-tight text-ink">Settings</h1>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 sm:px-6 pt-[calc(env(safe-area-inset-top)+16px)] md:pt-7 pb-nav">
+        <h1 className="mb-4 md:mb-5 text-[24px] sm:text-[26px] font-bold tracking-tight text-ink">Settings</h1>
 
-        {/* ── Hero Profile Card ── */}
-        <section className="mb-5 rounded-2xl bg-ink p-4 text-white shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[18px] font-bold text-white">
-              {avatarLetter}
-            </div>
+        <div className="lg:grid lg:grid-cols-[1.05fr_1fr] lg:gap-6 lg:items-start">
+          {/* ── Left Column: Profile Hero, Study Plan & Preferences ── */}
+          <div className="min-w-0">
+            {/* ── Hero Profile Card ── */}
+            <section className="mb-5 rounded-2xl bg-[#14201B] dark:bg-[#171C1A] dark:border dark:border-border p-4 sm:p-5 text-white shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand text-[18px] font-bold text-white">
+                  {avatarLetter}
+                </div>
 
-            <div className="min-w-0 flex-1">
-              {isEditingName ? (
-                <div className="flex items-center gap-1.5">
-                  <input
-                    value={nameInput}
-                    onChange={(e) => setNameInput(e.target.value)}
-                    className="w-full min-w-0 rounded-lg border border-white/25 bg-white/10 px-2.5 py-1 text-[15px] font-semibold text-white placeholder:text-white/50 focus:border-brand-light focus:outline-none"
-                    autoFocus
-                    maxLength={40}
-                  />
+                <div className="min-w-0 flex-1">
+                  {isEditingName ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        value={nameInput}
+                        onChange={(e) => setNameInput(e.target.value)}
+                        className="w-full min-w-0 rounded-lg border border-white/25 bg-white/10 px-2.5 py-1 text-[15px] font-semibold text-white placeholder:text-white/50 focus:border-brand-light focus:outline-none"
+                        autoFocus
+                        maxLength={40}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveName}
+                        disabled={savingName}
+                        aria-label="Save name"
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-brand text-white disabled:opacity-50 active:scale-95"
+                      >
+                        <Check size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        aria-label="Cancel"
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-white active:scale-95"
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="truncate text-[16px] font-bold leading-tight text-white">
+                        {displayName}
+                      </p>
+                      <p className="mt-0.5 truncate text-[12.5px] text-white/65">
+                        {isIndividual ? 'Independent Learner' : schoolName}
+                        {profile?.class_level ? ` · ${profile.class_level}` : ''}
+                      </p>
+                    </>
+                  )}
+                  {nameError && (
+                    <p className="mt-1 text-[12px] text-red-300">
+                      Could not save. Check your connection.
+                    </p>
+                  )}
+                </div>
+
+                {!isEditingName && (
                   <button
                     type="button"
-                    onClick={handleSaveName}
-                    disabled={savingName}
-                    aria-label="Save name"
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-brand text-white disabled:opacity-50 active:scale-95"
+                    onClick={() => setIsEditingName(true)}
+                    aria-label="Edit name"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white/85 transition-colors hover:bg-white/20 active:scale-95"
                   >
-                    <Check size={15} />
+                    <Pencil size={15} strokeWidth={2} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelEdit}
-                    aria-label="Cancel"
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-white active:scale-95"
-                  >
-                    <X size={15} />
-                  </button>
+                )}
+              </div>
+
+              <div className="my-3.5 border-t border-white/10" />
+
+              <div className="grid grid-cols-3 text-center">
+                <div>
+                  <p className="text-[18px] font-bold leading-none text-white tabular-nums">
+                    {streakDays}
+                  </p>
+                  <p className="mt-1 text-[11.5px] text-white/60">Day streak</p>
                 </div>
-              ) : (
-                <>
-                  <p className="truncate text-[16px] font-bold leading-tight text-white">
-                    {displayName}
+                <div>
+                  <p className="text-[18px] font-bold leading-none text-white tabular-nums">
+                    {activeSubjectsCount}
                   </p>
-                  <p className="mt-0.5 truncate text-[12.5px] text-white/65">
-                    {isIndividual ? 'Independent Learner' : schoolName}
-                    {profile?.class_level ? ` · ${profile.class_level}` : ''}
+                  <p className="mt-1 text-[11.5px] text-white/60">Subjects</p>
+                </div>
+                <div>
+                  <p className="text-[18px] font-bold leading-none text-white tabular-nums">
+                    {completionPercent}%
                   </p>
-                </>
-              )}
-              {nameError && (
-                <p className="mt-1 text-[12px] text-red-300">
-                  Could not save. Check your connection.
-                </p>
-              )}
-            </div>
-
-            {!isEditingName && (
-              <button
-                type="button"
-                onClick={() => setIsEditingName(true)}
-                aria-label="Edit name"
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white/85 transition-colors hover:bg-white/20 active:scale-95"
-              >
-                <Pencil size={15} strokeWidth={2} />
-              </button>
-            )}
-          </div>
-
-          <div className="my-3.5 border-t border-white/10" />
-
-          <div className="grid grid-cols-3 text-center">
-            <div>
-              <p className="text-[18px] font-bold leading-none text-white tabular-nums">
-                {streakDays}
-              </p>
-              <p className="mt-1 text-[11.5px] text-white/60">Day streak</p>
-            </div>
-            <div>
-              <p className="text-[18px] font-bold leading-none text-white tabular-nums">
-                {activeSubjectsCount}
-              </p>
-              <p className="mt-1 text-[11.5px] text-white/60">Subjects</p>
-            </div>
-            <div>
-              <p className="text-[18px] font-bold leading-none text-white tabular-nums">
-                {completionPercent}%
-              </p>
-              <p className="mt-1 text-[11.5px] text-white/60">Overall done</p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── STUDY PLAN (Class & targets only — no duplicate subjects card) ── */}
-        <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-          Study plan
-        </p>
-        <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card">
-          <button
-            type="button"
-            onClick={openStudyPlanModal}
-            className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
-          >
-            <div className="min-w-0">
-              <p className="text-[12px] text-muted leading-tight">Class &amp; targets</p>
-              <p className="mt-0.5 truncate text-[14px] font-semibold text-ink">
-                {studyPlanSummary}
-              </p>
-            </div>
-            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
-          </button>
-        </div>
-
-        {/* ── PREFERENCES ── */}
-        <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-          Preferences
-        </p>
-        <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
-          <div className="px-4 py-3.5">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
-                  <Bell size={22} strokeWidth={1.65} />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[14px] font-semibold text-ink leading-tight">Study reminders</p>
-                  <p className="mt-0.5 text-[12px] text-muted leading-snug">
-                    Study alerts and streak nudges
-                  </p>
+                  <p className="mt-1 text-[11.5px] text-white/60">Overall done</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleToggleNotifications}
-                disabled={notifLoading}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-[12.5px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
-                  notifEnabled
-                    ? 'bg-brand-tint text-brand'
-                    : 'bg-brand text-white hover:bg-brand-dark'
-                }`}
-              >
-                {notifLoading ? 'Updating...' : notifEnabled ? 'Enabled' : 'Enable'}
-              </button>
-            </div>
+            </section>
 
-            {isIOS && !isInstalled && (
-              <div className="mt-3 rounded-xl bg-warn-bg px-3 py-2.5">
-                <p className="text-[12px] font-medium text-warn leading-snug">
-                  On iPhone, add Recall to your Home Screen first before notifications can arrive.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowInstallModal(true)}
-                  className="mt-1 text-[12px] font-semibold text-ink underline"
-                >
-                  View iPhone guide →
-                </button>
-              </div>
-            )}
-
-            {notifEnabled && (
-              <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-bg-0 px-3 py-2 border border-border">
-                <span className="text-[12px] text-muted truncate">
-                  Verify alerts on this device
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleSendTestNotification()}
-                  disabled={testNotifLoading}
-                  className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11.5px] font-semibold text-ink hover:bg-bg-2 active:scale-95 disabled:opacity-50"
-                >
-                  {testNotifLoading ? 'Testing…' : 'Send test'}
-                </button>
-              </div>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleInstallClick}
-            className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
-                <Download size={22} strokeWidth={1.65} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-ink leading-tight">Install Recall</p>
-                <p className="mt-0.5 text-[12px] text-muted leading-snug">
-                  {isInstalled
-                    ? 'Installed on this device'
-                    : 'One-tap access from your home screen'}
-                </p>
-              </div>
-            </div>
-            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
-          </button>
-        </div>
-
-        {/* ── ACCOUNT ── */}
-        {isIndividual && (
-          <>
+            {/* ── STUDY PLAN (Class & targets only — no duplicate subjects card) ── */}
             <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-              Account
+              Study plan
             </p>
             <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card">
               <button
                 type="button"
-                onClick={() => {
-                  setPwError(null);
-                  setPwSuccess(false);
-                  setShowPasswordModal(true);
-                }}
+                onClick={openStudyPlanModal}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
+              >
+                <div className="min-w-0">
+                  <p className="text-[12px] text-muted leading-tight">Class &amp; targets</p>
+                  <p className="mt-0.5 truncate text-[14px] font-semibold text-ink">
+                    {studyPlanSummary}
+                  </p>
+                </div>
+                <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+              </button>
+            </div>
+
+            {/* ── PREFERENCES ── */}
+            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Preferences
+            </p>
+            <div className="mb-5 lg:mb-0 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
+              {/* Appearance / Theme selector */}
+              <div className="px-4 py-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                      {themePref === 'dark' ? (
+                        <Moon size={21} strokeWidth={1.65} />
+                      ) : themePref === 'light' ? (
+                        <Sun size={21} strokeWidth={1.65} />
+                      ) : (
+                        <Monitor size={21} strokeWidth={1.65} />
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-semibold text-ink leading-tight">Appearance</p>
+                      <p className="mt-0.5 text-[12px] text-muted leading-snug">
+                        {themePref === 'system'
+                          ? 'Matches device setting'
+                          : themePref === 'dark'
+                          ? 'Dark monochrome theme'
+                          : 'Light monochrome theme'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    role="group"
+                    aria-label="Theme preference"
+                    className="inline-flex items-center rounded-xl border border-border bg-bg-2 p-0.5"
+                  >
+                    {(['light', 'dark', 'system'] as const).map((option) => {
+                      const active = themePref === option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setThemePreference(option)}
+                          aria-pressed={active}
+                          className={`rounded-lg px-2.5 py-1 text-[12px] font-semibold capitalize transition-all ${
+                            active
+                              ? 'bg-card text-ink shadow-xs'
+                              : 'text-muted hover:text-ink'
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-4 py-3.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                      <Bell size={22} strokeWidth={1.65} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-semibold text-ink leading-tight">Study reminders</p>
+                      <p className="mt-0.5 text-[12px] text-muted leading-snug">
+                        Study alerts and streak nudges
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleToggleNotifications}
+                    disabled={notifLoading}
+                    className={`shrink-0 rounded-full px-4 py-1.5 text-[12.5px] font-bold transition-all active:scale-95 disabled:opacity-60 ${
+                      notifEnabled
+                        ? 'bg-brand-tint text-brand'
+                        : 'bg-brand text-white hover:bg-brand-dark'
+                    }`}
+                  >
+                    {notifLoading ? 'Updating...' : notifEnabled ? 'Enabled' : 'Enable'}
+                  </button>
+                </div>
+
+                {isIOS && !isInstalled && (
+                  <div className="mt-3 rounded-xl bg-warn-bg px-3 py-2.5">
+                    <p className="text-[12px] font-medium text-warn leading-snug">
+                      On iPhone, add Recall to your Home Screen first before notifications can arrive.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowInstallModal(true)}
+                      className="mt-1 text-[12px] font-semibold text-ink underline"
+                    >
+                      View iPhone guide →
+                    </button>
+                  </div>
+                )}
+
+                {notifEnabled && (
+                  <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-bg-0 px-3 py-2 border border-border">
+                    <span className="text-[12px] text-muted truncate">
+                      Verify alerts on this device
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleSendTestNotification()}
+                      disabled={testNotifLoading}
+                      className="shrink-0 rounded-lg border border-border-2 bg-card px-2.5 py-1 text-[11.5px] font-semibold text-ink hover:bg-bg-2 active:scale-95 disabled:opacity-50"
+                    >
+                      {testNotifLoading ? 'Testing…' : 'Send test'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleInstallClick}
                 className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
                   <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
-                    <Lock size={22} strokeWidth={1.65} />
+                    <Download size={22} strokeWidth={1.65} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[14px] font-semibold text-ink leading-tight">Change password</p>
-                    <p className="mt-0.5 text-[12px] text-muted">Opens a secure form</p>
+                    <p className="text-[14px] font-semibold text-ink leading-tight">Install Recall</p>
+                    <p className="mt-0.5 text-[12px] text-muted leading-snug">
+                      {isInstalled
+                        ? 'Installed on this device'
+                        : 'One-tap access from your home screen'}
+                    </p>
                   </div>
                 </div>
                 <ChevronRight size={16} className="flex-shrink-0 text-faint" />
               </button>
             </div>
-          </>
-        )}
+          </div>
 
-        {/* ── HELP ── */}
-        <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-          Help
-        </p>
-        <div className="mb-4 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
-          <a
-            href="mailto:support@definam.ng?subject=Recall%20App%20Feedback"
-            className="flex items-center justify-between gap-3 px-4 py-3.5 text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
-                <MessageSquarePlus size={22} strokeWidth={1.65} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-ink leading-tight">Send feedback</p>
-                <p className="mt-0.5 text-[12px] text-muted">Suggest an improvement</p>
-              </div>
-            </div>
-            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
-          </a>
+          {/* ── Right Column: Account, Help & Sign out ── */}
+          <div className="min-w-0">
+            {/* ── ACCOUNT ── */}
+            {isIndividual && (
+              <>
+                <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  Account
+                </p>
+                <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPwError(null);
+                      setPwSuccess(false);
+                      setShowPasswordModal(true);
+                    }}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                        <Lock size={22} strokeWidth={1.65} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-semibold text-ink leading-tight">Change password</p>
+                        <p className="mt-0.5 text-[12px] text-muted">Opens a secure form</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+                  </button>
+                </div>
+              </>
+            )}
 
-          <button
-            type="button"
-            onClick={() => setShowInstallModal(true)}
-            className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
-                <HelpCircle size={22} strokeWidth={1.65} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-ink leading-tight">Install guide</p>
-                <p className="mt-0.5 text-[12px] text-muted">iPhone and Android steps</p>
-              </div>
-            </div>
-            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
-          </button>
+            {/* ── HELP ── */}
+            <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Help
+            </p>
+            <div className="mb-4 overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
+              <a
+                href="mailto:support@definam.ng?subject=Recall%20App%20Feedback"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                    <MessageSquarePlus size={22} strokeWidth={1.65} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold text-ink leading-tight">Send feedback</p>
+                    <p className="mt-0.5 text-[12px] text-muted">Suggest an improvement</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+              </a>
 
-          <a
-            href="https://forms.gle/G93Xc3xbM12p1M327"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-between gap-3 px-4 py-3.5 text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <span className="flex w-7 flex-shrink-0 items-center justify-center text-warn">
-                <Bug size={22} strokeWidth={1.65} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-ink leading-tight">Report a bug</p>
-                <p className="mt-0.5 text-[12px] text-muted">Something not working? Tell us</p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowInstallModal(true)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <span className="flex w-7 flex-shrink-0 items-center justify-center text-ink-2">
+                    <HelpCircle size={22} strokeWidth={1.65} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold text-ink leading-tight">Install guide</p>
+                    <p className="mt-0.5 text-[12px] text-muted">iPhone and Android steps</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+              </button>
+
+              <a
+                href="https://forms.gle/G93Xc3xbM12p1M327"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 text-ink transition-colors hover:bg-bg-0 active:bg-bg-2"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <span className="flex w-7 flex-shrink-0 items-center justify-center text-warn">
+                    <Bug size={22} strokeWidth={1.65} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold text-ink leading-tight">Report a bug</p>
+                    <p className="mt-0.5 text-[12px] text-muted">Something not working? Tell us</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="flex-shrink-0 text-faint" />
+              </a>
             </div>
-            <ChevronRight size={16} className="flex-shrink-0 text-faint" />
-          </a>
+
+            {/* Legal links */}
+            <div className="mb-4 flex items-center justify-center gap-4 text-[12.5px] text-muted">
+              <Link href="/terms" className="underline underline-offset-2 hover:text-ink">
+                Terms of Service
+              </Link>
+              <Link href="/privacy" className="underline underline-offset-2 hover:text-ink">
+                Privacy Policy
+              </Link>
+            </div>
+
+            {/* Log out */}
+            <button
+              type="button"
+              onClick={() => setShowLogoutConfirm(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-[15px] font-semibold text-danger transition-colors hover:bg-danger-bg/40 active:scale-[0.99]"
+            >
+              <LogOut size={16} strokeWidth={2} />
+              <span>Log out</span>
+            </button>
+
+            <p className="mt-5 text-center text-[12px] text-faint">v{APP_VERSION}</p>
+          </div>
         </div>
-
-        {/* Legal links */}
-        <div className="mb-4 flex items-center justify-center gap-4 text-[12.5px] text-muted">
-          <Link href="/terms" className="underline underline-offset-2 hover:text-ink">
-            Terms of Service
-          </Link>
-          <Link href="/privacy" className="underline underline-offset-2 hover:text-ink">
-            Privacy Policy
-          </Link>
-        </div>
-
-        {/* Log out */}
-        <button
-          type="button"
-          onClick={() => setShowLogoutConfirm(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-[15px] font-semibold text-danger transition-colors hover:bg-danger-bg/40 active:scale-[0.99]"
-        >
-          <LogOut size={16} strokeWidth={2} />
-          <span>Log out</span>
-        </button>
-
-        <p className="mt-6 text-center text-[12px] text-faint">v{APP_VERSION}</p>
       </main>
     </div>
 
       {/* ── Study Plan Modal (outside page-enter stacking context) ── */}
       {showStudyPlanModal && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 px-4"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 backdrop-blur-[2px] px-4"
           onClick={() => setShowStudyPlanModal(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-card p-5 shadow-xl"
+            className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -726,7 +808,7 @@ export default function SettingsPage() {
                     onClick={() => setDraftClass(lvl)}
                     className={`rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition-all ${
                       draftClass === lvl
-                        ? 'border-ink bg-ink text-white'
+                        ? 'border-ink bg-ink text-on-ink'
                         : 'border-border bg-bg-0 text-ink hover:bg-bg-2'
                     }`}
                   >
@@ -782,11 +864,11 @@ export default function SettingsPage() {
       {/* ── Change Password Modal ── */}
       {showPasswordModal && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/50 px-4"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 backdrop-blur-[2px] px-4"
           onClick={() => setShowPasswordModal(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-card p-5 shadow-xl"
+            className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -856,11 +938,11 @@ export default function SettingsPage() {
       {/* ── Log Out Confirm Modal ── */}
       {showLogoutConfirm && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/60"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-[2px]"
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div
-            className="mx-4 w-full max-w-md animate-slide-up rounded-3xl bg-bg-0 px-6 pb-6 pt-6 shadow-lg"
+            className="mx-4 w-full max-w-md animate-slide-up rounded-3xl border border-border bg-card px-6 pb-6 pt-6 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <p className="mb-2 text-lg font-bold text-ink">Log out?</p>

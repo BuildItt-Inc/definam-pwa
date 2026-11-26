@@ -15,7 +15,7 @@ interface ClassTableProps {
 
 function AccuracyBar({ accuracy }: { accuracy: number }) {
   const fillColor =
-    accuracy >= 60 ? 'bg-ink' : accuracy >= 40 ? 'bg-gray-400' : 'bg-bg-3';
+    accuracy >= 60 ? 'bg-ink' : accuracy >= 40 ? 'bg-muted' : 'bg-bg-3';
   return (
     <div className="flex items-center gap-2">
       <div className="w-14 h-1 bg-bg-1 border border-border-2 rounded-full overflow-hidden">
@@ -48,7 +48,7 @@ function RecallBadge({ status, overdueDays }: { status: StudentRow['recall_statu
   }
   return (
     <span className="inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-[16px] bg-bg-0 text-muted border border-border-2">
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-300 mr-1.5" />
+      <span className="w-1.5 h-1.5 rounded-full bg-faint mr-1.5" />
       Not Started
     </span>
   );
@@ -171,7 +171,7 @@ export function ClassTable({ students, activeSubjects, onViewStudent }: ClassTab
                         {student.streak_days} days
                       </span>
                     ) : (
-                      <span className="text-[12px] font-medium text-gray-300">—</span>
+                      <span className="text-[12px] font-medium text-faint">—</span>
                     )}
                   </td>
 
@@ -210,7 +210,7 @@ export function ClassTable({ students, activeSubjects, onViewStudent }: ClassTab
                         e.stopPropagation();
                         onViewStudent(student.id);
                       }}
-                      className="text-[11px] font-bold border border-border-2 bg-bg-0 text-ink px-3 py-1.5 rounded-[16px] group-hover:bg-ink group-hover:text-white transition-colors whitespace-nowrap"
+                      className="text-[11px] font-bold border border-border-2 bg-bg-0 text-ink px-3 py-1.5 rounded-[16px] group-hover:bg-ink group-hover:text-on-ink transition-colors whitespace-nowrap"
                     >
                       View
                     </motion.button>

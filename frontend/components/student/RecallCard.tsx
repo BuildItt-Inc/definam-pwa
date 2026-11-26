@@ -19,33 +19,33 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
       <div
         ref={ref}
         onMouseMove={onMouseMove}
-        className="spotlight spotlight-card relative overflow-hidden rounded-2xl border border-[#ECFDF3] bg-white p-4 shadow-sm"
+        className="spotlight spotlight-card relative overflow-hidden rounded-2xl border border-brand/25 bg-card p-4 shadow-sm"
       >
         {/* Header row */}
         <div className="relative z-10 mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
-            <span className="text-[12px] font-semibold uppercase tracking-widest text-[#6B7280]">
+            <span className="h-2 w-2 rounded-full bg-brand" />
+            <span className="text-[12px] font-semibold uppercase tracking-widest text-muted">
               Daily Review
             </span>
           </div>
-          <span className="rounded-full bg-[#111827] px-2.5 py-0.5 text-[12px] font-semibold text-white">
+          <span className="rounded-full bg-ink px-2.5 py-0.5 text-[12px] font-semibold text-on-ink">
             {queue.length} {queue.length === 1 ? 'topic' : 'topics'}
           </span>
         </div>
 
         {/* Topics */}
-        <p className="relative z-10 mb-1 text-[15px] font-bold text-[#111827] leading-snug">
+        <p className="relative z-10 mb-1 text-[15px] font-bold text-ink leading-snug">
           Time to review
         </p>
-        <p className="relative z-10 mb-4 line-clamp-2 text-[13px] text-[#9CA3AF] leading-relaxed">
+        <p className="relative z-10 mb-4 line-clamp-2 text-[13px] text-muted leading-relaxed">
           {topicNames}
         </p>
 
         {/* CTA */}
         <button
           onClick={onStart}
-          className="relative z-10 flex w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] py-3 text-[15px] font-semibold text-white hover:bg-[#15803D] active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(22,163,74,0.2)]"
+          className="relative z-10 flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-[15px] font-semibold text-white hover:bg-brand-dark active:scale-[0.98] transition-all shadow-brand-sm"
         >
           Start review
           <ArrowRight size={16} strokeWidth={2.5} />
@@ -55,12 +55,12 @@ export function RecallCard({ queue, onStart }: RecallCardProps) {
   }
 
   return (
-    <div className="flex flex-col items-center rounded-2xl border border-dashed border-[#D1D5DB] bg-white px-4 py-6 text-center">
-      <BookOpen size={22} strokeWidth={1.5} className="mb-2.5 text-[#D1D5DB]" />
-      <p className="mb-1 text-[15px] font-semibold text-[#111827]">
+    <div className="flex flex-col items-center rounded-2xl border border-dashed border-border-2 bg-card px-4 py-6 text-center">
+      <BookOpen size={22} strokeWidth={1.5} className="mb-2.5 text-faint" />
+      <p className="mb-1 text-[15px] font-semibold text-ink">
         No reviews today
       </p>
-      <p className="text-[13px] text-[#9CA3AF] leading-relaxed">
+      <p className="text-[13px] text-muted leading-relaxed">
         Study a topic and it will come back for review when you need it.
       </p>
     </div>

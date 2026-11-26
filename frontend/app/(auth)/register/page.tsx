@@ -423,13 +423,13 @@ function RegisterForm() {
 
         {/* Footer links */}
         <div className="mt-8 text-center space-y-3">
-          <p className="text-[14px] text-gray-600">
+          <p className="text-[14px] text-muted">
             Already have an account?{' '}
             <Link href="/login" className="font-bold text-brand hover:underline">
               Sign in
             </Link>
           </p>
-          <p className="text-[14px] text-gray-600">
+          <p className="text-[14px] text-muted">
             No code yet?{' '}
             <Link
               href="/pay/individual"

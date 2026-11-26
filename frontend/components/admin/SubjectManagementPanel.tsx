@@ -233,7 +233,7 @@ export function SubjectManagementPanel() {
                         <button
                           onClick={() => handleRegenerate(sub.name)}
                           disabled={regenerating === sub.name}
-                          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold border border-amber-200 text-amber-800 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors disabled:opacity-50"
+                          className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold border border-warn/30 text-warn bg-warn-bg rounded-lg hover:opacity-85 transition-colors disabled:opacity-50"
                           title={`Regenerate curriculum for ${sub.name}`}
                         >
                           {regenerating === sub.name ? (
@@ -287,7 +287,7 @@ export function SubjectManagementPanel() {
 
       {/* Drill-down Subject Detail Modal */}
       {selectedSubject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm">
           <div className="bg-card border border-border-2 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border-2 bg-bg-0">
@@ -353,8 +353,8 @@ export function SubjectManagementPanel() {
                               <span
                                 className={`text-[10px] font-bold capitalize px-2 py-0.5 rounded ${
                                   top.status === 'published'
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    ? 'bg-brand-tint text-brand border border-brand/25'
+                                    : 'bg-warn-bg text-warn border border-warn/25'
                                 }`}
                               >
                                 {top.status}

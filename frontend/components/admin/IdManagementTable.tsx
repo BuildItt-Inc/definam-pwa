@@ -81,7 +81,7 @@ export function IdManagementTable({
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`px-4 py-1.5 text-[11px] font-bold rounded-[12px] transition-colors ${ statusFilter === tab.key ? 'bg-ink text-white shadow-sm' : 'text-muted hover:text-ink' }`}
+              className={`px-4 py-1.5 text-[11px] font-bold rounded-[12px] transition-colors ${ statusFilter === tab.key ? 'bg-ink text-on-ink shadow-sm' : 'text-muted hover:text-ink' }`}
             >
               {tab.label}
             </button>
@@ -174,7 +174,7 @@ export function IdManagementTable({
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-3 py-1 text-[10px] font-bold rounded-[16px] bg-bg-0 text-muted border border-border-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 mr-2" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-faint mr-2" />
                           Unused
                         </span>
                       )}

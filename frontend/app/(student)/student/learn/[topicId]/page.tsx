@@ -1,9 +1,10 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, ChevronRight, BookOpen, Check, ArrowDown, ArrowUp, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight, BookOpen, Check, ArrowDown, ArrowUp, RotateCcw, Trash2, X } from 'lucide-react';
+import { subjectIcon } from '@/lib/utils/subjects';
 import {
   getChaptersBySubjectName,
   getCachedChaptersBySubjectName,
@@ -94,7 +95,7 @@ function ListSkeleton({ rows = 5 }: { rows?: number }) {
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-      <BookOpen size={32} strokeWidth={1.5} className="mb-3 text-gray-300" />
+      <BookOpen size={32} strokeWidth={1.5} className="mb-3 text-faint" />
       <p className="text-[15px] text-muted">{message}</p>
     </div>
   );
@@ -125,6 +126,7 @@ function ChaptersView({ subjectName }: { subjectName: string }) {
   const [chapters, setChapters] = useState<Chapter[] | null>(() =>
     getCachedChaptersBySubjectName(subjectName),
   );
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
 
@@ -142,6 +144,23 @@ function ChaptersView({ subjectName }: { subjectName: string }) {
         setFetchError(err instanceof Error ? err.message : 'Failed to load');
       });
   }, [subjectName, retryTick]);
+
+  const levels = useMemo(
+    () =>
+      chapters
+        ? CLASS_LEVEL_ORDER.filter((level) => chapters.some((ch) => ch.class_level === level))
+        : [],
+    [chapters],
+  );
+
+  useEffect(() => {
+    if (levels.length === 0) return;
+    if (selectedLevel && levels.includes(selectedLevel)) return;
+    const profileLevel = getStudentProfile()?.class_level;
+    const initial =
+      profileLevel && levels.includes(profileLevel) ? profileLevel : levels[0];
+    setSelectedLevel(initial);
+  }, [levels, selectedLevel]);
 
   if (fetchError && !chapters) {
     return (
@@ -162,61 +181,160 @@ function ChaptersView({ subjectName }: { subjectName: string }) {
   if (chapters.length === 0) return <EmptyState message="No chapters found for this subject." />;
 
   const totalTopics = chapters.reduce((sum, ch) => sum + ch.topic_count, 0);
-  const levels = CLASS_LEVEL_ORDER.filter((level) =>
-    chapters.some((ch) => ch.class_level === level),
-  );
+  const completedChapters = chapters.filter(
+    (ch) => ch.mastery_percent !== null && ch.mastery_percent >= 100,
+  ).length;
+  const overallProgressPercent =
+    chapters.length > 0
+      ? Math.round(
+          chapters.reduce((sum, ch) => sum + (ch.mastery_percent ?? 0), 0) / chapters.length,
+        )
+      : 0;
+  const activeLevel = selectedLevel && levels.includes(selectedLevel) ? selectedLevel : levels[0];
+  const visibleChapters = activeLevel
+    ? chapters.filter((ch) => ch.class_level === activeLevel)
+    : chapters;
+  const firstUnfinished =
+    visibleChapters.find((ch) => ch.mastery_percent === null || ch.mastery_percent < 100) ??
+    visibleChapters[0] ??
+    chapters[0];
+  const Icon = subjectIcon(subjectName);
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-5 px-4 py-4">
-      <p className="text-[13px] font-medium text-muted">
-        {chapters.length} {chapters.length === 1 ? 'chapter' : 'chapters'} · {totalTopics} {totalTopics === 1 ? 'topic' : 'topics'}
-      </p>
-      {levels.map((level) => {
-        const levelChapters = chapters.filter((ch) => ch.class_level === level);
-        return (
-          <div key={level}>
-            <p className="mb-2 text-[11.5px] font-bold uppercase tracking-wider text-muted">
-              {level} · {levelChapters.length} {levelChapters.length === 1 ? 'chapter' : 'chapters'}
+    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 py-5 sm:py-7">
+      {/* Subject Header */}
+      <div className="mb-5">
+        <h2 className="text-[24px] sm:text-[28px] font-bold leading-tight tracking-tight text-ink">
+          {subjectName}
+        </h2>
+        <p className="mt-1 text-[13.5px] text-muted">
+          {chapters.length} {chapters.length === 1 ? 'chapter' : 'chapters'} · {totalTopics}{' '}
+          {totalTopics === 1 ? 'topic' : 'topics'}
+        </p>
+      </div>
+
+      {/* Level segmented pill tabs */}
+      {levels.length > 1 && activeLevel && (
+        <div className="mb-5 inline-flex items-center rounded-xl border border-border bg-bg-2 p-1">
+          {levels.map((level) => {
+            const active = level === activeLevel;
+            return (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setSelectedLevel(level)}
+                className={`rounded-lg px-4 py-1.5 text-[13px] font-semibold transition-all ${
+                  active
+                    ? 'bg-card text-ink shadow-xs'
+                    : 'text-muted hover:text-ink'
+                }`}
+              >
+                {level}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Desktop 2-column grid / Mobile stacked */}
+      <div className="lg:grid lg:grid-cols-[1.55fr_1fr] lg:gap-6 lg:items-start">
+        <div className="min-w-0">
+          {activeLevel && (
+            <p className="mb-2.5 text-[11.5px] font-bold uppercase tracking-wider text-muted">
+              {activeLevel} · {visibleChapters.length}{' '}
+              {visibleChapters.length === 1 ? 'chapter' : 'chapters'}
             </p>
-            <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
-              {levelChapters.map((chapter) => {
-                const mastery = chapter.mastery_percent ?? 0;
-                const inProgress = chapter.mastery_percent !== null && chapter.mastery_percent > 0;
-                return (
-                  <Link
-                    key={chapter.id}
-                    href={`/student/learn/${chapter.id}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(
-                      chapter.title,
-                    )}&subject=${encodeURIComponent(subjectName)}`}
-                    prefetch
-                    className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
+          )}
+          <div className="overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
+            {visibleChapters.map((chapter, index) => {
+              const mastery = chapter.mastery_percent ?? 0;
+              const inProgress = chapter.mastery_percent !== null && chapter.mastery_percent > 0;
+              return (
+                <Link
+                  key={chapter.id}
+                  href={`/student/learn/${chapter.id}?view=topics&chapterId=${chapter.id}&name=${encodeURIComponent(
+                    chapter.title,
+                  )}&subject=${encodeURIComponent(subjectName)}`}
+                  prefetch
+                  className="flex min-h-[64px] w-full items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
+                >
+                  <span
+                    className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold tabular-nums ${
+                      mastery >= 100
+                        ? 'bg-brand text-white'
+                        : inProgress
+                        ? 'bg-brand-tint text-brand'
+                        : 'bg-bg-2 text-muted'
+                    }`}
                   >
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[15px] font-bold text-ink">
-                        {chapter.title}
-                      </span>
-                      <span className="mt-0.5 block text-[12.5px] text-muted">
-                        {chapter.topic_count} {chapter.topic_count === 1 ? 'topic' : 'topics'}
-                        {inProgress ? ' · In progress' : ''}
-                      </span>
-                      {inProgress && (
-                        <span className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-bg-2">
-                          <span
-                            className="block h-full rounded-full bg-brand"
-                            style={{ width: `${mastery}%` }}
-                          />
-                        </span>
-                      )}
+                    {mastery >= 100 ? <Check size={16} strokeWidth={2.5} /> : index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px] font-bold text-ink">
+                      {chapter.title}
                     </span>
-                    <MasteryBadge mastery={chapter.mastery_percent} />
-                    <ChevronRight size={16} strokeWidth={1.8} className="flex-shrink-0 text-faint" />
-                  </Link>
-                );
-              })}
-            </div>
+                    <span className="mt-0.5 block text-[12.5px] text-muted">
+                      {chapter.topic_count} {chapter.topic_count === 1 ? 'topic' : 'topics'}
+                      {inProgress ? ' · In progress' : ''}
+                    </span>
+                    {inProgress && (
+                      <span className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-bg-2">
+                        <span
+                          className="block h-full rounded-full bg-brand"
+                          style={{ width: `${mastery}%` }}
+                        />
+                      </span>
+                    )}
+                  </span>
+                  <MasteryBadge mastery={chapter.mastery_percent} />
+                  <ChevronRight size={16} strokeWidth={1.8} className="flex-shrink-0 text-faint" />
+                </Link>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+
+        {/* Sticky Desktop Subject Progress Summary Card */}
+        {firstUnfinished && (
+          <aside className="hidden lg:block sticky top-[76px] rounded-2xl border border-border bg-card p-5 space-y-4">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-bg-0 text-ink-2">
+              <Icon size={22} strokeWidth={1.65} />
+            </span>
+
+            <div>
+              <h3 className="text-[18px] font-bold text-ink leading-snug">{subjectName}</h3>
+              <div className="mt-3 flex items-center justify-between text-[12.5px]">
+                <span className="font-semibold text-ink">Progress</span>
+                <span className="text-muted tabular-nums">
+                  {completedChapters} of {chapters.length}{' '}
+                  {chapters.length === 1 ? 'chapter' : 'chapters'}
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-bg-2">
+                <div
+                  className="h-full rounded-full bg-brand transition-all duration-300"
+                  style={{ width: `${overallProgressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            <Link
+              href={`/student/learn/${firstUnfinished.id}?view=topics&chapterId=${firstUnfinished.id}&name=${encodeURIComponent(
+                firstUnfinished.title,
+              )}&subject=${encodeURIComponent(subjectName)}`}
+              prefetch
+              className="btn-primary w-full"
+            >
+              <span>
+                {completedChapters === 0 && overallProgressPercent === 0
+                  ? 'Start first chapter'
+                  : 'Continue studying'}
+              </span>
+              <ArrowRight size={16} strokeWidth={2.2} />
+            </Link>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
@@ -275,20 +393,21 @@ function TopicsView({
   const nextTopic = firstUnstartedIdx >= 0 ? topics[firstUnstartedIdx] : topics[0];
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-5">
-      {/* Chapter header + progress */}
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 sm:px-6 py-5 sm:py-7">
+      {/* Chapter header */}
       <div className="mb-5">
-        <h2 className="text-[22px] font-bold leading-tight tracking-tight text-ink">
+        <h2 className="text-[24px] sm:text-[28px] font-bold leading-tight tracking-tight text-ink">
           {chapterTitle}
         </h2>
         <p className="mt-1 text-[13.5px] text-muted">
           {topics.length} {topics.length === 1 ? 'topic' : 'topics'}
         </p>
 
-        <div className="mt-4">
+        {/* Mobile progress bar */}
+        <div className="mt-4 lg:hidden">
           <div className="mb-1.5 flex items-center justify-between text-xs">
             <span className="font-semibold text-ink">Progress</span>
-            <span className="text-muted">
+            <span className="text-muted tabular-nums">
               {completedCount} of {topics.length} {topics.length === 1 ? 'topic' : 'topics'}
             </span>
           </div>
@@ -301,38 +420,83 @@ function TopicsView({
         </div>
       </div>
 
-      {/* Unified topic list card */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
-        {topics.map((topic, index) => (
-          <TopicListItem
-            key={topic.id}
-            topic={topic}
-            index={index}
-            isNext={index === firstUnstartedIdx}
-            href={`/student/learn/${topic.id}?title=${encodeURIComponent(topic.title)}&subject=${encodeURIComponent(subjectName)}`}
-          />
-        ))}
-      </div>
+      {/* Desktop 2-column grid / Mobile stacked */}
+      <div className="lg:grid lg:grid-cols-[1.55fr_1fr] lg:gap-6 lg:items-start">
+        <div className="min-w-0">
+          {/* Unified topic list card */}
+          <div className="overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
+            {topics.map((topic, index) => (
+              <TopicListItem
+                key={topic.id}
+                topic={topic}
+                index={index}
+                isNext={index === firstUnstartedIdx}
+                href={`/student/learn/${topic.id}?title=${encodeURIComponent(topic.title)}&subject=${encodeURIComponent(subjectName)}`}
+              />
+            ))}
+          </div>
 
-      {/* Sticky bottom primary CTA */}
-      {nextTopic && (
-        <div className="sticky bottom-[calc(64px+env(safe-area-inset-bottom,0px))] mt-6 pt-2">
-          <Link
-            href={`/student/learn/${nextTopic.id}?title=${encodeURIComponent(nextTopic.title)}&subject=${encodeURIComponent(subjectName)}`}
-            prefetch
-            className="btn-primary w-full shadow-md"
-          >
-            <span>
-              {completedCount === 0
-                ? 'Start first topic'
-                : firstUnstartedIdx >= 0
-                  ? 'Continue next topic'
-                  : 'Review first topic'}
-            </span>
-            <ArrowRight size={17} strokeWidth={2.2} />
-          </Link>
+          {/* Sticky bottom primary CTA on mobile */}
+          {nextTopic && (
+            <div className="sticky bottom-[calc(64px+env(safe-area-inset-bottom,0px))] mt-6 pt-2 lg:hidden">
+              <Link
+                href={`/student/learn/${nextTopic.id}?title=${encodeURIComponent(nextTopic.title)}&subject=${encodeURIComponent(subjectName)}`}
+                prefetch
+                className="btn-primary w-full shadow-md"
+              >
+                <span>
+                  {completedCount === 0
+                    ? 'Start first topic'
+                    : firstUnstartedIdx >= 0
+                      ? 'Continue next topic'
+                      : 'Review first topic'}
+                </span>
+                <ArrowRight size={17} strokeWidth={2.2} />
+              </Link>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Sticky Desktop Chapter Progress Card */}
+        {nextTopic && (
+          <aside className="hidden lg:block sticky top-[76px] rounded-2xl border border-border bg-card p-5 space-y-4">
+            <div>
+              <h3 className="text-[16px] font-bold text-ink">Chapter progress</h3>
+              <div className="mt-3 flex items-center justify-between text-[12.5px]">
+                <span className="text-muted">Topics</span>
+                <span className="font-semibold text-ink tabular-nums">
+                  {completedCount} of {topics.length}
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-bg-2">
+                <div
+                  className="h-full rounded-full bg-brand transition-all duration-300"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            <Link
+              href={`/student/learn/${nextTopic.id}?title=${encodeURIComponent(nextTopic.title)}&subject=${encodeURIComponent(subjectName)}`}
+              prefetch
+              className="btn-primary w-full"
+            >
+              <span>
+                {completedCount === 0
+                  ? 'Start first topic'
+                  : firstUnstartedIdx >= 0
+                    ? 'Continue next topic'
+                    : 'Review first topic'}
+              </span>
+              <ArrowRight size={16} strokeWidth={2.2} />
+            </Link>
+
+            <p className="text-[12px] leading-relaxed text-muted">
+              Each topic includes an explanation, worked example, practice questions and chat with Zikora.
+            </p>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
@@ -520,39 +684,54 @@ function ScoreSummary({
   score,
   total,
   onContinue,
+  onRetry,
 }: {
   score: number;
   total: number;
   onContinue: () => void;
+  onRetry: () => void;
 }) {
   const percent = total > 0 ? Math.round((score / total) * 100) : 0;
   const isGood = percent >= 60;
 
   return (
-    <div>
-      <div
-        className={`mb-6 rounded-xl border px-4 py-8 text-center ${
-          isGood ? 'border-brand/30 bg-brand-tint' : 'border-warn/30 bg-warn-bg'
-        }`}
-      >
-        <p className={`text-[40px] font-bold leading-none ${isGood ? 'text-brand' : 'text-warn'}`}>
-          {score}/{total}
-        </p>
-        <p className="mt-2 text-[16px] font-bold text-ink">
-          {isGood ? 'Great work!' : 'Needs another look'}
-        </p>
-        <p className="mt-1 text-[14.5px] text-ink-2">
-          {score} correct out of {total}
-        </p>
+    <div className="space-y-4">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div
+          className={`border-b border-border px-5 py-7 text-center ${
+            isGood ? 'bg-brand-tint' : 'bg-warn-bg'
+          }`}
+        >
+          <p className={`text-[42px] font-bold leading-none tabular-nums ${isGood ? 'text-brand' : 'text-warn'}`}>
+            {score}/{total}
+          </p>
+          <p className="mt-2.5 text-[17px] font-bold text-ink">
+            {isGood ? 'Great work!' : 'Needs another look'}
+          </p>
+          <p className="mt-1 text-[14px] text-ink-2">
+            {score} correct out of {total} ({percent}%)
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2.5 p-4">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="btn-secondary flex-1"
+          >
+            <RotateCcw size={16} strokeWidth={2} />
+            <span>Retry practice</span>
+          </button>
+          <button
+            type="button"
+            onClick={onContinue}
+            className="btn-primary flex-1"
+          >
+            <span>Continue to Zikora</span>
+            <ChevronRight size={18} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
-      <button
-        type="button"
-        onClick={onContinue}
-        className="btn-primary w-full"
-      >
-        <span>Continue to Zikora</span>
-        <ChevronRight size={18} strokeWidth={2.5} />
-      </button>
     </div>
   );
 }
@@ -731,7 +910,7 @@ function TopicZikoraSidebar({
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
             aria-label="Send message"
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-on-ink hover:opacity-90 disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
           >
             <ArrowUp size={15} strokeWidth={2.5} />
           </button>
@@ -890,7 +1069,7 @@ function AITutorScaffold({
           <div className="mx-auto flex max-w-3xl gap-2 justify-center">
             <button
               onClick={onBrowse}
-              className="flex-1 rounded-xl bg-ink text-white py-2.5 text-xs font-bold hover:bg-ink/90 active:scale-95 transition-all"
+              className="flex-1 rounded-xl bg-ink text-on-ink py-2.5 text-xs font-bold hover:opacity-90 active:scale-95 transition-all"
             >
               Browse Topics
             </button>
@@ -921,7 +1100,7 @@ function AITutorScaffold({
           <button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-on-ink hover:opacity-90 disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
             aria-label="Send message"
           >
             <ArrowUp size={15} strokeWidth={2.5} />
@@ -1050,7 +1229,7 @@ function LearningFlow({
   if (fetchError && !detail) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-6">
-        <BookOpen size={36} strokeWidth={1.5} className="text-gray-300" />
+        <BookOpen size={36} strokeWidth={1.5} className="text-faint" />
         <p className="text-center text-[15px] text-muted">{fetchError}</p>
         <div className="flex items-center gap-3">
           <button
@@ -1160,6 +1339,12 @@ function LearningFlow({
                   score={score}
                   total={totalQuestions}
                   onContinue={() => advanceStep(4)}
+                  onRetry={() => {
+                    setDirection(-1);
+                    setScore(0);
+                    setQuestionIndex(0);
+                    setShowScoreSummary(false);
+                  }}
                 />
               )}
             </motion.div>
@@ -1204,8 +1389,8 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
   // view=chapters or view=topics → browse layout with clean header
   return (
     <div className="flex min-h-screen flex-col bg-bg-0">
-      <header className="sticky top-0 z-20 border-b border-border bg-card px-4 py-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+      <header className="sticky top-0 z-20 border-b border-border bg-card px-4 sm:px-6 py-3 pt-[calc(env(safe-area-inset-top)+12px)]">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <button
               type="button"
@@ -1215,8 +1400,8 @@ function BrowseDetailInner({ topicId }: { topicId: string }) {
             >
               <ArrowLeft size={20} strokeWidth={2} />
             </button>
-            <h1 className="min-w-0 truncate text-[17px] font-bold text-ink">
-              {isTopicsView && subjectName ? subjectName : name}
+            <h1 className="min-w-0 truncate text-[16px] font-bold text-ink">
+              {isChaptersView ? 'Subjects' : isTopicsView && subjectName ? subjectName : name}
             </h1>
           </div>
         </div>

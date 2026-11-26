@@ -271,7 +271,7 @@ function UserMessageCard({ content }: { content: string }) {
 
   return (
     <div className="flex justify-end">
-      <div className="relative max-w-[85%] rounded-2xl border border-[#E5E3DC] bg-[#EFECE6] px-4 py-2.5 text-ink">
+      <div className="relative max-w-[85%] rounded-2xl border border-border bg-bg-2 px-4 py-2.5 text-ink">
         <div className={!expanded && isLong ? 'max-h-[168px] overflow-hidden relative' : ''}>
           <p className="text-[14.5px] leading-[1.6] text-ink whitespace-pre-wrap break-words">
             {content}
@@ -279,7 +279,7 @@ function UserMessageCard({ content }: { content: string }) {
           {!expanded && isLong && (
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#EFECE6] via-[#EFECE6]/85 to-transparent"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-bg-2 via-bg-2/85 to-transparent"
             />
           )}
         </div>
