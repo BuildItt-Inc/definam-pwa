@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { House, BookOpen, RefreshCw, Activity, Settings } from 'lucide-react';
+import { House, BookOpen, RefreshCw, Activity, Settings, Sparkles } from 'lucide-react';
 import { getStudentProfile, type StudentProfile } from '@/lib/utils/studentProfile';
 import { getCachedHomeData, getHomeData } from '@/lib/api/topics';
 import { getMe } from '@/lib/api/auth';
@@ -46,6 +46,7 @@ function DesktopSidebarInner() {
   // Eagerly prefetch all student routes so desktop tab switches resolve without delay
   useEffect(() => {
     NAV_ITEMS.forEach((item) => router.prefetch(item.href));
+    router.prefetch('/student/chat');
   }, [router]);
 
   useEffect(() => {
@@ -145,6 +146,17 @@ function DesktopSidebarInner() {
             </Link>
           );
         })}
+
+        <div className="my-2 border-t border-border/80" />
+
+        <Link
+          href="/student/chat"
+          prefetch
+          className="flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold text-muted hover:bg-bg-2 hover:text-ink transition-colors duration-100"
+        >
+          <Sparkles size={17} strokeWidth={1.9} className="flex-shrink-0 text-brand" />
+          <span>Ask Zikora</span>
+        </Link>
       </nav>
 
       {/* User card */}
