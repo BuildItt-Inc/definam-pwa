@@ -11,7 +11,7 @@ import { RecallCard } from '@/components/student/RecallCard';
 import { CompletionRing } from '@/components/student/CompletionRing';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useSpotlight } from '@/hooks/useSpotlight';
-import { SUBJECT_ICONS, subjectIcon, subjectColor } from '@/lib/utils/subjects';
+import { SUBJECT_ICONS, subjectIcon } from '@/lib/utils/subjects';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import {
   getStudentProfile,
@@ -57,48 +57,50 @@ function HomeSkeleton() {
   );
 }
 
-// ── Topic row ──────────────────────────────────────────────────────────────
+// ── Topic row (unified clean monochrome craft matching SubjectCard) ──────────
 
 function TopicRow({ topic }: { topic: RecentTopic }) {
   const Icon = subjectIcon(topic.subject);
-  const color = subjectColor(topic.subject);
-  const { ref, onMouseMove } = useSpotlight<HTMLAnchorElement>();
   const progress = topic.mastery_percent ?? 0;
   const started = progress > 0;
 
   return (
     <Link
-      ref={ref}
-      onMouseMove={onMouseMove}
       href={`/student/learn/${topic.topic_id}`}
-      className="spotlight spotlight-card relative flex items-center gap-3 overflow-hidden rounded-[14px] border border-border bg-white px-3 py-3 active:scale-[0.99] transition-transform"
+      prefetch
+      className="group flex min-h-[64px] items-center gap-3.5 px-4 py-3.5 text-left transition-colors hover:bg-bg-0 active:bg-bg-2"
     >
-      {/* Subject icon */}
-      <span
-        className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[11px]"
-        style={{ backgroundColor: color.bg, color: color.fg }}
-      >
-        <Icon size={18} strokeWidth={1.8} />
+      {/* Clean borderless subject icon matching Subjects page */}
+      <span className="flex w-8 flex-shrink-0 items-center justify-center text-ink-2 transition-colors group-hover:text-brand">
+        <Icon size={22} strokeWidth={1.65} />
       </span>
 
-      {/* Info + progress bar */}
-      <span className="relative z-10 min-w-0 flex-1">
-        <span className="block truncate text-sm font-bold text-ink">
+      {/* Title, clean subject metadata, and progress bar only when started */}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[14.5px] font-bold text-ink leading-snug">
           {topic.topic_title}
         </span>
-        <span className="mt-1.5 block h-[5px] overflow-hidden rounded-full bg-bg-2">
-          <span
-            className="block h-full rounded-full"
-            style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #4ADE80, #16A34A)' }}
-          />
-        </span>
-        <span className="mt-1 block text-xs text-faint">
+        <span className="mt-0.5 block text-[12px] text-muted">
           {topic.subject} · {started ? `${progress}% done` : 'Not started'}
         </span>
+        {started && (
+          <span className="mt-2 block h-1 w-full overflow-hidden rounded-full bg-bg-2">
+            <span
+              className="block h-full rounded-full bg-brand transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </span>
+        )}
       </span>
 
-      {/* CTA */}
-      <span className="relative z-10 flex-shrink-0 rounded-[9px] bg-ink px-3 py-1.5 text-xs font-bold text-white">
+      {/* Subtle tactile action badge */}
+      <span
+        className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-[12px] font-bold transition-colors ${
+          started
+            ? 'bg-brand-tint text-brand group-hover:bg-brand group-hover:text-white'
+            : 'border border-border bg-bg-0 text-ink group-hover:border-ink group-hover:bg-ink group-hover:text-white'
+        }`}
+      >
         {started ? 'Continue' : 'Start'}
       </span>
     </Link>
@@ -370,9 +372,9 @@ export default function StudentHomePage() {
             </div>
 
             {displayTopics.length > 0 ? (
-              <div className="rounded-2xl md:border md:border-border md:bg-card md:p-5">
-                <div className="hidden md:flex items-center justify-between mb-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="hidden md:flex items-center justify-between border-b border-border px-4 py-3">
+                  <span className="text-[11.5px] font-bold uppercase tracking-wider text-muted">
                     {hasStarted ? 'Continue studying' : 'Start here'}
                   </span>
                   <Link
@@ -382,7 +384,7 @@ export default function StudentHomePage() {
                     Browse all
                   </Link>
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="divide-y divide-border">
                   {displayTopics.map((topic) => (
                     <TopicRow key={topic.topic_id} topic={topic} />
                   ))}

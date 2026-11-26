@@ -272,13 +272,13 @@
     @apply inline-flex items-center gap-1 rounded-full bg-brand-tint px-2.5 py-0.5 text-[11px] font-semibold text-brand;
   }
 
-  /* Animated page entry */
+  /* Smooth crossfade on tab entry (no vertical bounce or drag) */
   .page-enter {
-    animation: pageEnter 250ms cubic-bezier(0.4, 0, 0.2, 1) both;
+    animation: pageEnter 120ms ease-out both;
   }
   @keyframes pageEnter {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0.94; }
+    to   { opacity: 1; }
   }
 
   /* Skeleton shimmer */
