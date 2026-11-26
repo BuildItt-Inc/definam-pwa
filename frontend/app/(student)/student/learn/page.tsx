@@ -17,19 +17,18 @@ import {
 function BrowseSkeleton() {
   return (
     <div className="min-h-screen bg-bg-0">
-      <div className="mx-auto max-w-2xl px-4 pb-24 pt-[calc(env(safe-area-inset-top)+16px)]">
+      <div className="mx-auto max-w-2xl md:max-w-5xl px-4 md:px-7 pb-24 pt-[calc(env(safe-area-inset-top)+16px)] md:pt-7">
         <div className="mb-4 flex items-start justify-between">
           <div className="space-y-1.5">
             <div className="h-7 w-28 animate-pulse rounded bg-bg-3" />
             <div className="h-3.5 w-48 animate-pulse rounded bg-bg-2" />
           </div>
-          <div className="h-9 w-24 animate-pulse rounded-lg bg-bg-2" />
+          <div className="h-9 w-36 animate-pulse rounded-lg bg-bg-2" />
         </div>
-        <div className="mb-3 h-10 animate-pulse rounded-lg bg-bg-2" />
-        <div className="mb-4 h-11 animate-pulse rounded-xl border border-border bg-card" />
-        <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center gap-3.5 px-4 py-3.5">
+        <div className="mb-4 h-10 md:w-72 animate-pulse rounded-xl bg-bg-2" />
+        <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border md:border-0 md:bg-transparent md:divide-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="flex items-center gap-3.5 px-4 py-3.5 md:rounded-xl md:border md:border-border md:bg-card">
               <div className="h-7 w-7 mx-1 flex-shrink-0 animate-pulse rounded-md bg-bg-2" />
               <div className="flex-1 space-y-2">
                 <div className="h-3.5 w-32 animate-pulse rounded bg-bg-3" />
@@ -107,60 +106,73 @@ export default function BrowsePage() {
 
   return (
     <div className="page-with-nav bg-bg-0 page-enter">
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-nav">
-        {/* Header */}
-        <header className="mb-4">
-          <h1 className="text-[24px] font-bold leading-tight tracking-tight text-ink">
-            Subjects
-          </h1>
-          <p className="mt-0.5 text-[13.5px] text-muted">
-            Pick what you are studying this term.
-          </p>
+      <div className="mx-auto flex w-full max-w-2xl md:max-w-5xl flex-1 flex-col px-4 md:px-7 pt-[calc(env(safe-area-inset-top)+16px)] md:pt-7 pb-nav">
+        {/* Header with top-right Manage CTA on desktop */}
+        <header className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-[24px] md:text-[28px] font-bold leading-tight tracking-tight text-ink">
+              Subjects
+            </h1>
+            <p className="mt-0.5 text-[13.5px] text-muted">
+              Pick what you are studying this term.
+            </p>
+          </div>
+          <Link
+            href="/student/subjects"
+            className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-[13px] font-semibold text-ink shadow-2xs hover:bg-bg-2 active:scale-[0.98] transition-all self-start"
+          >
+            <Plus size={15} strokeWidth={2.2} className="text-brand" />
+            <span>Add or remove subjects</span>
+          </Link>
         </header>
 
-        {/* Segmented tabs */}
-        {hasSelectedSubjects && (
-          <div className="mb-3 grid grid-cols-2 rounded-lg bg-bg-2 p-1">
-            <button
-              type="button"
-              onClick={() => setFilterMode('my')}
-              className={`min-h-[36px] rounded-md px-3 py-1.5 text-[13px] font-semibold transition-all ${
-                filterMode === 'my'
-                  ? 'bg-card text-ink shadow-2xs'
-                  : 'text-muted hover:text-ink'
-              }`}
-            >
-              My subjects · {mySubjects.length}
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterMode('all')}
-              className={`min-h-[36px] rounded-md px-3 py-1.5 text-[13px] font-semibold transition-all ${
-                filterMode === 'all'
-                  ? 'bg-card text-ink shadow-2xs'
-                  : 'text-muted hover:text-ink'
-              }`}
-            >
-              All · {subjects.length}
-            </button>
-          </div>
-        )}
+        {/* Controls row: segmented tabs + search side-by-side on desktop */}
+        <div className="mb-4 md:mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          {hasSelectedSubjects ? (
+            <div className="grid grid-cols-2 rounded-xl bg-bg-2 p-1 md:inline-grid md:min-w-[260px]">
+              <button
+                type="button"
+                onClick={() => setFilterMode('my')}
+                className={`min-h-[36px] rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all ${
+                  filterMode === 'my'
+                    ? 'bg-card text-ink shadow-2xs'
+                    : 'text-muted hover:text-ink'
+                }`}
+              >
+                My subjects · {mySubjects.length}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterMode('all')}
+                className={`min-h-[36px] rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition-all ${
+                  filterMode === 'all'
+                    ? 'bg-card text-ink shadow-2xs'
+                    : 'text-muted hover:text-ink'
+                }`}
+              >
+                All · {subjects.length}
+              </button>
+            </div>
+          ) : (
+            <div className="hidden md:block text-[12.5px] font-medium text-muted">
+              Showing {filtered.length} available {filtered.length === 1 ? 'subject' : 'subjects'}
+            </div>
+          )}
 
-        {/* Search bar */}
-        <div className="mb-4">
-          <label className="flex min-h-[44px] items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2 focus-within:border-ink focus-within:ring-2 focus-within:ring-[#14201B]/10 transition-all">
+          {/* Search bar */}
+          <label className="flex min-h-[42px] md:w-72 items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2 focus-within:border-ink focus-within:ring-2 focus-within:ring-[#14201B]/10 transition-all">
             <Search size={16} strokeWidth={1.8} className="flex-shrink-0 text-muted" />
             <input
               type="search"
               placeholder="Search subjects"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent text-[15px] text-ink placeholder:text-faint focus:outline-none"
+              className="flex-1 bg-transparent text-[14.5px] text-ink placeholder:text-faint focus:outline-none"
             />
           </label>
         </div>
 
-        {/* Grouped Subject Card */}
+        {/* Grouped list on mobile, 2/3-col card grid on desktop */}
         <main className="flex-1 pb-4">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card px-6 py-12 text-center">
@@ -189,7 +201,7 @@ export default function BrowsePage() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border">
+              <div className="overflow-hidden rounded-xl border border-border bg-card divide-y divide-border md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:divide-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
                 {filtered.map((subject) => (
                   <SubjectCard
                     key={subject.name}
@@ -201,7 +213,7 @@ export default function BrowsePage() {
 
               <Link
                 href="/student/subjects"
-                className="btn-secondary w-full rounded-xl"
+                className="btn-secondary w-full rounded-xl md:hidden"
               >
                 <Plus size={16} strokeWidth={2.2} />
                 <span>Add or remove subjects</span>
