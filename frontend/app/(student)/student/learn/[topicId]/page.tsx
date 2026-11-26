@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, ChevronRight, BookOpen, Check, ArrowDown, ArrowUp, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight, BookOpen, Check, ArrowDown, ArrowUp, Trash2, X } from 'lucide-react';
 import {
   getChaptersBySubjectName,
   getCachedChaptersBySubjectName,
@@ -21,15 +21,8 @@ import { AnalyticsEvents } from '@/lib/analytics';
 import { LearningStep } from '@/components/student/LearningStep';
 import { PracticeQuestion } from '@/components/student/PracticeQuestion';
 import { ChatMessageItem } from '@/components/student/ChatMessageItem';
-import { useSmartChatScroll } from '@/hooks/useSmoothedStream';
+import { useTopicChat } from '@/hooks/useTopicChat';
 import { getFollowUpSuggestions } from '@/lib/utils/chatFollowUps';
-import {
-  getChatHistory,
-  getCachedChatHistory,
-  setCachedChatHistory,
-  sendChatMessageStream,
-  type ChatMessage,
-} from '@/lib/api/chat';
 import { useCelebration } from '@/components/ui/celebration/CelebrationContext';
 import { useFloatingChat } from '@/components/student/FloatingChat/FloatingChatContext';
 import { AskZikoraButton } from '@/components/student/FloatingChat/FloatingChatWidget';
@@ -412,20 +405,22 @@ function LearningFlowSkeleton() {
 function LearningTopBar({
   step,
   topicId,
+  subjectName,
   onBack,
   onExit,
 }: {
   step: 1 | 2 | 3 | 4;
   topicId: string;
+  subjectName?: string;
   onBack: () => void;
   onExit: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-card px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)]">
-      <div className="mx-auto max-w-2xl">
-        {/* Navigation row: Exit/Back on left, Ask Zikora on right */}
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-20 border-b border-border bg-card px-4 lg:px-6 pb-3 lg:py-3.5 pt-[calc(env(safe-area-inset-top)+12px)]">
+      <div className="mx-auto max-w-2xl lg:max-w-none">
+        {/* Top row */}
+        <div className="mb-3 lg:mb-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             {step > 1 && (
               <button
                 type="button"
@@ -446,36 +441,73 @@ function LearningTopBar({
             </button>
           </div>
 
-          <AskZikoraButton topicId={topicId} />
+          {/* Desktop centered segmented step bar */}
+          <div className="hidden lg:flex flex-col w-[360px] flex-shrink-0">
+            <div className="mb-1 flex gap-1.5">
+              {STEP_LABELS.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1 flex-1 rounded-full transition-colors ${i < step ? 'bg-brand' : 'bg-bg-3'}`}
+                />
+              ))}
+            </div>
+            <div className="flex gap-1.5">
+              {STEP_LABELS.map((label, i) => {
+                const isDone = i < step - 1;
+                const isCurrent = i === step - 1;
+                return (
+                  <span
+                    key={i}
+                    className={`flex flex-1 items-center justify-center gap-1 text-center text-[11px] ${
+                      isDone || isCurrent ? 'font-bold text-brand' : 'font-medium text-muted'
+                    }`}
+                  >
+                    {isDone && <Check size={10} strokeWidth={3} />}
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mobile: Ask Zikora button. Desktop: subtle subject · step indicator */}
+          <div className="flex items-center">
+            <div className="lg:hidden">
+              <AskZikoraButton topicId={topicId} />
+            </div>
+            <span className="hidden lg:inline-block text-[12.5px] font-medium text-muted">
+              {subjectName ? `${subjectName} · ` : ''}Step {step} of 4
+            </span>
+          </div>
         </div>
 
-        {/* Progress bar — 4 segments */}
-        <div className="mb-1.5 flex gap-1.5">
-          {STEP_LABELS.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1 flex-1 rounded-full transition-colors ${i < step ? 'bg-brand' : 'bg-bg-3'}`}
-            />
-          ))}
-        </div>
-
-        {/* Step labels */}
-        <div className="flex gap-1.5">
-          {STEP_LABELS.map((label, i) => {
-            const isDone = i < step - 1;
-            const isCurrent = i === step - 1;
-            return (
-              <span
+        {/* Mobile progress bar — 4 segments */}
+        <div className="lg:hidden">
+          <div className="mb-1.5 flex gap-1.5">
+            {STEP_LABELS.map((_, i) => (
+              <div
                 key={i}
-                className={`flex flex-1 items-center justify-center gap-1 text-center text-[10.5px] ${
-                  isDone || isCurrent ? 'font-bold text-brand' : 'font-medium text-muted'
-                }`}
-              >
-                {isDone && <Check size={10} strokeWidth={3} />}
-                {label}
-              </span>
-            );
-          })}
+                className={`h-1 flex-1 rounded-full transition-colors ${i < step ? 'bg-brand' : 'bg-bg-3'}`}
+              />
+            ))}
+          </div>
+          <div className="flex gap-1.5">
+            {STEP_LABELS.map((label, i) => {
+              const isDone = i < step - 1;
+              const isCurrent = i === step - 1;
+              return (
+                <span
+                  key={i}
+                  className={`flex flex-1 items-center justify-center gap-1 text-center text-[10.5px] ${
+                    isDone || isCurrent ? 'font-bold text-brand' : 'font-medium text-muted'
+                  }`}
+                >
+                  {isDone && <Check size={10} strokeWidth={3} />}
+                  {label}
+                </span>
+              );
+            })}
+          </div>
         </div>
       </div>
     </header>
@@ -525,7 +557,189 @@ function ScoreSummary({
   );
 }
 
-// ── Step 5 — AI Tutor (Streaming Chat) ──────────────────────────────────────
+// ── Desktop Lesson Sidebar + Step 4 Fullscreen Zikora Chat ─────────────────
+
+const LESSON_QUICK_ACTIONS = [
+  { label: 'Explain it simply', prompt: 'Explain this topic in simple, intuitive terms.' },
+  { label: 'Give me an example', prompt: 'Give me a clear worked example for this topic.' },
+  {
+    label: 'Quiz me',
+    prompt: 'Quiz me on this topic one question at a time with options A, B, C, D and rate my answer.',
+  },
+];
+
+function TopicZikoraSidebar({
+  topicId,
+  topicTitle,
+}: {
+  topicId: string;
+  topicTitle: string;
+}) {
+  const profile = getStudentProfile();
+  const studentName = profile?.name?.trim() || '';
+
+  const {
+    messages,
+    inputMessage,
+    setInputMessage,
+    isLoading,
+    confirmingClear,
+    isClearing,
+    quizScore,
+    recordQuizOutcome,
+    handleClearClick,
+    submitMessage,
+    handleSubmit,
+    scrollContainerRef,
+    messagesEndRef,
+    showJumpToBottom,
+    handleScroll,
+    handleWheel,
+    jumpToBottom,
+    followIfPinned,
+  } = useTopicChat({ topicId });
+
+  const followUpSuggestions =
+    !isLoading && messages.length > 0 ? getFollowUpSuggestions(messages, topicTitle) : [];
+
+  return (
+    <aside className="hidden lg:flex flex-col border-l border-border bg-card sticky top-[69px] h-[calc(100dvh-69px)] relative overflow-hidden">
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-4 py-3.5">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+            <ZikoraLogo size={24} className="text-ink" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-bold text-[14.5px] text-ink leading-tight tracking-tight">Zikora</p>
+              {quizScore.total > 0 && (
+                <span className="rounded-full bg-brand-tint px-2 py-0.5 text-[10.5px] font-bold text-brand">
+                  {quizScore.correct}/{quizScore.total}
+                </span>
+              )}
+            </div>
+            <p className="text-[11.5px] text-muted leading-tight">Ask about this topic</p>
+          </div>
+        </div>
+
+        {messages.length > 0 &&
+          (confirmingClear ? (
+            <button
+              type="button"
+              onClick={handleClearClick}
+              disabled={isClearing}
+              className="rounded-lg bg-danger-bg px-2.5 py-1 text-[11px] font-bold text-danger hover:bg-danger/15 disabled:opacity-50"
+            >
+              Clear?
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleClearClick}
+              aria-label="Clear conversation"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-bg-2 hover:text-ink transition-colors"
+            >
+              <Trash2 size={14} strokeWidth={1.8} />
+            </button>
+          ))}
+      </div>
+
+      {/* Scrollable thread */}
+      <section
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        onWheel={handleWheel}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-5"
+      >
+        {messages.length === 0 ? (
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-border bg-bg-0/70 px-3.5 py-3 text-[13.5px] text-ink leading-relaxed">
+              Hi{studentName ? ` ${studentName}` : ''}! Stuck on anything in this topic? Ask me, or pick a question.
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {LESSON_QUICK_ACTIONS.map((action) => (
+                <button
+                  key={action.label}
+                  type="button"
+                  onClick={() => void submitMessage(action.prompt)}
+                  className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-ink shadow-2xs hover:bg-bg-2 hover:border-ink/20 active:scale-[0.97] transition-all"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          messages.map((msg, index) => {
+            const isLast = index === messages.length - 1;
+            const isStreamingThis = isLast && isLoading && msg.role === 'assistant';
+            return (
+              <div key={index} className="space-y-2.5">
+                <ChatMessageItem
+                  message={msg}
+                  isStreaming={isStreamingThis}
+                  interactiveDisabled={isLoading || !isLast}
+                  onStreamAdvance={followIfPinned}
+                  onSelectOption={(reply) => void submitMessage(reply)}
+                  onScored={recordQuizOutcome}
+                />
+                {isLast && msg.role === 'assistant' && !isLoading && followUpSuggestions.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {followUpSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => void submitMessage(suggestion)}
+                        className="rounded-xl border border-border bg-bg-0/70 px-3 py-1.5 text-[12px] font-medium text-ink hover:bg-bg-2 active:scale-[0.98] transition-all text-left"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </section>
+
+      {showJumpToBottom && (
+        <button
+          type="button"
+          onClick={jumpToBottom}
+          aria-label="Jump to bottom"
+          className="absolute bottom-[78px] left-1/2 z-20 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-ink shadow-md hover:bg-bg-2"
+        >
+          <ArrowDown size={14} strokeWidth={2.2} />
+        </button>
+      )}
+
+      {/* Input */}
+      <form onSubmit={handleSubmit} className="shrink-0 border-t border-border bg-card p-3">
+        <div className="flex items-center gap-2 rounded-xl border border-border-2 bg-bg-0 px-3 py-2 focus-within:border-ink/40 focus-within:ring-2 focus-within:ring-ink/5 transition-all">
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            disabled={isLoading}
+            placeholder="Ask Zikora a question"
+            className="flex-1 min-w-0 bg-transparent text-[13.5px] placeholder:text-faint focus:outline-none text-ink disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !inputMessage.trim()}
+            aria-label="Send message"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-ink text-white hover:bg-[#1f3029] disabled:bg-bg-2 disabled:text-faint transition-all active:scale-95"
+          >
+            <ArrowUp size={15} strokeWidth={2.5} />
+          </button>
+        </div>
+      </form>
+    </aside>
+  );
+}
 
 function AITutorScaffold({
   topicId,
@@ -540,22 +754,18 @@ function AITutorScaffold({
   onBrowse: () => void;
   onHome: () => void;
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const cached = getCachedChatHistory(topicId);
-    if (cached && cached.length > 0) return cached;
-    const profile = getStudentProfile();
-    const studentName = profile?.name?.trim() ? ` ${profile.name.trim()}` : ' there';
-    return [
-      {
-        role: 'assistant',
-        content: `Hi${studentName}. Ask me anything about this topic, or tell me the part you're stuck on.`,
-      },
-    ];
-  });
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const profile = getStudentProfile();
+  const studentName = profile?.name?.trim() ? ` ${profile.name.trim()}` : ' there';
 
   const {
+    messages,
+    inputMessage,
+    setInputMessage,
+    isLoading,
+    quizScore,
+    recordQuizOutcome,
+    submitMessage,
+    handleSubmit,
     scrollContainerRef,
     messagesEndRef,
     showJumpToBottom,
@@ -564,9 +774,17 @@ function AITutorScaffold({
     handleTouchStart,
     handleTouchMove,
     jumpToBottom,
-    pinToBottom,
     followIfPinned,
-  } = useSmartChatScroll();
+  } = useTopicChat({
+    topicId,
+    inlineErrorFallback: true,
+    initialMessages: [
+      {
+        role: 'assistant',
+        content: `Hi${studentName}. Ask me anything about this topic, or tell me the part you're stuck on.`,
+      },
+    ],
+  });
   const { setSuppressed } = useFloatingChat();
 
   // Suppress floating AI widget while at the full-screen AI chat page
@@ -576,102 +794,6 @@ function AITutorScaffold({
       setSuppressed(false);
     };
   }, [setSuppressed]);
-
-  // Load chat history in background on mount
-  useEffect(() => {
-    let isCurrent = true;
-    getChatHistory(topicId)
-      .then((history) => {
-        if (!isCurrent) return;
-        if (history && history.length > 0) {
-          setMessages(history);
-          setCachedChatHistory(topicId, history);
-        }
-      })
-      .catch(() => {
-        // Fallback welcoming message already displayed
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [topicId, topicTitle]);
-
-  useEffect(() => {
-    followIfPinned();
-  }, [messages.length, followIfPinned]);
-
-  const submitMessage = async (query: string) => {
-    if (!query.trim() || isLoading) return;
-
-    setInputMessage('');
-    setIsLoading(true);
-
-    // Append user message + placeholder assistant bubble atomically
-    setMessages((prev) => {
-      const next: ChatMessage[] = [
-        ...prev,
-        { role: 'user', content: query },
-        { role: 'assistant', content: '' },
-      ];
-      setCachedChatHistory(topicId, next);
-      return next;
-    });
-
-    pinToBottom();
-
-    let responseAccumulator = '';
-
-    try {
-      await sendChatMessageStream(
-        topicId,
-        query,
-        (chunk) => {
-          responseAccumulator += chunk;
-          setMessages((prev) => {
-            if (prev.length === 0) return prev;
-            const next = [...prev];
-            const lastIdx = next.length - 1;
-            if (next[lastIdx]?.role === 'assistant') {
-              next[lastIdx] = {
-                ...next[lastIdx],
-                content: responseAccumulator,
-              };
-            }
-            setCachedChatHistory(topicId, next);
-            return next;
-          });
-        },
-        () => {
-          setIsLoading(false);
-        },
-        (err) => {
-          setIsLoading(false);
-          setMessages((prev) => {
-            if (prev.length === 0) return prev;
-            const next = [...prev];
-            const lastIdx = next.length - 1;
-            if (next[lastIdx]?.role === 'assistant') {
-              next[lastIdx] = {
-                ...next[lastIdx],
-                content:
-                  responseAccumulator || (err?.message || "Sorry, I couldn't reach the AI tutor. Please try again."),
-              };
-            }
-            setCachedChatHistory(topicId, next);
-            return next;
-          });
-        }
-      );
-    } catch {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    void submitMessage(inputMessage);
-  };
 
   const followUpSuggestions = !isLoading ? getFollowUpSuggestions(messages, topicTitle) : [];
 
@@ -685,8 +807,13 @@ function AITutorScaffold({
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
           <ZikoraLogo size={26} className="text-ink" />
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex items-center gap-2">
           <p className="font-bold text-[15.5px] text-ink leading-tight tracking-tight">Zikora</p>
+          {quizScore.total > 0 && (
+            <span className="rounded-full bg-brand-tint px-2 py-0.5 text-[11px] font-bold text-brand">
+              {quizScore.correct}/{quizScore.total}
+            </span>
+          )}
         </div>
       </header>
 
@@ -717,7 +844,10 @@ function AITutorScaffold({
                 <ChatMessageItem
                   message={msg}
                   isStreaming={isStreamingThis}
+                  interactiveDisabled={isLoading || !isLast}
                   onStreamAdvance={followIfPinned}
+                  onSelectOption={(reply) => void submitMessage(reply)}
+                  onScored={recordQuizOutcome}
                 />
 
                 {/* Auto follow-up question pills directly beneath assistant reply */}
@@ -963,76 +1093,82 @@ function LearningFlow({
       <LearningTopBar
         step={step}
         topicId={topicId}
+        subjectName={subjectName}
         onBack={handleBack}
         onExit={onExit}
       />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col overflow-y-auto px-4 py-5 pb-8">
-        {/* Topic eyebrow + title matching clean lesson header */}
-        <div className="mb-4">
-          <p className="text-[12.5px] font-medium text-muted">
-            {subjectName ? `${subjectName} · ` : ''}
-            {step === 3
-              ? showScoreSummary
-                ? 'Practice complete'
-                : `Question ${questionIndex + 1} of ${totalQuestions}`
-              : `Step ${step} of 4`}
-          </p>
-          <h1 className="mt-0.5 text-[22px] font-bold leading-tight tracking-tight text-ink">
-            {topicTitle}
-          </h1>
-        </div>
+      <div className="flex-1 lg:grid lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_400px] min-h-0">
+        <main className="mx-auto flex w-full max-w-2xl flex-col overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-8 pb-8">
+          {/* Topic eyebrow + title matching clean lesson header */}
+          <div className="mb-4">
+            <p className="text-[12.5px] font-medium text-muted">
+              {subjectName ? `${subjectName} · ` : ''}
+              {step === 3
+                ? showScoreSummary
+                  ? 'Practice complete'
+                  : `Question ${questionIndex + 1} of ${totalQuestions}`
+                : `Step ${step} of 4`}
+            </p>
+            <h1 className="mt-0.5 text-[22px] sm:text-[26px] font-bold leading-tight tracking-tight text-ink">
+              {topicTitle}
+            </h1>
+          </div>
 
-        <AnimatePresence mode="wait" custom={direction} initial={false}>
-          <motion.div
-            key={`${step}-${questionIndex}-${showScoreSummary}`}
-            custom={direction}
-            variants={stepSlide}
-            initial="enter"
-            animate="center"
-            exit="exit"
-          >
-            {(step === 1 || step === 2) && (
-              <>
-                <LearningStep
-                  step={step}
-                  title={getStepContent(detail!, step).title}
-                  content={getStepContent(detail!, step).content}
+          <AnimatePresence mode="wait" custom={direction} initial={false}>
+            <motion.div
+              key={`${step}-${questionIndex}-${showScoreSummary}`}
+              custom={direction}
+              variants={stepSlide}
+              initial="enter"
+              animate="center"
+              exit="exit"
+            >
+              {(step === 1 || step === 2) && (
+                <>
+                  <LearningStep
+                    step={step}
+                    title={getStepContent(detail!, step).title}
+                    content={getStepContent(detail!, step).content}
+                  />
+                  <div className="mt-6 pb-safe">
+                    <StepCta onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4)}>
+                      {STEP_CTA[step]}
+                      <ArrowRight size={17} strokeWidth={2.2} />
+                    </StepCta>
+                  </div>
+                </>
+              )}
+
+              {step === 3 && !showScoreSummary && (
+                totalQuestions > 0 ? (
+                  <PracticeQuestion
+                    question={questions[questionIndex]}
+                    onComplete={handleQuestionComplete}
+                    isLast={questionIndex === totalQuestions - 1}
+                    topicId={topicId}
+                  />
+                ) : (
+                  <div className="rounded-xl border border-border bg-card py-10 text-center text-sm text-muted">
+                    No practice questions available for this topic.
+                  </div>
+                )
+              )}
+
+              {step === 3 && showScoreSummary && (
+                <ScoreSummary
+                  score={score}
+                  total={totalQuestions}
+                  onContinue={() => advanceStep(4)}
                 />
-                <div className="mt-6 pb-safe">
-                  <StepCta onClick={() => advanceStep((step + 1) as 1 | 2 | 3 | 4)}>
-                    {STEP_CTA[step]}
-                    <ArrowRight size={17} strokeWidth={2.2} />
-                  </StepCta>
-                </div>
-              </>
-            )}
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </main>
 
-            {step === 3 && !showScoreSummary && (
-              totalQuestions > 0 ? (
-                <PracticeQuestion
-                  question={questions[questionIndex]}
-                  onComplete={handleQuestionComplete}
-                  isLast={questionIndex === totalQuestions - 1}
-                  topicId={topicId}
-                />
-              ) : (
-                <div className="rounded-xl border border-border bg-card py-10 text-center text-sm text-muted">
-                  No practice questions available for this topic.
-                </div>
-              )
-            )}
-
-            {step === 3 && showScoreSummary && (
-              <ScoreSummary
-                score={score}
-                total={totalQuestions}
-                onContinue={() => advanceStep(4)}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+        {/* Desktop docked Zikora sidebar */}
+        <TopicZikoraSidebar topicId={topicId} topicTitle={topicTitle} />
+      </div>
     </div>
   );
 }

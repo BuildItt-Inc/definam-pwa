@@ -35,30 +35,22 @@ function getGreeting(): string {
 
 function HomeSkeleton() {
   return (
-    <div className="min-h-screen bg-bg-0">
-      <div
-        className="relative overflow-hidden px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)]"
-        style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 130%)' }}
-      >
-        <div className="mb-1 h-3 w-20 animate-pulse rounded bg-white/10" />
-        <div className="mb-1 h-8 w-44 animate-pulse rounded bg-white/20" />
-        <div className="mb-4 h-3 w-36 animate-pulse rounded bg-white/10" />
+    <div className="min-h-screen bg-bg-0 md:max-w-5xl md:mx-auto md:px-6 md:pt-7">
+      <div className="rounded-b-3xl md:rounded-2xl bg-ink px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)] md:px-7 md:py-6">
+        <div className="mb-1.5 h-3 w-20 animate-pulse rounded bg-white/10" />
+        <div className="mb-1.5 h-8 w-44 animate-pulse rounded bg-white/20" />
+        <div className="mb-5 h-3 w-36 animate-pulse rounded bg-white/10" />
         <div className="flex items-center justify-between">
-          <div className="h-9 w-28 animate-pulse rounded-full bg-white/10" />
-          <div className="h-10 w-10 animate-pulse rounded-full bg-white/10" />
-        </div>
-        <div className="mt-3.5 flex gap-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-[34px] w-[34px] animate-pulse rounded-[10px] bg-white/10" />
-          ))}
+          <div className="h-9 w-36 animate-pulse rounded-full bg-white/10" />
+          <div className="h-11 w-11 animate-pulse rounded-full bg-white/10" />
         </div>
       </div>
-      <div className="mt-4 px-4">
-        <div className="h-28 animate-pulse rounded-2xl bg-white border border-border" />
+      <div className="mt-4 px-4 md:px-0">
+        <div className="h-24 animate-pulse rounded-2xl bg-card border border-border" />
       </div>
-      <div className="mt-4 px-4 space-y-3">
+      <div className="mt-4 px-4 md:px-0 space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 animate-pulse rounded-xl bg-white border border-border" />
+          <div key={i} className="h-20 animate-pulse rounded-2xl bg-card border border-border" />
         ))}
       </div>
     </div>
@@ -113,37 +105,60 @@ function TopicRow({ topic }: { topic: RecentTopic }) {
   );
 }
 
-// ── Subject strip ───────────────────────────────────────────────────────────
+// ── Your Subjects Strip (below hero — clean mobile & desktop tiles) ──────────
 
-function SubjectStrip({ subjects }: { subjects: Subject[] }) {
-  const mappedSubjects = subjects.filter((s) => s.name in SUBJECT_ICONS).slice(0, 6);
+function YourSubjectsCard({ subjects }: { subjects: Subject[] }) {
+  const mappedSubjects = subjects.filter((s) => s.name in SUBJECT_ICONS).slice(0, 7);
+  if (mappedSubjects.length === 0) return null;
 
   return (
-    <div className="relative z-10 mt-3.5 flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
-      {mappedSubjects.map((subject) => {
-        const Icon = subjectIcon(subject.name);
-        return (
+    <section className="mt-4 px-4 md:px-0">
+      <div className="md:rounded-2xl md:border md:border-border md:bg-card md:px-5 md:py-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[15.5px] font-bold text-ink tracking-tight">Your subjects</h2>
           <Link
-            key={subject.name}
-            href={`/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`}
-            aria-label={subject.name}
-            title={subject.name}
-            className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[10px] border border-white/10 bg-white/[0.08] text-white active:bg-white/[0.16] transition-colors"
+            href="/student/subjects"
+            className="text-[13px] font-semibold text-brand hover:underline"
           >
-            <Icon size={16} strokeWidth={1.8} />
+            <span className="md:hidden">Edit</span>
+            <span className="hidden md:inline">Manage</span>
           </Link>
-        );
-      })}
-      <Link
-        href="/student/subjects"
-        aria-label="Add or remove subjects"
-        title="Add or remove subjects"
-        className="flex h-[34px] flex-shrink-0 items-center gap-1 rounded-[10px] border border-white/20 bg-white/10 px-2.5 text-xs font-semibold text-white active:bg-white/20 transition-colors"
-      >
-        <Plus size={14} strokeWidth={2.5} />
-        <span>Edit</span>
-      </Link>
-    </div>
+        </div>
+        <div className="flex items-start gap-3 md:gap-2 overflow-x-auto scrollbar-none pb-0.5">
+          {mappedSubjects.map((subject) => {
+            const Icon = subjectIcon(subject.name);
+            const shortLabel = subject.name === 'Mathematics' ? 'Maths' : subject.name.split(' ')[0];
+            return (
+              <Link
+                key={subject.name}
+                href={`/student/learn/${encodeURIComponent(subject.name)}?view=chapters&name=${encodeURIComponent(subject.name)}`}
+                title={subject.name}
+                className="group flex w-[64px] md:flex-1 md:min-w-[76px] flex-shrink-0 flex-col items-center gap-1.5 rounded-xl border border-transparent py-1 md:py-2 md:hover:border-border md:hover:bg-bg-0 transition-all active:scale-95"
+              >
+                <span className="flex h-12 w-12 md:h-10 md:w-10 items-center justify-center rounded-2xl md:rounded-xl border border-border bg-card md:bg-bg-0 text-ink-2 group-hover:text-brand group-hover:border-brand/30 transition-colors shadow-2xs md:shadow-none">
+                  <Icon size={20} strokeWidth={1.75} />
+                </span>
+                <span className="truncate max-w-full text-[11.5px] font-medium text-muted group-hover:text-ink text-center">
+                  {shortLabel}
+                </span>
+              </Link>
+            );
+          })}
+          <Link
+            href="/student/subjects"
+            aria-label="Edit subjects"
+            className="group flex w-[64px] md:flex-1 md:min-w-[76px] flex-shrink-0 flex-col items-center gap-1.5 rounded-xl border border-transparent py-1 md:py-2 md:hover:border-border md:hover:bg-bg-0 transition-all active:scale-95"
+          >
+            <span className="flex h-12 w-12 md:h-10 md:w-10 items-center justify-center rounded-2xl md:rounded-xl border border-dashed border-border-2 bg-card md:bg-bg-0 text-muted group-hover:text-ink transition-colors">
+              <Plus size={18} strokeWidth={2} />
+            </span>
+            <span className="text-[11.5px] font-medium text-muted group-hover:text-ink text-center">
+              Edit
+            </span>
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -228,147 +243,202 @@ export default function StudentHomePage() {
   const hasStarted = displayTopics.some((t) => (t.mastery_percent ?? 0) > 0);
 
   return (
-    <div className="page-with-nav bg-bg-0 page-enter">
+    <div className="page-with-nav bg-bg-0 page-enter md:max-w-5xl md:mx-auto md:px-6 md:pt-7 md:pb-10">
 
-      {/* ── 1. Hero Header ── */}
+      {/* ── 1. Hero Header (standard crisp dark ink card, no gradient glow) ── */}
       <div
         ref={glowRef}
         onMouseMove={onGlowMouseMove}
-        className="relative shrink-0 overflow-hidden px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)]"
-        style={{ background: 'linear-gradient(160deg, #111827 0%, #16321F 130%)' }}
+        className="relative shrink-0 overflow-hidden rounded-b-3xl bg-ink px-5 pb-6 pt-[calc(env(safe-area-inset-top,0px)+24px)] md:rounded-2xl md:px-7 md:py-6"
       >
-        {/* Static corner glow */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(74,222,128,0.22), transparent 70%)' }}
-        />
+        <div className="relative z-10 flex items-center justify-between gap-4 md:gap-6">
+          <div className="min-w-0 flex-1">
+            <p className="mb-0.5 text-xs font-medium text-white/55 tracking-wide">
+              {greeting}
+            </p>
+            <h1 className="mb-0.5 truncate text-[26px] md:text-[30px] font-bold leading-tight text-white tracking-tight">
+              {displayName}
+            </h1>
+            {profile?.class_level ? (
+              <p className="mb-4 text-[13px] md:text-sm text-white/55">
+                {profile.class_level}{profile.targets?.length ? ` · ${profile.targets.join(', ')}` : ''}{school_name ? ` · ${school_name}` : ''}
+              </p>
+            ) : school_name ? (
+              <p className="mb-4 text-[13px] md:text-sm text-white/45">{school_name}</p>
+            ) : (
+              <div className="mb-4" />
+            )}
 
-        <p className="relative z-10 mb-0.5 text-xs font-medium text-white/50 tracking-wide">
-          {greeting}
-        </p>
-        <h1 className="relative z-10 mb-0.5 text-[26px] font-bold leading-tight text-white tracking-tight">
-          {displayName}
-        </h1>
-        {profile?.class_level ? (
-          <p className="relative z-10 mb-5 text-sm text-white/50">
-            {profile.class_level}{profile.targets?.length ? ` · ${profile.targets.join(', ')}` : ''}{school_name ? ` · ${school_name}` : ''}
-          </p>
-        ) : school_name ? (
-          <p className="relative z-10 mb-5 text-sm text-white/40">{school_name}</p>
-        ) : (
-          <div className="mb-4" />
-        )}
-
-        {/* Streak pill + completion ring — streak shown once only here */}
-        <div className="relative z-10 flex items-center justify-between gap-2.5">
-          <div className="inline-flex items-center gap-2 rounded-full border border-brand-light/30 bg-white/10 px-3.5 py-2">
-            <Flame size={15} strokeWidth={2} className="flame-pulse text-brand-light" />
-            <span className="font-bold text-base leading-none text-white">
-              {streak_days}
-            </span>
-            <span className="text-xs text-white/55">
-              {streak_days === 0 ? 'Start your streak' : streak_days === 1 ? 'day streak' : 'day streak'}
-            </span>
+            {/* Streak pill + mobile completion ring */}
+            <div className="flex items-center justify-between gap-2.5">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-2">
+                <Flame size={15} strokeWidth={2} className="flame-pulse text-brand-light" />
+                <span className="font-bold text-base leading-none text-white">
+                  {streak_days}
+                </span>
+                <span className="text-xs text-white/65">
+                  {streak_days === 0 ? 'Start your streak' : 'day streak'}
+                </span>
+              </div>
+              <div className="md:hidden">
+                <CompletionRing percent={completion_percent} />
+              </div>
+            </div>
           </div>
-          <CompletionRing percent={completion_percent} />
-        </div>
 
-        {/* Subject shortcut strip */}
-        {displaySubjects && displaySubjects.length > 0 && <SubjectStrip subjects={displaySubjects} />}
+          <div className="hidden md:flex flex-col items-center gap-1 pr-2">
+            <CompletionRing percent={completion_percent} />
+            <span className="text-[11px] font-medium text-white/60">Overall</span>
+          </div>
+        </div>
       </div>
 
-      {/* ── 2. Main scroll area ── */}
-      <main className="flex-1 px-4 pb-nav">
+      {/* ── Your subjects clean icon strip ── */}
+      {displaySubjects && displaySubjects.length > 0 && (
+        <YourSubjectsCard subjects={displaySubjects} />
+      )}
 
-        {/* Recall card — sits cleanly below the header with no overlap */}
-        <div className="mt-4 mb-4">
+      {/* ── 2. Main content grid (single column on mobile, 2 columns on desktop) ── */}
+      <main className="flex-1 px-4 md:px-0 pb-nav md:pb-0 md:mt-4 md:grid md:grid-cols-[1.25fr_1fr] md:gap-4 md:items-start">
+
+        {/* Mobile-only Recall card */}
+        <div className="mt-4 mb-4 md:hidden">
           <RecallCard
             queue={recall_queue}
             onStart={() => router.push('/student/review')}
           />
         </div>
 
-        {/* PWA install banner */}
-        {canInstall && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-border bg-white p-3.5 shadow-xs">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-ink">Install Recall App</p>
-              <p className="text-xs text-muted mt-0.5 leading-snug">
-                Add Recall to your home screen for quick, one-tap access.
-              </p>
-            </div>
-            <button
-              onClick={promptInstall}
-              className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-white active:scale-95 transition-transform"
-            >
-              <Download size={13} strokeWidth={2.5} />
-              Install
-            </button>
-          </div>
-        )}
-
-        <AppInstallModal
-          isOpen={showInstallModal}
-          onClose={() => setShowInstallModal(false)}
-        />
-
-        {/* Stats row — displays filtered subjects count */}
-        <div className="mb-5 grid grid-cols-2 gap-2">
-          <Link
-            href="/student/subjects"
-            aria-label="Manage your subjects"
-            className="group rounded-[14px] border border-border bg-white px-3 py-3.5 text-center transition-all hover:border-ink/20 active:scale-[0.98]"
-          >
-            <div className="flex items-center justify-center gap-1 text-xl font-extrabold text-ink">
-              <span>{displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}</span>
-              <ChevronRight size={14} className="text-muted group-hover:text-ink transition-colors" />
-            </div>
-            <div className="mt-0.5 text-xs text-muted">my subjects · edit</div>
-          </Link>
-          <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
-            <div className="text-xl font-extrabold text-ink">
-              {completion_percent}%
-            </div>
-            <div className="mt-0.5 text-xs text-muted">overall done</div>
-          </div>
-        </div>
-
-        {/* Topics section */}
-        <section className="mb-6">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-base font-bold text-ink">
-              {hasStarted ? 'Continue studying' : 'Start here'}
-            </span>
-            <Link
-              href="/student/learn"
-              className="text-sm font-semibold text-brand active:opacity-70 transition-opacity"
-            >
-              Browse all
-            </Link>
-          </div>
-
-          {displayTopics.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {displayTopics.map((topic) => (
-                <TopicRow key={topic.topic_id} topic={topic} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-[14px] border border-border bg-white p-5 text-center">
-              <p className="text-sm font-semibold text-ink">Ready to begin?</p>
-              <p className="text-xs text-muted mt-1 max-w-[280px] mx-auto">
-                Explore your selected subjects and start your first topic to build your recall streak.
-              </p>
-              <Link
-                href="/student/learn"
-                className="mt-3.5 inline-flex items-center justify-center rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-brand-dark transition-colors"
+        {/* PWA install banner (spans across mobile, sits top of left col on desktop) */}
+        <div className="min-w-0">
+          {canInstall && (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-[14px] border border-border bg-white p-3.5 shadow-xs">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-ink">Install Recall App</p>
+                <p className="text-xs text-muted mt-0.5 leading-snug">
+                  Add Recall to your home screen for quick, one-tap access.
+                </p>
+              </div>
+              <button
+                onClick={promptInstall}
+                className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-white active:scale-95 transition-transform"
               >
-                Open My Subjects
-              </Link>
+                <Download size={13} strokeWidth={2.5} />
+                Install
+              </button>
             </div>
           )}
-        </section>
+
+          <AppInstallModal
+            isOpen={showInstallModal}
+            onClose={() => setShowInstallModal(false)}
+          />
+
+          {/* Stats row — only on mobile (desktop has the right panel) */}
+          <div className="mb-5 grid grid-cols-2 gap-2 md:hidden">
+            <Link
+              href="/student/subjects"
+              aria-label="Manage your subjects"
+              className="group rounded-[14px] border border-border bg-white px-3 py-3.5 text-center transition-all hover:border-ink/20 active:scale-[0.98]"
+            >
+              <div className="flex items-center justify-center gap-1 text-xl font-extrabold text-ink">
+                <span>{displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}</span>
+                <ChevronRight size={14} className="text-muted group-hover:text-ink transition-colors" />
+              </div>
+              <div className="mt-0.5 text-xs text-muted">my subjects · edit</div>
+            </Link>
+            <div className="rounded-[14px] border border-border bg-white px-3 py-3.5 text-center">
+              <div className="text-xl font-extrabold text-ink">
+                {completion_percent}%
+              </div>
+              <div className="mt-0.5 text-xs text-muted">overall done</div>
+            </div>
+          </div>
+
+          {/* Topics / Start here section */}
+          <section className="mb-6 md:mb-0">
+            <div className="mb-3 flex items-center justify-between md:hidden">
+              <span className="text-base font-bold text-ink">
+                {hasStarted ? 'Continue studying' : 'Start here'}
+              </span>
+              <Link
+                href="/student/learn"
+                className="text-sm font-semibold text-brand active:opacity-70 transition-opacity"
+              >
+                Browse all
+              </Link>
+            </div>
+
+            {displayTopics.length > 0 ? (
+              <div className="rounded-2xl md:border md:border-border md:bg-card md:p-5">
+                <div className="hidden md:flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
+                    {hasStarted ? 'Continue studying' : 'Start here'}
+                  </span>
+                  <Link
+                    href="/student/learn"
+                    className="text-[12.5px] font-semibold text-brand hover:underline"
+                  >
+                    Browse all
+                  </Link>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {displayTopics.map((topic) => (
+                    <TopicRow key={topic.topic_id} topic={topic} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-border bg-card p-5 md:p-6 text-center md:text-left">
+                <p className="hidden md:block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+                  Start here
+                </p>
+                <p className="text-sm md:text-[18px] font-bold text-ink">Ready to begin?</p>
+                <p className="text-xs md:text-[13.5px] text-muted mt-1 max-w-[320px] mx-auto md:mx-0 leading-relaxed">
+                  Explore your selected subjects and start your first topic to build your recall streak.
+                </p>
+                <Link
+                  href="/student/learn"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-brand md:bg-ink px-4 py-2.5 text-xs md:text-[13px] font-bold text-white shadow-xs hover:opacity-90 transition-all"
+                >
+                  <span>Open my subjects</span>
+                  <ChevronRight size={14} strokeWidth={2.5} />
+                </Link>
+              </div>
+            )}
+          </section>
+        </div>
+
+        {/* ── Right column: Recall status + 2-up stats (desktop only) ── */}
+        <aside className="hidden md:flex flex-col gap-3">
+          <RecallCard
+            queue={recall_queue}
+            onStart={() => router.push('/student/review')}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/student/subjects"
+              aria-label="Manage your subjects"
+              className="group rounded-2xl border border-border bg-card px-4 py-4 transition-all hover:border-ink/20 active:scale-[0.98]"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-2xl font-extrabold text-ink">
+                  {displaySubjects ? displaySubjects.length : (profile?.selectedSubjects?.length || '—')}
+                </span>
+                <ChevronRight size={14} className="text-muted group-hover:text-ink transition-colors" />
+              </div>
+              <p className="text-[12px] text-muted">My subjects</p>
+            </Link>
+
+            <div className="rounded-2xl border border-border bg-card px-4 py-4">
+              <div className="text-2xl font-extrabold text-ink mb-1">
+                {completion_percent}%
+              </div>
+              <p className="text-[12px] text-muted">Overall done</p>
+            </div>
+          </div>
+        </aside>
       </main>
     </div>
   );

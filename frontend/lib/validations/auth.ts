@@ -77,9 +77,10 @@ export const registerSchema = z
       .string()
       .min(1, 'Access code is required')
       .transform((val) => val.trim().toUpperCase())
-      .refine((val) => /^[A-Z0-9]{2,5}-[A-Z0-9]{3,6}-[A-Z0-9]{2,6}$/.test(val) || val.length >= 8, {
-        message: 'Invalid access code format',
-      }),
+      .refine(
+        (val) => /^(IND-[A-Z0-9]{4}-[A-Z0-9]{2,4}|BETA-[A-Z0-9]{6,10}|SMOKE-[A-Z0-9]{2,6}-[A-Z0-9]{2,6})$/.test(val),
+        { message: 'Enter a valid individual access code (e.g. IND-7K2M-Q9)' },
+      ),
   });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;

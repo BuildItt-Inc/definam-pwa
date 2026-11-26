@@ -1,0 +1,146 @@
+'use client';
+
+import { motion } from 'framer-motion';
+
+export type BirdMood = 'welcome' | 'idle' | 'nod' | 'pulling' | 'celebrate';
+
+/**
+ * Animated Recall project bird mascot built directly from the official
+ * RecallMark / LandingBrandMark vector geometry (light-surface navy + green).
+ *
+ * Each anatomical group (outer ring, head, beak, eye) animates independently so
+ * the bird can swoop in, nod as the student types their name, dip to pull
+ * option cards up with its beak, and roll smoothly back into the clean brand logo.
+ */
+export function AnimatedRecallBird({
+  size = 56,
+  mood = 'idle',
+  nodKey = 0,
+  className = '',
+}: {
+  size?: number;
+  mood?: BirdMood;
+  nodKey?: number;
+  className?: string;
+}) {
+  const isPulling = mood === 'pulling';
+  const isCelebrate = mood === 'celebrate';
+  const isWelcome = mood === 'welcome';
+
+  return (
+    <motion.div
+      style={{ width: size, height: size }}
+      className={`relative inline-flex items-center justify-center flex-shrink-0 select-none ${className}`}
+      initial={isWelcome ? { y: -44, scale: 0.85, opacity: 0 } : false}
+      animate={
+        isCelebrate
+          ? {
+              y: [0, -10, -4, -110],
+              scale: [1, 1.12, 1.05, 0.78],
+              rotate: [0, -6, 6, -12],
+              opacity: [1, 1, 1, 0],
+            }
+          : isPulling
+          ? {
+              y: [0, 14, -4, 0],
+              rotate: [0, -8, 3, 0],
+              scale: 1,
+              opacity: 1,
+            }
+          : isWelcome
+          ? {
+              y: [0, -3, 0],
+              scale: 1,
+              opacity: 1,
+            }
+          : {
+              y: 0,
+              scale: 1,
+              opacity: 1,
+            }
+      }
+      transition={
+        isCelebrate
+          ? { duration: 1.25, times: [0, 0.28, 0.5, 1], ease: [0.22, 1, 0.36, 1] }
+          : isPulling
+          ? { duration: 0.7, times: [0, 0.32, 0.72, 1], ease: [0.22, 1, 0.36, 1] }
+          : isWelcome
+          ? {
+              y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
+              scale: { type: 'spring', stiffness: 280, damping: 20 },
+              opacity: { duration: 0.35 },
+            }
+          : { type: 'spring', stiffness: 320, damping: 24 }
+      }
+    >
+      {/* Nod wrapper keyed by word count so each typed word triggers a crisp nod */}
+      <motion.svg
+        key={nodKey}
+        viewBox="46 42 162 174"
+        width={size}
+        height={size}
+        fill="none"
+        aria-hidden="true"
+        className="w-full h-full overflow-visible"
+        initial={nodKey > 0 ? { rotate: -6, y: 2 } : false}
+        animate={nodKey > 0 ? { rotate: 0, y: 0 } : undefined}
+        transition={{ type: 'spring', stiffness: 420, damping: 18 }}
+      >
+        {/* Outer circular body arc — rolls smoothly back into the clean logo */}
+        <motion.path
+          d="M79.67 171.61 L76.68 169.25 L73.81 166.73 L71.08 164.05 L68.50 161.21 L66.08 158.22 L63.83 155.10 L61.76 151.84 L59.88 148.46 L58.19 144.97 L56.70 141.39 L55.41 137.71 L54.34 133.96 L53.49 130.14 L52.85 126.27 L52.44 122.36 L52.25 118.42 L52.30 114.47 L52.57 110.52 L53.07 106.59 L53.80 102.67 L54.76 98.80 L55.95 94.98 L57.35 91.23 L58.98 87.56 L60.82 83.97 L62.87 80.49 L65.13 77.13 L67.58 73.90 L70.23 70.80 L73.05 67.86 L76.05 65.08 L79.21 62.47 L82.53 60.04 L85.99 57.80 L89.59 55.77 L93.31 53.94 L97.14 52.32 L101.06 50.93 L105.07 49.76 L109.15 48.83 L113.29 48.13 L117.47 47.68 L121.69 47.46 L125.92 47.50 L130.15 47.77 L134.37 48.30 L138.56 49.07 L142.72 50.09 L146.81 51.35 L150.84 52.85 L154.78 54.59 L158.63 56.55 L162.36 58.75 L165.97 61.16 L169.44 63.79 L172.77 66.62 L175.93 69.64 L178.91 72.86 L181.72 76.25 L184.33 79.81 L186.73 83.52 L188.92 87.37 L190.88 91.36 L192.62 95.47 L194.11 99.68 L195.37 103.98 L196.37 108.36 L197.12 112.80 L197.61 117.29 L197.84 121.81 L197.80 126.35 L197.50 130.89 L196.94 135.42 L196.11 139.92 L195.02 144.37 L193.67 148.77 L192.06 153.09 L190.19 157.32 L188.08 161.45 L185.72 165.45 L183.13 169.33 L180.31 173.05 L177.28 176.61 L174.03 180.00 L170.58 183.21 L166.94 186.21 L163.12 189.00 L159.13 191.58 L155.00 193.92 L150.72 196.03 L137.23 162.65 L139.77 161.77 L142.27 160.73 L144.71 159.55 L147.09 158.21 L149.40 156.74 L151.62 155.12 L153.76 153.37 L155.80 151.49 L157.73 149.48 L159.55 147.35 L161.25 145.12 L162.83 142.77 L164.27 140.33 L165.56 137.80 L166.72 135.18 L167.72 132.49 L168.56 129.73 L169.25 126.92 L169.77 124.06 L170.13 121.17 L170.31 118.24 L170.33 115.30 L170.17 112.35 L169.84 109.41 L169.33 106.47 L168.65 103.56 L167.80 100.69 L166.77 97.86 L165.58 95.08 L164.22 92.37 L162.70 89.73 L161.03 87.17 L159.19 84.71 L157.21 82.35 L155.09 80.10 L152.83 77.98 L150.45 75.98 L147.94 74.11 L145.31 72.40 L142.58 70.83 L139.75 69.42 L136.84 68.18 L133.85 67.10 L130.78 66.20 L127.66 65.47 L124.50 64.93 L121.29 64.57 L118.06 64.40 L114.81 64.42 L111.56 64.63 L108.32 65.04 L105.09 65.63 L101.90 66.41 L98.74 67.38 L95.64 68.54 L92.60 69.89 L89.64 71.41 L86.76 73.11 L83.98 74.98 L81.30 77.02 L78.74 79.22 L76.31 81.57 L74.01 84.07 L71.85 86.70 L69.85 89.47 L68.00 92.35 L66.33 95.35 L64.82 98.45 L63.50 101.64 L62.37 104.92 L61.42 108.26 L60.68 111.66 L60.13 115.11 L59.78 118.60 L59.64 122.11 L59.70 125.63 L59.98 129.15 L60.46 132.66 L61.14 136.14 L62.04 139.58 L63.13 142.98 L64.43 146.31 L65.93 149.56 L67.62 152.73 L69.50 155.80 L71.56 158.76 L73.80 161.60 L76.21 164.30 L78.78 166.86 L81.52 169.25 Z"
+          fill="#0B1F3A"
+          style={{ transformOrigin: '125px 122px' }}
+          animate={
+            isPulling
+              ? { rotate: [-28, 8, 0] }
+              : isCelebrate
+              ? { rotate: [0, 360] }
+              : { rotate: 0 }
+          }
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        />
+
+        {/* Bird head */}
+        <circle cx="143.97" cy="179.34" r="30" fill="#12945A" />
+
+        {/* Beak — dips down & closes to pull cards up, chatters gently on welcome */}
+        <motion.path
+          d="M128.45 199.63 L85.38 205.17 L118.71 175.53 Z"
+          fill="#12945A"
+          style={{ transformOrigin: '125px 186px' }}
+          animate={
+            isPulling
+              ? { rotate: [-18, 8, -4, 0], scale: [1, 1.06, 1, 1] }
+              : isWelcome
+              ? { rotate: [0, -10, 0, -6, 0] }
+              : { rotate: 0 }
+          }
+          transition={
+            isPulling
+              ? { duration: 0.65, times: [0, 0.35, 0.7, 1], ease: [0.22, 1, 0.36, 1] }
+              : isWelcome
+              ? { duration: 3.2, repeat: Infinity, repeatDelay: 1.5, ease: 'easeInOut' }
+              : { type: 'spring', stiffness: 320, damping: 22 }
+          }
+        />
+
+        {/* Bird eye — subtle natural blink */}
+        <motion.circle
+          cx="144.76"
+          cy="191.96"
+          r="6"
+          fill="#FFFFFF"
+          style={{ transformOrigin: '144.76px 191.96px' }}
+          animate={{ scaleY: [1, 1, 0.12, 1, 1] }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            times: [0, 0.45, 0.48, 0.51, 1],
+            ease: 'easeInOut',
+          }}
+        />
+      </motion.svg>
+    </motion.div>
+  );
+}

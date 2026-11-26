@@ -1,66 +1,67 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Check, ArrowRight } from 'lucide-react';
-import { getStudentProfile, saveStudentProfile, type StudentProfile } from '@/lib/utils/studentProfile';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { Check, ArrowRight, ArrowLeft } from 'lucide-react';
+import {
+  getStudentProfile,
+  saveStudentProfile,
+  type StudentProfile,
+} from '@/lib/utils/studentProfile';
 import { getMe } from '@/lib/api/auth';
+import { ALL_CURRICULUM_SUBJECTS, type CurriculumSubject } from '@/lib/utils/subjects';
+import { AnimatedRecallBird, type BirdMood } from '@/components/student/AnimatedRecallBird';
 
-interface SubjectItem {
-  id: string;
-  name: string;
-  badge: string;
-  badgeBg: string;
-  badgeFg: string;
-}
-
-const EVERYONE_SUBJECTS: SubjectItem[] = [
-  { id: 'en', name: 'English Language', badge: 'En', badgeBg: '#f3e8ff', badgeFg: '#7e22ce' },
-  { id: 'ma', name: 'Mathematics', badge: 'Ma', badgeBg: '#dbeafe', badgeFg: '#1d4ed8' },
-];
-
-const SCIENCE_SUBJECTS: SubjectItem[] = [
-  { id: 'ph', name: 'Physics', badge: 'Ph', badgeBg: '#ffedd5', badgeFg: '#c2410c' },
-  { id: 'ch', name: 'Chemistry', badge: 'Ch', badgeBg: '#cffafe', badgeFg: '#0e7490' },
-  { id: 'bi', name: 'Biology', badge: 'Bi', badgeBg: '#dcfce7', badgeFg: '#15803d' },
-  { id: 'fm', name: 'Further Mathematics', badge: 'Fm', badgeBg: '#e0e7ff', badgeFg: '#4338ca' },
-  { id: 'ag', name: 'Agricultural Science', badge: 'Ag', badgeBg: '#ecfdf5', badgeFg: '#047857' },
-  { id: 'td', name: 'Technical Drawing', badge: 'Td', badgeBg: '#f1f5f9', badgeFg: '#334155' },
-];
-
-const ARTS_SUBJECTS: SubjectItem[] = [
-  { id: 'li', name: 'Literature in English', badge: 'Li', badgeBg: '#ede9fe', badgeFg: '#6d28d9' },
-  { id: 'ec', name: 'Economics', badge: 'Ec', badgeBg: '#fce7f3', badgeFg: '#be185d' },
-  { id: 'gv', name: 'Government', badge: 'Gv', badgeBg: '#ffe4e6', badgeFg: '#e11d48' },
-  { id: 'fn', name: 'Food and Nutrition', badge: 'Fn', badgeBg: '#d1fae5', badgeFg: '#065f46' },
-];
-
-const MORE_SUBJECTS: SubjectItem[] = [
-  { id: 'cm', name: 'Commerce', badge: 'Cm', badgeBg: '#fef3c7', badgeFg: '#b45309' },
-  { id: 'ac', name: 'Financial Accounting', badge: 'Ac', badgeBg: '#e0f2fe', badgeFg: '#0369a1' },
-  { id: 'ce', name: 'Civic Education', badge: 'Ce', badgeBg: '#ede9fe', badgeFg: '#5b21b6' },
-  { id: 'cr', name: 'Christian Religious Studies', badge: 'Cr', badgeBg: '#e0e7ff', badgeFg: '#3730a3' },
-  { id: 'ir', name: 'Islamic Studies', badge: 'Ir', badgeBg: '#dcfce7', badgeFg: '#166534' },
-  { id: 'gg', name: 'Geography', badge: 'Gg', badgeBg: '#fed7aa', badgeFg: '#9a3412' },
-  { id: 'cs', name: 'Computer Studies', badge: 'Cs', badgeBg: '#ccfbf1', badgeFg: '#0f766e' },
-  { id: 'dp', name: 'Data Processing', badge: 'Dp', badgeBg: '#f1f5f9', badgeFg: '#475569' },
-];
+// ── Static curriculum option lists ────────────────────────────────────────────
 
 type ClassOption = 'SS1' | 'SS2' | 'SS3' | 'Finished school';
-const CLASS_OPTIONS: ClassOption[] = ['SS1', 'SS2', 'SS3', 'Finished school'];
+const CLASS_OPTIONS: { value: ClassOption; hint: string }[] = [
+  { value: 'SS1', hint: 'Senior Secondary 1' },
+  { value: 'SS2', hint: 'Senior Secondary 2' },
+  { value: 'SS3', hint: 'Final year prep' },
+  { value: 'Finished school', hint: 'Post-secondary / JAMB' },
+];
 
 const EXAM_OPTIONS = ['WAEC', 'NECO', 'JAMB', 'School exams'];
 
+const CORE_SUBJECTS = ALL_CURRICULUM_SUBJECTS.filter((s) => s.category === 'core');
+const SCIENCE_SUBJECTS = ALL_CURRICULUM_SUBJECTS.filter((s) => s.category === 'science');
+const ARTS_SUBJECTS = ALL_CURRICULUM_SUBJECTS.filter((s) => s.category === 'arts');
+const COMMERCIAL_SUBJECTS = ALL_CURRICULUM_SUBJECTS.filter((s) => s.category === 'commercial');
+
+// ── Motion helpers ────────────────────────────────────────────────────────────
+
+const EASE_OUT_EXPO = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
+const cardPullVariants: Variants = {
+  initial: { opacity: 0, y: 56, scale: 0.985 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 260, damping: 24, mass: 0.9 },
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    scale: 0.985,
+    transition: { duration: 0.18, ease: EASE_OUT_EXPO },
+  },
+};
+
+// ── Component ────────────────────────────────────────────────────────────────
+
 export default function OnboardingPage() {
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // Step 1 state
+  // step: 0=welcome, 1=name, 2=class, 3=exams, 4=subjects, 5=done
+  const [step, setStep] = useState<number>(0);
+
+  // form state
   const [name, setName] = useState('');
   const [selectedClass, setSelectedClass] = useState<ClassOption>('SS3');
   const [selectedTargets, setSelectedTargets] = useState<string[]>(['WAEC', 'School exams']);
-
-  // Step 2 state
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([
     'English Language',
     'Mathematics',
@@ -72,15 +73,39 @@ export default function OnboardingPage() {
   ]);
   const [showMoreSubjects, setShowMoreSubjects] = useState(false);
 
-  // Load existing profile or current user details if available
+  // Bird state: welcome | idle | nod | pulling | celebrate
+  const [birdMood, setBirdMood] = useState<BirdMood>('welcome');
+  const [birdNodKey, setBirdNodKey] = useState(0);
+  const lastWordCountRef = useRef(0);
+  const pullTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Handle word-count nod while typing name
+  useEffect(() => {
+    if (step === 1) {
+      const wc = name.trim().split(/\s+/).filter(Boolean).length;
+      if (wc > lastWordCountRef.current) {
+        lastWordCountRef.current = wc;
+        setBirdNodKey((k) => k + 1);
+      } else if (wc < lastWordCountRef.current) {
+        lastWordCountRef.current = wc;
+      }
+    }
+  }, [name, step]);
+
+  useEffect(() => {
+    return () => {
+      if (pullTimerRef.current) clearTimeout(pullTimerRef.current);
+    };
+  }, []);
+
+  // Load existing profile / authenticated name without overriding with hardcoded placeholders
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const stepParam = urlParams.get('step');
       if (stepParam === '2') {
-        setStep(2);
-      } else if (stepParam === '3') {
-        setStep(3);
+        setStep(4);
+        setBirdMood('idle');
       }
     }
 
@@ -93,11 +118,9 @@ export default function OnboardingPage() {
         setSelectedSubjects(existing.selectedSubjects);
       }
     } else {
-      // Only prefill if an actual human display name is already stored on the account
-      // (never auto-fill the student's login username)
       getMe()
         .then((me) => {
-          if (me?.name) {
+          if (me?.name && me.name !== 'Student') {
             setName((prev) => prev || me.name || '');
           }
         })
@@ -105,366 +128,548 @@ export default function OnboardingPage() {
     }
   }, []);
 
-  const toggleTarget = (target: string) => {
+  const goToStep = (nextStep: number, withBirdPull = false) => {
+    setStep(nextStep);
+    if (pullTimerRef.current) clearTimeout(pullTimerRef.current);
+
+    if (nextStep === 0) {
+      setBirdMood('welcome');
+      return;
+    }
+    if (nextStep === 5) {
+      setBirdMood('celebrate');
+      return;
+    }
+    if (withBirdPull) {
+      setBirdMood('pulling');
+      pullTimerRef.current = setTimeout(() => {
+        setBirdMood('idle');
+      }, 720);
+    } else {
+      setBirdMood('idle');
+    }
+  };
+
+  const toggleTarget = (t: string) =>
     setSelectedTargets((prev) =>
-      prev.includes(target) ? prev.filter((t) => t !== target) : [...prev, target]
+      prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]
     );
-  };
 
-  const toggleSubject = (subjectName: string) => {
+  const toggleSubject = (s: string) =>
     setSelectedSubjects((prev) =>
-      prev.includes(subjectName) ? prev.filter((s) => s !== subjectName) : [...prev, subjectName]
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
     );
-  };
 
-  const handleFinishOnboarding = () => {
+  const handleFinish = () => {
     const profile: StudentProfile = {
-      name: name.trim() || 'Student',
+      name: name.trim(),
       class_level: selectedClass,
       targets: selectedTargets,
       selectedSubjects,
       completedOnboarding: true,
     };
     saveStudentProfile(profile);
-    router.push('/student');
+    setTimeout(() => router.push('/student'), 1400);
   };
 
+  useEffect(() => {
+    if (step === 5) {
+      handleFinish();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  const isWelcome = step === 0;
+  const totalSteps = 5;
+  const dotStep = Math.min(step, totalSteps);
+  const isPulling = birdMood === 'pulling';
+
   return (
-    <div className="min-h-screen bg-[#fafbfa] flex flex-col justify-between px-4 py-6 sm:py-10">
-      <div className="w-full max-w-[420px] mx-auto flex-1 flex flex-col">
-        {/* Progress header */}
-        <div className="mb-6">
-          {step > 1 && (
-            <button
-              type="button"
-              onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}
-              aria-label="Go back"
-              className="text-ink -ml-1.5 mb-2.5 p-1 text-ink/80 hover:text-ink active:scale-95 transition-all inline-flex items-center"
-            >
-              <ChevronLeft size={24} strokeWidth={2} />
-            </button>
+    <div className="min-h-screen bg-bg-0 flex flex-col items-center px-4 sm:px-6 pb-10 overflow-x-hidden">
+      {/* ── Project bird mascot + step progress ──────────────────────── */}
+      <div className="flex flex-col items-center pt-9 sm:pt-12 mb-4 relative">
+        <AnimatedRecallBird
+          size={isWelcome ? 76 : step === 5 ? 64 : 50}
+          mood={birdMood}
+          nodKey={birdNodKey}
+        />
+
+        {/* Subtle pull-line connecting beak to the rising options card during transitions */}
+        <AnimatePresence>
+          {isPulling && (
+            <motion.div
+              aria-hidden
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              exit={{ opacity: 0, scaleY: 0 }}
+              transition={{ duration: 0.25 }}
+              style={{ transformOrigin: 'top center' }}
+              className="w-[2px] h-5 bg-gradient-to-b from-brand to-brand/20 rounded-full -mt-1"
+            />
           )}
+        </AnimatePresence>
 
-          {/* 3-segment progress indicator bar */}
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            <div className={`h-1.5 rounded-full transition-colors ${step >= 1 ? 'bg-brand' : 'bg-bg-3'}`} />
-            <div className={`h-1.5 rounded-full transition-colors ${step >= 2 ? 'bg-brand' : 'bg-bg-3'}`} />
-            <div className={`h-1.5 rounded-full transition-colors ${step >= 3 ? 'bg-brand' : 'bg-bg-3'}`} />
-          </div>
-
-          <p className="text-[12.5px] font-semibold text-gray-500">
-            Step {step} of 3
-          </p>
-        </div>
-
-        {/* ── STEP 1: Let's set you up ────────────────────────────────────── */}
-        {step === 1 && (
-          <div className="flex-1 flex flex-col">
-            <h1 className="text-[28px] sm:text-[30px] font-bold text-ink tracking-tight mb-1 leading-tight">
-              Let&apos;s set you up
-            </h1>
-            <p className="text-[14.5px] text-muted mb-6 leading-relaxed">
-              One minute. You can change all of this later.
-            </p>
-
-            <div className="space-y-6 flex-1">
-              {/* Question 1: Name */}
-              <div>
-                <label htmlFor="student_name" className="block text-[14px] font-bold text-ink mb-1.5">
-                  What should we call you?
-                </label>
-                <input
-                  id="student_name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Chisom or Amina"
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-[16px] sm:text-[15px] font-medium text-ink placeholder:text-gray-400 focus:border-brand focus:ring-1 focus:ring-brand focus:outline-none transition-all touch-manipulation"
+        {/* Step dots */}
+        {!isWelcome && step < 5 && (
+          <div className="flex items-center gap-1.5 mt-3.5" aria-label={`Step ${dotStep} of 4`}>
+            {Array.from({ length: 4 }).map((_, i) => {
+              const active = dotStep === i + 1;
+              const completed = i + 1 < dotStep;
+              return (
+                <div
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    active
+                      ? 'w-6 bg-brand'
+                      : completed
+                      ? 'w-2 bg-brand/50'
+                      : 'w-2 bg-border-2'
+                  }`}
                 />
-              </div>
-
-              {/* Question 2: Class */}
-              <div>
-                <p className="text-[14px] font-bold text-ink mb-2">
-                  Which class are you in?
-                </p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {CLASS_OPTIONS.map((c) => {
-                    const isSelected = selectedClass === c;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setSelectedClass(c)}
-                        className={`rounded-xl p-3.5 text-[14.5px] font-bold transition-all text-center flex items-center justify-center gap-1.5 ${
-                          isSelected
-                            ? 'border-2 border-[#15803d] bg-white text-[#15803d] shadow-2xs'
-                            : 'border border-gray-300 bg-white text-ink hover:border-gray-400 active:scale-[0.98]'
-                        }`}
-                      >
-                        {isSelected && <Check size={16} strokeWidth={3} className="text-[#15803d]" />}
-                        <span>{c}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Question 3: Targets */}
-              <div>
-                <p className="text-[14px] font-bold text-ink mb-2">
-                  What are you preparing for? <span className="font-normal text-gray-500 text-[13px]">(pick any)</span>
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {EXAM_OPTIONS.map((target) => {
-                    const isSelected = selectedTargets.includes(target);
-                    return (
-                      <button
-                        key={target}
-                        type="button"
-                        onClick={() => toggleTarget(target)}
-                        className={`rounded-full px-4 py-2 text-[13.5px] font-bold transition-all flex items-center gap-1.5 active:scale-95 ${
-                          isSelected
-                            ? 'bg-[#15803d] text-white shadow-xs'
-                            : 'bg-white border border-gray-300 text-ink hover:border-gray-400'
-                        }`}
-                      >
-                        {isSelected && <Check size={14} strokeWidth={3} />}
-                        <span>{target}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-4">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="btn-primary w-full min-h-[48px] text-[15.5px]"
-              >
-                <span>Continue</span>
-                <ArrowRight size={17} strokeWidth={2.5} />
-              </button>
-            </div>
+              );
+            })}
           </div>
         )}
+      </div>
 
-        {/* ── STEP 2: Pick your subjects ──────────────────────────────────── */}
-        {step === 2 && (
-          <div className="flex-1 flex flex-col pb-16">
-            <h1 className="text-[28px] sm:text-[30px] font-bold text-ink tracking-tight mb-1 leading-tight">
-              Pick your subjects
-            </h1>
-            <p className="text-[14px] text-muted mb-6 leading-relaxed">
-              Choose the ones you&apos;re writing. WAEC candidates usually write 8 or 9. You can change this anytime.
-            </p>
-
-            <div className="space-y-6">
-              {/* Category 1: Everyone Writes */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2.5">
-                  Everyone Writes
+      {/* ── Animated step card ────────────────────────────────────────── */}
+      <div className={`w-full flex-1 flex flex-col ${step === 4 ? 'max-w-[540px]' : 'max-w-[430px]'}`}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            variants={cardPullVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="flex-1 flex flex-col"
+          >
+            {step === 0 && (
+              <div className="flex-1 flex flex-col items-center justify-center text-center pb-12">
+                <span className="inline-flex items-center rounded-full bg-brand-tint px-3 py-1 text-[11.5px] font-bold text-brand tracking-wide mb-4">
+                  Welcome to Recall
+                </span>
+                <h1 className="text-[32px] sm:text-[36px] font-extrabold text-ink tracking-tight leading-[1.15] mb-3">
+                  Let&apos;s set up your study plan
+                </h1>
+                <p className="text-[15px] text-muted max-w-[300px] leading-relaxed mb-10">
+                  Tell us a little about what you&apos;re preparing for. Takes under 30 seconds.
                 </p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {EVERYONE_SUBJECTS.map((subj) => (
-                    <SubjectToggleCard
-                      key={subj.id}
-                      item={subj}
-                      selected={selectedSubjects.includes(subj.name)}
-                      onToggle={() => toggleSubject(subj.name)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Category 2: Sciences */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2.5">
-                  Sciences
-                </p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {SCIENCE_SUBJECTS.map((subj) => (
-                    <SubjectToggleCard
-                      key={subj.id}
-                      item={subj}
-                      selected={selectedSubjects.includes(subj.name)}
-                      onToggle={() => toggleSubject(subj.name)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Category 3: Arts and Social Sciences */}
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2.5">
-                  Arts and Social Sciences
-                </p>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {ARTS_SUBJECTS.map((subj) => (
-                    <SubjectToggleCard
-                      key={subj.id}
-                      item={subj}
-                      selected={selectedSubjects.includes(subj.name)}
-                      onToggle={() => toggleSubject(subj.name)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Expandable Additional Subjects */}
-              {showMoreSubjects ? (
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2.5">
-                    Other Subjects
-                  </p>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {MORE_SUBJECTS.map((subj) => (
-                      <SubjectToggleCard
-                        key={subj.id}
-                        item={subj}
-                        selected={selectedSubjects.includes(subj.name)}
-                        onToggle={() => toggleSubject(subj.name)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowMoreSubjects(true)}
-                    className="text-[14px] font-bold text-brand underline underline-offset-4 hover:text-brand-dark transition-colors"
-                  >
-                    Show 8 more subjects
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Sticky bottom bar matching mockup */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-3 pb-safe">
-              <div className="max-w-[420px] mx-auto flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-[17px] font-bold text-ink">
-                    {selectedSubjects.length}
-                  </span>{' '}
-                  <span className="text-[13px] text-gray-500">
-                    subjects selected
-                  </span>
-                </div>
                 <button
                   type="button"
-                  onClick={() => setStep(3)}
-                  disabled={selectedSubjects.length === 0}
-                  className="btn-primary min-h-[44px] px-6 text-[14.5px]"
+                  onClick={() => goToStep(1, true)}
+                  className="btn-primary px-8 min-h-[50px] text-[15.5px]"
                 >
-                  <span>Continue</span>
-                  <ArrowRight size={16} strokeWidth={2.5} />
+                  <span>Get started</span>
+                  <ArrowRight size={17} strokeWidth={2.2} />
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* ── STEP 3: You're all set! ────────────────────────────────────── */}
-        {step === 3 && (
-          <div className="flex-1 flex flex-col">
-            <h1 className="text-[28px] sm:text-[30px] font-bold text-ink tracking-tight mb-1 leading-tight">
-              You&apos;re all set{name ? `, ${name}` : ''}!
-            </h1>
-            <p className="text-[14.5px] text-muted mb-6 leading-relaxed">
-              Your personalized curriculum is configured for your class and selected subjects.
-            </p>
+            {step === 1 && (
+              <NameStep
+                name={name}
+                setName={setName}
+                onContinue={() => goToStep(2, true)}
+              />
+            )}
 
-            <div className="space-y-4 flex-1">
-              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Class Level</span>
-                  <span className="font-bold text-ink text-[14px]">{selectedClass}</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Target Exams</span>
-                  <span className="font-bold text-ink text-[14px]">{selectedTargets.join(', ')}</span>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400">My Selected Subjects</span>
-                    <span className="font-bold text-brand text-xs">{selectedSubjects.length} subjects</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedSubjects.map((s) => (
-                      <span
-                        key={s}
-                        className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700"
-                      >
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+            {step === 2 && (
+              <ClassStep
+                studentName={name.trim()}
+                selectedClass={selectedClass}
+                setSelectedClass={setSelectedClass}
+                onContinue={() => goToStep(3, true)}
+                onBack={() => goToStep(1)}
+              />
+            )}
+
+            {step === 3 && (
+              <ExamStep
+                selectedTargets={selectedTargets}
+                toggleTarget={toggleTarget}
+                onContinue={() => goToStep(4, true)}
+                onBack={() => goToStep(2)}
+              />
+            )}
+
+            {step === 4 && (
+              <SubjectsStep
+                selectedSubjects={selectedSubjects}
+                toggleSubject={toggleSubject}
+                showMoreSubjects={showMoreSubjects}
+                setShowMoreSubjects={setShowMoreSubjects}
+                onContinue={() => goToStep(5)}
+                onBack={() => goToStep(3)}
+              />
+            )}
+
+            {step === 5 && (
+              <div className="flex-1 flex flex-col items-center justify-center text-center pb-12">
+                <h1 className="text-[30px] sm:text-[34px] font-extrabold text-ink tracking-tight leading-tight mb-2.5">
+                  You&apos;re all set{name.trim() ? `, ${name.trim()}` : ''}!
+                </h1>
+                <p className="text-[14.5px] text-muted">
+                  Opening your personalised Recall workspace…
+                </p>
               </div>
-
-              <div className="rounded-xl bg-[#ecfdf5] border border-emerald-200/70 p-3.5 text-[13px] text-emerald-900 leading-relaxed">
-                <p className="font-bold text-emerald-950 mb-0.5">Customized student experience</p>
-                Only your selected subjects will appear on your study dashboard. You can modify your subjects anytime.
-              </div>
-            </div>
-
-            <div className="mt-8 pt-4">
-              <button
-                type="button"
-                onClick={handleFinishOnboarding}
-                className="btn-primary w-full min-h-[48px] text-[15.5px]"
-              >
-                <span>Start learning</span>
-                <ArrowRight size={17} strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
-        )}
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
 }
 
-function SubjectToggleCard({
+// ── Sub-steps ────────────────────────────────────────────────────────────────
+
+function NameStep({
+  name,
+  setName,
+  onContinue,
+}: {
+  name: string;
+  setName: (v: string) => void;
+  onContinue: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 140);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="flex-1 flex flex-col rounded-2xl border border-border bg-card p-6 sm:p-7 shadow-2xs">
+      <h1 className="text-[26px] font-extrabold text-ink tracking-tight leading-tight mb-1.5">
+        What&apos;s your name?
+      </h1>
+      <p className="text-[14px] text-muted mb-7">
+        Recall and Zikora will greet you by name.
+      </p>
+      <input
+        ref={inputRef}
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && name.trim() && onContinue()}
+        placeholder="e.g. Chisom or Amina"
+        className="w-full rounded-xl border border-border-2 bg-bg-0 px-4 py-3.5 text-[17px] font-semibold text-ink placeholder:text-faint focus:border-ink focus:ring-2 focus:ring-ink/5 focus:outline-none transition-all"
+        autoComplete="given-name"
+      />
+      <div className="mt-auto pt-8">
+        <button
+          type="button"
+          onClick={onContinue}
+          disabled={!name.trim()}
+          className="btn-primary w-full min-h-[48px] text-[15.5px] disabled:opacity-35 disabled:cursor-not-allowed"
+        >
+          <span>Continue</span>
+          <ArrowRight size={17} strokeWidth={2.2} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ClassStep({
+  studentName,
+  selectedClass,
+  setSelectedClass,
+  onContinue,
+  onBack,
+}: {
+  studentName: string;
+  selectedClass: ClassOption;
+  setSelectedClass: (c: ClassOption) => void;
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="flex-1 flex flex-col rounded-2xl border border-border bg-card p-6 sm:p-7 shadow-2xs">
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-1.5 text-muted text-[13px] font-semibold mb-5 self-start hover:text-ink transition-colors"
+      >
+        <ArrowLeft size={14} strokeWidth={2.2} />
+        Back
+      </button>
+      <h1 className="text-[26px] font-extrabold text-ink tracking-tight leading-tight mb-1.5">
+        {studentName ? `Nice to meet you, ${studentName}.` : 'What class are you in?'}
+      </h1>
+      <p className="text-[14px] text-muted mb-6">
+        Select your current class level.
+      </p>
+
+      <div className="grid grid-cols-2 gap-2.5">
+        {CLASS_OPTIONS.map((c, i) => {
+          const selected = selectedClass === c.value;
+          return (
+            <motion.button
+              key={c.value}
+              type="button"
+              onClick={() => setSelectedClass(c.value)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                transition: { delay: i * 0.055, type: 'spring' as const, stiffness: 300, damping: 24 },
+              }}
+              whileTap={{ scale: 0.97 }}
+              className={`rounded-xl p-4 text-left border transition-all ${
+                selected
+                  ? 'border-brand border-2 bg-brand-tint/60'
+                  : 'border-border-2 bg-bg-0/60 hover:border-ink/25 hover:bg-card'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[15.5px] font-bold text-ink">{c.value}</span>
+                {selected && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white">
+                    <Check size={12} strokeWidth={3} />
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-[11.5px] text-muted">{c.hint}</p>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <div className="mt-auto pt-8">
+        <button
+          type="button"
+          onClick={onContinue}
+          className="btn-primary w-full min-h-[48px] text-[15.5px]"
+        >
+          <span>Continue</span>
+          <ArrowRight size={17} strokeWidth={2.2} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ExamStep({
+  selectedTargets,
+  toggleTarget,
+  onContinue,
+  onBack,
+}: {
+  selectedTargets: string[];
+  toggleTarget: (t: string) => void;
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="flex-1 flex flex-col rounded-2xl border border-border bg-card p-6 sm:p-7 shadow-2xs">
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-1.5 text-muted text-[13px] font-semibold mb-5 self-start hover:text-ink transition-colors"
+      >
+        <ArrowLeft size={14} strokeWidth={2.2} />
+        Back
+      </button>
+      <h1 className="text-[26px] font-extrabold text-ink tracking-tight leading-tight mb-1.5">
+        What are you preparing for?
+      </h1>
+      <p className="text-[14px] text-muted mb-7">Pick all that apply.</p>
+
+      <div className="flex flex-wrap gap-2.5">
+        {EXAM_OPTIONS.map((t, i) => {
+          const selected = selectedTargets.includes(t);
+          return (
+            <motion.button
+              key={t}
+              type="button"
+              onClick={() => toggleTarget(t)}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0, transition: { delay: i * 0.055, duration: 0.28 } }}
+              whileTap={{ scale: 0.96 }}
+              className={`rounded-full px-4 py-2.5 text-[13.5px] font-bold border transition-all flex items-center gap-2 ${
+                selected
+                  ? 'border-brand border-2 bg-brand-tint text-brand'
+                  : 'border-border-2 bg-bg-0/60 text-ink hover:border-ink/25'
+              }`}
+            >
+              {selected && <Check size={14} strokeWidth={3} />}
+              {t}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <div className="mt-auto pt-8">
+        <button
+          type="button"
+          onClick={onContinue}
+          className="btn-primary w-full min-h-[48px] text-[15.5px]"
+        >
+          <span>Continue</span>
+          <ArrowRight size={17} strokeWidth={2.2} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const SUBJECT_GROUPS: { label: string; items: CurriculumSubject[] }[] = [
+  { label: 'Core', items: CORE_SUBJECTS },
+  { label: 'Sciences', items: SCIENCE_SUBJECTS },
+  { label: 'Arts & Humanities', items: ARTS_SUBJECTS },
+];
+
+function SubjectsStep({
+  selectedSubjects,
+  toggleSubject,
+  showMoreSubjects,
+  setShowMoreSubjects,
+  onContinue,
+  onBack,
+}: {
+  selectedSubjects: string[];
+  toggleSubject: (s: string) => void;
+  showMoreSubjects: boolean;
+  setShowMoreSubjects: (v: boolean) => void;
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="flex-1 flex flex-col pb-24">
+      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-2xs">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-muted text-[13px] font-semibold mb-4 self-start hover:text-ink transition-colors"
+        >
+          <ArrowLeft size={14} strokeWidth={2.2} />
+          Back
+        </button>
+        <h1 className="text-[25px] font-extrabold text-ink tracking-tight leading-tight mb-1.5">
+          Pick your subjects
+        </h1>
+        <p className="text-[13.5px] text-muted mb-6">
+          Choose the ones you study. You can update these anytime in Subjects.
+        </p>
+
+        <div className="space-y-5">
+          {SUBJECT_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2.5">
+                {group.label}
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {group.items.map((subj, i) => (
+                  <motion.div
+                    key={subj.id}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0, transition: { delay: i * 0.04, duration: 0.22 } }}
+                  >
+                    <SubjectChip
+                      item={subj}
+                      selected={selectedSubjects.includes(subj.name)}
+                      onToggle={() => toggleSubject(subj.name)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* More subjects */}
+          {showMoreSubjects ? (
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted mb-2.5">
+                Commercial &amp; Social Sciences
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {COMMERCIAL_SUBJECTS.map((subj, i) => (
+                  <motion.div
+                    key={subj.id}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0, transition: { delay: i * 0.04, duration: 0.22 } }}
+                  >
+                    <SubjectChip
+                      item={subj}
+                      selected={selectedSubjects.includes(subj.name)}
+                      onToggle={() => toggleSubject(subj.name)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={() => setShowMoreSubjects(true)}
+                className="text-[13.5px] font-bold text-brand underline underline-offset-4 hover:opacity-80 transition-opacity"
+              >
+                Show {COMMERCIAL_SUBJECTS.length} more subjects
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Fixed bottom confirmation bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border px-4 py-3">
+        <div className="max-w-[540px] mx-auto flex items-center justify-between gap-3">
+          <div>
+            <span className="text-[17px] font-extrabold text-ink">{selectedSubjects.length}</span>{' '}
+            <span className="text-[13px] text-muted">selected</span>
+          </div>
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={selectedSubjects.length === 0}
+            className="btn-primary px-6 py-2.5 min-h-[44px] text-[14.5px] disabled:opacity-35 disabled:cursor-not-allowed"
+          >
+            <span>Finish setup</span>
+            <ArrowRight size={16} strokeWidth={2.2} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SubjectChip({
   item,
   selected,
   onToggle,
 }: {
-  item: SubjectItem;
+  item: CurriculumSubject;
   selected: boolean;
   onToggle: () => void;
 }) {
+  const Icon = item.icon;
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onToggle}
       aria-pressed={selected}
-      className={`w-full rounded-xl p-3 flex items-center justify-between gap-2 border text-left cursor-pointer select-none active:scale-[0.97] transition-all ${
+      whileTap={{ scale: 0.97 }}
+      className={`w-full rounded-xl px-3 py-3 flex items-center justify-between gap-2 border text-left cursor-pointer select-none transition-all ${
         selected
-          ? 'border-2 border-[#15803d] bg-white shadow-2xs'
-          : 'border-gray-200 bg-white hover:border-gray-300'
+          ? 'border-brand border-2 bg-brand-tint/60'
+          : 'border-border-2 bg-bg-0/50 hover:border-ink/25 hover:bg-card'
       }`}
     >
       <div className="flex items-center gap-2.5 min-w-0">
         <span
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold"
-          style={{ backgroundColor: item.badgeBg, color: item.badgeFg }}
+          className="flex flex-shrink-0 items-center justify-center"
+          style={{ color: item.color.fg }}
         >
-          {item.badge}
+          <Icon size={22} strokeWidth={1.8} />
         </span>
-        <span className="truncate text-[13.5px] font-bold text-ink leading-tight">
-          {item.name}
-        </span>
+        <span className="truncate text-[13px] font-bold text-ink leading-tight">{item.name}</span>
       </div>
       {selected && (
-        <span className="flex-shrink-0 text-[#15803d]">
-          <Check size={16} strokeWidth={3} />
+        <span className="flex-shrink-0 text-brand">
+          <Check size={15} strokeWidth={3} />
         </span>
       )}
-    </button>
+    </motion.button>
   );
 }

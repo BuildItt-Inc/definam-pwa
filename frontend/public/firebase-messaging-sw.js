@@ -81,7 +81,7 @@ try {
     messaging.onBackgroundMessage((payload) => {
       console.log('[firebase-messaging-sw.js] Background message received:', payload);
 
-      const title = payload.notification?.title || payload.data?.title || 'Recall Reminder';
+      const title = payload.notification?.title || payload.data?.title || 'Study Reminder';
       const options = {
         body: payload.notification?.body || payload.data?.body || 'You have pending learning tasks.',
         icon: '/icons/icon-192.png',
@@ -110,7 +110,7 @@ self.addEventListener('push', (event) => {
 
   try {
     const rawData = event.data.json();
-    const title = rawData.notification?.title || rawData.data?.title || 'Recall Reminder';
+    const title = rawData.notification?.title || rawData.data?.title || 'Study Reminder';
     const body = rawData.notification?.body || rawData.data?.body || 'You have pending learning tasks.';
     const options = {
       body,

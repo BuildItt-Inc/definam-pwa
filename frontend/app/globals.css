@@ -186,6 +186,18 @@
   .pb-nav {
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
+  @media (min-width: 768px) {
+    .pb-nav { padding-bottom: 2rem; }
+    .page-with-nav { min-height: 100dvh; }
+  }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 
   /* Premium multi-layer shadow */
   .shadow-premium {
