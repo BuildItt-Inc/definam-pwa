@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { House, BookOpen, RefreshCw, Activity, Settings } from 'lucide-react';
 import { getStudentProfile, type StudentProfile } from '@/lib/utils/studentProfile';
 import { getCachedHomeData, getHomeData } from '@/lib/api/topics';
@@ -21,8 +21,18 @@ function matchesNav(pathname: string, href: string): boolean {
   return href === '/student' ? pathname === '/student' : pathname.startsWith(href);
 }
 
+function isFocusMode(pathname: string | null, viewParam: string | null): boolean {
+  if (!pathname) return false;
+  const isReviewSession = pathname === '/student/review/session';
+  const isChatPage = pathname === '/student/chat';
+  const isTopicRoute = pathname.startsWith('/student/learn/') && pathname !== '/student/learn';
+  const isInsideActiveLesson = isTopicRoute && !viewParam;
+  return isReviewSession || isChatPage || isInsideActiveLesson;
+}
+
 function DesktopSidebarInner() {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<StudentProfile | null>(() => getStudentProfile());
   const [resolvedName, setResolvedName] = useState<string>(() => {
@@ -32,6 +42,11 @@ function DesktopSidebarInner() {
   });
   const [resolvedSub, setResolvedSub] = useState<string>('');
   const [hydrated, setHydrated] = useState(false);
+
+  // Eagerly prefetch all student routes so desktop tab switches resolve without delay
+  useEffect(() => {
+    NAV_ITEMS.forEach((item) => router.prefetch(item.href));
+  }, [router]);
 
   useEffect(() => {
     let active = true;
@@ -88,15 +103,7 @@ function DesktopSidebarInner() {
     };
   }, []);
 
-  if (!pathname) return null;
-
-  // Distraction-free lesson / review / full-chat focus modes hide navigation sidebar
-  const isReviewSession = pathname === '/student/review/session';
-  const isChatPage = pathname === '/student/chat';
-  const isTopicRoute = pathname.startsWith('/student/learn/') && pathname !== '/student/learn';
-  const isInsideActiveLesson = isTopicRoute && !searchParams?.get('view');
-
-  if (isReviewSession || isChatPage || isInsideActiveLesson) {
+  if (!pathname || isFocusMode(pathname, searchParams?.get('view') ?? null)) {
     return null;
   }
 
@@ -106,7 +113,7 @@ function DesktopSidebarInner() {
   const sub = resolvedSub || fallbackSub;
 
   return (
-    <aside className="hidden md:flex flex-col w-[220px] flex-shrink-0 h-screen sticky top-0 border-r border-border bg-card z-40">
+    <aside className="hidden md:flex flex-col w-[220px] fixed inset-y-0 left-0 border-r border-border bg-card z-40">
       {/* Logo */}
       <div className="px-5 pt-6 pb-5 flex items-center">
         <Link href="/student" aria-label="Recall Home" className="inline-flex items-center">
@@ -122,7 +129,8 @@ function DesktopSidebarInner() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold transition-all duration-100 active:scale-[0.98] ${
+              prefetch
+              className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold transition-colors duration-100 ${
                 active
                   ? 'bg-brand-tint text-brand'
                   : 'text-muted hover:bg-bg-2 hover:text-ink'
@@ -176,5 +184,28 @@ export function DesktopSidebar() {
     <Suspense fallback={null}>
       <DesktopSidebarInner />
     </Suspense>
+  );
+}
+
+function StudentContentOffset({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const focus = isFocusMode(pathname, searchParams?.get('view') ?? null);
+
+  return (
+    <div className={`min-h-screen min-w-0 bg-bg-0 relative ${focus ? '' : 'md:pl-[220px]'}`}>
+      {children}
+    </div>
+  );
+}
+
+export function StudentShell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <DesktopSidebar />
+      <Suspense fallback={<div className="min-h-screen min-w-0 bg-bg-0 md:pl-[220px]">{children}</div>}>
+        <StudentContentOffset>{children}</StudentContentOffset>
+      </Suspense>
+    </>
   );
 }
