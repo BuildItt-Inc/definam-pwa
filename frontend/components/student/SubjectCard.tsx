@@ -52,14 +52,22 @@ export function SubjectCard({ subject, href, onClick }: SubjectCardProps) {
 
   if (href) {
     return (
-      <Link href={href} prefetch className="block">
+      <Link
+        href={href}
+        prefetch
+        className="block md:rounded-xl md:border md:border-border md:bg-card md:hover:border-ink/20 md:transition-all md:overflow-hidden"
+      >
         {inner}
       </Link>
     );
   }
 
   return (
-    <button type="button" onClick={onClick} className="block w-full">
+    <button
+      type="button"
+      onClick={onClick}
+      className="block w-full md:rounded-xl md:border md:border-border md:bg-card md:hover:border-ink/20 md:transition-all md:overflow-hidden"
+    >
       {inner}
     </button>
   );

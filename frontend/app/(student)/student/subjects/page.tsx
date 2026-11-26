@@ -15,7 +15,6 @@ import {
   ALL_CURRICULUM_SUBJECTS,
   type CurriculumSubject,
   type SubjectCategory,
-  subjectColor,
 } from '@/lib/utils/subjects';
 import {
   getStudentProfile,
@@ -141,7 +140,8 @@ export default function ManageSubjectsPage() {
   return (
     <div className="page-with-nav min-h-screen bg-bg-0 text-ink page-enter pb-32">
       {/* ── Top Header ── */}
-      <header className="sticky top-0 z-20 border-b border-border bg-white/95 backdrop-blur-md px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] shadow-2xs">
+      <header className="sticky top-0 z-20 border-b border-border bg-white/95 backdrop-blur-md px-4 md:px-7 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] shadow-2xs">
+        <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <button
@@ -210,10 +210,11 @@ export default function ManageSubjectsPage() {
             );
           })}
         </div>
+        </div>
       </header>
 
       {/* ── Main Subject List ── */}
-      <main className="px-4 pt-4">
+      <main className="mx-auto max-w-5xl px-4 md:px-7 pt-4">
         {/* Banner with helpful hints and shortcuts */}
         <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 rounded-2xl border border-border bg-white p-3.5 shadow-2xs">
           <div className="flex items-center gap-2">
@@ -264,10 +265,9 @@ export default function ManageSubjectsPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
             {filteredSubjects.map((subject) => {
               const Icon = subject.icon;
-              const color = subjectColor(subject.name);
               const isSelected = isSubjectSelected(subject.name, selectedSubjects);
 
               return (
@@ -282,19 +282,16 @@ export default function ManageSubjectsPage() {
                       handleToggle(subject);
                     }
                   }}
-                  className={`group relative flex items-center justify-between gap-3 rounded-2xl border p-3 cursor-pointer transition-all active:scale-[0.99] ${
+                  className={`group relative flex items-center justify-between gap-3 rounded-2xl border p-3.5 cursor-pointer transition-all active:scale-[0.99] ${
                     isSelected
                       ? 'border-ink/20 bg-white shadow-2xs hover:border-ink/40'
                       : 'border-border bg-white/60 opacity-80 hover:opacity-100 hover:border-border-2 hover:bg-white'
                   }`}
                 >
-                  {/* Left: Icon + Info */}
+                  {/* Left: Clean scaled unboxed icon + Info */}
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div
-                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
-                      style={{ backgroundColor: color.bg, color: color.fg }}
-                    >
-                      <Icon size={20} strokeWidth={2} />
+                    <div className="flex w-9 flex-shrink-0 items-center justify-center text-ink-2 transition-transform group-hover:scale-105">
+                      <Icon size={24} strokeWidth={1.65} />
                     </div>
 
                     <div className="min-w-0 flex-1">
