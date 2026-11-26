@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useParams, usePathname } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import {
   MessageCircle,
   Sparkles,
@@ -119,6 +119,7 @@ function FloatingChatPanel({
   onSeedConsumed: () => void;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const seedSentRef = useRef(false);
 
@@ -272,12 +273,19 @@ function FloatingChatPanel({
               </button>
             ))}
 
-          {/* Expand / Exit Fullscreen */}
+          {/* Expand / Open full workspace on desktop or fullscreen on mobile */}
           <button
             type="button"
-            onClick={() => setIsFullscreen((f) => !f)}
-            aria-label={isFullscreen ? 'Exit full screen' : 'Expand to full screen'}
-            title={isFullscreen ? 'Exit full screen' : 'Expand to full screen'}
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+                onClose();
+                router.push(topicId ? `/student/chat?topicId=${encodeURIComponent(topicId)}` : '/student/chat');
+              } else {
+                setIsFullscreen((f) => !f);
+              }
+            }}
+            aria-label={isFullscreen ? 'Exit full screen' : 'Expand workspace'}
+            title={isFullscreen ? 'Exit full screen' : 'Expand to workspace'}
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-bg-2 hover:text-ink active:scale-95"
           >
             {isFullscreen ? (

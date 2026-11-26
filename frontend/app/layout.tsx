@@ -25,7 +25,7 @@ const roboto = Roboto({
 import type { Viewport } from 'next';
 
 export const viewport: Viewport = {
-  themeColor: '#111827',
+  themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -46,6 +46,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],

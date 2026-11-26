@@ -60,7 +60,7 @@ export default function ManageSubjectsPage() {
     let base = profile;
     if (!base) {
       base = {
-        name: 'Student',
+        name: '',
         class_level: 'SS3',
         targets: ['WAEC', 'School exams'],
         selectedSubjects: newSubjects,
